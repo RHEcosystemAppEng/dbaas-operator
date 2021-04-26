@@ -1,0 +1,7 @@
+apiVersion: dbaas.dbaas.redhat.com/v1
+kind: DBaaSService
+metadata:
+  name: dbaasservice-sample
+spec:
+  # Add fields here
+  foo: bar

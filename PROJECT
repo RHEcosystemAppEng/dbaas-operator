@@ -1,0 +1,19 @@
+domain: dbaas.redhat.com
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: dbaas-operator
+repo: github.com/RHEcosystemAppEng/dbaas-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dbaas.redhat.com
+  group: dbaas
+  kind: DBaaSService
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
+  version: v1
+version: "3"

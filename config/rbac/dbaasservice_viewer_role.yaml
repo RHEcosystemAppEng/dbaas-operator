@@ -1,0 +1,20 @@
+# permissions for end users to view dbaasservices.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaasservice-viewer-role
+rules:
+- apiGroups:
+  - dbaas.dbaas.redhat.com
+  resources:
+  - dbaasservices
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dbaas.dbaas.redhat.com
+  resources:
+  - dbaasservices/status
+  verbs:
+  - get
