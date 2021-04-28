@@ -5,7 +5,7 @@ metadata:
   name: dbaasservice-viewer-role
 rules:
 - apiGroups:
-  - dbaas.dbaas.redhat.com
+  - dbaas.redhat.com
   resources:
   - dbaasservices
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - dbaas.dbaas.redhat.com
+  - dbaas.redhat.com
   resources:
   - dbaasservices/status
   verbs:

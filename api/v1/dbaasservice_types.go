@@ -20,22 +20,28 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // DBaaSServiceSpec defines the desired state of DBaaSService
 type DBaaSServiceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of DBaaSService. Edit dbaasservice_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Provider is the name of the database provider whom we wish to connect with
+	Provider DatabaseProvider `json:"provider"`
+
+	// CredentialsSecretName indicates the name of the secret storing the vendor-specific connection credentials
+	CredentialsSecretName string `json:"credentialsSecretName"`
+
+	// CredentialsSecretName indicates the namespace of the secret storing the vendor-specific connection credentials
+	CredentialsSecretNamespace string `json:"credentialsSecretNamespace"`
 }
 
 // DBaaSServiceStatus defines the observed state of DBaaSService
 type DBaaSServiceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Projects reflects the list of entities returned from querying the DB provider
+	Projects []DBaaSProject `json:"projects,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -57,6 +63,47 @@ type DBaaSServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []DBaaSService `json:"items"`
+}
+
+type DatabaseProvider struct {
+	Name string `json:"name"`
+}
+
+type DBaaSProject struct {
+	ID       string              `json:"id,omitempty"`
+	Name     string              `json:"name,omitempty"`
+	Clusters []DBaaSCluster      `json:"clusters,omitempty"`
+	Users    []DBaaSDatabaseUser `json:"users,omitempty"`
+}
+
+type DBaaSProjectList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DBaaSProject `json:"items"`
+}
+
+type DBaaSCluster struct {
+	ID                string `json:"id,omitempty"`
+	Name              string `json:"name,omitempty"`
+	CloudProviderName string `json:"cloudProvider,omitempty"`
+	CloudRegion       string `json:"cloudRegion,omitempty"`
+	InstanceSizeName  string `json:"instanceSizeName,omitempty"`
+}
+
+type DBaaSClusterList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DBaaSClusterList `json:"items"`
+}
+
+type DBaaSDatabaseUser struct {
+	Name string `json:"name,omitempty"`
+}
+
+type DBaaSDatabaseUserList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DBaaSDatabaseUser `json:"items"`
 }
 
 func init() {
