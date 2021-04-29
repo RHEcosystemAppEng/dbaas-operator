@@ -1,7 +1,6 @@
 # DBaaS Operator
 
-
-### Contributing
+## Contributing
 
 - Fork DBaas Operator repository
   - https://github.com/RHEcosystemAppEng/dbaas-operator
@@ -14,13 +13,13 @@
 - raise PR's from your feature branch targeting upstream main branch
 - add `jeremyary` (and others as needed) as reviewer
 
-**Building the operator**
+## Building and Running the Operator
   
-- Update the `Makefile` and edit `IMAGE_TAG_BASE`, with your `ORG` name.
+- Update the `Makefile` and edit `IMAGE_TAG_BASE`, with your Quay.io `ORG` name.
 
-- To build and push the operator, bundle and index images, you just need to run: `make`
+- To build and push the operator, bundle and index images, you just need to run: `make release`
 
-**Run locally outside the cluster**:  `make install run`
+**Run locally outside the cluster**: Run `make install run`
  
 **Deploy manualy inside the cluster**: Run `make deploy` 
  
@@ -34,4 +33,4 @@
   
   `make undeploy`
   
-  cleanup from OLM: `operator-sdk cleanup dbaas-operator`
+  Cleanup from OLM: `operator-sdk cleanup dbaas-operator`

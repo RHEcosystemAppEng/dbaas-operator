@@ -1,5 +1,5 @@
 ## Description
-<!-- Please include a summary of the change. Please add any additional motivation and context as needed. Screenshots are also welcome -->
+<!-- Please include a summary of the change and link to the related Jira issue. Please add any additional motivation and context as needed. Screenshots are also welcome -->
 
 ## Verification Steps
 <!--
