@@ -47,7 +47,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: build
+all: build generate docker-build catalog-build docker-push catalog-push
 
 ##@ General
 
