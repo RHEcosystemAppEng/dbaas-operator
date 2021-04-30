@@ -6,12 +6,62 @@ metadata:
       [
         {
           "apiVersion": "dbaas.redhat.com/v1",
-          "kind": "DBaaSService",
+          "kind": "DBaaSConnection",
           "metadata": {
-            "name": "dbaasservice-sample"
+            "name": "dbaasconnection-sample"
           },
           "spec": {
             "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1",
+          "kind": "DBaaSService",
+          "metadata": {
+            "name": "atlas-dbaas-service",
+            "namespace": "dbaas-operator"
+          },
+          "spec": {
+            "credentialsSecretName": "dbaas-vendor-credentials-jary",
+            "credentialsSecretNamespace": "dbaas-operator",
+            "provider": {
+              "name": "MongoDB Atlas"
+            }
+          },
+          "status": {
+            "projects": [
+              {
+                "clusters": [
+                  {
+                    "cloudProvider": "TENANT",
+                    "cloudRegion": "US_EAST_1",
+                    "id": "6086aa1528fd4b5704aed738",
+                    "instanceSizeName": "M0",
+                    "name": "Cluster0"
+                  }
+                ],
+                "id": "6086aa084e995e38dfd1dd7e",
+                "name": "different project"
+              },
+              {
+                "clusters": [
+                  {
+                    "cloudProvider": "TENANT",
+                    "cloudRegion": "US_EAST_1",
+                    "id": "608484560795100e26a40caa",
+                    "instanceSizeName": "M0",
+                    "name": "Cluster0"
+                  }
+                ],
+                "id": "6084842759a7bd6d9b0ea0e8",
+                "name": "example project",
+                "users": [
+                  {
+                    "name": "dbExampleUser"
+                  }
+                ]
+              }
+            ]
           }
         }
       ]
@@ -24,6 +74,9 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
+      version: v1
     - kind: DBaaSService
       name: dbaasservices.dbaas.redhat.com
       version: v1
@@ -54,6 +107,32 @@ spec:
           - atlasservices/status
           verbs:
           - get
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasconnections
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasconnections/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasconnections/status
+          verbs:
+          - get
+          - patch
+          - update
         - apiGroups:
           - dbaas.redhat.com
           resources:

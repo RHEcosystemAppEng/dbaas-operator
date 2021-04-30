@@ -16,4 +16,13 @@ resources:
   kind: DBaaSService
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
   version: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: dbaas.redhat.com
+  group: dbaas
+  kind: DBaaSConnection
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
+  version: v1
 version: "3"

@@ -136,6 +136,28 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
+	if dbaasService.Spec.Imports != nil {
+		for _, id := range dbaasService.Spec.Imports {
+			dbaasConnection := dbaasv1.DBaaSConnection{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: fmt.Sprintf("atlas-connection-%s", id),
+					Namespace: dbaasService.Namespace,
+				},
+			}
+			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, &dbaasConnection, func() error {
+				// modifier callback, mutate spec to match expectation
+				dbaasConnection.Spec = dbaasv1.DBaaSConnectionSpec{
+					Imports: []string{id},
+				}
+				return nil
+			})
+			if err != nil {
+				r.Log.Error(err, "error creating new matching AtlasService")
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
 	// reconcile cycle complete
 	return ctrl.Result{}, nil
 }

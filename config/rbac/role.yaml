@@ -27,6 +27,32 @@ rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
+  - dbaasconnections
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasconnections/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasconnections/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
   - dbaasservices
   verbs:
   - create
