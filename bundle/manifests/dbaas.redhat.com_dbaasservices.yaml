@@ -44,6 +44,11 @@ spec:
                 required:
                 - name
                 type: object
+              selectedForImport:
+                description: Imports indicates the ID's of cluster instances to be imported for developer workflow
+                items:
+                  type: string
+                type: array
             required:
             - credentialsSecretName
             - credentialsSecretNamespace

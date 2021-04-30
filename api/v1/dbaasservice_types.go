@@ -33,6 +33,9 @@ type DBaaSServiceSpec struct {
 
 	// CredentialsSecretName indicates the namespace of the secret storing the vendor-specific connection credentials
 	CredentialsSecretNamespace string `json:"credentialsSecretNamespace"`
+
+	// Imports indicates the ID's of cluster instances to be imported for developer workflow
+	Imports []string `json:"selectedForImport,omitempty"`
 }
 
 // DBaaSServiceStatus defines the observed state of DBaaSService

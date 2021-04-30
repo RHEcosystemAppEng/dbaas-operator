@@ -1,8 +1,8 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: dbaas-operator-manifests
-  namespace: dbaas-operator
+  name: dbaas-operator
+  namespace: dbaas-olm
 spec:
   sourceType: grpc
   image: quay.io/ecosystem-appeng/dbaas-operator-index:v0.0.1
