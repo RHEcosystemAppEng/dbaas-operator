@@ -12,4 +12,25 @@
 - create feature branches within your fork to complete your work
 - raise PR's from your feature branch targeting upstream main branch
 - add `jeremyary` (and others as needed) as reviewer
+
+## Building and Running the Operator
   
+- Update the `Makefile` and edit `IMAGE_TAG_BASE`, with your Quay.io `ORG` name.
+
+- To build and push the operator, bundle and index images, you just need to run: `make release`
+
+**Run locally outside the cluster**: Run `make install run`
+ 
+**Deploy manualy inside the cluster**: Run `make deploy` 
+ 
+**Deploy With OLM**: Run `operator-sdk run bundle quay.io/ecosystem-appeng/dbaas-operator-bundle:<TAG>`
+   
+**Create the CR**:  `oc apply -f config/samples/dbaas_v1_dbaasservice.yaml -n <namesapce> `
+
+**Cleanup**:  
+
+  `oc delete -f config/samples/dbaas_v1_dbaasservice.yaml -n <namesapce> `
+  
+  `make undeploy`
+  
+  Cleanup from OLM: `operator-sdk cleanup dbaas-operator`

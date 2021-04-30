@@ -49,6 +49,8 @@ endif
 
 all: build
 
+release: build generate bundle docker-build docker-push bundle-build bundle-push catalog-build catalog-push
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
