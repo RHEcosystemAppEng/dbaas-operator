@@ -7,6 +7,7 @@ require (
 	github.com/mongodb/mongodb-atlas-kubernetes v0.5.0
 	github.com/onsi/ginkgo v1.15.2
 	github.com/onsi/gomega v1.11.0
+	k8s.io/api v0.19.2
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.19.2
 	k8s.io/utils v0.0.0-20200912215256-4140de9c8800
