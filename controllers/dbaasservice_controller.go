@@ -18,12 +18,10 @@ package controllers
 
 import (
 	"context"
-	"fmt"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/models"
 	"github.com/go-logr/logr"
 	atlas "github.com/mongodb/mongodb-atlas-kubernetes/pkg/api/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	ptr "k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -65,48 +63,15 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// DBaaSService resource found, try and find matching AtlasService
-	found := atlas.AtlasService{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "atlas.mongodb.com/v1",
-			Kind:       "AtlasService",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("atlas-service-%s", dbaasService.UID),
-			Namespace: dbaasService.Namespace,
-		},
-	}
-	err = r.Get(ctx, client.ObjectKeyFromObject(&found), &found)
+	found := models.AtlasService(&dbaasService)
+	err = r.Get(ctx, client.ObjectKeyFromObject(found), found)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 
 			// matching AtlasService has not yet been created, make one with ownerReference to our resource
-			atlasInstance := atlas.AtlasService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("atlas-service-%s", dbaasService.UID),
-					Namespace: dbaasService.Namespace,
-					Labels: map[string]string{
-						"owner-resource": dbaasService.Name,
-					},
-					OwnerReferences: []metav1.OwnerReference{
-						{
-							UID:                dbaasService.GetUID(),
-							APIVersion:         "dbaas.redhat.com/v1",
-							BlockOwnerDeletion: ptr.BoolPtr(false),
-							Controller:         ptr.BoolPtr(true),
-							Kind:               "DBaaSService",
-							Name:               dbaasService.Name,
-						},
-					},
-				},
-			}
-			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, &atlasInstance, func() error {
-				// modifier callback, mutate spec to match expectation
-				atlasInstance.Spec = atlas.AtlasServiceSpec{
-					Name: "dbaas-operator-test",
-					ConnectionSecret: &atlas.ResourceRef{
-						Name: dbaasService.Spec.CredentialsSecretName,
-					},
-				}
+			atlasInstance := models.OwnedAtlasService(&dbaasService)
+			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, atlasInstance, func() error {
+				atlasInstance.Spec = models.MutateAtlasServiceSpec(&dbaasService)
 				return nil
 			})
 			if err != nil {
@@ -123,41 +88,52 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
+	// refetch object prior to status update in case modifications have occurred
+	err = r.Get(ctx, req.NamespacedName, &dbaasService)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// CR deleted since request queued, child objects getting GC'd, no requeue
+			log.Info("DBaasService resource not found, has been deleted")
+			return ctrl.Result{}, nil
+		}
+		// error fetching resource instance, requeue and try again
+		r.Log.Error(err, "error fetching DBaasService prior to status update")
+		return ctrl.Result{}, err
+	}
+
 	// matching AtlasService with ownerReference to our resource found, so it's been touched - update our status
 	log.Info("AtlasService altered, syncing DBaaSService status")
-	err = r.syncServiceStatuses(&dbaasService, &found)
+	err = r.syncServiceStatuses(&dbaasService, found)
 	if err != nil {
 		r.Log.Error(err, "error syncing service status")
 		return ctrl.Result{}, err
 	}
-
 	if err = r.Status().Update(ctx, &dbaasService); err != nil {
-		r.Log.Error(err, "error saving modified DBaaSService status")
-		return ctrl.Result{}, err
+		if apierrors.IsConflict(err) {
+			r.Log.Info("conflict at status update, requeue to sort it out")
+			return ctrl.Result{}, nil
+		} else {
+			r.Log.Error(err, "error saving modified DBaaSService status")
+			return ctrl.Result{}, err
+		}
 	}
 
+	// instances have been selected for import & added to our Spec, so we need to create DBaasConnection for each
 	if dbaasService.Spec.Imports != nil {
 		for _, id := range dbaasService.Spec.Imports {
-			dbaasConnection := dbaasv1.DBaaSConnection{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: fmt.Sprintf("atlas-connection-%s", id),
-					Namespace: dbaasService.Namespace,
-				},
-			}
-			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, &dbaasConnection, func() error {
-				// modifier callback, mutate spec to match expectation
+			dbaasConnection := models.DBaaSConnection(&dbaasService)
+			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, dbaasConnection, func() error {
 				dbaasConnection.Spec = dbaasv1.DBaaSConnectionSpec{
 					Imports: []string{id},
 				}
 				return nil
 			})
 			if err != nil {
-				r.Log.Error(err, "error creating new matching AtlasService")
+				r.Log.Error(err, "error creating new DBaaSConnection for import selection")
 				return ctrl.Result{}, err
 			}
 		}
 	}
-
 	// reconcile cycle complete
 	return ctrl.Result{}, nil
 }

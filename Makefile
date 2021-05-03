@@ -49,6 +49,7 @@ endif
 
 all: build
 
+.PHONY: release
 release: build generate bundle docker-build docker-push bundle-build bundle-push catalog-build catalog-push
 
 ##@ General
@@ -116,6 +117,14 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+.PHONY: catalog-update
+catalog-update: catalog-remove catalog-apply
+
+catalog-remove: ## remove the sample catalog source from the dbaas-olm namespace
+	oc delete catalogsource dbaas-operator -n dbaas-olm
+
+catalog-apply: ## apply the sample catalog source to dbaas-olm namespace
+	oc apply -f config/samples/catalog-source.yaml
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

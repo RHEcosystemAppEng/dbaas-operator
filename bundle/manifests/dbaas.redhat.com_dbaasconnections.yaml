@@ -3,6 +3,13 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+    service.binding/db.host: path={.status.dbConfigMap},objectType=ConfigMap
+    service.binding/db.name: path={.status.dbConfigMap},objectType=ConfigMap
+    service.binding/db.password: path={.status.dbCredentials},objectType=Secret
+    service.binding/db.port: path={.status.dbConfigMap},objectType=ConfigMap
+    service.binding/db.user: path={.status.dbCredentials},objectType=Secret
+    service.binding/provider: path={.spec.provider}
+    service.binding/type: path={.spec.type}
   creationTimestamp: null
   name: dbaasconnections.dbaas.redhat.com
 spec:
@@ -38,6 +45,16 @@ spec:
             type: object
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
+            properties:
+              dbConfigMap:
+                description: DBConfigMap is the name of the ConfigMap containing the connection info
+                type: string
+              dbCredentials:
+                description: DBCredentials is the name of the Secret containing the database credentials
+                type: string
+            required:
+            - dbConfigMap
+            - dbCredentials
             type: object
         type: object
     served: true
