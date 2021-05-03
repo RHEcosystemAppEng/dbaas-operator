@@ -96,7 +96,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			// matching ConfigMap has not yet been created, make one with ownerReference
 			connectionConfigMap := models.OwnedConfigMap(&dbaasConnection)
 			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, connectionConfigMap, func() error {
-				connectionConfigMap.Data = models.MutateConfigMapData(&dbaasConnection)
+				connectionConfigMap.Data = models.MutateConfigMapData()
 				return nil
 			})
 			if err != nil {

@@ -42,6 +42,17 @@ spec:
                 items:
                   type: string
                 type: array
+              provider:
+                description: Provider will be used by ServiceBindingConverter to indicate
+                  the provider type for connection desired (WIP)
+                type: string
+              type:
+                description: Type will be used by ServiceBindingConverter to indicate
+                  the type of connection desired (WIP)
+                type: string
+            required:
+            - provider
+            - type
             type: object
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection

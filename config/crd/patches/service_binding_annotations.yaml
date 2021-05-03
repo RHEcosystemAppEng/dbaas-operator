@@ -5,8 +5,7 @@ metadata:
   annotations:
     service.binding/type: 'path={.spec.type}'
     service.binding/provider: 'path={.spec.provider}'
-    service.binding/db.name: 'path={.status.dbConfigMap},objectType=ConfigMap'
-    service.binding/db.host: 'path={.status.dbConfigMap},objectType=ConfigMap'
-    service.binding/db.port: 'path={.status.dbConfigMap},objectType=ConfigMap'
-    service.binding/db.user: 'path={.status.dbCredentials},objectType=Secret'
-    service.binding/db.password: 'path={.status.dbCredentials},objectType=Secret'
+    service.binding/database: 'path={.status.dbConfigMap},objectType=ConfigMap'
+    service.binding/host: 'path={.status.dbConfigMap},objectType=ConfigMap'
+    service.binding/username: 'path={.status.dbCredentials},objectType=Secret'
+    service.binding/password: 'path={.status.dbCredentials},objectType=Secret'

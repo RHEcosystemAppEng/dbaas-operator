@@ -28,6 +28,12 @@ type DBaaSConnectionSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// Type will be used by ServiceBindingConverter to indicate the type of connection desired (WIP)
+	Type string `json:"type"`
+
+	// Provider will be used by ServiceBindingConverter to indicate the provider type for connection desired (WIP)
+	Provider string `json:"provider"`
+
 	// Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go to remove/update
 	Imports []string `json:"imports,omitempty"`
 }

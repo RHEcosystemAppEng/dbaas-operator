@@ -124,7 +124,9 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			dbaasConnection := models.DBaaSConnection(&dbaasService)
 			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, dbaasConnection, func() error {
 				dbaasConnection.Spec = dbaasv1.DBaaSConnectionSpec{
-					Imports: []string{id},
+					Type:     "MongoDB",
+					Provider: "atlas",
+					Imports:  []string{id},
 				}
 				return nil
 			})

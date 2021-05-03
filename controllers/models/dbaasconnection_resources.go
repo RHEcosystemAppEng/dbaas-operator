@@ -101,11 +101,10 @@ func OwnedConfigMap(dbaasConnection *dbaasv1.DBaaSConnection) *v1.ConfigMap {
 	}
 }
 
-func MutateConfigMapData(dbaasConnection *dbaasv1.DBaaSConnection) map[string]string {
+func MutateConfigMapData() map[string]string {
 	return map[string]string{
-		"db.host": "example.mongodb.net",
-		"db.name": fmt.Sprintf("db-%s", dbaasConnection.Spec.Imports[0]),
-		"db.port": "27017",
+		"database": "customers",
+		"host": "customers.etodz.mongodb.net",
 	}
 }
 
@@ -148,8 +147,8 @@ func OwnedSecret(dbaasConnection *dbaasv1.DBaaSConnection) *v1.Secret {
 
 func MutateSecretData() map[string][]byte {
 	return map[string][]byte{
-		"db.password": []byte(base64.StdEncoding.EncodeToString([]byte("foo-user"))),
-		"db.user":     []byte(base64.StdEncoding.EncodeToString([]byte("bar-pw"))),
+		"password": []byte(base64.StdEncoding.EncodeToString([]byte("foo"))),
+		"username":     []byte(base64.StdEncoding.EncodeToString([]byte("bar"))),
 	}
 }
 
