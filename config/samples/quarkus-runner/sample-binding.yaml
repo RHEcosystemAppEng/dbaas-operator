@@ -1,0 +1,19 @@
+apiVersion: binding.operators.coreos.com/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: dbaas-quarkus-sample-app-d-atlas-connection-dbsc
+  finalizers:
+    - finalizer.servicebinding.openshift.io
+spec:
+  application:
+    group: apps
+    name: dbaas-quarkus-sample-app
+    resource: deployments
+    version: v1
+  bindAsFiles: true
+  detectBindingResources: true
+  services:
+    - group: dbaas.redhat.com
+      kind: DBaaSConnection
+      name: atlas-connection
+      version: v1

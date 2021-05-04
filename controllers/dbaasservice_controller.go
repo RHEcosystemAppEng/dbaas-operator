@@ -120,13 +120,37 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	// instances have been selected for import & added to our Spec, so we need to create DBaasConnection for each
 	if dbaasService.Spec.Imports != nil {
-		for _, id := range dbaasService.Spec.Imports {
+		var importCluster *dbaasv1.DBaaSCluster
+		for _, importClusterId := range dbaasService.Spec.Imports {
+		findCluster:
+			for _, project := range dbaasService.Status.Projects {
+				for _, cluster := range project.Clusters {
+					if cluster.ID == importClusterId {
+						importCluster = cluster.DeepCopy()
+						break findCluster
+					}
+				}
+			}
+
+			// demo hack - can't get credentials combo with a password from atlas, so fetch from secret for now
+			dbUserCredentialSecret := models.DBUserCredentialsSecret(&dbaasService)
+			err := r.Get(ctx, client.ObjectKeyFromObject(dbUserCredentialSecret), dbUserCredentialSecret)
+			if err != nil {
+				r.Log.Error(err, "error fetching Atlas dbUser credentials secret, requeuing")
+				return ctrl.Result{}, err
+			}
+			importCluster.DatabaseUser = dbaasv1.DBaaSDatabaseUser{
+				Name:     string(dbUserCredentialSecret.Data["username"]),
+				Password: dbUserCredentialSecret.Data["password"],
+			}
+			// end hack
+
 			dbaasConnection := models.DBaaSConnection(&dbaasService)
 			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, dbaasConnection, func() error {
 				dbaasConnection.Spec = dbaasv1.DBaaSConnectionSpec{
 					Type:     "MongoDB",
-					Provider: "atlas",
-					Imports:  []string{id},
+					Provider: "dbaas-operator",
+					Cluster:  importCluster,
 				}
 				return nil
 			})
@@ -160,6 +184,7 @@ func (r *DBaaSServiceReconciler) syncServiceStatuses(dbaas *dbaasv1.DBaaSService
 				InstanceSizeName:  cluster.InstanceSizeName,
 				CloudProviderName: cluster.ProviderName,
 				CloudRegion:       cluster.RegionName,
+				ConnectionString:  cluster.ConnectionString,
 			}
 			dbaasProject.Clusters = append(dbaasProject.Clusters, dbaasCluster)
 		}

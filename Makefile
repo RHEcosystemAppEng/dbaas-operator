@@ -117,14 +117,37 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
-.PHONY: catalog-update
-catalog-update: catalog-remove catalog-apply
+deploy-olm:
+	oc apply -f config/samples/catalog-operator-group.yaml
+	oc apply -f config/samples/catalog-subscription.yaml
 
-catalog-remove: ## remove the sample catalog source from the dbaas-olm namespace
-	oc delete catalogsource dbaas-operator -n dbaas-olm
+undeploy-olm:
+	-oc delete subscriptions.operators.coreos.com dbaas-operator
+	-oc delete operatorgroup dbaas-operator-group
+	-oc delete clusterserviceversion dbaas-operator.v${VERSION}
 
-catalog-apply: ## apply the sample catalog source to dbaas-olm namespace
+catalog-update:
+	-oc delete catalogsource dbaas-operator -n openshift-marketplace
 	oc apply -f config/samples/catalog-source.yaml
+
+deploy-sample-app:
+	oc apply -f config/samples/quarkus-runner/deployment.yaml
+
+undeploy-sample-app:
+	-oc delete servicebindings.binding.operators.coreos.com dbaas-quarkus-sample-app-d-atlas-connection-dbsc
+	-oc delete deployment dbaas-quarkus-sample-app
+	-oc delete service dbaas-quarkus-sample-app
+	-oc delete route dbaas-quarkus-sample-app
+
+deploy-sample-binding:
+	oc apply -f config/samples/quarkus-runner/sample-binding.yaml
+
+undeploy-sample-binding:
+	oc delete servicebindings.binding.operators.coreos.com dbaas-quarkus-sample-app-d-atlas-connection-dbsc
+
+clean-namespace:
+	-oc delete dbaasconnections.dbaas.redhat.com --all
+	-oc delete dbaasservices.dbaas.redhat.com --all
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

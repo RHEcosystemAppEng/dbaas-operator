@@ -35,7 +35,7 @@ type DBaaSConnectionSpec struct {
 	Provider string `json:"provider"`
 
 	// Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go to remove/update
-	Imports []string `json:"imports,omitempty"`
+	Cluster *DBaaSCluster `json:"cluster"`
 }
 
 // DBaaSConnectionStatus defines the observed state of DBaaSConnection

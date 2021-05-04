@@ -75,29 +75,48 @@ spec:
                     clusters:
                       items:
                         properties:
-                          cloudProvider:
+                          connectionString:
                             type: string
-                          cloudRegion:
-                            type: string
+                          databaseUser:
+                            properties:
+                              name:
+                                type: string
+                              password:
+                                format: byte
+                                type: string
+                            required:
+                            - name
+                            type: object
                           id:
                             type: string
                           instanceSizeName:
                             type: string
                           name:
                             type: string
+                          providerName:
+                            type: string
+                          regionName:
+                            type: string
+                        required:
+                        - id
+                        type: object
+                      type: array
+                    dbUsers:
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          password:
+                            format: byte
+                            type: string
+                        required:
+                        - name
                         type: object
                       type: array
                     id:
                       type: string
                     name:
                       type: string
-                    users:
-                      items:
-                        properties:
-                          name:
-                            type: string
-                        type: object
-                      type: array
                   type: object
                 type: array
             type: object
