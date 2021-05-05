@@ -2,31 +2,31 @@ apiVersion: dbaas.redhat.com/v1
 kind: DBaaSService
 metadata:
   name: atlas-dbaas-service
-  namespace: dbaas-operator
+  namespace: <your_target_namespace>
 spec:
-  credentialsSecretName: dbaas-vendor-credentials-jary
-  credentialsSecretNamespace: dbaas-operator
+  credentialsSecretName: dbaas-vendor-credentials
+  credentialsSecretNamespace: <your_target_namespace>
   provider:
     name: MongoDB Atlas
-# Once Atlas has been queried based on the credential secret auth info provided, results will populate status -
-# Here's an example status after query result is appended:
 # status:
 #  projects:
 #    - clusters:
 #        - cloudProvider: TENANT
 #          cloudRegion: US_EAST_1
-#          id: 6086aa1528fd4b5704aed738
+#          id: 6086aa1528fd4b1234aed133
 #          instanceSizeName: M0
-#          name: Cluster0
-#      id: 6086aa084e995e38dfd1dd7e
+#          name: customers-cluster
+#          connectionString: mongodb+srv://<atlas-cloud-URI>
+#      id: 6086aa084e332e45dfd1dd7e
 #      name: different project
 #    - clusters:
 #        - cloudProvider: TENANT
 #          cloudRegion: US_EAST_1
-#          id: 608484560795100e26a40caa
+#          id: 608357560795100e26a34298
 #          instanceSizeName: M0
-#          name: Cluster0
-#      id: 6084842759a7bd6d9b0ea0e8
+#          name: warehouse-cluster
+#          connectionString: mongodb+srv://<atlas-cloud-URI>
+#      id: 60209478208a7bd6d9b0e5094
 #      name: example project
 #      users:
 #        - name: dbExampleUser

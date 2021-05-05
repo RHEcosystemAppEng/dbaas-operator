@@ -76,7 +76,7 @@ type DBaaSProject struct {
 	ID       string              `json:"id,omitempty"`
 	Name     string              `json:"name,omitempty"`
 	Clusters []DBaaSCluster      `json:"clusters,omitempty"`
-	Users    []DBaaSDatabaseUser `json:"users,omitempty"`
+	Users    []DBaaSDatabaseUser `json:"dbUsers,omitempty"`
 }
 
 type DBaaSProjectList struct {
@@ -86,11 +86,13 @@ type DBaaSProjectList struct {
 }
 
 type DBaaSCluster struct {
-	ID                string `json:"id,omitempty"`
-	Name              string `json:"name,omitempty"`
-	CloudProviderName string `json:"cloudProvider,omitempty"`
-	CloudRegion       string `json:"cloudRegion,omitempty"`
-	InstanceSizeName  string `json:"instanceSizeName,omitempty"`
+	ID                string            `json:"id"`
+	Name              string            `json:"name,omitempty"`
+	CloudProviderName string            `json:"providerName,omitempty"`
+	CloudRegion       string            `json:"regionName,omitempty"`
+	InstanceSizeName  string            `json:"instanceSizeName,omitempty"`
+	DatabaseUser      DBaaSDatabaseUser `json:"databaseUser,omitempty"`
+	ConnectionString  string            `json:"connectionString,omitempty"`
 }
 
 type DBaaSClusterList struct {
@@ -100,7 +102,8 @@ type DBaaSClusterList struct {
 }
 
 type DBaaSDatabaseUser struct {
-	Name string `json:"name,omitempty"`
+	Name     string `json:"name"`
+	Password []byte `json:"password,omitempty"`
 }
 
 type DBaaSDatabaseUserList struct {

@@ -269,8 +269,8 @@ github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJ
 github.com/imdario/mergo v0.3.10 h1:6q5mVkdH/vYmqngx7kZQTjJ5HRsx+ImorDIEQ+beJgc=
 github.com/imdario/mergo v0.3.10/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
-github.com/jeremyary/mongodb-atlas-kubernetes v1.0.3 h1:Ve5/2pDWlCKYdcTdldDdw3DkPGo2JGDryFRRLusrdjc=
-github.com/jeremyary/mongodb-atlas-kubernetes v1.0.3/go.mod h1:rB4aNX4ciu9GhNIAOXvbz0a2u0be0agVP9aaZopZFW8=
+github.com/jeremyary/mongodb-atlas-kubernetes v1.0.4 h1:WK7deUkXficIDILZgossab096WKeSH5o72kPUZXVdn4=
+github.com/jeremyary/mongodb-atlas-kubernetes v1.0.4/go.mod h1:rB4aNX4ciu9GhNIAOXvbz0a2u0be0agVP9aaZopZFW8=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=

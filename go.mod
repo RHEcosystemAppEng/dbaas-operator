@@ -14,4 +14,4 @@ require (
 	sigs.k8s.io/controller-runtime v0.7.2
 )
 
-replace github.com/mongodb/mongodb-atlas-kubernetes => github.com/jeremyary/mongodb-atlas-kubernetes v1.0.3
+replace github.com/mongodb/mongodb-atlas-kubernetes => github.com/jeremyary/mongodb-atlas-kubernetes v1.0.4

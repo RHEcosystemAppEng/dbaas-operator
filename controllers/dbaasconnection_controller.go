@@ -118,11 +118,14 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			// matching Secret has not yet been created, make one with ownerReference
 			connectionSecret := models.OwnedSecret(&dbaasConnection)
 			_, err = controllerutil.CreateOrUpdate(ctx, r.Client, connectionSecret, func() error {
-				connectionSecret.Data = models.MutateSecretData()
+				connectionSecret.Data = map[string][]byte{
+					"username": []byte(dbaasConnection.Spec.Cluster.DatabaseUser.Name),
+					"password": dbaasConnection.Spec.Cluster.DatabaseUser.Password,
+				}
 				return nil
 			})
 			if err != nil {
-				r.Log.Error(err, "error creating new connection ConfigMap")
+				r.Log.Error(err, "error creating new connection Secret")
 				return ctrl.Result{}, err
 			}
 		} else {

@@ -36,12 +36,47 @@ spec:
           spec:
             description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
             properties:
-              imports:
+              cluster:
                 description: Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go
                   to remove/update
-                items:
-                  type: string
-                type: array
+                properties:
+                  connectionString:
+                    type: string
+                  databaseUser:
+                    properties:
+                      name:
+                        type: string
+                      password:
+                        format: byte
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  id:
+                    type: string
+                  instanceSizeName:
+                    type: string
+                  name:
+                    type: string
+                  providerName:
+                    type: string
+                  regionName:
+                    type: string
+                required:
+                - id
+                type: object
+              provider:
+                description: Provider will be used by ServiceBindingConverter to indicate
+                  the provider type for connection desired (WIP)
+                type: string
+              type:
+                description: Type will be used by ServiceBindingConverter to indicate
+                  the type of connection desired (WIP)
+                type: string
+            required:
+            - cluster
+            - provider
+            - type
             type: object
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection

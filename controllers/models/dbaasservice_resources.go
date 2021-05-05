@@ -5,6 +5,7 @@ import (
 	dbaasv1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
 	atlas "github.com/mongodb/mongodb-atlas-kubernetes/pkg/api/v1"
 	v1 "github.com/mongodb/mongodb-atlas-kubernetes/pkg/api/v1"
+	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ptr "k8s.io/utils/pointer"
 )
@@ -18,6 +19,12 @@ func AtlasService(dbaasService *dbaasv1.DBaaSService) *v1.AtlasService {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("atlas-service-%s", dbaasService.UID),
 			Namespace: dbaasService.Namespace,
+			Labels: map[string]string{
+				"managed-by":      "dbaas-operator",
+				"owner":           dbaasService.Name,
+				"owner.kind":      dbaasService.Kind,
+				"owner.namespace": dbaasService.Namespace,
+			},
 		},
 	}
 }
@@ -28,7 +35,10 @@ func OwnedAtlasService(dbaasService *dbaasv1.DBaaSService) *v1.AtlasService {
 			Name:      fmt.Sprintf("atlas-service-%s", dbaasService.UID),
 			Namespace: dbaasService.Namespace,
 			Labels: map[string]string{
-				"owner-resource": dbaasService.Name,
+				"managed-by":      "dbaas-operator",
+				"owner":           dbaasService.Name,
+				"owner.kind":      dbaasService.Kind,
+				"owner.namespace": dbaasService.Namespace,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -58,6 +68,24 @@ func DBaaSConnection(dbaasService *dbaasv1.DBaaSService) *dbaasv1.DBaaSConnectio
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "atlas-connection",
 			Namespace: dbaasService.Namespace,
+			Labels: map[string]string{
+				"managed-by": "dbaas-operator",
+			},
+		},
+	}
+}
+
+func DBUserCredentialsSecret(dbaasService *dbaasv1.DBaaSService) *v12.Secret {
+	return &v12.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "atlas-dbuser-credentials",
+			Namespace: dbaasService.Namespace,
+			Labels: map[string]string{
+				"managed-by":      "dbaas-operator",
+				"owner":           dbaasService.Name,
+				"owner.kind":      dbaasService.Kind,
+				"owner.namespace": dbaasService.Namespace,
+			},
 		},
 	}
 }

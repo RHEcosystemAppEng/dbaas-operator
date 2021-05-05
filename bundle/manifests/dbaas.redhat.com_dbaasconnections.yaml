@@ -3,13 +3,12 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
-    service.binding/db.host: path={.status.dbConfigMap},objectType=ConfigMap
-    service.binding/db.name: path={.status.dbConfigMap},objectType=ConfigMap
-    service.binding/db.password: path={.status.dbCredentials},objectType=Secret
-    service.binding/db.port: path={.status.dbConfigMap},objectType=ConfigMap
-    service.binding/db.user: path={.status.dbCredentials},objectType=Secret
+    service.binding/database: path={.status.dbConfigMap},objectType=ConfigMap
+    service.binding/host: path={.status.dbConfigMap},objectType=ConfigMap
+    service.binding/password: path={.status.dbCredentials},objectType=Secret
     service.binding/provider: path={.spec.provider}
     service.binding/type: path={.spec.type}
+    service.binding/username: path={.status.dbCredentials},objectType=Secret
   creationTimestamp: null
   name: dbaasconnections.dbaas.redhat.com
 spec:
@@ -37,11 +36,44 @@ spec:
           spec:
             description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
             properties:
-              imports:
+              cluster:
                 description: Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go to remove/update
-                items:
-                  type: string
-                type: array
+                properties:
+                  connectionString:
+                    type: string
+                  databaseUser:
+                    properties:
+                      name:
+                        type: string
+                      password:
+                        format: byte
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  id:
+                    type: string
+                  instanceSizeName:
+                    type: string
+                  name:
+                    type: string
+                  providerName:
+                    type: string
+                  regionName:
+                    type: string
+                required:
+                - id
+                type: object
+              provider:
+                description: Provider will be used by ServiceBindingConverter to indicate the provider type for connection desired (WIP)
+                type: string
+              type:
+                description: Type will be used by ServiceBindingConverter to indicate the type of connection desired (WIP)
+                type: string
+            required:
+            - cluster
+            - provider
+            - type
             type: object
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
