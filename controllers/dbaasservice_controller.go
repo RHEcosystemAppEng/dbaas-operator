@@ -215,7 +215,7 @@ func (r *DBaaSServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request
 							Username:     dbUser.Name,
 							Roles: []atlas.RoleSpec{
 								{
-									RoleName:     "readWrite",
+									RoleName:     "readWriteAnyDatabase",
 									DatabaseName: "admin",
 								},
 							},
