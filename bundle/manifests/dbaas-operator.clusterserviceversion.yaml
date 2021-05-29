@@ -42,7 +42,7 @@ spec:
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1
-    - description: DBaaSInventory is the Schema for the dbaasinventories API
+    - description: DBaaSInventory is the Schema for the dbaasinventory API
       displayName: DBaaS Inventory
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
@@ -56,6 +56,12 @@ spec:
     spec:
       clusterPermissions:
       - rules:
+        - apiGroups:
+          - '*'
+          resources:
+          - '*'
+          verbs:
+          - create
         - apiGroups:
           - dbaas.redhat.com
           resources:

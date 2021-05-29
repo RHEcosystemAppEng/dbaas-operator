@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	dbaasv1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
+	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -57,6 +57,6 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&dbaasv1.DBaaSConnection{}).
+		For(&v1.DBaaSConnection{}).
 		Complete(r)
 }
