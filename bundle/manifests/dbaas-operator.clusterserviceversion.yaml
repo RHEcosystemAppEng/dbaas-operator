@@ -16,24 +16,20 @@ metadata:
         },
         {
           "apiVersion": "dbaas.redhat.com/v1",
-          "kind": "DBaaSService",
+          "kind": "DBaaSInventory",
           "metadata": {
-            "name": "atlas-dbaas-service",
-            "namespace": "\u003cyour_target_namespace\u003e"
+            "name": "dbaasinventory-sample"
           },
           "spec": {
-            "credentialsSecretName": "dbaas-vendor-credentials",
-            "credentialsSecretNamespace": "\u003cyour_target_namespace\u003e",
-            "provider": {
-              "name": "MongoDB Atlas"
-            }
+            "foo": "bar"
           }
         }
       ]
     capabilities: Basic Install
     categories: Database
-    description: Import provider cloud instances for easy coupling with developer applications.
-    operators.operatorframework.io/builder: operator-sdk-v1.6.1+git
+    description: Import provider cloud instances for easy coupling with developer
+      applications.
+    operators.operatorframework.io/builder: operator-sdk-v1.7.1+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: dbaas-operator.v0.0.1
   namespace: placeholder
@@ -41,11 +37,15 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - kind: DBaaSConnection
+    - description: DBaaSConnection is the Schema for the dbaasconnections API
+      displayName: DBaaS Connection
+      kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1
-    - kind: DBaaSService
-      name: dbaasservices.dbaas.redhat.com
+    - description: DBaaSInventory is the Schema for the dbaasinventories API
+      displayName: DBaaS Inventory
+      kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
       version: v1
   description: Import provider cloud instances for easy coupling with developer applications.
   displayName: Database-as-a-Service Operator
@@ -56,71 +56,6 @@ spec:
     spec:
       clusterPermissions:
       - rules:
-        - apiGroups:
-          - ""
-          resources:
-          - configmaps
-          - secrets
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - update
-          - watch
-        - apiGroups:
-          - apps
-          resources:
-          - deployments
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - update
-          - watch
-        - apiGroups:
-          - atlas.mongodb.com
-          resources:
-          - atlasdatabaseusers
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - atlas.mongodb.com
-          resources:
-          - atlasprojects
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - atlas.mongodb.com
-          resources:
-          - atlasservices
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - atlas.mongodb.com
-          resources:
-          - atlasservices/status
-          verbs:
-          - get
         - apiGroups:
           - dbaas.redhat.com
           resources:
@@ -150,7 +85,7 @@ spec:
         - apiGroups:
           - dbaas.redhat.com
           resources:
-          - dbaasservices
+          - dbaasinventories
           verbs:
           - create
           - delete
@@ -162,13 +97,13 @@ spec:
         - apiGroups:
           - dbaas.redhat.com
           resources:
-          - dbaasservices/finalizers
+          - dbaasinventories/finalizers
           verbs:
           - update
         - apiGroups:
           - dbaas.redhat.com
           resources:
-          - dbaasservices/status
+          - dbaasinventories/status
           verbs:
           - get
           - patch
@@ -205,7 +140,7 @@ spec:
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=10
-                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
                 name: kube-rbac-proxy
                 ports:
                 - containerPort: 8443
@@ -253,9 +188,19 @@ spec:
       - rules:
         - apiGroups:
           - ""
-          - coordination.k8s.io
           resources:
           - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
           - leases
           verbs:
           - get
@@ -281,13 +226,16 @@ spec:
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
-  - supported: false
+  - supported: true
     type: AllNamespaces
   keywords:
   - dbaas
   links:
   - name: Database-as-a-Service Operator
     url: https://dbaas-operator.domain
+  maintainers:
+  - email: jary@redhat.com
+    name: Jeremy Ary
   maturity: alpha
   provider:
     name: Red Hat

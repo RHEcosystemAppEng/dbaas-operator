@@ -23,6 +23,3 @@ testbin/*
 *.swp
 *.swo
 *~
-
-# Allow use of local secret file without committing:
-config/samples/example-local-atlas-credentials-secret.yaml

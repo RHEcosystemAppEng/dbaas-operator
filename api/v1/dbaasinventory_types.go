@@ -23,17 +23,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// DBaaSConnectionSpec defines the desired state of DBaaSConnection
-type DBaaSConnectionSpec struct {
+// DBaaSInventorySpec defines the desired state of DBaaSInventory
+type DBaaSInventorySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go to remove/update
+	// Foo is an example field of DBaaSInventory. Edit dbaasinventory_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// DBaaSConnectionStatus defines the observed state of DBaaSConnection
-type DBaaSConnectionStatus struct {
+// DBaaSInventoryStatus defines the observed state of DBaaSInventory
+type DBaaSInventoryStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -41,24 +41,24 @@ type DBaaSConnectionStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// DBaaSConnection is the Schema for the dbaasconnections API
-type DBaaSConnection struct {
+// DBaaSInventory is the Schema for the dbaasinventories API
+type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DBaaSConnectionSpec   `json:"spec,omitempty"`
-	Status DBaaSConnectionStatus `json:"status,omitempty"`
+	Spec   DBaaSInventorySpec   `json:"spec,omitempty"`
+	Status DBaaSInventoryStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// DBaaSConnectionList contains a list of DBaaSConnection
-type DBaaSConnectionList struct {
+// DBaaSInventoryList contains a list of DBaaSInventory
+type DBaaSInventoryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []DBaaSConnection `json:"items"`
+	Items           []DBaaSInventory `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&DBaaSConnection{}, &DBaaSConnectionList{})
+	SchemeBuilder.Register(&DBaaSInventory{}, &DBaaSInventoryList{})
 }

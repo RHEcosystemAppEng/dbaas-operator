@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: e4addb06.dbaas.redhat.com
+  resourceName: e4addb06.redhat.com

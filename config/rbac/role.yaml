@@ -7,71 +7,6 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - atlas.mongodb.com
-  resources:
-  - atlasdatabaseusers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - atlas.mongodb.com
-  resources:
-  - atlasprojects
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - atlas.mongodb.com
-  resources:
-  - atlasservices
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - atlas.mongodb.com
-  resources:
-  - atlasservices/status
-  verbs:
-  - get
-- apiGroups:
   - dbaas.redhat.com
   resources:
   - dbaasconnections
@@ -100,7 +35,7 @@ rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaasservices
+  - dbaasinventories
   verbs:
   - create
   - delete
@@ -112,13 +47,13 @@ rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaasservices/finalizers
+  - dbaasinventories/finalizers
   verbs:
   - update
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaasservices/status
+  - dbaasinventories/status
   verbs:
   - get
   - patch
