@@ -14,12 +14,12 @@ spec:
   customresourcedefinitions:
     owned:
     - description: DBaaSConnection is the Schema for the dbaasconnections API
-      displayName: DBaaS Connection
+      displayName: DBaa SConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1
     - description: DBaaSInventory is the Schema for the dbaasinventory API
-      displayName: DBaaS Inventory
+      displayName: DBaa SInventory
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1

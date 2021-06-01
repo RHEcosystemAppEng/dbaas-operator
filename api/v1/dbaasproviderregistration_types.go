@@ -18,7 +18,6 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -35,10 +34,13 @@ type DBaaSProviderRegistrationSpec struct {
 	Provider DatabaseProvider `json:"provider"`
 
 	// The name of the inventory CRD defined by the provider
-	InventoryCRD schema.GroupVersionKind `json:"inventoryCRD"`
+	InventoryKind string `json:"inventoryKind"`
+
+	// The name of the inventory CRD defined by the provider
+	AuthenticationFields []string `json:"authenticationFields"`
 
 	// The name of the connection CRD defined by the provider
-	ConnectionCRD schema.GroupVersionKind `json:"connectionCRD"`
+	ConnectionKind string `json:"connectionKind"`
 }
 
 type DatabaseProvider struct {

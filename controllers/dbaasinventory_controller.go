@@ -20,7 +20,6 @@ import (
 	"context"
 	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -35,10 +34,9 @@ type DBaaSInventoryReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=*,resources=*,verbs=create
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasinventories,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasinventories/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasinventories/finalizers,verbs=update
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -71,7 +69,11 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	logger.Info("Found DBaaS provider", "provider", provider)
 	providerInventory := &unstructured.Unstructured{}
-	providerInventory.SetGroupVersionKind(provider.Spec.InventoryCRD)
+	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   inventory.GroupVersionKind().Group,
+		Version: inventory.GroupVersionKind().Version,
+		Kind:    provider.Spec.InventoryKind,
+	})
 	providerInventory.SetNamespace(inventory.GetNamespace())
 	providerInventory.SetName(inventory.GetName())
 	providerInventory.UnstructuredContent()["spec"] = inventory.Spec.DeepCopy()
@@ -92,7 +94,7 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *DBaaSInventoryReconciler) getDBaaSProvider(requestedProvider v1.DatabaseProvider) (v1.DBaaSProviderRegistration, error) {
-	providers := r.getDBaaSProviders()
+	providers := r.getDBaaSProviders(r.Client, r.Scheme)
 	for _, provider := range providers.Items {
 		if provider.Spec.Provider == requestedProvider {
 			return provider, nil
@@ -103,31 +105,4 @@ func (r *DBaaSInventoryReconciler) getDBaaSProvider(requestedProvider v1.Databas
 		Group:    notFound.GroupVersionKind().Group,
 		Resource: notFound.GroupVersionKind().Kind,
 	}, requestedProvider.Name)
-}
-
-func (r *DBaaSInventoryReconciler) getDBaaSProviders() v1.DBaaSProviderRegistrationList {
-	return v1.DBaaSProviderRegistrationList{
-		Items: []v1.DBaaSProviderRegistration{
-			{
-				TypeMeta: metav1.TypeMeta{},
-				Spec: v1.DBaaSProviderRegistrationSpec{
-					TypeMeta: metav1.TypeMeta{},
-					ListMeta: metav1.ListMeta{},
-					Provider: v1.DatabaseProvider{
-						Name: "MongoDB Atlas",
-					},
-					InventoryCRD: schema.GroupVersionKind{
-						Group:   "atlas.mongodb.com",
-						Version: "v1",
-						Kind:    "AtlasAccount",
-					},
-					ConnectionCRD: schema.GroupVersionKind{
-						Group:   "atlas.mongodb.com",
-						Version: "v1",
-						Kind:    "DBaaSConnection",
-					},
-				},
-			},
-		},
-	}
 }
