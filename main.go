@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	dbaasv1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
+	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -45,7 +45,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(dbaasv1.AddToScheme(scheme))
+	utilruntime.Must(dbaasv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

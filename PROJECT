@@ -14,8 +14,8 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSConnection
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
-  version: v1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
@@ -23,6 +23,6 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSInventory
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
-  version: v1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

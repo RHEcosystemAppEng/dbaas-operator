@@ -16,7 +16,7 @@ spec:
     singular: dbaasconnection
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DBaaSConnection is the Schema for the dbaasconnections API

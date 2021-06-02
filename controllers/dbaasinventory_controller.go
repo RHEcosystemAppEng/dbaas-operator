@@ -18,7 +18,7 @@ package controllers
 
 import (
 	"context"
-	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -46,7 +46,7 @@ type DBaaSInventoryReconciler struct {
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx, "dbaasservice", req.NamespacedName)
 
-	var inventory v1.DBaaSInventory
+	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -60,7 +60,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	provider, err := r.getDBaaSProvider(inventory.Spec.Provider)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Spec.Provider)
+			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
 			return ctrl.Result{}, err
 		}
 		logger.Error(err, "Error reading configured DBaaS providers")
@@ -72,7 +72,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   inventory.GroupVersionKind().Group,
 		Version: inventory.GroupVersionKind().Version,
-		Kind:    provider.Spec.InventoryKind,
+		Kind:    provider.InventoryKind,
 	})
 	providerInventory.SetNamespace(inventory.GetNamespace())
 	providerInventory.SetName(inventory.GetName())
@@ -89,20 +89,20 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1.DBaaSInventory{}).
+		For(&v1alpha1.DBaaSInventory{}).
 		Complete(r)
 }
 
-func (r *DBaaSInventoryReconciler) getDBaaSProvider(requestedProvider v1.DatabaseProvider) (v1.DBaaSProviderRegistration, error) {
+func (r *DBaaSInventoryReconciler) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider) (v1alpha1.DBaaSProvider, error) {
 	providers := r.getDBaaSProviders(r.Client, r.Scheme)
 	for _, provider := range providers.Items {
-		if provider.Spec.Provider == requestedProvider {
+		if provider.Provider == requestedProvider {
 			return provider, nil
 		}
 	}
-	notFound := v1.DBaaSProviderRegistration{}
+	notFound := v1alpha1.DBaaSProvider{}
 	return notFound, errors.NewNotFound(schema.GroupResource{
-		Group:    notFound.GroupVersionKind().Group,
-		Resource: notFound.GroupVersionKind().Kind,
+		Group:    schema.GroupVersionKind{}.Group,
+		Resource: requestedProvider.Name,
 	}, requestedProvider.Name)
 }
