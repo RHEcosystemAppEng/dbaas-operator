@@ -5,12 +5,24 @@ metadata:
     alm-examples: '[]'
     capabilities: Basic Install
     categories: Database
-    description: Import provider cloud instances for easy coupling with developer applications.
+    description: Import provider cloud instances for easy coupling with developer
+      applications.
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
-  customresourcedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: DBaaSConnection is the Schema for the dbaasconnections API
+      displayName: DBaaS Connection
+      kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSInventory is the Schema for the dbaasinventory API
+      displayName: DBaaS Inventory
+      kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
+      version: v1alpha1
   description: Import provider cloud instances for easy coupling with developer applications.
   displayName: Database-as-a-Service Operator
   icon:
@@ -27,13 +39,16 @@ spec:
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
-  - supported: false
+  - supported: true
     type: AllNamespaces
   keywords:
   - dbaas
   links:
   - name: Database-as-a-Service Operator
     url: https://dbaas-operator.domain
+  maintainers:
+  - email: jary@redhat.com
+    name: Jeremy Ary
   maturity: alpha
   provider:
     name: Red Hat

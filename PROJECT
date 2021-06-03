@@ -1,4 +1,4 @@
-domain: dbaas.redhat.com
+domain: redhat.com
 layout:
 - go.kubebuilder.io/v3
 plugins:
@@ -11,18 +11,18 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: dbaas.redhat.com
+  domain: redhat.com
   group: dbaas
-  kind: DBaaSService
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
-  version: v1
+  kind: DBaaSConnection
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: dbaas.redhat.com
+  domain: redhat.com
   group: dbaas
-  kind: DBaaSConnection
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1
-  version: v1
+  kind: DBaaSInventory
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,32 +22,6 @@ import (
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// DBaaSConnectionSpec defines the desired state of DBaaSConnection
-type DBaaSConnectionSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Type will be used by ServiceBindingConverter to indicate the type of connection desired (WIP)
-	Type string `json:"type"`
-
-	// Provider will be used by ServiceBindingConverter to indicate the provider type for connection desired (WIP)
-	Provider string `json:"provider"`
-
-	// Foo is an example field of DBaaSConnection. Edit dbaasconnection_types.go to remove/update
-	Cluster *DBaaSCluster `json:"cluster"`
-}
-
-// DBaaSConnectionStatus defines the observed state of DBaaSConnection
-type DBaaSConnectionStatus struct {
-
-	// DBConfigMap is the name of the ConfigMap containing the connection info
-	DBConfigMap string `json:"dbConfigMap"`
-
-	//+kubebuilder:validation:Required
-	// DBCredentials is the name of the Secret containing the database credentials
-	DBCredentials string `json:"dbCredentials"`
-}
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status

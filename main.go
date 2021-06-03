@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	atlas "github.com/mongodb/mongodb-atlas-kubernetes/pkg/api/v1"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -34,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	dbaasv1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1"
+	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -47,9 +45,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(dbaasv1.AddToScheme(scheme))
-	utilruntime.Must(atlas.AddToScheme(scheme))
-
+	utilruntime.Must(dbaasv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -82,7 +78,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "e4addb06.dbaas.redhat.com",
+		LeaderElectionID:       "e4addb06.redhat.com",
 		Namespace:              watchNamespace, // namespaced-scope when the value is not an empty string
 	})
 	if err != nil {
@@ -90,20 +86,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DBaaSServiceReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("DBaaSService"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSService")
-		os.Exit(1)
-	}
 	if err = (&controllers.DBaaSConnectionReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("DBaaSConnection"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
+		os.Exit(1)
+	}
+	if err = (&controllers.DBaaSInventoryReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

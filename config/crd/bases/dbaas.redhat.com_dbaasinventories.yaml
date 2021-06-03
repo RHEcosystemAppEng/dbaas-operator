@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dbaasconnections.dbaas.redhat.com
+  name: dbaasinventories.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSConnection
-    listKind: DBaaSConnectionList
-    plural: dbaasconnections
-    singular: dbaasconnection
+    kind: DBaaSInventory
+    listKind: DBaaSInventoryList
+    plural: dbaasinventories
+    singular: dbaasinventory
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSConnection is the Schema for the dbaasconnections API
+        description: DBaaSInventory is the Schema for the dbaasinventory API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,26 +34,35 @@ spec:
           metadata:
             type: object
           spec:
-            description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
+            description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
-              instanceID:
-                description: The ID of the instance to connect to, as seen in the
-                  Status of the referenced DBaaSInventory
-                type: string
-              inventory:
-                description: A reference to the relevant DBaaSInventory CR
+              credentialsRef:
+                description: The secret storing the vendor-specific connection credentials
+                  to use with the API endpoint. The secret may be placed in a separate
+                  namespace to control access.
                 properties:
                   name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    description: The name for object of known type
+                    type: string
+                  namespace:
+                    description: The namespace where object of known type is store
                     type: string
                 type: object
+              provider:
+                description: Provider is the name of the database provider that we
+                  wish to connect with
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
             required:
-            - instanceID
-            - inventory
+            - credentialsRef
+            - provider
             type: object
           status:
-            description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
+            description: DBaaSInventoryStatus defines the observed state of DBaaSInventory
             properties:
               conditions:
                 items:
@@ -124,25 +133,31 @@ spec:
                   - type
                   type: object
                 type: array
-              connectionInfo:
-                additionalProperties:
-                  type: string
-                description: Any other provider-specific information related to this
-                  connection
-                type: object
-              connectionString:
-                description: The connection string for this instance
+              instances:
+                description: A list of instances returned from querying the DB provider
+                items:
+                  properties:
+                    extraInfo:
+                      additionalProperties:
+                        type: string
+                      description: Any other provider-specific information related
+                        to this instance
+                      type: object
+                    instanceID:
+                      description: The ID for this instance in the database service
+                      type: string
+                    name:
+                      description: The name of this instance in the database service
+                      type: string
+                  required:
+                  - instanceID
+                  type: object
+                type: array
+              type:
+                description: E.g., MongoDB, Postgres
                 type: string
-              credentialsRef:
-                description: Secret holding username and password
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
             required:
-            - credentialsRef
+            - type
             type: object
         type: object
     served: true

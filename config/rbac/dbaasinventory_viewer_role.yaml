@@ -1,24 +1,20 @@
-# permissions for end users to edit dbaasservices.
+# permissions for end users to view dbaasinventories.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: dbaasservice-editor-role
+  name: dbaasinventory-viewer-role
 rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaasservices
+  - dbaasinventories
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaasservices/status
+  - dbaasinventories/status
   verbs:
   - get
