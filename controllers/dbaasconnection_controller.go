@@ -18,13 +18,16 @@ package controllers
 
 import (
 	"context"
-
+	"fmt"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	v1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -39,17 +42,60 @@ type DBaaSConnectionReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the DBaaSConnection object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx, "dbaasconnection", req.NamespacedName)
 
-	// your logic here
+	var connection v1alpha1.DBaaSConnection
+	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
+		if errors.IsNotFound(err) {
+			// CR deleted since request queued, child objects getting GC'd, no requeue
+			logger.Info("DBaaSConnection resource not found, has been deleted")
+			return ctrl.Result{}, nil
+		}
+		logger.Error(err, "Error fetching DBaaSConnection for reconcile")
+		return ctrl.Result{}, err
+	}
+
+	if connection.Spec.InventoryRef == nil {
+		err := fmt.Errorf("inventory reference is missing for DBaaS connection %s", connection.Name)
+		logger.Error(err, "Invalid DBaaSConnection for reconcile")
+		return ctrl.Result{}, err
+	}
+
+	var inventory v1alpha1.DBaaSInventory
+	if err := r.Get(ctx, types.NamespacedName{Namespace: connection.Namespace, Name: connection.Spec.InventoryRef.Name}, &inventory); err != nil {
+		logger.Error(err, "Error fetching DBaaSInventory resource reference for DBaaSConnection reconcile", "Inventory", connection.Spec.InventoryRef.Name)
+		return ctrl.Result{}, err
+	}
+
+	provider, err := getDBaaSProvider(inventory.Spec.Provider, r.Client, ctx, logger)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
+			return ctrl.Result{}, err
+		}
+		logger.Error(err, "Error reading configured DBaaS providers")
+		return ctrl.Result{}, err
+	}
+
+	logger.Info("Found DBaaS provider", "provider", provider)
+	providerConnection := &unstructured.Unstructured{}
+	providerConnection.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   connection.GroupVersionKind().Group,
+		Version: connection.GroupVersionKind().Version,
+		Kind:    provider.ConnectionKind,
+	})
+	providerConnection.SetNamespace(connection.GetNamespace())
+	providerConnection.SetName(connection.GetName())
+	providerConnection.UnstructuredContent()["spec"] = connection.Spec.DeepCopy()
+	logger.Info("Connection resource created as ", "providerConnection", providerConnection)
+	if err = r.Create(ctx, providerConnection); err != nil {
+		logger.Error(err, "Error creating a provider connection", "providerConnection", providerConnection)
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

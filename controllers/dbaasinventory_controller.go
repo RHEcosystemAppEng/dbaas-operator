@@ -44,7 +44,7 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx, "dbaasservice", req.NamespacedName)
+	logger := log.FromContext(ctx, "dbaasinventory", req.NamespacedName)
 
 	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
@@ -57,7 +57,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	provider, err := r.getDBaaSProvider(inventory.Spec.Provider)
+	provider, err := getDBaaSProvider(inventory.Spec.Provider, r.Client, ctx, logger)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
@@ -91,18 +91,4 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInventory{}).
 		Complete(r)
-}
-
-func (r *DBaaSInventoryReconciler) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider) (v1alpha1.DBaaSProvider, error) {
-	providers := r.getDBaaSProviders(r.Client, r.Scheme)
-	for _, provider := range providers.Items {
-		if provider.Provider == requestedProvider {
-			return provider, nil
-		}
-	}
-	notFound := v1alpha1.DBaaSProvider{}
-	return notFound, errors.NewNotFound(schema.GroupResource{
-		Group:    schema.GroupVersionKind{}.Group,
-		Resource: requestedProvider.Name,
-	}, requestedProvider.Name)
 }
