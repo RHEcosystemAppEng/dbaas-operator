@@ -18,14 +18,18 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"time"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
@@ -57,7 +61,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	provider, err := getDBaaSProvider(inventory.Spec.Provider, r.Client, ctx, logger)
+	provider, err := getDBaaSProvider(inventory.Spec.Provider, req.Namespace, r.Client, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
@@ -66,8 +70,54 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		logger.Error(err, "Error reading configured DBaaS providers")
 		return ctrl.Result{}, err
 	}
-
 	logger.Info("Found DBaaS provider", "provider", provider)
+
+	if providerInventory, err := r.getProviderInventory(inventory, provider, ctx); err != nil {
+		return ctrl.Result{}, err
+	} else if providerInventory == nil {
+		if err = r.createProviderInventory(inventory, provider, ctx); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	} else if !reflect.DeepEqual(providerInventory.UnstructuredContent()["spec"], inventory.Spec) {
+		if err = r.updateProviderInventory(inventory, provider, ctx); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+
+	} else {
+		if providerInventoryStatus, exists := providerInventory.UnstructuredContent()["status"]; exists {
+			if status, ok := providerInventoryStatus.(v1alpha1.DBaaSInventoryStatus); ok {
+				// TODO condition update
+
+				inventory.Status.Type = status.Type
+				inventory.Status.Instances = status.Instances
+				if err := r.Status().Update(ctx, &inventory); err != nil {
+					logger.Error(err, "Error updating DBaaSInventory status")
+					return ctrl.Result{}, err
+				}
+
+				return ctrl.Result{RequeueAfter: time.Minute}, nil
+			}
+		}
+
+		err = fmt.Errorf("failed to parse the status of the provider inventory %v", providerInventory)
+		logger.Error(err, "Error parsing the status of the provider inventory CR")
+		return ctrl.Result{}, err
+	}
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1alpha1.DBaaSInventory{}).
+		Complete(r)
+}
+
+func (r *DBaaSInventoryReconciler) createProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
+	ctx context.Context) error {
+	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
+
 	providerInventory := &unstructured.Unstructured{}
 	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   inventory.GroupVersionKind().Group,
@@ -77,18 +127,54 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	providerInventory.SetNamespace(inventory.GetNamespace())
 	providerInventory.SetName(inventory.GetName())
 	providerInventory.UnstructuredContent()["spec"] = inventory.Spec.DeepCopy()
-	logger.Info("Inventory resource created as ", "providerInventory", providerInventory)
-	if err = r.Create(ctx, providerInventory); err != nil {
+	if err := r.Create(ctx, providerInventory); err != nil {
 		logger.Error(err, "Error creating a provider inventory", "providerInventory", providerInventory)
-		return ctrl.Result{}, err
+		return err
 	}
-
-	return ctrl.Result{}, nil
+	logger.Info("Inventory resource created as ", "providerInventory", providerInventory)
+	return nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSInventory{}).
-		Complete(r)
+func (r *DBaaSInventoryReconciler) updateProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
+	ctx context.Context) error {
+	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
+
+	providerInventory := &unstructured.Unstructured{}
+	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   inventory.GroupVersionKind().Group,
+		Version: inventory.GroupVersionKind().Version,
+		Kind:    provider.InventoryKind,
+	})
+	providerInventory.SetNamespace(inventory.GetNamespace())
+	providerInventory.SetName(inventory.GetName())
+	providerInventory.UnstructuredContent()["spec"] = inventory.Spec.DeepCopy()
+	if err := r.Update(ctx, providerInventory); err != nil {
+		logger.Error(err, "Error updating a provider inventory", "providerInventory", providerInventory)
+		return err
+	}
+	logger.Info("Inventory resource updated as ", "providerInventory", providerInventory)
+	return nil
+}
+
+func (r *DBaaSInventoryReconciler) getProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
+	ctx context.Context) (*unstructured.Unstructured, error) {
+	gvk := schema.GroupVersionKind{
+		Group:   inventory.GroupVersionKind().Group,
+		Version: inventory.GroupVersionKind().Version,
+		Kind:    provider.InventoryKind,
+	}
+
+	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name}, "GVK", gvk)
+
+	var providerInventory = unstructured.Unstructured{}
+	providerInventory.SetGroupVersionKind(gvk)
+	if err := r.Get(ctx, client.ObjectKeyFromObject(&inventory), &providerInventory); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Provider inventory resource not found", "providerInventory", inventory.GetName())
+			return nil, nil
+		}
+		logger.Error(err, "Error finding the provider inventory", "providerInventory", inventory.GetName())
+		return nil, err
+	}
+	return &providerInventory, nil
 }

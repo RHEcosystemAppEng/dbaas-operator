@@ -36,9 +36,9 @@ type DBaaSConnectionReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasconnections,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasconnections/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasconnections/finalizers,verbs=update
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -71,7 +71,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	provider, err := getDBaaSProvider(inventory.Spec.Provider, r.Client, ctx, logger)
+	provider, err := getDBaaSProvider(inventory.Spec.Provider, req.Namespace, r.Client, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
