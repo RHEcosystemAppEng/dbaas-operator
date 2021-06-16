@@ -114,7 +114,7 @@ type DBaaSConnectionStatus struct {
 	ConnectionString string `json:"connectionString,omitempty"`
 
 	// Secret holding username and password
-	CredentialsRef *corev1.LocalObjectReference `json:"credentialsRef"`
+	CredentialsRef *corev1.LocalObjectReference `json:"credentialsRef,omitempty"`
 
 	// Any other provider-specific information related to this connection
 	ConnectionInfo map[string]string `json:"connectionInfo,omitempty"`
