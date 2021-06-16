@@ -21,8 +21,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -105,7 +105,7 @@ func (in *DBaaSConnectionSpec) DeepCopyInto(out *DBaaSConnectionSpec) {
 	*out = *in
 	if in.InventoryRef != nil {
 		in, out := &in.InventoryRef, &out.InventoryRef
-		*out = new(v1.LocalObjectReference)
+		*out = new(corev1.LocalObjectReference)
 		**out = **in
 	}
 }
@@ -125,14 +125,14 @@ func (in *DBaaSConnectionStatus) DeepCopyInto(out *DBaaSConnectionStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]metav1.Condition, len(*in))
+		*out = make([]v1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.CredentialsRef != nil {
 		in, out := &in.CredentialsRef, &out.CredentialsRef
-		*out = new(v1.LocalObjectReference)
+		*out = new(corev1.LocalObjectReference)
 		**out = **in
 	}
 	if in.ConnectionInfo != nil {
@@ -238,7 +238,7 @@ func (in *DBaaSInventoryStatus) DeepCopyInto(out *DBaaSInventoryStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]metav1.Condition, len(*in))
+		*out = make([]v1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
