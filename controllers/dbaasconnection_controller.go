@@ -25,9 +25,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"time"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -80,8 +82,51 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Error reading configured DBaaS providers")
 		return ctrl.Result{}, err
 	}
-
 	logger.Info("Found DBaaS provider", "provider", provider)
+
+	if providerConnection, err := r.getProviderConnection(connection, provider, ctx); err != nil {
+		return ctrl.Result{}, err
+	} else if providerConnection == nil {
+		if err = r.createProviderConnection(connection, provider, ctx); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{RequeueAfter: time.Minute}, nil
+	} else if !reflect.DeepEqual(providerConnection.UnstructuredContent()["spec"], connection.Spec) {
+		if err = r.updateProviderConnection(connection, provider, ctx); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	} else {
+		if providerConnectionStatus, exists := providerConnection.UnstructuredContent()["status"]; exists {
+			if status, ok := providerConnectionStatus.(v1alpha1.DBaaSConnectionStatus); ok {
+				connection.Status.Conditions = status.Conditions
+				connection.Status.ConnectionString = status.ConnectionString
+				connection.Status.CredentialsRef = status.CredentialsRef
+				connection.Status.ConnectionInfo = status.ConnectionInfo
+				if err := r.Status().Update(ctx, &connection); err != nil {
+					logger.Error(err, "Error updating DBaaSConnection status")
+					return ctrl.Result{}, err
+				}
+				return ctrl.Result{RequeueAfter: time.Minute}, nil
+			}
+		}
+
+		err = fmt.Errorf("failed to parse the status of the provider connection %v", providerConnection)
+		logger.Error(err, "Error parsing the status of the provider connection CR")
+		return ctrl.Result{}, err
+	}
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1alpha1.DBaaSConnection{}).
+		Complete(r)
+}
+
+func (r *DBaaSConnectionReconciler) createProviderConnection(connection v1alpha1.DBaaSConnection, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
+	logger := log.FromContext(ctx, "dbaasconnection", types.NamespacedName{Namespace: connection.Namespace, Name: connection.Name})
+
 	providerConnection := &unstructured.Unstructured{}
 	providerConnection.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   connection.GroupVersionKind().Group,
@@ -91,18 +136,52 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	providerConnection.SetNamespace(connection.GetNamespace())
 	providerConnection.SetName(connection.GetName())
 	providerConnection.UnstructuredContent()["spec"] = connection.Spec.DeepCopy()
-	logger.Info("Connection resource created as ", "providerConnection", providerConnection)
-	if err = r.Create(ctx, providerConnection); err != nil {
+	if err := r.Create(ctx, providerConnection); err != nil {
 		logger.Error(err, "Error creating a provider connection", "providerConnection", providerConnection)
-		return ctrl.Result{}, err
+		return err
 	}
-
-	return ctrl.Result{}, nil
+	logger.Info("Provider connection resource created", "providerConnection", providerConnection)
+	return nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSConnection{}).
-		Complete(r)
+func (r *DBaaSConnectionReconciler) updateProviderConnection(connection v1alpha1.DBaaSConnection, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
+	logger := log.FromContext(ctx, "dbaasconnection", types.NamespacedName{Namespace: connection.Namespace, Name: connection.Name})
+
+	providerConnection := &unstructured.Unstructured{}
+	providerConnection.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   connection.GroupVersionKind().Group,
+		Version: connection.GroupVersionKind().Version,
+		Kind:    provider.ConnectionKind,
+	})
+	providerConnection.SetNamespace(connection.GetNamespace())
+	providerConnection.SetName(connection.GetName())
+	providerConnection.UnstructuredContent()["spec"] = connection.Spec.DeepCopy()
+	if err := r.Update(ctx, providerConnection); err != nil {
+		logger.Error(err, "Error updating a provider connection", "providerConnection", providerConnection)
+		return err
+	}
+	logger.Info("Provider connection resource updated as ", "providerConnection", providerConnection)
+	return nil
+}
+
+func (r *DBaaSConnectionReconciler) getProviderConnection(connection v1alpha1.DBaaSConnection, provider v1alpha1.DBaaSProvider, ctx context.Context) (*unstructured.Unstructured, error) {
+	gvk := schema.GroupVersionKind{
+		Group:   connection.GroupVersionKind().Group,
+		Version: connection.GroupVersionKind().Version,
+		Kind:    provider.ConnectionKind,
+	}
+
+	logger := log.FromContext(ctx, "dbaasconnection", types.NamespacedName{Namespace: connection.Namespace, Name: connection.Name}, "GVK", gvk)
+
+	var providerConnection = unstructured.Unstructured{}
+	providerConnection.SetGroupVersionKind(gvk)
+	if err := r.Get(ctx, client.ObjectKeyFromObject(&connection), &providerConnection); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Provider connection resource not found", "providerConnection", connection.GetName())
+			return nil, nil
+		}
+		logger.Error(err, "Error finding the provider connection", "providerConnection", connection.GetName())
+		return nil, err
+	}
+	return &providerConnection, nil
 }

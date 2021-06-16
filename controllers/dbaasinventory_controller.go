@@ -84,19 +84,16 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
-
 	} else {
 		if providerInventoryStatus, exists := providerInventory.UnstructuredContent()["status"]; exists {
 			if status, ok := providerInventoryStatus.(v1alpha1.DBaaSInventoryStatus); ok {
-				// TODO condition update
-
+				inventory.Status.Conditions = status.Conditions
 				inventory.Status.Type = status.Type
 				inventory.Status.Instances = status.Instances
 				if err := r.Status().Update(ctx, &inventory); err != nil {
 					logger.Error(err, "Error updating DBaaSInventory status")
 					return ctrl.Result{}, err
 				}
-
 				return ctrl.Result{RequeueAfter: time.Minute}, nil
 			}
 		}
@@ -114,8 +111,7 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *DBaaSInventoryReconciler) createProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
-	ctx context.Context) error {
+func (r *DBaaSInventoryReconciler) createProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
 	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
 
 	providerInventory := &unstructured.Unstructured{}
@@ -131,12 +127,11 @@ func (r *DBaaSInventoryReconciler) createProviderInventory(inventory v1alpha1.DB
 		logger.Error(err, "Error creating a provider inventory", "providerInventory", providerInventory)
 		return err
 	}
-	logger.Info("Inventory resource created as ", "providerInventory", providerInventory)
+	logger.Info("Provider inventory resource created", "providerInventory", providerInventory)
 	return nil
 }
 
-func (r *DBaaSInventoryReconciler) updateProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
-	ctx context.Context) error {
+func (r *DBaaSInventoryReconciler) updateProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
 	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
 
 	providerInventory := &unstructured.Unstructured{}
@@ -152,12 +147,11 @@ func (r *DBaaSInventoryReconciler) updateProviderInventory(inventory v1alpha1.DB
 		logger.Error(err, "Error updating a provider inventory", "providerInventory", providerInventory)
 		return err
 	}
-	logger.Info("Inventory resource updated as ", "providerInventory", providerInventory)
+	logger.Info("Provider inventory resource updated", "providerInventory", providerInventory)
 	return nil
 }
 
-func (r *DBaaSInventoryReconciler) getProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider,
-	ctx context.Context) (*unstructured.Unstructured, error) {
+func (r *DBaaSInventoryReconciler) getProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) (*unstructured.Unstructured, error) {
 	gvk := schema.GroupVersionKind{
 		Group:   inventory.GroupVersionKind().Group,
 		Version: inventory.GroupVersionKind().Version,
