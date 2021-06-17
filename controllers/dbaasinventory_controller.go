@@ -21,15 +21,11 @@ import (
 	"fmt"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"time"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
@@ -41,6 +37,7 @@ type DBaaSInventoryReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
+//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -72,103 +69,64 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 	logger.Info("Found DBaaS provider", "provider", provider)
 
-	if providerInventory, err := r.getProviderInventory(inventory, provider, ctx); err != nil {
+	if providerInventory, err := getProviderCR(&inventory, provider.InventoryKind, r.Client, ctx); err != nil {
 		return ctrl.Result{}, err
 	} else if providerInventory == nil {
-		if err = r.createProviderInventory(inventory, provider, ctx); err != nil {
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{RequeueAfter: time.Minute}, nil
-	} else if !reflect.DeepEqual(providerInventory.UnstructuredContent()["spec"], inventory.Spec) {
-		if err = r.updateProviderInventory(inventory, provider, ctx); err != nil {
+		if err = createProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), r.Client, r.Scheme, ctx); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	} else {
 		if providerInventoryStatus, exists := providerInventory.UnstructuredContent()["status"]; exists {
-			if status, ok := providerInventoryStatus.(v1alpha1.DBaaSInventoryStatus); ok {
-				inventory.Status.Conditions = status.Conditions
-				inventory.Status.Type = status.Type
-				inventory.Status.Instances = status.Instances
+			var status v1alpha1.DBaaSInventoryStatus
+			if err := decode(providerInventoryStatus, &status); err != nil {
+				logger.Error(err, "Error parsing the status of the provider inventory CR", "ProviderInventoryStatus", providerInventoryStatus)
+				return ctrl.Result{}, err
+			} else {
+				inventory.Status = *status.DeepCopy()
 				if err := r.Status().Update(ctx, &inventory); err != nil {
 					logger.Error(err, "Error updating DBaaSInventory status")
 					return ctrl.Result{}, err
 				}
-				return ctrl.Result{RequeueAfter: time.Minute}, nil
+				logger.Info("DBaaSInventory status updated")
 			}
+		} else {
+			logger.Info("Provider inventory resource status not found", "providerInventory", providerInventory)
 		}
 
-		err = fmt.Errorf("failed to parse the status of the provider inventory %v", providerInventory)
-		logger.Error(err, "Error parsing the status of the provider inventory CR")
-		return ctrl.Result{}, err
+		if providerInventorySpec, exists := providerInventory.UnstructuredContent()["spec"]; exists {
+			var spec v1alpha1.DBaaSInventorySpec
+			if err := decode(providerInventorySpec, &spec); err != nil {
+				logger.Error(err, "Error parsing the spec of the provider inventory CR", "ProviderInventorySpec", providerInventorySpec)
+				return ctrl.Result{}, err
+			} else {
+				if !reflect.DeepEqual(spec, inventory.Spec.DBaaSInventorySpec) {
+					if err = updateProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), r.Client, r.Scheme, ctx); err != nil {
+						return ctrl.Result{}, err
+					}
+					logger.Info("Provider inventory spec updated")
+				}
+			}
+		} else {
+			err = fmt.Errorf("failed to get the spec of the provider inventory %v", providerInventory)
+			logger.Error(err, "Error getting the spec of the provider inventory CR")
+			return ctrl.Result{}, err
+		}
 	}
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSInventory{}).
-		Complete(r)
-}
-
-func (r *DBaaSInventoryReconciler) createProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
-	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
-
-	providerInventory := &unstructured.Unstructured{}
-	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   inventory.GroupVersionKind().Group,
-		Version: inventory.GroupVersionKind().Version,
-		Kind:    provider.InventoryKind,
-	})
-	providerInventory.SetNamespace(inventory.GetNamespace())
-	providerInventory.SetName(inventory.GetName())
-	providerInventory.UnstructuredContent()["spec"] = inventory.Spec.DeepCopy()
-	if err := r.Create(ctx, providerInventory); err != nil {
-		logger.Error(err, "Error creating a provider inventory", "providerInventory", providerInventory)
+func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager, namespace string) error {
+	owned, err := getDBaaSProviderInventoryObjects(namespace)
+	if err != nil {
 		return err
 	}
-	logger.Info("Provider inventory resource created", "providerInventory", providerInventory)
-	return nil
-}
 
-func (r *DBaaSInventoryReconciler) updateProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) error {
-	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name})
-
-	providerInventory := &unstructured.Unstructured{}
-	providerInventory.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   inventory.GroupVersionKind().Group,
-		Version: inventory.GroupVersionKind().Version,
-		Kind:    provider.InventoryKind,
-	})
-	providerInventory.SetNamespace(inventory.GetNamespace())
-	providerInventory.SetName(inventory.GetName())
-	providerInventory.UnstructuredContent()["spec"] = inventory.Spec.DeepCopy()
-	if err := r.Update(ctx, providerInventory); err != nil {
-		logger.Error(err, "Error updating a provider inventory", "providerInventory", providerInventory)
-		return err
+	builder := ctrl.NewControllerManagedBy(mgr)
+	builder = builder.For(&v1alpha1.DBaaSInventory{})
+	for _, o := range owned {
+		builder = builder.Owns(&o)
 	}
-	logger.Info("Provider inventory resource updated", "providerInventory", providerInventory)
-	return nil
-}
-
-func (r *DBaaSInventoryReconciler) getProviderInventory(inventory v1alpha1.DBaaSInventory, provider v1alpha1.DBaaSProvider, ctx context.Context) (*unstructured.Unstructured, error) {
-	gvk := schema.GroupVersionKind{
-		Group:   inventory.GroupVersionKind().Group,
-		Version: inventory.GroupVersionKind().Version,
-		Kind:    provider.InventoryKind,
-	}
-
-	logger := log.FromContext(ctx, "dbaasinventory", types.NamespacedName{Namespace: inventory.Namespace, Name: inventory.Name}, "GVK", gvk)
-
-	var providerInventory = unstructured.Unstructured{}
-	providerInventory.SetGroupVersionKind(gvk)
-	if err := r.Get(ctx, client.ObjectKeyFromObject(&inventory), &providerInventory); err != nil {
-		if errors.IsNotFound(err) {
-			logger.Info("Provider inventory resource not found", "providerInventory", inventory.GetName())
-			return nil, nil
-		}
-		logger.Error(err, "Error finding the provider inventory", "providerInventory", inventory.GetName())
-		return nil, err
-	}
-	return &providerInventory, nil
+	return builder.Complete(r)
 }
