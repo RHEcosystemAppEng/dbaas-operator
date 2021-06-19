@@ -12,13 +12,11 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 )
 
@@ -36,11 +34,20 @@ const (
 	operatorVersion = "v1alpha1"
 )
 
-func getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, namespace string, client ctrlclient.Client, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
-	if cmList, err := getConfigMapListByController(namespace, client, ctx); err != nil {
+type DBaaSReconciler interface {
+	getClient() ctrlclient.Client
+	getScheme() *runtime.Scheme
+}
+
+type DBaaSProvider struct {
+	reconciler DBaaSReconciler
+}
+
+func (p *DBaaSProvider) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, namespace string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
+	if cmList, err := p.getConfigMapListByController(namespace, ctx); err != nil {
 		return v1alpha1.DBaaSProvider{}, err
 	} else {
-		if providers, err := getDBaaSProviders(cmList); err != nil {
+		if providers, err := p.getDBaaSProviders(cmList); err != nil {
 			return v1alpha1.DBaaSProvider{}, err
 		} else {
 			for _, provider := range providers.Items {
@@ -49,42 +56,43 @@ func getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, namespace str
 				}
 			}
 			return v1alpha1.DBaaSProvider{}, apierrors.NewNotFound(schema.GroupResource{
+				Group:    operatorGroup,
 				Resource: strings.ToLower(requestedProvider.Name),
 			}, requestedProvider.Name)
 		}
 	}
 }
 
-func getDBaaSProviders(cmList *v1.ConfigMapList) (*v1alpha1.DBaaSProviderList, error) {
+func (p *DBaaSProvider) getDBaaSProviders(cmList v1.ConfigMapList) (v1alpha1.DBaaSProviderList, error) {
 	providers := make([]v1alpha1.DBaaSProvider, len(cmList.Items))
 	for i, cm := range cmList.Items {
 		var provider v1alpha1.DBaaSProvider
 		if providerName, exists := cm.Data[providerDataKey]; exists {
 			provider.Provider = v1alpha1.DatabaseProvider{Name: providerName}
 		} else {
-			return nil, errors.New("provider name is missing of the configured DBaaS provider")
+			return v1alpha1.DBaaSProviderList{}, errors.New("provider name is missing of the configured DBaaS Provider")
 		}
 		if inventoryKind, exists := cm.Data[inventoryKindDataKey]; exists {
 			provider.InventoryKind = inventoryKind
 		} else {
-			return nil, fmt.Errorf("inventory kind is missing of the configured DBaaS provider %s", provider.Provider.Name)
+			return v1alpha1.DBaaSProviderList{}, fmt.Errorf("inventory kind is missing of the configured DBaaS Provider %s", provider.Provider.Name)
 		}
 		if connectionKind, exists := cm.Data[connectionKindDataKey]; exists {
 			provider.ConnectionKind = connectionKind
 		} else {
-			return nil, fmt.Errorf("connection kind is missing of the configured DBaaS provider %s", provider.Provider.Name)
+			return v1alpha1.DBaaSProviderList{}, fmt.Errorf("connection kind is missing of the configured DBaaS Provider %s", provider.Provider.Name)
 		}
 		providers[i] = provider
 	}
 
-	return &v1alpha1.DBaaSProviderList{Items: providers}, nil
+	return v1alpha1.DBaaSProviderList{Items: providers}, nil
 }
 
-func getDBaaSProviderInventoryObjects(namespace string) ([]unstructured.Unstructured, error) {
-	if cmList, err := getConfigMapList(namespace); err != nil {
+func (p *DBaaSProvider) getDBaaSProviderInventoryObjects(namespace string) ([]unstructured.Unstructured, error) {
+	if cmList, err := p.getConfigMapList(namespace); err != nil {
 		return nil, err
 	} else {
-		if providers, err := getDBaaSProviders(cmList); err != nil {
+		if providers, err := p.getDBaaSProviders(cmList); err != nil {
 			return nil, err
 		} else {
 			objects := make([]unstructured.Unstructured, len(providers.Items))
@@ -102,11 +110,11 @@ func getDBaaSProviderInventoryObjects(namespace string) ([]unstructured.Unstruct
 	}
 }
 
-func getDBaaSProviderConnectionObjects(namespace string) ([]unstructured.Unstructured, error) {
-	if cmList, err := getConfigMapList(namespace); err != nil {
+func (p *DBaaSProvider) getDBaaSProviderConnectionObjects(namespace string) ([]unstructured.Unstructured, error) {
+	if cmList, err := p.getConfigMapList(namespace); err != nil {
 		return nil, err
 	} else {
-		if providers, err := getDBaaSProviders(cmList); err != nil {
+		if providers, err := p.getDBaaSProviders(cmList); err != nil {
 			return nil, err
 		} else {
 			objects := make([]unstructured.Unstructured, len(providers.Items))
@@ -124,9 +132,7 @@ func getDBaaSProviderConnectionObjects(namespace string) ([]unstructured.Unstruc
 	}
 }
 
-func getConfigMapListByController(namespace string, client ctrlclient.Client, ctx context.Context) (*v1.ConfigMapList, error) {
-	logger := log.FromContext(ctx, "dbaasprovider", namespace)
-
+func (p *DBaaSProvider) getConfigMapListByController(namespace string, ctx context.Context) (v1.ConfigMapList, error) {
 	var cmList v1.ConfigMapList
 	opts := []ctrlclient.ListOption{
 		ctrlclient.InNamespace(namespace),
@@ -136,26 +142,20 @@ func getConfigMapListByController(namespace string, client ctrlclient.Client, ct
 		},
 	}
 
-	if err := client.List(ctx, &cmList, opts...); err != nil {
-		logger.Error(err, "Error reading ConfigMaps for the configured DBaaS Providers")
-		return nil, err
+	if err := p.reconciler.getClient().List(ctx, &cmList, opts...); err != nil {
+		return v1.ConfigMapList{}, err
 	}
-	return &cmList, nil
+	return cmList, nil
 }
 
-func getConfigMapList(namespace string) (*v1.ConfigMapList, error) {
-	ctx := context.TODO()
-	logger := log.FromContext(ctx, "dbaasprovider", namespace)
-
+func (p *DBaaSProvider) getConfigMapList(namespace string) (v1.ConfigMapList, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		logger.Error(err, "Error reading ConfigMaps for the configured DBaaS Providers")
-		return nil, err
+		return v1.ConfigMapList{}, err
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logger.Error(err, "Error reading ConfigMaps for the configured DBaaS Providers")
-		return nil, err
+		return v1.ConfigMapList{}, err
 	}
 	options := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(
@@ -166,17 +166,14 @@ func getConfigMapList(namespace string) (*v1.ConfigMapList, error) {
 			String(),
 	}
 
-	if cmList, err := clientset.CoreV1().ConfigMaps(namespace).List(ctx, options); err != nil {
-		logger.Error(err, "Error reading ConfigMaps for the configured DBaaS Providers")
-		return nil, err
+	if cmList, err := clientset.CoreV1().ConfigMaps(namespace).List(context.TODO(), options); err != nil {
+		return v1.ConfigMapList{}, err
 	} else {
-		return cmList, nil
+		return *cmList, nil
 	}
 }
 
-func createProviderCR(object ctrlclient.Object, providerCRKind string, spec interface{}, client ctrlclient.Client, scheme *runtime.Scheme, ctx context.Context) error {
-	logger := log.FromContext(ctx, "dbaasprovider", types.NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()})
-
+func (p *DBaaSProvider) createProviderCR(object ctrlclient.Object, providerCRKind string, spec interface{}, ctx context.Context) error {
 	providerCR := &unstructured.Unstructured{}
 	providerCR.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   object.GetObjectKind().GroupVersionKind().Group,
@@ -186,21 +183,16 @@ func createProviderCR(object ctrlclient.Object, providerCRKind string, spec inte
 	providerCR.SetNamespace(object.GetNamespace())
 	providerCR.SetName(object.GetName())
 	providerCR.UnstructuredContent()["spec"] = spec
-	if err := ctrl.SetControllerReference(object, providerCR, scheme); err != nil {
-		logger.Error(err, "Error setting controller reference", "providerCR", providerCR)
+	if err := ctrl.SetControllerReference(object, providerCR, p.reconciler.getScheme()); err != nil {
 		return err
 	}
-	if err := client.Create(ctx, providerCR); err != nil {
-		logger.Error(err, "Error creating a provider CR", "providerCR", providerCR)
+	if err := p.reconciler.getClient().Create(ctx, providerCR); err != nil {
 		return err
 	}
-	logger.Info("Provider CR resource created", "providerCR", providerCR)
 	return nil
 }
 
-func updateProviderCR(object ctrlclient.Object, providerCRKind string, spec interface{}, client ctrlclient.Client, scheme *runtime.Scheme, ctx context.Context) error {
-	logger := log.FromContext(ctx, "dbaasprovider", types.NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()})
-
+func (p *DBaaSProvider) updateProviderCR(object ctrlclient.Object, providerCRKind string, spec interface{}, ctx context.Context) error {
 	providerCR := &unstructured.Unstructured{}
 	providerCR.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   object.GetObjectKind().GroupVersionKind().Group,
@@ -210,36 +202,26 @@ func updateProviderCR(object ctrlclient.Object, providerCRKind string, spec inte
 	providerCR.SetNamespace(object.GetNamespace())
 	providerCR.SetName(object.GetName())
 	providerCR.UnstructuredContent()["spec"] = spec
-	if err := ctrl.SetControllerReference(object, providerCR, scheme); err != nil {
-		logger.Error(err, "Error setting controller reference", "providerCR", providerCR)
+	if err := ctrl.SetControllerReference(object, providerCR, p.reconciler.getScheme()); err != nil {
 		return err
 	}
-	if err := client.Update(ctx, providerCR); err != nil {
-		logger.Error(err, "Error updating a provider CR", "providerCR", providerCR)
+	if err := p.reconciler.getClient().Update(ctx, providerCR); err != nil {
 		return err
 	}
-	logger.Info("Provider CR resource updated", "providerCR", providerCR)
 	return nil
 }
 
-func getProviderCR(object ctrlclient.Object, providerCRKind string, client ctrlclient.Client, ctx context.Context) (*unstructured.Unstructured, error) {
+func (p *DBaaSProvider) getProviderCR(object ctrlclient.Object, providerCRKind string, ctx context.Context) (unstructured.Unstructured, error) {
 	gvk := schema.GroupVersionKind{
 		Group:   object.GetObjectKind().GroupVersionKind().Group,
 		Version: object.GetObjectKind().GroupVersionKind().Version,
 		Kind:    providerCRKind,
 	}
 
-	logger := log.FromContext(ctx, "dbaasprovider", types.NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()}, "GVK", gvk)
-
 	var providerCR = unstructured.Unstructured{}
 	providerCR.SetGroupVersionKind(gvk)
-	if err := client.Get(ctx, ctrlclient.ObjectKeyFromObject(object), &providerCR); err != nil {
-		if apierrors.IsNotFound(err) {
-			logger.Info("Provider CR resource not found", "providerCR", object.GetName())
-			return nil, nil
-		}
-		logger.Error(err, "Error finding the provider CR", "providerCR", object.GetName())
-		return nil, err
+	if err := p.reconciler.getClient().Get(ctx, ctrlclient.ObjectKeyFromObject(object), &providerCR); err != nil {
+		return unstructured.Unstructured{}, err
 	}
-	return &providerCR, nil
+	return providerCR, nil
 }

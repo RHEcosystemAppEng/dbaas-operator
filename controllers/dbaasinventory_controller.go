@@ -25,13 +25,21 @@ import (
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
 type DBaaSInventoryReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	provider *DBaaSProvider
+}
+
+func (r *DBaaSInventoryReconciler) getClient() client.Client {
+	return r.Client
+}
+
+func (r *DBaaSInventoryReconciler) getScheme() *runtime.Scheme {
+	return r.Scheme
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -45,71 +53,77 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx, "dbaasinventory", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", req.NamespacedName)
 
 	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
-			logger.Info("DBaaSInventory resource not found, has been deleted")
+			logger.Info("DBaaS Inventory resource not found, has been deleted")
 			return ctrl.Result{}, nil
 		}
-		logger.Error(err, "Error fetching DBaaSInventory for reconcile")
+		logger.Error(err, "Error fetching DBaaS Inventory for reconcile")
 		return ctrl.Result{}, err
 	}
 
-	provider, err := getDBaaSProvider(inventory.Spec.Provider, req.Namespace, r.Client, ctx)
+	provider, err := r.provider.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "Provider", provider.Provider)
+			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", provider.Provider)
 			return ctrl.Result{}, err
 		}
-		logger.Error(err, "Error reading configured DBaaS providers")
+		logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", inventory.Spec.Provider)
 		return ctrl.Result{}, err
 	}
-	logger.Info("Found DBaaS provider", "provider", provider)
+	logger.Info("Found DBaaS Provider", "DBaaS Provider", provider.Provider)
 
-	if providerInventory, err := getProviderCR(&inventory, provider.InventoryKind, r.Client, ctx); err != nil {
-		return ctrl.Result{}, err
-	} else if providerInventory == nil {
-		if err = createProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), r.Client, r.Scheme, ctx); err != nil {
-			return ctrl.Result{}, err
+	if providerInventory, err := r.provider.getProviderCR(&inventory, provider.InventoryKind, ctx); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("Provider Inventory resource not found", "DBaaS Provider", inventory.GetName())
+			if err = r.provider.createProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
+				logger.Error(err, "Error creating Provider Inventory resource", "DBaaS Provider", inventory.GetName())
+				return ctrl.Result{}, err
+			}
+			logger.Info("Provider Inventory resource created", "DBaaS Provider", inventory.GetName())
+			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, nil
+		logger.Error(err, "Error finding the Provider Inventory resource", "DBaaS Provider", inventory.GetName())
+		return ctrl.Result{}, err
 	} else {
 		if providerInventoryStatus, exists := providerInventory.UnstructuredContent()["status"]; exists {
 			var status v1alpha1.DBaaSInventoryStatus
 			if err := decode(providerInventoryStatus, &status); err != nil {
-				logger.Error(err, "Error parsing the status of the provider inventory CR", "ProviderInventoryStatus", providerInventoryStatus)
+				logger.Error(err, "Error parsing the status of the Provider Inventory resource", "DBaaS Provider", providerInventory.GetName())
 				return ctrl.Result{}, err
 			} else {
 				inventory.Status = *status.DeepCopy()
 				if err := r.Status().Update(ctx, &inventory); err != nil {
-					logger.Error(err, "Error updating DBaaSInventory status")
+					logger.Error(err, "Error updating the DBaaS Inventory status")
 					return ctrl.Result{}, err
 				}
-				logger.Info("DBaaSInventory status updated")
+				logger.Info("DBaaS Inventory status updated")
 			}
 		} else {
-			logger.Info("Provider inventory resource status not found", "providerInventory", providerInventory)
+			logger.Info("Provider Inventory resource status not found", "DBaaS Provider", providerInventory.GetName())
 		}
 
 		if providerInventorySpec, exists := providerInventory.UnstructuredContent()["spec"]; exists {
 			var spec v1alpha1.DBaaSInventorySpec
 			if err := decode(providerInventorySpec, &spec); err != nil {
-				logger.Error(err, "Error parsing the spec of the provider inventory CR", "ProviderInventorySpec", providerInventorySpec)
+				logger.Error(err, "Error parsing the spec of the Provider Inventory resource", "DBaaS Provider", providerInventory.GetName())
 				return ctrl.Result{}, err
 			} else {
 				if !reflect.DeepEqual(spec, inventory.Spec.DBaaSInventorySpec) {
-					if err = updateProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), r.Client, r.Scheme, ctx); err != nil {
+					if err = r.provider.updateProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
+						logger.Error(err, "Error updating the Provider Inventory spec", "DBaaS Provider", providerInventory.GetName())
 						return ctrl.Result{}, err
 					}
-					logger.Info("Provider inventory spec updated")
+					logger.Info("Provider Inventory spec updated")
 				}
 			}
 		} else {
-			err = fmt.Errorf("failed to get the spec of the provider inventory %v", providerInventory)
-			logger.Error(err, "Error getting the spec of the provider inventory CR")
+			err = fmt.Errorf("failed to get the spec of the Provider Inventory %s", providerInventory.GetName())
+			logger.Error(err, "Error getting the spec of the Provider Inventory", "DBaaS Provider", providerInventory.GetName())
 			return ctrl.Result{}, err
 		}
 	}
@@ -118,8 +132,14 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager, namespace string) error {
-	owned, err := getDBaaSProviderInventoryObjects(namespace)
+	logger := ctrl.Log.WithName("controllers").WithName("DBaaS Inventory")
+
+	r.provider = &DBaaSProvider{reconciler: r}
+
+	logger.Info("Read configured DBaaS Providers from ConfigMaps")
+	owned, err := r.provider.getDBaaSProviderInventoryObjects(namespace)
 	if err != nil {
+		logger.Error(err, "Error reading the configured DBaaS Providers from ConfigMaps")
 		return err
 	}
 
