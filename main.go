@@ -86,16 +86,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.DBaaSConnectionReconciler{
+	DBaaSReconciler := &controllers.DBaaSReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+	}
+
+	if err = (&controllers.DBaaSConnectionReconciler{
+		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr, watchNamespace); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
 		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSInventoryReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr, watchNamespace); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)

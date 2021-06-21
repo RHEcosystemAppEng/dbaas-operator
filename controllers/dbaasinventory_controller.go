@@ -21,25 +21,13 @@ import (
 	"fmt"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
 type DBaaSInventoryReconciler struct {
-	client.Client
-	Scheme   *runtime.Scheme
-	provider *DBaaSProvider
-}
-
-func (r *DBaaSInventoryReconciler) getClient() client.Client {
-	return r.Client
-}
-
-func (r *DBaaSInventoryReconciler) getScheme() *runtime.Scheme {
-	return r.Scheme
+	*DBaaSReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -66,7 +54,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	provider, err := r.provider.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
+	provider, err := r.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", provider.Provider)
@@ -77,10 +65,10 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", provider.Provider)
 
-	if providerInventory, err := r.provider.getProviderCR(&inventory, provider.InventoryKind, ctx); err != nil {
+	if providerInventory, err := r.getProviderObject(&inventory, provider.InventoryKind, ctx); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Provider Inventory resource not found", "DBaaS Provider", inventory.GetName())
-			if err = r.provider.createProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
+			if err = r.createProviderObject(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
 				logger.Error(err, "Error creating Provider Inventory resource", "DBaaS Provider", inventory.GetName())
 				return ctrl.Result{}, err
 			}
@@ -114,7 +102,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				return ctrl.Result{}, err
 			} else {
 				if !reflect.DeepEqual(spec, inventory.Spec.DBaaSInventorySpec) {
-					if err = r.provider.updateProviderCR(&inventory, provider.InventoryKind, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
+					if err = r.updateProviderObject(providerInventory, inventory.Spec.DBaaSInventorySpec.DeepCopy(), ctx); err != nil {
 						logger.Error(err, "Error updating the Provider Inventory spec", "DBaaS Provider", providerInventory.GetName())
 						return ctrl.Result{}, err
 					}
@@ -134,10 +122,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager, namespace string) error {
 	logger := ctrl.Log.WithName("controllers").WithName("DBaaS Inventory")
 
-	r.provider = &DBaaSProvider{reconciler: r}
-
 	logger.Info("Read configured DBaaS Providers from ConfigMaps")
-	owned, err := r.provider.getDBaaSProviderInventoryObjects(namespace)
+	owned, err := r.preStartGetDBaaSProviderInventories(namespace)
 	if err != nil {
 		logger.Error(err, "Error reading the configured DBaaS Providers from ConfigMaps")
 		return err

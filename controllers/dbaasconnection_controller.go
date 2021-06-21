@@ -21,26 +21,14 @@ import (
 	"fmt"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
 type DBaaSConnectionReconciler struct {
-	client.Client
-	Scheme   *runtime.Scheme
-	provider *DBaaSProvider
-}
-
-func (r *DBaaSConnectionReconciler) getClient() client.Client {
-	return r.Client
-}
-
-func (r *DBaaSConnectionReconciler) getScheme() *runtime.Scheme {
-	return r.Scheme
+	*DBaaSReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -79,7 +67,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	provider, err := r.provider.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
+	provider, err := r.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", provider.Provider)
@@ -90,10 +78,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", provider.Provider)
 
-	if providerConnection, err := r.provider.getProviderCR(&connection, provider.ConnectionKind, ctx); err != nil {
+	if providerConnection, err := r.getProviderObject(&connection, provider.ConnectionKind, ctx); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Provider Connection resource not found", "DBaaS Provider", connection.GetName())
-			if err = r.provider.createProviderCR(&connection, provider.ConnectionKind, connection.Spec.DeepCopy(), ctx); err != nil {
+			if err = r.createProviderObject(&connection, provider.ConnectionKind, connection.Spec.DeepCopy(), ctx); err != nil {
 				logger.Error(err, "Error creating Provider Connection resource", "DBaaS Provider", connection.GetName())
 				return ctrl.Result{}, err
 			}
@@ -127,7 +115,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return ctrl.Result{}, err
 			} else {
 				if !reflect.DeepEqual(spec, connection.Spec) {
-					if err = r.provider.updateProviderCR(&connection, provider.ConnectionKind, connection.Spec.DeepCopy(), ctx); err != nil {
+					if err = r.updateProviderObject(providerConnection, connection.Spec.DeepCopy(), ctx); err != nil {
 						logger.Error(err, "Error updating the Provider Connection spec", "DBaaS Provider", providerConnection.GetName())
 						return ctrl.Result{}, err
 					}
@@ -147,10 +135,8 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager, namespace string) error {
 	logger := ctrl.Log.WithName("controllers").WithName("DBaaS Connection")
 
-	r.provider = &DBaaSProvider{reconciler: r}
-
 	logger.Info("Read configured DBaaS Providers from ConfigMaps")
-	owned, err := r.provider.getDBaaSProviderConnectionObjects(namespace)
+	owned, err := r.preStartGetDBaaSProviderConnections(namespace)
 	if err != nil {
 		logger.Error(err, "Error reading the configured DBaaS Providers from ConfigMaps")
 		return err
