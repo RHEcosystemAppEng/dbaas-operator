@@ -83,28 +83,26 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}
 
-	setupLog.Info("Read configured DBaaS Providers")
-	providerList, err := DBaaSReconciler.PreStartGetDBaaSProviderList()
-	if err != nil {
-		setupLog.Error(err, "unable to fetch DBaaS Providers")
-		os.Exit(1)
-	}
-
-	if err = (&controllers.DBaaSConnectionReconciler{
+	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr, providerList); err != nil {
+	}).SetupWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
 		os.Exit(1)
 	}
-	if err = (&controllers.DBaaSInventoryReconciler{
+	inventoryCtrl, err := (&controllers.DBaaSInventoryReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr, providerList); err != nil {
+	}).SetupWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)
 	}
-	if err = (&controllers.DBaaSProviderReconciler{
+	err = (&controllers.DBaaSProviderReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr); err != nil {
+		ConnectionCtrl:  connectionCtrl,
+		InventoryCtrl:   inventoryCtrl,
+	}).SetupWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSProvider")
 		os.Exit(1)
 	}
