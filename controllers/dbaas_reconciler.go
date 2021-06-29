@@ -31,10 +31,10 @@ type DBaaSReconciler struct {
 	InstallNamespace string
 }
 
-func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
-	var provider v1alpha1.DBaaSProvider
-	if err := p.Get(ctx, types.NamespacedName{Name: providerName}, &provider); err != nil {
-		return v1alpha1.DBaaSProvider{}, err
+func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (*v1alpha1.DBaaSProvider, error) {
+	provider := &v1alpha1.DBaaSProvider{}
+	if err := p.Get(ctx, types.NamespacedName{Name: providerName}, provider); err != nil {
+		return nil, err
 	}
 	return provider, nil
 }
@@ -88,7 +88,7 @@ func (p *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerO
 	}
 }
 
-func (p *DBaaSReconciler) parseProviderObject(object interface{}, unstructured *unstructured.Unstructured) error {
+func (p *DBaaSReconciler) parseProviderObject(unstructured *unstructured.Unstructured, object interface{}) error {
 	b, err := unstructured.MarshalJSON()
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (p *DBaaSReconciler) parseProviderObject(object interface{}, unstructured *
 	return nil
 }
 
-func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, ctx context.Context, f controllerutil.MutateFn) error {
+func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, f controllerutil.MutateFn, ctx context.Context) error {
 	if err := f(); err != nil {
 		return err
 	}

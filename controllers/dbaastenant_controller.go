@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 var (

@@ -49,6 +49,14 @@ var testEnv *envtest.Environment
 var ctx context.Context
 var cancel context.CancelFunc
 
+const (
+	testNamespace = "default"
+
+	timeout  = time.Second * 10
+	duration = time.Second * 10
+	interval = time.Millisecond * 250
+)
+
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -106,6 +114,7 @@ var _ = BeforeSuite(func() {
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
+		defer GinkgoRecover()
 		err = mgr.Start(ctx)
 		if err != nil {
 			Expect(err).NotTo(HaveOccurred())
