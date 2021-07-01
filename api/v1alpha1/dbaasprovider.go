@@ -83,7 +83,7 @@ type Instance struct {
 	Name string `json:"name,omitempty"`
 
 	// Any other provider-specific information related to this instance
-	InstanceInfo map[string]string `json:"extraInfo,omitempty"`
+	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 }
 
 type NamespacedName struct {
@@ -99,7 +99,7 @@ type DBaaSConnectionSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// A reference to the relevant DBaaSInventory CR
-	InventoryRef *corev1.LocalObjectReference `json:"inventory"`
+	InventoryRef *corev1.LocalObjectReference `json:"inventoryRef"`
 
 	// The ID of the instance to connect to, as seen in the Status of
 	// the referenced DBaaSInventory
