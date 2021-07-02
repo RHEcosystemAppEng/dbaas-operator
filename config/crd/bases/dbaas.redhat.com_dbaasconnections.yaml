@@ -40,7 +40,7 @@ spec:
                 description: The ID of the instance to connect to, as seen in the
                   Status of the referenced DBaaSInventory
                 type: string
-              inventory:
+              inventoryRef:
                 description: A reference to the relevant DBaaSInventory CR
                 properties:
                   name:
@@ -50,7 +50,7 @@ spec:
                 type: object
             required:
             - instanceID
-            - inventory
+            - inventoryRef
             type: object
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection

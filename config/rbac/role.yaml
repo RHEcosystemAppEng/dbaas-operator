@@ -7,6 +7,13 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+- apiGroups:
   - dbaas.redhat.com
   resources:
   - '*'
@@ -28,32 +35,6 @@ rules:
   - dbaas.redhat.com
   resources:
   - '*/status'
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasconnections
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasconnections/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasconnections/status
   verbs:
   - get
   - patch
