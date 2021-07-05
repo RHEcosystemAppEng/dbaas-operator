@@ -22,8 +22,6 @@ import (
 
 // DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
 type DBaaSOperatorInventorySpec struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Provider is the name of the database provider that we wish to connect with
 	Provider DatabaseProvider `json:"provider"`
 

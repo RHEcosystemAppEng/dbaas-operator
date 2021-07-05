@@ -55,14 +55,8 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	if connection.Spec.InventoryRef == nil {
-		err := fmt.Errorf("inventory reference is missing for DBaaS Connection")
-		logger.Error(err, "Invalid DBaaS Connection for reconcile")
-		return ctrl.Result{}, err
-	}
-
 	var inventory v1alpha1.DBaaSInventory
-	if err := r.Get(ctx, types.NamespacedName{Namespace: connection.Namespace, Name: connection.Spec.InventoryRef.Name}, &inventory); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Namespace: connection.Spec.InventoryRef.Namespace, Name: connection.Spec.InventoryRef.Name}, &inventory); err != nil {
 		logger.Error(err, "Error fetching DBaaS Inventory resource reference for DBaaS Connection", "DBaaS Inventory", connection.Spec.InventoryRef.Name)
 		return ctrl.Result{}, err
 	}

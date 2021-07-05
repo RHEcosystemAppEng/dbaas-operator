@@ -42,7 +42,6 @@ func Test_decode(t *testing.T) {
 			name: "inventory_status",
 			args: args{
 				input: map[string]interface{}{
-					"type": "MongoDB",
 					"conditions": []map[string]interface{}{
 						{
 							"lastTransitionTime": lastTransitionTimeString,
@@ -56,7 +55,6 @@ func Test_decode(t *testing.T) {
 				output: &v1alpha1.DBaaSInventoryStatus{},
 			},
 			want: &v1alpha1.DBaaSInventoryStatus{
-				Type: "MongoDB",
 				Conditions: []metav1.Condition{
 					{
 						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
