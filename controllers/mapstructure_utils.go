@@ -17,10 +17,12 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/mitchellh/mapstructure"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 func StringToAPITimeHookFunc(layout string) mapstructure.DecodeHookFunc {

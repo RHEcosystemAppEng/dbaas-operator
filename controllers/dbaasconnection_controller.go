@@ -19,11 +19,13 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"reflect"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -61,7 +63,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	provider, err := r.getDBaaSProvider(inventory.Spec.Provider, req.Namespace, ctx)
+	provider, err := r.getDBaaSProvider(inventory.Spec.Provider, ctx)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", provider.Provider)
@@ -72,7 +74,8 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", provider.Provider)
 
-	if providerConnection, err := r.getProviderObject(&connection, provider.ConnectionKind, ctx); err != nil {
+	providerConnection, err := r.getProviderObject(&connection, provider.ConnectionKind, ctx)
+	if err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Provider Connection resource not found", "DBaaS Provider", connection.GetName())
 			if err = r.createProviderObject(&connection, provider.ConnectionKind, connection.Spec.DeepCopy(), ctx); err != nil {
@@ -84,62 +87,67 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		logger.Error(err, "Error finding the Provider Connection resource", "DBaaS Provider", connection.GetName())
 		return ctrl.Result{}, err
-	} else {
-		if providerConnectionStatus, exists := providerConnection.UnstructuredContent()["status"]; exists {
-			var status v1alpha1.DBaaSConnectionStatus
-			if err := decode(providerConnectionStatus, &status); err != nil {
-				logger.Error(err, "Error parsing the status of the Provider Connection resource", "DBaaS Provider", providerConnection.GetName())
-				return ctrl.Result{}, err
-			} else {
-				connection.Status = *status.DeepCopy()
-				if err := r.Status().Update(ctx, &connection); err != nil {
-					logger.Error(err, "Error updating the DBaaS Connection status")
-					return ctrl.Result{}, err
-				}
-				logger.Info("DBaaS Connection status updated")
-			}
-		} else {
-			logger.Info("Provider Connection resource status not found", "DBaaS Provider", providerConnection.GetName())
-		}
+	}
 
-		if providerConnectionSpec, exists := providerConnection.UnstructuredContent()["spec"]; exists {
-			var spec v1alpha1.DBaaSConnectionSpec
-			if err := decode(providerConnectionSpec, &spec); err != nil {
-				logger.Error(err, "Error parsing the spec of the Provider Connection resource", "DBaaS Provider", providerConnection.GetName())
-				return ctrl.Result{}, err
-			} else {
-				if !reflect.DeepEqual(spec, connection.Spec) {
-					if err = r.updateProviderObject(providerConnection, connection.Spec.DeepCopy(), ctx); err != nil {
-						logger.Error(err, "Error updating the Provider Connection spec", "DBaaS Provider", providerConnection.GetName())
-						return ctrl.Result{}, err
-					}
-					logger.Info("Provider Connection spec updated")
-				}
-			}
-		} else {
-			err = fmt.Errorf("failed to get the spec of the Provider Connection %s", providerConnection.GetName())
-			logger.Error(err, "Error getting the spec of the Provider Connection", "DBaaS Provider", providerConnection.GetName())
+	providerConnectionStatus, existStatus := providerConnection.UnstructuredContent()["status"]
+	if existStatus {
+		var status v1alpha1.DBaaSConnectionStatus
+		err = decode(providerConnectionStatus, &status)
+		if err != nil {
+			logger.Error(err, "Error parsing the status of the Provider Connection resource", "DBaaS Provider", providerConnection.GetName())
 			return ctrl.Result{}, err
 		}
+
+		connection.Status = *status.DeepCopy()
+		if err = r.Status().Update(ctx, &connection); err != nil {
+			if errors.IsConflict(err) {
+				logger.Info("DBaaS Connection modified, retry syncing status", "DBaaS Provider", providerConnection.GetName())
+				return ctrl.Result{Requeue: true}, nil
+			}
+			logger.Error(err, "Error updating the DBaaS Connection status")
+			return ctrl.Result{}, err
+		}
+		logger.Info("DBaaS Connection status updated")
+	} else {
+		logger.Info("Provider Connection resource status not found", "DBaaS Provider", providerConnection.GetName())
 	}
+
+	providerConnectionSpec, existSpec := providerConnection.UnstructuredContent()["spec"]
+	if existSpec {
+		var spec v1alpha1.DBaaSConnectionSpec
+		err = decode(providerConnectionSpec, &spec)
+		if err != nil {
+			logger.Error(err, "Error parsing the spec of the Provider Connection resource", "DBaaS Provider", providerConnection.GetName())
+			return ctrl.Result{}, err
+		}
+
+		if !reflect.DeepEqual(spec, connection.Spec) {
+			if err = r.updateProviderObject(providerConnection, connection.Spec.DeepCopy(), ctx); err != nil {
+				if errors.IsConflict(err) {
+					logger.Info("Provider Connection modified, retry syncing spec", "DBaaS Provider", providerConnection.GetName())
+					return ctrl.Result{Requeue: true}, nil
+				}
+				logger.Error(err, "Error updating the Provider Connection spec", "DBaaS Provider", providerConnection.GetName())
+				return ctrl.Result{}, err
+			}
+			logger.Info("Provider Connection spec updated")
+		}
+	} else {
+		err = fmt.Errorf("failed to get the spec of the Provider Connection %s", providerConnection.GetName())
+		logger.Error(err, "Error getting the spec of the Provider Connection", "DBaaS Provider", providerConnection.GetName())
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager, namespace string) error {
-	logger := ctrl.Log.WithName("controllers").WithName("DBaaS Connection")
-
-	logger.Info("Read configured DBaaS Providers from ConfigMaps")
-	owned, err := r.preStartGetDBaaSProviderConnections(namespace)
-	if err != nil {
-		logger.Error(err, "Error reading the configured DBaaS Providers from ConfigMaps")
-		return err
-	}
-
+func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager, providerList v1alpha1.DBaaSProviderList) error {
+	owned := r.parseDBaaSProviderConnections(providerList)
 	builder := ctrl.NewControllerManagedBy(mgr)
 	builder = builder.For(&v1alpha1.DBaaSConnection{})
 	for _, o := range owned {
-		builder = builder.Owns(&o)
+		builder = builder.Owns(o)
 	}
 	return builder.Complete(r)
 }

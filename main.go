@@ -18,7 +18,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -66,12 +65,6 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	watchNamespace, err := getWatchNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to get WatchNamespace, "+
-			"the manager will watch and manage resources in all namespaces")
-	}
-
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -79,7 +72,6 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "e4addb06.redhat.com",
-		Namespace:              watchNamespace, // namespaced-scope when the value is not an empty string
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -91,15 +83,27 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}
 
+	setupLog.Info("Read configured DBaaS Providers from ConfigMaps")
+	cmList, err := DBaaSReconciler.PreStartGetProviderCMList()
+	if err != nil {
+		setupLog.Error(err, "unable to fetch DBaaS Providers")
+		os.Exit(1)
+	}
+	providerList, err := DBaaSReconciler.ParseDBaaSProviderList(cmList)
+	if err != nil {
+		setupLog.Error(err, "unable to parse DBaaS Providers")
+		os.Exit(1)
+	}
+
 	if err = (&controllers.DBaaSConnectionReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr, watchNamespace); err != nil {
+	}).SetupWithManager(mgr, providerList); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
 		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSInventoryReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr, watchNamespace); err != nil {
+	}).SetupWithManager(mgr, providerList); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)
 	}
@@ -119,18 +123,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-// getWatchNamespace returns the Namespace the operator should be watching for changes
-func getWatchNamespace() (string, error) {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var watchNamespaceEnvVar = "WATCH_NAMESPACE"
-
-	ns, found := os.LookupEnv(watchNamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
-	}
-	return ns, nil
 }

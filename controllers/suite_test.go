@@ -42,7 +42,6 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
-var testNamespace string
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -74,25 +73,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
-	testNamespace = "test"
-
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:    scheme.Scheme,
-		Namespace: testNamespace,
+		Scheme: scheme.Scheme,
 	})
 	Expect(err).ToNot(HaveOccurred())
-
-	//err = (&DBaaSInventoryReconciler{
-	//	Client: k8sManager.GetClient(),
-	//	Scheme: k8sManager.GetScheme(),
-	//}).SetupWithManager(k8sManager, testNamespace)
-	//Expect(err).ToNot(HaveOccurred())
-	//
-	//err = (&DBaaSConnectionReconciler{
-	//	Client: k8sManager.GetClient(),
-	//	Scheme: k8sManager.GetScheme(),
-	//}).SetupWithManager(k8sManager, testNamespace)
-	//Expect(err).ToNot(HaveOccurred())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
