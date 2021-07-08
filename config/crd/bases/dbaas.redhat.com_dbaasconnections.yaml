@@ -44,8 +44,10 @@ spec:
                 description: A reference to the relevant DBaaSInventory CR
                 properties:
                   name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    description: The name for object of known type
+                    type: string
+                  namespace:
+                    description: The namespace where object of known type is store
                     type: string
                 type: object
             required:
@@ -124,17 +126,18 @@ spec:
                   - type
                   type: object
                 type: array
-              connectionInfo:
-                additionalProperties:
-                  type: string
-                description: Any other provider-specific information related to this
-                  connection
+              connectionInfoRef:
+                description: ConfigMap holding non-sensitive information needed for
+                  connecting to the DB instance
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
                 type: object
-              connectionString:
-                description: The connection string for this instance
-                type: string
               credentialsRef:
-                description: Secret holding username and password
+                description: Secret holding credentials needed for accessing the DB
+                  instance
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

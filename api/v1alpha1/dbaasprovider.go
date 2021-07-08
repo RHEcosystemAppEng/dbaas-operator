@@ -23,8 +23,6 @@ import (
 
 // DBaaSProvider defines a database provider for DBaaS operator
 type DBaaSProvider struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Provider is the name of the database provider
 	Provider DatabaseProvider `json:"provider"`
 
@@ -56,8 +54,6 @@ type DBaaSProviderList struct {
 
 // DBaaSInventorySpec defines the desired state of DBaaSInventory
 type DBaaSInventorySpec struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// The secret storing the vendor-specific connection credentials to
 	// use with the API endpoint. The secret may be placed in a separate
 	// namespace to control access.
@@ -67,9 +63,6 @@ type DBaaSInventorySpec struct {
 // DBaaSInventoryStatus defines the observed state of DBaaSInventory
 type DBaaSInventoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
-
-	// E.g., MongoDB, Postgres
-	Type string `json:"type"`
 
 	// A list of instances returned from querying the DB provider
 	Instances []Instance `json:"instances,omitempty"`
@@ -96,10 +89,8 @@ type NamespacedName struct {
 
 // DBaaSConnectionSpec defines the desired state of DBaaSConnection
 type DBaaSConnectionSpec struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// A reference to the relevant DBaaSInventory CR
-	InventoryRef *corev1.LocalObjectReference `json:"inventoryRef"`
+	InventoryRef NamespacedName `json:"inventoryRef"`
 
 	// The ID of the instance to connect to, as seen in the Status of
 	// the referenced DBaaSInventory
@@ -110,12 +101,9 @@ type DBaaSConnectionSpec struct {
 type DBaaSConnectionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// The connection string for this instance
-	ConnectionString string `json:"connectionString,omitempty"`
-
-	// Secret holding username and password
+	// Secret holding credentials needed for accessing the DB instance
 	CredentialsRef *corev1.LocalObjectReference `json:"credentialsRef,omitempty"`
 
-	// Any other provider-specific information related to this connection
-	ConnectionInfo map[string]string `json:"connectionInfo,omitempty"`
+	// ConfigMap holding non-sensitive information needed for connecting to the DB instance
+	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
 }
