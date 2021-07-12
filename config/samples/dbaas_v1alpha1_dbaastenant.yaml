@@ -1,0 +1,7 @@
+apiVersion: dbaas.redhat.com/v1alpha1
+kind: DBaasTenant
+metadata:
+  name: dbaastenant-sample
+spec:
+  # Add fields here
+  foo: bar
