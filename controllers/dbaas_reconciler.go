@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"reflect"
+	"strings"
+
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,52 +16,56 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 const (
-	relatedToLabelName  = "related-to"
+	relatedToLabelKey   = "related-to"
 	relatedToLabelValue = "dbaas-operator"
-	typeLabelName       = "type"
+	typeLabelKey        = "type"
 	typeLabelValue      = "dbaas-provider-registration"
 
 	providerDataKey       = "provider"
 	inventoryKindDataKey  = "inventory_kind"
 	connectionKindDataKey = "connection_kind"
-
-	operatorGroup   = "dbaas.redhat.com"
-	operatorVersion = "v1alpha1"
 )
+
+var ConfigMapSelector = map[string]string{
+	relatedToLabelKey: relatedToLabelValue,
+	typeLabelKey:      typeLabelValue,
+}
 
 type DBaaSReconciler struct {
 	client.Client
 	*runtime.Scheme
 }
 
-func (p *DBaaSReconciler) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, namespace string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
-	if cmList, err := p.getProviderCMList(namespace, ctx); err != nil {
+func (p *DBaaSReconciler) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
+	cmList, err := p.getProviderCMList(ctx)
+	if err != nil {
 		return v1alpha1.DBaaSProvider{}, err
-	} else {
-		if providers, err := p.parseDBaaSProviderList(cmList); err != nil {
-			return v1alpha1.DBaaSProvider{}, err
-		} else {
-			for _, provider := range providers.Items {
-				if reflect.DeepEqual(provider.Provider, requestedProvider) {
-					return provider, nil
-				}
-			}
-			return v1alpha1.DBaaSProvider{}, apierrors.NewNotFound(schema.GroupResource{
-				Group:    operatorGroup,
-				Resource: strings.ToLower(requestedProvider.Name),
-			}, requestedProvider.Name)
+	}
+
+	providers, err := p.ParseDBaaSProviderList(cmList)
+	if err != nil {
+		return v1alpha1.DBaaSProvider{}, err
+	}
+
+	for _, provider := range providers.Items {
+		if reflect.DeepEqual(provider.Provider, requestedProvider) {
+			return provider, nil
 		}
 	}
+	return v1alpha1.DBaaSProvider{}, apierrors.NewNotFound(schema.GroupResource{
+		Group:    v1alpha1.GroupVersion.Group,
+		Resource: strings.ToLower(requestedProvider.Name),
+	}, requestedProvider.Name)
 }
 
-func (p *DBaaSReconciler) parseDBaaSProviderList(cmList v1.ConfigMapList) (v1alpha1.DBaaSProviderList, error) {
+func (p *DBaaSReconciler) ParseDBaaSProviderList(cmList v1.ConfigMapList) (v1alpha1.DBaaSProviderList, error) {
 	providers := make([]v1alpha1.DBaaSProvider, len(cmList.Items))
 	for i, cm := range cmList.Items {
 		var provider v1alpha1.DBaaSProvider
@@ -84,58 +90,38 @@ func (p *DBaaSReconciler) parseDBaaSProviderList(cmList v1.ConfigMapList) (v1alp
 	return v1alpha1.DBaaSProviderList{Items: providers}, nil
 }
 
-func (p *DBaaSReconciler) preStartGetDBaaSProviderInventories(namespace string) ([]unstructured.Unstructured, error) {
-	if cmList, err := p.preStartGetProviderCMList(namespace); err != nil {
-		return nil, err
-	} else {
-		if providers, err := p.parseDBaaSProviderList(cmList); err != nil {
-			return nil, err
-		} else {
-			objects := make([]unstructured.Unstructured, len(providers.Items))
-			for i, provider := range providers.Items {
-				object := unstructured.Unstructured{}
-				object.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   operatorGroup,
-					Version: operatorVersion,
-					Kind:    provider.InventoryKind,
-				})
-				objects[i] = object
-			}
-			return objects, nil
-		}
+func (p *DBaaSReconciler) parseDBaaSProviderInventories(providerList v1alpha1.DBaaSProviderList) []*unstructured.Unstructured {
+	objects := make([]*unstructured.Unstructured, len(providerList.Items))
+	for i, provider := range providerList.Items {
+		object := &unstructured.Unstructured{}
+		object.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    provider.InventoryKind,
+		})
+		objects[i] = object
 	}
+	return objects
 }
 
-func (p *DBaaSReconciler) preStartGetDBaaSProviderConnections(namespace string) ([]unstructured.Unstructured, error) {
-	if cmList, err := p.preStartGetProviderCMList(namespace); err != nil {
-		return nil, err
-	} else {
-		if providers, err := p.parseDBaaSProviderList(cmList); err != nil {
-			return nil, err
-		} else {
-			objects := make([]unstructured.Unstructured, len(providers.Items))
-			for i, provider := range providers.Items {
-				object := unstructured.Unstructured{}
-				object.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   operatorGroup,
-					Version: operatorVersion,
-					Kind:    provider.ConnectionKind,
-				})
-				objects[i] = object
-			}
-			return objects, nil
-		}
+func (p *DBaaSReconciler) parseDBaaSProviderConnections(providerList v1alpha1.DBaaSProviderList) []*unstructured.Unstructured {
+	objects := make([]*unstructured.Unstructured, len(providerList.Items))
+	for i, provider := range providerList.Items {
+		object := &unstructured.Unstructured{}
+		object.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    provider.ConnectionKind,
+		})
+		objects[i] = object
 	}
+	return objects
 }
 
-func (p *DBaaSReconciler) getProviderCMList(namespace string, ctx context.Context) (v1.ConfigMapList, error) {
+func (p *DBaaSReconciler) getProviderCMList(ctx context.Context) (v1.ConfigMapList, error) {
 	var cmList v1.ConfigMapList
 	opts := []client.ListOption{
-		client.InNamespace(namespace),
-		client.MatchingLabels{
-			relatedToLabelName: relatedToLabelValue,
-			typeLabelName:      typeLabelValue,
-		},
+		client.MatchingLabels(ConfigMapSelector),
 	}
 
 	if err := p.List(ctx, &cmList, opts...); err != nil {
@@ -144,7 +130,7 @@ func (p *DBaaSReconciler) getProviderCMList(namespace string, ctx context.Contex
 	return cmList, nil
 }
 
-func (p *DBaaSReconciler) preStartGetProviderCMList(namespace string) (v1.ConfigMapList, error) {
+func (p *DBaaSReconciler) PreStartGetProviderCMList() (v1.ConfigMapList, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return v1.ConfigMapList{}, err
@@ -154,15 +140,10 @@ func (p *DBaaSReconciler) preStartGetProviderCMList(namespace string) (v1.Config
 		return v1.ConfigMapList{}, err
 	}
 	options := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(
-			map[string]string{
-				relatedToLabelName: relatedToLabelValue,
-				typeLabelName:      typeLabelValue,
-			}).
-			String(),
+		LabelSelector: labels.SelectorFromSet(ConfigMapSelector).String(),
 	}
 
-	if cmList, err := clientset.CoreV1().ConfigMaps(namespace).List(context.TODO(), options); err != nil {
+	if cmList, err := clientset.CoreV1().ConfigMaps("").List(context.TODO(), options); err != nil {
 		return v1.ConfigMapList{}, err
 	} else {
 		return *cmList, nil
@@ -170,19 +151,19 @@ func (p *DBaaSReconciler) preStartGetProviderCMList(namespace string) (v1.Config
 }
 
 func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string, spec interface{}, ctx context.Context) error {
-	providerObject := &unstructured.Unstructured{}
+	var providerObject unstructured.Unstructured
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   object.GetObjectKind().GroupVersionKind().Group,
-		Version: object.GetObjectKind().GroupVersionKind().Version,
+		Group:   v1alpha1.GroupVersion.Group,
+		Version: v1alpha1.GroupVersion.Version,
 		Kind:    providerObjectKind,
 	})
 	providerObject.SetNamespace(object.GetNamespace())
 	providerObject.SetName(object.GetName())
 	providerObject.UnstructuredContent()["spec"] = spec
-	if err := ctrl.SetControllerReference(object, providerObject, p.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(object, &providerObject, p.Scheme); err != nil {
 		return err
 	}
-	if err := p.Create(ctx, providerObject); err != nil {
+	if err := p.Create(ctx, &providerObject); err != nil {
 		return err
 	}
 	return nil
@@ -197,14 +178,12 @@ func (p *DBaaSReconciler) updateProviderObject(providerObject unstructured.Unstr
 }
 
 func (p *DBaaSReconciler) getProviderObject(object client.Object, providerObjectKind string, ctx context.Context) (unstructured.Unstructured, error) {
-	gvk := schema.GroupVersionKind{
-		Group:   object.GetObjectKind().GroupVersionKind().Group,
-		Version: object.GetObjectKind().GroupVersionKind().Version,
+	var providerObject unstructured.Unstructured
+	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   v1alpha1.GroupVersion.Group,
+		Version: v1alpha1.GroupVersion.Version,
 		Kind:    providerObjectKind,
-	}
-
-	var providerObject = unstructured.Unstructured{}
-	providerObject.SetGroupVersionKind(gvk)
+	})
 	if err := p.Get(ctx, client.ObjectKeyFromObject(object), &providerObject); err != nil {
 		return unstructured.Unstructured{}, err
 	}

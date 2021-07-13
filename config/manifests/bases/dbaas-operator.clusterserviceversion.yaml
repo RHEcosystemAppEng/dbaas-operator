@@ -7,6 +7,7 @@ metadata:
     categories: Database
     description: Import provider cloud instances for easy coupling with developer
       applications.
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com"]'
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:
@@ -33,7 +34,7 @@ spec:
       deployments: null
     strategy: ""
   installModes:
-  - supported: true
+  - supported: false
     type: OwnNamespace
   - supported: false
     type: SingleNamespace
