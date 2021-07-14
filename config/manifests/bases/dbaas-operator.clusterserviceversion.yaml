@@ -7,20 +7,25 @@ metadata:
     categories: Database
     description: Import provider cloud instances for easy coupling with developer
       applications.
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com"]'
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasconfigs.dbaas.redhat.com"]'
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: DBaasConfig is the Schema for the dbaasconfigs API
+      displayName: DBaas Config
+      kind: DBaasConfig
+      name: dbaasconfigs.dbaas.redhat.com
+      version: v1alpha1
     - description: DBaaSConnection is the Schema for the dbaasconnections API
-      displayName: DBaaS Connection
+      displayName: DBaa SConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSInventory is the Schema for the dbaasinventory API
-      displayName: DBaaS Inventory
+      displayName: DBaa SInventory
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
@@ -44,6 +49,8 @@ spec:
     type: AllNamespaces
   keywords:
   - dbaas
+  - database
+  - service
   links:
   - name: Database-as-a-Service Operator
     url: https://dbaas-operator.domain
