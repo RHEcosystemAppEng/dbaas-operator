@@ -29,7 +29,7 @@ resources:
     crdVersion: v1
   domain: redhat.com
   group: dbaas
-  kind: DBaasConfig
+  kind: DBaaSConfig
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

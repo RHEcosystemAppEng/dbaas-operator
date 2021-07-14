@@ -107,3 +107,36 @@ type DBaaSConnectionStatus struct {
 	// ConfigMap holding non-sensitive information needed for connecting to the DB instance
 	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
 }
+
+// DBaaSConfigSpec defines the desired state of DBaaSConfig
+type DBaaSConfigSpec struct {
+	Data map[string]string `json:"data,omitempty"`
+}
+
+// DBaaSConfigStatus defines the observed state of DBaaSConfig
+type DBaaSConfigStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+}
+
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
+
+// DBaaSConfig is the Schema for the dbaasconfigs API
+type DBaaSConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   DBaaSConfigSpec   `json:"spec,omitempty"`
+	Status DBaaSConfigStatus `json:"status,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+
+// DBaaSConfigList contains a list of DBaaSConfig
+type DBaaSConfigList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DBaaSConfig `json:"items"`
+}

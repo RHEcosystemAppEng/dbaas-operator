@@ -14,18 +14,18 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: DBaasConfig is the Schema for the dbaasconfigs API
-      displayName: DBaas Config
-      kind: DBaasConfig
+    - description: DBaaSConfig is the Schema for the dbaasconfigs API
+      displayName: DBaaS Config
+      kind: DBaaSConfig
       name: dbaasconfigs.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSConnection is the Schema for the dbaasconnections API
-      displayName: DBaa SConnection
+      displayName: DBaaS Connection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSInventory is the Schema for the dbaasinventory API
-      displayName: DBaa SInventory
+      displayName: DBaaS Inventory
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1

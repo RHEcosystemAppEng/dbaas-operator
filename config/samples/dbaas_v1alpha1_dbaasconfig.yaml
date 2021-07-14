@@ -1,5 +1,5 @@
 apiVersion: dbaas.redhat.com/v1alpha1
-kind: DBaasConfig
+kind: DBaaSConfig
 metadata:
   name: dbaasconfig-sample
 spec:

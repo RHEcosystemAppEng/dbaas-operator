@@ -36,6 +36,19 @@ spec:
           spec:
             description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
+              authz:
+                description: DBaasUsersGroups designates which OpenShift users and
+                  groups to authorize
+                properties:
+                  groups:
+                    items:
+                      type: string
+                    type: array
+                  users:
+                    items:
+                      type: string
+                    type: array
+                type: object
               credentialsRef:
                 description: The secret storing the vendor-specific connection credentials
                   to use with the API endpoint. The secret may be placed in a separate
