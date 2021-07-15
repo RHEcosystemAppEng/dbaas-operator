@@ -3,5 +3,5 @@ kind: CustomResourceDefinition
 metadata:
   name: dbaasconnections.dbaas.redhat.com
   annotations:
-    service.binding/credentials: 'path={.status.credentialsRef},objectType=Secret'
-    service.binding/configuration: 'path={.status.connectionInfoRef},objectType=ConfigMap'
+    service.binding/credentials: 'path={.status.credentialsRef.name},objectType=Secret'
+    service.binding/configuration: 'path={.status.connectionInfoRef.name},objectType=ConfigMap'
