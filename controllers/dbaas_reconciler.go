@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -188,4 +189,16 @@ func (p *DBaaSReconciler) getProviderObject(object client.Object, providerObject
 		return unstructured.Unstructured{}, err
 	}
 	return providerObject, nil
+}
+
+// getInstallNamespace returns the Namespace the operator should be watching for single tenant changes
+func getInstallNamespace() (string, error) {
+	// installNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
+	var installNamespaceEnvVar = "INSTALL_NAMESPACE"
+
+	ns, found := os.LookupEnv(installNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", installNamespaceEnvVar)
+	}
+	return ns, nil
 }

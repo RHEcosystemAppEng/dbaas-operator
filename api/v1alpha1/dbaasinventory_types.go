@@ -24,8 +24,15 @@ import (
 type DBaaSOperatorInventorySpec struct {
 	// Provider is the name of the database provider that we wish to connect with
 	Provider DatabaseProvider `json:"provider"`
+	Authz    DBaasUsersGroups `json:"authz,omitempty"`
 
 	DBaaSInventorySpec `json:",inline"`
+}
+
+// DBaasUsersGroups designates which OpenShift users and groups to authorize
+type DBaasUsersGroups struct {
+	Users  []string `json:"users,omitempty"`
+	Groups []string `json:"groups,omitempty"`
 }
 
 //+kubebuilder:object:root=true
