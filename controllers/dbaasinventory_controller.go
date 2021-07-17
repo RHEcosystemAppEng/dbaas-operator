@@ -41,8 +41,8 @@ type DBaaSInventoryReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;update;patch
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings/finalizers,verbs=update
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles/finalizers;rolebindings/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -70,7 +70,21 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		//
 		// RBAC
 		//
-		rolebinding := inventoryRoleBinding(inventory)
+		role, rolebinding := inventoryRbacObjs(inventory)
+		var roleObj rbacv1.Role
+		if err := r.Get(ctx, types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, &roleObj); err != nil {
+			if errors.IsNotFound(err) {
+				logger.Info("Inventory rbac resource not found", "Inventory RBAC", role.Name)
+				if err = r.createRoleObject(role, &inventory, ctx); err != nil {
+					logger.Error(err, "Error creating Inventory rbac resource", "Inventory RBAC", role.Name)
+					return ctrl.Result{}, err
+				}
+				logger.Info("Inventory rbac resource created", "Inventory RBAC", role.Name)
+			} else {
+				logger.Error(err, "Error finding the Inventory rbac resource", "Inventory RBAC", role.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		var roleBindingObj rbacv1.RoleBinding
 		if err := r.Get(ctx, types.NamespacedName{Name: rolebinding.Name, Namespace: rolebinding.Namespace}, &roleBindingObj); err != nil {
 			if errors.IsNotFound(err) {
@@ -179,39 +193,52 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager, providerLi
 	return builder.Complete(r)
 }
 
-// inventoryRoleBinding sets up rbac for an inventory's users
-func inventoryRoleBinding(inventory v1alpha1.DBaaSInventory) rbacv1.RoleBinding {
-	installNS, _ := getInstallNamespace()
+// inventoryRbacObjs sets up rbac for an inventory's users
+func inventoryRbacObjs(inventory v1alpha1.DBaaSInventory) (rbacv1.Role, rbacv1.RoleBinding) {
+	role := rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dbaas-" + inventory.Name + "-developer",
+			Namespace: inventory.Namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups:     []string{v1alpha1.GroupVersion.Group},
+				Resources:     []string{"dbaasinventories"},
+				ResourceNames: []string{inventory.Name},
+				Verbs:         []string{"get", "list", "watch"},
+			},
+			{
+				APIGroups:     []string{v1alpha1.GroupVersion.Group},
+				Resources:     []string{"dbaasinventories/status"},
+				ResourceNames: []string{inventory.Name},
+				Verbs:         []string{"get"},
+			},
+		},
+	}
+
 	roleBinding := rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dbaas-" + inventory.Name + "-developers",
-			Namespace: inventory.Namespace,
+			Name:      role.Name + "s",
+			Namespace: role.Namespace,
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.SchemeGroupVersion.Group,
-			Kind:     "ClusterRole",
-			Name:     installNS + "-dbaasinventory-viewer-role",
+			Kind:     "Role",
+			Name:     role.Name,
 		},
 	}
 	if inventory.Spec.Authz.Users != nil || inventory.Spec.Authz.Groups != nil {
 		for _, user := range inventory.Spec.Authz.Users {
-			roleBinding.Subjects = append(roleBinding.Subjects, getSubject(user, roleBinding.Namespace, "User"))
+			roleBinding.Subjects = append(roleBinding.Subjects, getSubject(user, role.Namespace, "User"))
 		}
 		for _, group := range inventory.Spec.Authz.Groups {
-			roleBinding.Subjects = append(roleBinding.Subjects, getSubject(group, roleBinding.Namespace, "Group"))
+			roleBinding.Subjects = append(roleBinding.Subjects, getSubject(group, role.Namespace, "Group"))
 		}
 	} else {
-		roleBinding.Subjects = []rbacv1.Subject{
-			{
-				APIGroup:  rbacv1.SchemeGroupVersion.Group,
-				Kind:      "Group",
-				Name:      "system:authenticated",
-				Namespace: roleBinding.Namespace,
-			},
-		}
+		roleBinding.Subjects = []rbacv1.Subject{getSubject("system:authenticated", role.Namespace, "Group")}
 	}
 
-	return roleBinding
+	return role, roleBinding
 }
 
 func getSubject(name, namespace, rbacObjectKind string) rbacv1.Subject {
@@ -221,6 +248,21 @@ func getSubject(name, namespace, rbacObjectKind string) rbacv1.Subject {
 		Name:      name,
 		Namespace: namespace,
 	}
+}
+
+func (r *DBaaSInventoryReconciler) createRoleObject(role rbacv1.Role, owner client.Object, ctx context.Context) error {
+	var rbacObject unstructured.Unstructured
+	rbacObject.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("Role"))
+	rbacObject.SetNamespace(role.Namespace)
+	rbacObject.SetName(role.Name)
+	rbacObject.UnstructuredContent()["rules"] = role.Rules
+	if err := ctrl.SetControllerReference(owner, &rbacObject, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Create(ctx, &rbacObject); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *DBaaSInventoryReconciler) createRoleBindingObject(roleBinding rbacv1.RoleBinding, owner client.Object, ctx context.Context) error {
