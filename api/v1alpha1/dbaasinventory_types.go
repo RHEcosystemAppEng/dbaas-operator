@@ -38,6 +38,7 @@ type DBaasUsersGroups struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
+//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSInventory"
 // DBaaSInventory is the Schema for the dbaasinventory API
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`

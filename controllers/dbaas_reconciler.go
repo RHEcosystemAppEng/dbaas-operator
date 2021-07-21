@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
@@ -151,7 +152,7 @@ func (p *DBaaSReconciler) PreStartGetProviderCMList() (v1.ConfigMapList, error) 
 	}
 }
 
-func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string, spec interface{}, ctx context.Context) error {
+func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string) *unstructured.Unstructured {
 	var providerObject unstructured.Unstructured
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   v1alpha1.GroupVersion.Group,
@@ -160,35 +161,40 @@ func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObj
 	})
 	providerObject.SetNamespace(object.GetNamespace())
 	providerObject.SetName(object.GetName())
-	providerObject.UnstructuredContent()["spec"] = spec
-	if err := ctrl.SetControllerReference(object, &providerObject, p.Scheme); err != nil {
-		return err
-	}
-	if err := p.Create(ctx, &providerObject); err != nil {
-		return err
-	}
-	return nil
+	return &providerObject
 }
 
-func (p *DBaaSReconciler) updateProviderObject(providerObject unstructured.Unstructured, spec interface{}, ctx context.Context) error {
-	providerObject.UnstructuredContent()["spec"] = spec
-	if err := p.Update(ctx, &providerObject); err != nil {
-		return err
-	}
-	return nil
+func (p *DBaaSReconciler) reconcileProviderObject(providerObject *unstructured.Unstructured, mutateFn controllerutil.MutateFn, ctx context.Context) (controllerutil.OperationResult, error) {
+	return controllerutil.CreateOrUpdate(ctx, p.Client, providerObject, mutateFn)
 }
 
-func (p *DBaaSReconciler) getProviderObject(object client.Object, providerObjectKind string, ctx context.Context) (unstructured.Unstructured, error) {
-	var providerObject unstructured.Unstructured
-	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   v1alpha1.GroupVersion.Group,
-		Version: v1alpha1.GroupVersion.Version,
-		Kind:    providerObjectKind,
-	})
-	if err := p.Get(ctx, client.ObjectKeyFromObject(object), &providerObject); err != nil {
-		return unstructured.Unstructured{}, err
+func (p *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerObject *unstructured.Unstructured, spec interface{}) controllerutil.MutateFn {
+	return func() error {
+		providerObject.UnstructuredContent()["spec"] = spec
+		providerObject.SetOwnerReferences(nil)
+		if err := ctrl.SetControllerReference(object, providerObject, p.Scheme); err != nil {
+			return err
+		}
+		return nil
 	}
-	return providerObject, nil
+}
+
+func (p *DBaaSReconciler) parseProviderObjectStatus(providerObject *unstructured.Unstructured, status interface{}) (bool, error) {
+	providerObjectStatus, existStatus := providerObject.UnstructuredContent()["status"]
+	if existStatus {
+		if err := decode(providerObjectStatus, status); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, ctx context.Context, f controllerutil.MutateFn) error {
+	if err := f(); err != nil {
+		return err
+	}
+	return p.Status().Update(ctx, object)
 }
 
 // getInstallNamespace returns the Namespace the operator should be watching for single tenant changes
