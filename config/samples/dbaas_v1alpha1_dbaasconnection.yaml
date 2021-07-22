@@ -3,5 +3,7 @@ kind: DBaaSConnection
 metadata:
   name: dbaasconnection-sample
 spec:
-  # Add fields here
-  foo: bar
+  inventoryRef:
+    namespace: openshift-dbaas-operator
+    name: atlas-inventory
+  instanceID: atlas-instance

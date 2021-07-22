@@ -38,7 +38,6 @@ type DBaaSInventoryReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles/finalizers;rolebindings/finalizers,verbs=update
 
@@ -101,18 +100,18 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		//
 		// Provider Inventory
 		//
-		provider, err := r.getDBaaSProvider(inventory.Spec.Provider, ctx)
+		provider, err := r.getDBaaSProvider(inventory.Spec.ProviderRef.Name, ctx)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", inventory.Spec.Provider)
+				logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", inventory.Spec.ProviderRef)
 				return ctrl.Result{}, err
 			}
-			logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", inventory.Spec.Provider)
+			logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", inventory.Spec.ProviderRef)
 			return ctrl.Result{}, err
 		}
-		logger.Info("Found DBaaS Provider", "DBaaS Provider", provider.Provider)
+		logger.Info("Found DBaaS Provider", "DBaaS Provider", inventory.Spec.ProviderRef)
 
-		providerInventory := r.createProviderObject(&inventory, provider.InventoryKind)
+		providerInventory := r.createProviderObject(&inventory, provider.Spec.InventoryKind)
 		if result, err := r.reconcileProviderObject(providerInventory, r.providerObjectMutateFn(&inventory, providerInventory, inventory.Spec.DeepCopy()), ctx); err != nil {
 			if errors.IsConflict(err) {
 				logger.Info("Provider Inventory modified, retry syncing spec")
@@ -121,29 +120,26 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			logger.Error(err, "Error reconciling the Provider Inventory resource")
 			return ctrl.Result{}, err
 		} else {
-			logger.Info("Provider inventory resource reconciled", "result", result)
+			logger.Info("Provider Inventory resource reconciled", "result", result)
 		}
 
-		var status v1alpha1.DBaaSInventoryStatus
-		if exist, err := r.parseProviderObjectStatus(providerInventory, &status); err != nil {
-			logger.Error(err, "Error parsing the status of the Provider Inventory resource")
+		var DBaaSProviderInventory v1alpha1.DBaaSProviderInventory
+		if err := r.parseProviderObject(&DBaaSProviderInventory, providerInventory); err != nil {
+			logger.Error(err, "Error parsing the Provider Inventory resource")
 			return ctrl.Result{}, err
-		} else if exist {
-			err = r.reconcileDBaaSObjectStatus(&inventory, ctx, func() error {
-				status.DeepCopyInto(&inventory.Status)
-				return nil
-			})
-			if err != nil {
-				if errors.IsConflict(err) {
-					logger.Info("DBaaS Inventory modified, retry syncing status")
-					return ctrl.Result{Requeue: true}, nil
-				}
-				logger.Error(err, "Error updating the DBaaS Inventory status")
-				return ctrl.Result{}, err
+		}
+		if err := r.reconcileDBaaSObjectStatus(&inventory, ctx, func() error {
+			DBaaSProviderInventory.Status.DeepCopyInto(&inventory.Status)
+			return nil
+		}); err != nil {
+			if errors.IsConflict(err) {
+				logger.Info("DBaaS Inventory modified, retry syncing status")
+				return ctrl.Result{Requeue: true}, nil
 			}
-			logger.Info("DBaaS Inventory status updated")
+			logger.Error(err, "Error updating the DBaaS Inventory status")
+			return ctrl.Result{}, err
 		} else {
-			logger.Info("Provider Inventory resource status not found")
+			logger.Info("DBaaS Inventory status updated")
 		}
 	}
 

@@ -7,8 +7,8 @@ metadata:
     categories: Database
     description: Import provider cloud instances for easy coupling with developer
       applications.
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com"]'
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com"]'
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:
@@ -24,6 +24,11 @@ spec:
       displayName: DBaaSInventory
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSProvider is the Schema for the dbaasproviders API
+      displayName: DBaaSProvider
+      kind: DBaaSProvider
+      name: dbaasproviders.dbaas.redhat.com
       version: v1alpha1
   description: Import provider cloud instances for easy coupling with developer applications.
   displayName: Database-as-a-Service Operator
