@@ -22,10 +22,13 @@ import (
 
 // DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
 type DBaaSOperatorInventorySpec struct {
-	// Provider is the name of the database provider that we wish to connect with
-	Provider DatabaseProvider `json:"provider"`
-	Authz    DBaasUsersGroups `json:"authz,omitempty"`
+	// A reference to a DBaaSProvider CR
+	ProviderRef NamespacedName `json:"providerRef"`
 
+	// Optionally define developer user and group access to this inventory
+	Authz DBaasUsersGroups `json:"authz,omitempty"`
+
+	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
 }
 

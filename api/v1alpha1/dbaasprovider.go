@@ -21,46 +21,65 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DBaaSProvider defines a database provider for DBaaS operator
-type DBaaSProvider struct {
-	// Provider is the name of the database provider
+// DBaaSProviderSpec defines the desired state of DBaaSProvider
+type DBaaSProviderSpec struct {
+	// Provider contains information about database provider & platform
 	Provider DatabaseProvider `json:"provider"`
 
-	// The name of the inventory CRD defined by the provider
+	// InventoryKind is the name of the inventory resource (CRD) defined by the provider
 	InventoryKind string `json:"inventoryKind"`
 
-	// The authentication fields the user needs to receive and provide
-	AuthenticationFields []AuthenticationField `json:"authenticationFields"`
-
-	// The name of the connection CRD defined by the provider
+	// ConnectionKind is the name of the connection resource (CRD) defined by the provider
 	ConnectionKind string `json:"connectionKind"`
+
+	// CredentialFields indicates what information to collect from UX & how to display fields in a form
+	CredentialFields []CredentialField `json:"credentialFields"`
 }
 
 type DatabaseProvider struct {
+	// Indicates the name used to specify Service Binding origin parameter (e.g. 'Red Hat DBaas / MongoDB Atlas')
 	Name string `json:"name"`
+
+	// A user-friendly name for this database provider (e.g. 'MongoDB Atlas')
+	DisplayName string `json:"displayName"`
+
+	// DisplayDescription indicates the description text shown for a Provider within UX (e.g. developer’s catalog tile)
+	DisplayDescription string `json:"displayDescription"`
+
+	// Icon information indicates what logo we display on developer catalog tile
+	Icon ProviderIcon `json:"icon"`
 }
 
-type AuthenticationField struct {
-	Name   string `json:"name"`
-	Masked bool   `json:"masked"`
+// ProviderIcon follows same field/naming formats as CSV
+type ProviderIcon struct {
+	Data      string `json:"base64data"`
+	MediaType string `json:"mediatype"`
 }
 
-// DBaaSProviderList contains a list of DBaaSProvider
-type DBaaSProviderList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []DBaaSProvider `json:"items"`
+type CredentialField struct {
+	// The name for this field
+	Key string `json:"key"`
+
+	// A user-friendly name for this field
+	DisplayName string `json:"displayName"`
+
+	// The type of field (string, maskedstring, integer, boolean)
+	Type string `json:"type"`
+
+	// If this field is required or not
+	Required bool `json:"required"`
 }
 
-// DBaaSInventorySpec defines the desired state of DBaaSInventory
+// DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
 type DBaaSInventorySpec struct {
-	// The secret storing the vendor-specific connection credentials to
-	// use with the API endpoint. The secret may be placed in a separate
-	// namespace to control access.
+	// The Secret containing the provider-specific connection credentials to use with its API
+	// endpoint. The format of the Secret is specified in the provider’s operator in its
+	// DBaaSProvider CR (CredentialFields key). It is recommended to place the Secret in a
+	// namespace with limited accessibility.
 	CredentialsRef *NamespacedName `json:"credentialsRef"`
 }
 
-// DBaaSInventoryStatus defines the observed state of DBaaSInventory
+// DBaaSInventoryStatus defines the Inventory status to be used by provider operators
 type DBaaSInventoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -69,7 +88,9 @@ type DBaaSInventoryStatus struct {
 }
 
 type Instance struct {
-	// The ID for this instance in the database service
+	// A provider-specific identifier for this instance in the database service. It may contain one or
+	// more pieces of information used by the provider operator to identify the instance on the
+	// database service.
 	InstanceID string `json:"instanceID"`
 
 	// The name of this instance in the database service
@@ -80,7 +101,7 @@ type Instance struct {
 }
 
 type NamespacedName struct {
-	// The namespace where object of known type is store
+	// The namespace where object of known type is stored
 	Namespace string `json:"namespace,omitempty"`
 
 	// The name for object of known type
@@ -101,9 +122,25 @@ type DBaaSConnectionSpec struct {
 type DBaaSConnectionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// Secret holding credentials needed for accessing the DB instance
+	// Secret holding the credentials needed for accessing the DB instance
 	CredentialsRef *corev1.LocalObjectReference `json:"credentialsRef,omitempty"`
 
-	// ConfigMap holding non-sensitive information needed for connecting to the DB instance
+	// A ConfigMap holding non-sensitive information needed for connecting to the DB instance
 	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
+}
+
+// DBaaSProviderConnection is the schema for unmarshalling provider connection object
+type DBaaSProviderConnection struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   DBaaSConnectionSpec   `json:"spec,omitempty"`
+	Status DBaaSConnectionStatus `json:"status,omitempty"`
+}
+
+// DBaaSProviderInventory is the schema for unmarshalling provider inventory object
+type DBaaSProviderInventory struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   DBaaSInventorySpec   `json:"spec,omitempty"`
+	Status DBaaSInventoryStatus `json:"status,omitempty"`
 }

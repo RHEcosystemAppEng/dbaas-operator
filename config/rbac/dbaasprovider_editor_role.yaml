@@ -1,0 +1,24 @@
+# permissions for end users to edit dbaasproviders.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaasprovider-editor-role
+rules:
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasproviders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasproviders/status
+  verbs:
+  - get

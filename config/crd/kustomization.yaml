@@ -4,6 +4,7 @@
 resources:
 - bases/dbaas.redhat.com_dbaasconnections.yaml
 - bases/dbaas.redhat.com_dbaasinventories.yaml
+- bases/dbaas.redhat.com_dbaasproviders.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -13,12 +14,14 @@ patchesStrategicMerge:
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_dbaasconnections.yaml
 #- patches/webhook_in_dbaasinventories.yaml
+#- patches/webhook_in_dbaasproviders.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_dbaasconnections.yaml
 #- patches/cainjection_in_dbaasinventories.yaml
+#- patches/cainjection_in_dbaasproviders.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

@@ -37,8 +37,8 @@ spec:
             description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
               authz:
-                description: DBaasUsersGroups designates which OpenShift users and
-                  groups to authorize
+                description: Optionally define developer user and group access to
+                  this inventory
                 properties:
                   groups:
                     items:
@@ -50,32 +50,36 @@ spec:
                     type: array
                 type: object
               credentialsRef:
-                description: The secret storing the vendor-specific connection credentials
-                  to use with the API endpoint. The secret may be placed in a separate
-                  namespace to control access.
+                description: The Secret containing the provider-specific connection
+                  credentials to use with its API endpoint. The format of the Secret
+                  is specified in the provider’s operator in its DBaaSProvider CR
+                  (CredentialFields key). It is recommended to place the Secret in
+                  a namespace with limited accessibility.
                 properties:
                   name:
                     description: The name for object of known type
                     type: string
                   namespace:
-                    description: The namespace where object of known type is store
+                    description: The namespace where object of known type is stored
                     type: string
                 type: object
-              provider:
-                description: Provider is the name of the database provider that we
-                  wish to connect with
+              providerRef:
+                description: A reference to a DBaaSProvider CR
                 properties:
                   name:
+                    description: The name for object of known type
                     type: string
-                required:
-                - name
+                  namespace:
+                    description: The namespace where object of known type is stored
+                    type: string
                 type: object
             required:
             - credentialsRef
-            - provider
+            - providerRef
             type: object
           status:
-            description: DBaaSInventoryStatus defines the observed state of DBaaSInventory
+            description: DBaaSInventoryStatus defines the Inventory status to be used
+              by provider operators
             properties:
               conditions:
                 items:
@@ -151,7 +155,10 @@ spec:
                 items:
                   properties:
                     instanceID:
-                      description: The ID for this instance in the database service
+                      description: A provider-specific identifier for this instance
+                        in the database service. It may contain one or more pieces
+                        of information used by the provider operator to identify the
+                        instance on the database service.
                       type: string
                     instanceInfo:
                       additionalProperties:

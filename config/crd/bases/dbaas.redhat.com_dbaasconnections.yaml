@@ -47,7 +47,7 @@ spec:
                     description: The name for object of known type
                     type: string
                   namespace:
-                    description: The namespace where object of known type is store
+                    description: The namespace where object of known type is stored
                     type: string
                 type: object
             required:
@@ -127,8 +127,8 @@ spec:
                   type: object
                 type: array
               connectionInfoRef:
-                description: ConfigMap holding non-sensitive information needed for
-                  connecting to the DB instance
+                description: A ConfigMap holding non-sensitive information needed
+                  for connecting to the DB instance
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -136,8 +136,8 @@ spec:
                     type: string
                 type: object
               credentialsRef:
-                description: Secret holding credentials needed for accessing the DB
-                  instance
+                description: Secret holding the credentials needed for accessing the
+                  DB instance
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

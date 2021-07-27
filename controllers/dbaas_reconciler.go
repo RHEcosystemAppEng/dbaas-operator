@@ -2,17 +2,11 @@ package controllers
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
-	"strings"
 
-	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -24,72 +18,17 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
-const (
-	relatedToLabelKey   = "related-to"
-	relatedToLabelValue = "dbaas-operator"
-	typeLabelKey        = "type"
-	typeLabelValue      = "dbaas-provider-registration"
-
-	providerDataKey       = "provider"
-	inventoryKindDataKey  = "inventory_kind"
-	connectionKindDataKey = "connection_kind"
-)
-
-var ConfigMapSelector = map[string]string{
-	relatedToLabelKey: relatedToLabelValue,
-	typeLabelKey:      typeLabelValue,
-}
-
 type DBaaSReconciler struct {
 	client.Client
 	*runtime.Scheme
 }
 
-func (p *DBaaSReconciler) getDBaaSProvider(requestedProvider v1alpha1.DatabaseProvider, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
-	cmList, err := p.getProviderCMList(ctx)
-	if err != nil {
+func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
+	var provider v1alpha1.DBaaSProvider
+	if err := p.Get(ctx, client.ObjectKey{Name: providerName}, &provider); err != nil {
 		return v1alpha1.DBaaSProvider{}, err
 	}
-
-	providers, err := p.ParseDBaaSProviderList(cmList)
-	if err != nil {
-		return v1alpha1.DBaaSProvider{}, err
-	}
-
-	for _, provider := range providers.Items {
-		if reflect.DeepEqual(provider.Provider, requestedProvider) {
-			return provider, nil
-		}
-	}
-	return v1alpha1.DBaaSProvider{}, apierrors.NewNotFound(schema.GroupResource{
-		Group:    v1alpha1.GroupVersion.Group,
-		Resource: strings.ToLower(requestedProvider.Name),
-	}, requestedProvider.Name)
-}
-
-func (p *DBaaSReconciler) ParseDBaaSProviderList(cmList v1.ConfigMapList) (v1alpha1.DBaaSProviderList, error) {
-	providers := make([]v1alpha1.DBaaSProvider, len(cmList.Items))
-	for i, cm := range cmList.Items {
-		var provider v1alpha1.DBaaSProvider
-		if providerName, exists := cm.Data[providerDataKey]; exists {
-			provider.Provider = v1alpha1.DatabaseProvider{Name: providerName}
-		} else {
-			return v1alpha1.DBaaSProviderList{}, errors.New("provider name is missing of the configured DBaaS Provider")
-		}
-		if inventoryKind, exists := cm.Data[inventoryKindDataKey]; exists {
-			provider.InventoryKind = inventoryKind
-		} else {
-			return v1alpha1.DBaaSProviderList{}, fmt.Errorf("inventory kind is missing of the configured DBaaS Provider %s", provider.Provider.Name)
-		}
-		if connectionKind, exists := cm.Data[connectionKindDataKey]; exists {
-			provider.ConnectionKind = connectionKind
-		} else {
-			return v1alpha1.DBaaSProviderList{}, fmt.Errorf("connection kind is missing of the configured DBaaS Provider %s", provider.Provider.Name)
-		}
-		providers[i] = provider
-	}
-
-	return v1alpha1.DBaaSProviderList{Items: providers}, nil
+	return provider, nil
 }
 
 func (p *DBaaSReconciler) parseDBaaSProviderInventories(providerList v1alpha1.DBaaSProviderList) []*unstructured.Unstructured {
@@ -99,7 +38,7 @@ func (p *DBaaSReconciler) parseDBaaSProviderInventories(providerList v1alpha1.DB
 		object.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
-			Kind:    provider.InventoryKind,
+			Kind:    provider.Spec.InventoryKind,
 		})
 		objects[i] = object
 	}
@@ -113,42 +52,35 @@ func (p *DBaaSReconciler) parseDBaaSProviderConnections(providerList v1alpha1.DB
 		object.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
-			Kind:    provider.ConnectionKind,
+			Kind:    provider.Spec.ConnectionKind,
 		})
 		objects[i] = object
 	}
 	return objects
 }
 
-func (p *DBaaSReconciler) getProviderCMList(ctx context.Context) (v1.ConfigMapList, error) {
-	var cmList v1.ConfigMapList
-	opts := []client.ListOption{
-		client.MatchingLabels(ConfigMapSelector),
-	}
-
-	if err := p.List(ctx, &cmList, opts...); err != nil {
-		return v1.ConfigMapList{}, err
-	}
-	return cmList, nil
-}
-
-func (p *DBaaSReconciler) PreStartGetProviderCMList() (v1.ConfigMapList, error) {
+func (p *DBaaSReconciler) PreStartGetDBaaSProviderList() (v1alpha1.DBaaSProviderList, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return v1.ConfigMapList{}, err
+		return v1alpha1.DBaaSProviderList{}, err
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return v1.ConfigMapList{}, err
-	}
-	options := metav1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(ConfigMapSelector).String(),
+		return v1alpha1.DBaaSProviderList{}, err
 	}
 
-	if cmList, err := clientset.CoreV1().ConfigMaps("").List(context.TODO(), options); err != nil {
-		return v1.ConfigMapList{}, err
+	var providerList v1alpha1.DBaaSProviderList
+	err = clientset.RESTClient().
+		Get().
+		AbsPath("/apis/" + v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version).
+		Resource("dbaasproviders").
+		Do(context.Background()).
+		Into(&providerList)
+
+	if err != nil {
+		return providerList, err
 	} else {
-		return *cmList, nil
+		return providerList, nil
 	}
 }
 
@@ -179,15 +111,16 @@ func (p *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerO
 	}
 }
 
-func (p *DBaaSReconciler) parseProviderObjectStatus(providerObject *unstructured.Unstructured, status interface{}) (bool, error) {
-	providerObjectStatus, existStatus := providerObject.UnstructuredContent()["status"]
-	if existStatus {
-		if err := decode(providerObjectStatus, status); err != nil {
-			return false, err
-		}
-		return true, nil
+func (p *DBaaSReconciler) parseProviderObject(object interface{}, unstructured *unstructured.Unstructured) error {
+	b, err := unstructured.MarshalJSON()
+	if err != nil {
+		return err
 	}
-	return false, nil
+	err = json.Unmarshal(b, object)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, ctx context.Context, f controllerutil.MutateFn) error {

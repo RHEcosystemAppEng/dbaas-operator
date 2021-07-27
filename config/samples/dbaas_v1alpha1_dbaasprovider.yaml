@@ -1,0 +1,30 @@
+apiVersion: dbaas.redhat.com/v1alpha1
+kind: DBaaSProvider
+metadata:
+  name: atlas-provider-registration
+  labels:
+    related-to: dbaas-operator
+    type: dbaas-provider-registration
+spec:
+  provider:
+    name: Red Hat DBaaS / MongoDB Atlas
+    displayName: MongoDB Atlas
+    displayDescription: Some nice description show to dev users in UX when selecting which provider from catalog.
+    icon:
+      base64data: <base64-encoded image data>
+      mediatype: image/png
+  inventoryKind: MongoDBAtlasInventory
+  connectionKind: MongoDBAtlasConnection
+  credentialFields:
+    - key: organizationId
+      displayName: Organization ID
+      type: string
+      required: true
+    - key: publicApiKey
+      displayName: Organization Public Key
+      type: string
+      required: true
+    - key: privateApiKey
+      displayName: Organization Private Key
+      type: maskedstring
+      required: true
