@@ -1,0 +1,27 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
+  failurePolicy: Fail
+  name: vdbaasconnection.kb.io
+  rules:
+  - apiGroups:
+    - dbaas.redhat.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - UPDATE
+    resources:
+    - dbaasconnections
+  sideEffects: None
