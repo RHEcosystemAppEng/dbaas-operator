@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
@@ -123,15 +124,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager, providerList v1alpha1.DBaaSProviderList) error {
-	owned := r.parseDBaaSProviderConnections(providerList)
-	builder := ctrl.NewControllerManagedBy(mgr)
-	builder = builder.For(&v1alpha1.DBaaSConnection{})
-	builder.Owns(&appv1.Deployment{})
-	for _, o := range owned {
-		builder = builder.Owns(o)
-	}
-	return builder.Complete(r)
+func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1alpha1.DBaaSConnection{}).
+		Build(r)
 }
 
 func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(connection *v1alpha1.DBaaSConnection, ctx context.Context) (controllerutil.OperationResult, error) {

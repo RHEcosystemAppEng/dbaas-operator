@@ -9,11 +9,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
@@ -25,63 +27,32 @@ type DBaaSReconciler struct {
 
 func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
 	var provider v1alpha1.DBaaSProvider
-	if err := p.Get(ctx, client.ObjectKey{Name: providerName}, &provider); err != nil {
+	if err := p.Get(ctx, types.NamespacedName{Name: providerName}, &provider); err != nil {
 		return v1alpha1.DBaaSProvider{}, err
 	}
 	return provider, nil
 }
 
-func (p *DBaaSReconciler) parseDBaaSProviderInventories(providerList v1alpha1.DBaaSProviderList) []*unstructured.Unstructured {
-	objects := make([]*unstructured.Unstructured, len(providerList.Items))
-	for i, provider := range providerList.Items {
-		object := &unstructured.Unstructured{}
-		object.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
-			Kind:    provider.Spec.InventoryKind,
-		})
-		objects[i] = object
-	}
-	return objects
-}
-
-func (p *DBaaSReconciler) parseDBaaSProviderConnections(providerList v1alpha1.DBaaSProviderList) []*unstructured.Unstructured {
-	objects := make([]*unstructured.Unstructured, len(providerList.Items))
-	for i, provider := range providerList.Items {
-		object := &unstructured.Unstructured{}
-		object.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
-			Kind:    provider.Spec.ConnectionKind,
-		})
-		objects[i] = object
-	}
-	return objects
-}
-
-func (p *DBaaSReconciler) PreStartGetDBaaSProviderList() (v1alpha1.DBaaSProviderList, error) {
-	config, err := rest.InClusterConfig()
+func (p *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, object runtime.Object, providerObjectKind string) error {
+	providerObject := unstructured.Unstructured{}
+	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   v1alpha1.GroupVersion.Group,
+		Version: v1alpha1.GroupVersion.Version,
+		Kind:    providerObjectKind,
+	})
+	err := ctrl.Watch(
+		&source.Kind{
+			Type: &providerObject,
+		},
+		&handler.EnqueueRequestForOwner{
+			OwnerType:    object,
+			IsController: true,
+		},
+	)
 	if err != nil {
-		return v1alpha1.DBaaSProviderList{}, err
+		return err
 	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return v1alpha1.DBaaSProviderList{}, err
-	}
-
-	var providerList v1alpha1.DBaaSProviderList
-	err = clientset.RESTClient().
-		Get().
-		AbsPath("/apis/" + v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version).
-		Resource("dbaasproviders").
-		Do(context.Background()).
-		Into(&providerList)
-
-	if err != nil {
-		return providerList, err
-	} else {
-		return providerList, nil
-	}
+	return nil
 }
 
 func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string) *unstructured.Unstructured {
@@ -131,7 +102,7 @@ func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, ctx c
 }
 
 // getInstallNamespace returns the Namespace the operator should be watching for single tenant changes
-func getInstallNamespace() (string, error) {
+func (p *DBaaSReconciler) getInstallNamespace() (string, error) {
 	// installNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 	var installNamespaceEnvVar = "INSTALL_NAMESPACE"
 

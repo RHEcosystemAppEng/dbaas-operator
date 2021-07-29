@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
@@ -50,7 +51,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", req.NamespacedName)
 	// for now, limit to controller to reconciling inventories in the "install" namespace...
 	//     will expand to other namespaces when multi-tenancy logic is added.
-	ns, err := getInstallNamespace()
+	ns, err := r.getInstallNamespace()
 	if err == nil && ns == req.Namespace {
 
 		var inventory v1alpha1.DBaaSInventory
@@ -147,14 +148,10 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager, providerList v1alpha1.DBaaSProviderList) error {
-	owned := r.parseDBaaSProviderInventories(providerList)
-	builder := ctrl.NewControllerManagedBy(mgr)
-	builder = builder.For(&v1alpha1.DBaaSInventory{})
-	for _, o := range owned {
-		builder = builder.Owns(o)
-	}
-	return builder.Complete(r)
+func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1alpha1.DBaaSInventory{}).
+		Build(r)
 }
 
 // inventoryRbacObjs sets up rbac for an inventory's users

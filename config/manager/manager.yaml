@@ -16,11 +16,13 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
+      type: dbaas-operator
   replicas: 1
   template:
     metadata:
       labels:
         control-plane: controller-manager
+        type: dbaas-operator
     spec:
       securityContext:
         runAsNonRoot: true
