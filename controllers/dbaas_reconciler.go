@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -20,9 +22,13 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
+// InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
+var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
+
 type DBaaSReconciler struct {
 	client.Client
 	*runtime.Scheme
+	InstallNamespace string
 }
 
 func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (v1alpha1.DBaaSProvider, error) {
@@ -101,14 +107,86 @@ func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, ctx c
 	return p.Status().Update(ctx, object)
 }
 
-// getInstallNamespace returns the Namespace the operator should be watching for single tenant changes
-func (p *DBaaSReconciler) getInstallNamespace() (string, error) {
-	// installNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
-	var installNamespaceEnvVar = "INSTALL_NAMESPACE"
+func (r *DBaaSReconciler) createObject(k8sObj, owner client.Object, ctx context.Context) error {
+	if err := ctrl.SetControllerReference(owner, k8sObj, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Create(ctx, k8sObj); err != nil {
+		return err
+	}
+	return nil
+}
 
-	ns, found := os.LookupEnv(installNamespaceEnvVar)
+func (r *DBaaSReconciler) updateObject(k8sObj client.Object, ctx context.Context) error {
+	if err := r.Update(ctx, k8sObj); err != nil {
+		return err
+	}
+	return nil
+}
+
+// create RBAC object, return true if already exists
+func (r *DBaaSReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
+	name := newObj.GetName()
+	namespace := newObj.GetNamespace()
+	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind+" RBAC", types.NamespacedName{Name: name, Namespace: namespace})
+	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
+		if errors.IsNotFound(err) {
+			logger.V(1).Info("resource not found", name, namespace)
+			if err = r.createObject(newObj, owner, ctx); err != nil {
+				logger.Error(err, "Error creating resource", name, namespace)
+				return false, err
+			}
+			logger.V(1).Info("resource created", name, namespace)
+		} else {
+			logger.Error(err, "Error getting the resource", name, namespace)
+			return false, err
+		}
+	} else {
+		return true, nil
+	}
+	return false, nil
+}
+
+// GetInstallNamespace returns the operator's install Namespace
+func GetInstallNamespace() (string, error) {
+	ns, found := os.LookupEnv(InstallNamespaceEnvVar)
 	if !found {
-		return "", fmt.Errorf("%s must be set", installNamespaceEnvVar)
+		return "", fmt.Errorf("%s must be set", InstallNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+// create an rbac subject for use in role bindings
+func getSubject(name, namespace, rbacObjectKind string) rbacv1.Subject {
+	return rbacv1.Subject{
+		APIGroup:  rbacv1.SchemeGroupVersion.Group,
+		Kind:      rbacObjectKind,
+		Name:      name,
+		Namespace: namespace,
+	}
+}
+
+// returns a unique subset of the provided slice
+func uniqueStr(input []string) []string {
+	u := make([]string, 0, len(input))
+	m := make(map[string]bool)
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = true
+			u = append(u, val)
+		}
+	}
+
+	return u
+}
+
+// checks if a string is present in a slice
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
