@@ -58,7 +58,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 			if errors.IsNotFound(err) {
 				// CR deleted since request queued, child objects getting GC'd, no requeue
-				logger.Info("DBaaS Inventory resource not found, has been deleted")
+				logger.V(1).Info("DBaaS Inventory resource not found, has been deleted")
 				return ctrl.Result{}, nil
 			}
 			logger.Error(err, "Error fetching DBaaS Inventory for reconcile")
@@ -72,12 +72,12 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		var roleObj rbacv1.Role
 		if err := r.Get(ctx, types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, &roleObj); err != nil {
 			if errors.IsNotFound(err) {
-				logger.Info("Inventory rbac resource not found", "Inventory RBAC", role.Name)
+				logger.V(1).Info("Inventory rbac resource not found", "Inventory RBAC", role.Name)
 				if err = r.createRoleObject(role, &inventory, ctx); err != nil {
 					logger.Error(err, "Error creating Inventory rbac resource", "Inventory RBAC", role.Name)
 					return ctrl.Result{}, err
 				}
-				logger.Info("Inventory rbac resource created", "Inventory RBAC", role.Name)
+				logger.V(1).Info("Inventory rbac resource created", "Inventory RBAC", role.Name)
 			} else {
 				logger.Error(err, "Error finding the Inventory rbac resource", "Inventory RBAC", role.Name)
 				return ctrl.Result{}, err
@@ -86,12 +86,12 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		var roleBindingObj rbacv1.RoleBinding
 		if err := r.Get(ctx, types.NamespacedName{Name: rolebinding.Name, Namespace: rolebinding.Namespace}, &roleBindingObj); err != nil {
 			if errors.IsNotFound(err) {
-				logger.Info("Inventory rbac resource not found", "Inventory RBAC", rolebinding.Name)
+				logger.V(1).Info("Inventory rbac resource not found", "Inventory RBAC", rolebinding.Name)
 				if err = r.createRoleBindingObject(rolebinding, &inventory, ctx); err != nil {
 					logger.Error(err, "Error creating Inventory rbac resource", "Inventory RBAC", rolebinding.Name)
 					return ctrl.Result{}, err
 				}
-				logger.Info("Inventory rbac resource created", "Inventory RBAC", rolebinding.Name)
+				logger.V(1).Info("Inventory rbac resource created", "Inventory RBAC", rolebinding.Name)
 			} else {
 				logger.Error(err, "Error finding the Inventory rbac resource", "Inventory RBAC", rolebinding.Name)
 				return ctrl.Result{}, err
@@ -110,18 +110,18 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", inventory.Spec.ProviderRef)
 			return ctrl.Result{}, err
 		}
-		logger.Info("Found DBaaS Provider", "DBaaS Provider", inventory.Spec.ProviderRef)
+		logger.V(1).Info("Found DBaaS Provider", "DBaaS Provider", inventory.Spec.ProviderRef)
 
 		providerInventory := r.createProviderObject(&inventory, provider.Spec.InventoryKind)
 		if result, err := r.reconcileProviderObject(providerInventory, r.providerObjectMutateFn(&inventory, providerInventory, inventory.Spec.DeepCopy()), ctx); err != nil {
 			if errors.IsConflict(err) {
-				logger.Info("Provider Inventory modified, retry syncing spec")
+				logger.V(1).Info("Provider Inventory modified, retry syncing spec")
 				return ctrl.Result{Requeue: true}, nil
 			}
 			logger.Error(err, "Error reconciling the Provider Inventory resource")
 			return ctrl.Result{}, err
 		} else {
-			logger.Info("Provider Inventory resource reconciled", "result", result)
+			logger.V(1).Info("Provider Inventory resource reconciled", "result", result)
 		}
 
 		var DBaaSProviderInventory v1alpha1.DBaaSProviderInventory
@@ -134,13 +134,13 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return nil
 		}); err != nil {
 			if errors.IsConflict(err) {
-				logger.Info("DBaaS Inventory modified, retry syncing status")
+				logger.V(1).Info("DBaaS Inventory modified, retry syncing status")
 				return ctrl.Result{Requeue: true}, nil
 			}
 			logger.Error(err, "Error updating the DBaaS Inventory status")
 			return ctrl.Result{}, err
 		} else {
-			logger.Info("DBaaS Inventory status updated")
+			logger.V(1).Info("DBaaS Inventory status updated")
 		}
 	}
 
