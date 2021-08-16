@@ -114,7 +114,6 @@ func main() {
 	}
 	err = (&controllers.DBaaSTenantReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-		InventoryCtrl:   inventoryCtrl,
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")

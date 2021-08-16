@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,26 +29,17 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
-var (
-	TenantList        v1alpha1.DBaaSTenantList
-	TenantNames       []string
-	TenantInventoryNS []string
-)
-
 // DBaaSTenantReconciler reconciles a DBaaSTenant object
 type DBaaSTenantReconciler struct {
 	*DBaaSReconciler
-	InventoryCtrl controller.Controller
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -66,16 +56,15 @@ type DBaaSTenantReconciler struct {
 func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", req.NamespacedName)
 
-	// Get list of DBaaSTenants from cluster
-	TenantList = v1alpha1.DBaaSTenantList{}
-	if err := r.List(ctx, &TenantList); err != nil {
+	// get list of DBaaSTenants
+	tenantList := v1alpha1.DBaaSTenantList{}
+	if err := r.List(ctx, &tenantList); err != nil {
 		logger.Error(err, "Error fetching DBaaS Tenant List for reconcile")
 		return ctrl.Result{}, err
 	}
-	getTenantNamesandNS()
 
 	// create default tenant if none exists
-	if result, err := r.createDefaultTenant(ctx); err != nil {
+	if result, err := r.createDefaultTenant(ctx, tenantList); err != nil {
 		return result, err
 	}
 
@@ -99,65 +88,36 @@ func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	//
 	// Tenant RBAC
 	//
-	inventoryAuthz := getAllAuthzFromInventoryList(inventoryList, tenant)
-	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, inventoryAuthz)
-	var clusterRoleObj rbacv1.ClusterRole
-	if exists, err := r.createRbacObj(&clusterRole, &clusterRoleObj, &tenant, ctx); err != nil {
+	if err := r.reconcileTenantRbacObjs(ctx, tenant, getAllAuthzFromInventoryList(inventoryList, tenant)); err != nil {
 		return ctrl.Result{}, err
-	} else if exists {
-		if !reflect.DeepEqual(clusterRole.Rules, clusterRoleObj.Rules) {
-			clusterRoleObj.Rules = clusterRole.Rules
-			if err := r.updateObject(&clusterRoleObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", "Name", clusterRoleObj.Name)
-				return ctrl.Result{}, err
-			}
-			logger.Info(clusterRoleObj.Kind+" resource updated", "Name", clusterRoleObj.Name)
-		}
-	}
-	var clusterRoleBindingObj rbacv1.ClusterRoleBinding
-	if exists, err := r.createRbacObj(&clusterRolebinding, &clusterRoleBindingObj, &tenant, ctx); err != nil {
-		return ctrl.Result{}, err
-	} else if exists {
-		if !reflect.DeepEqual(clusterRolebinding.RoleRef, clusterRoleBindingObj.RoleRef) ||
-			!reflect.DeepEqual(clusterRolebinding.Subjects, clusterRoleBindingObj.Subjects) {
-			clusterRoleBindingObj.RoleRef = clusterRolebinding.RoleRef
-			clusterRoleBindingObj.Subjects = clusterRolebinding.Subjects
-			if err := r.updateObject(&clusterRoleBindingObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", "Name", clusterRoleBindingObj.Name)
-				return ctrl.Result{}, err
-			}
-			logger.Info(clusterRoleBindingObj.Kind+" resource updated", "Name", clusterRoleBindingObj.Name)
-		}
 	}
 
 	// Reconcile each inventory in the tenant's namespace to ensure proper RBAC is created
 	for _, inventory := range inventoryList.Items {
 		// should we return anything on err for these reconciles?
-		// _, err = r.InventoryCtrl.Reconcile(ctx, invReq)
-		r.InventoryCtrl.Reconcile(ctx, reconcile.Request{
-			NamespacedName: types.NamespacedName{Name: inventory.Name, Namespace: inventory.Namespace},
-		})
+		if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
-	// re-run reconcile every minute to ensure tenant rbac is accurate.
-	//    this forces a fresh inventory list so we can be sure all proper devs have tenant access
-	//    ?? can we, instead, force this tenant reconciliation whenever an inventory in a tenant's namespace is modified ??
-	return ctrl.Result{RequeueAfter: time.Duration(60) * time.Second}, nil
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// watch all tenants in the cluster
 	c, err := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSTenant{}).
 		Build(r)
 	if err != nil {
 		return err
 	}
+
+	// watch deployments if owned by a csv and installed to the operator's namespace
 	csvType := &unstructured.Unstructured{}
 	csvType.SetGroupVersionKind(schema.GroupVersionKind{
-		Group: "operators.coreos.com",
-		Kind:  "ClusterServiceVersion",
-		// is version used? necessary here?
+		Group:   "operators.coreos.com",
+		Kind:    "ClusterServiceVersion",
 		Version: "v1alpha1",
 	})
 	if err = c.Watch(
@@ -170,10 +130,11 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
+// only reconcile deployments which reside in the operator's install namespace
 func (r *DBaaSTenantReconciler) ignoreOtherDeployments() predicate.Predicate {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			return r.evaluatePredicateObject(e.Object)
+			return e.Object.GetNamespace() == r.InstallNamespace
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return false
@@ -187,15 +148,13 @@ func (r *DBaaSTenantReconciler) ignoreOtherDeployments() predicate.Predicate {
 	}
 }
 
-func (r *DBaaSTenantReconciler) evaluatePredicateObject(obj client.Object) bool {
-	return obj.GetNamespace() == r.InstallNamespace
-}
-
 // create a default Tenant if one doesn't exist
-func (r *DBaaSTenantReconciler) createDefaultTenant(ctx context.Context) (ctrl.Result, error) {
+func (r *DBaaSTenantReconciler) createDefaultTenant(ctx context.Context, tenantList v1alpha1.DBaaSTenantList) (ctrl.Result, error) {
 	defaultName := "cluster"
 	logger := ctrl.LoggerFrom(ctx, "default DBaaS Tenant", defaultName)
-	if !contains(TenantNames, defaultName) && !contains(TenantInventoryNS, r.InstallNamespace) {
+
+	tenantNames, tenantNamespaces := getTenantNamesAndNamespaces(tenantList)
+	if !contains(tenantNames, defaultName) && !contains(tenantNamespaces, r.InstallNamespace) {
 		defaultTenant := v1alpha1.DBaaSTenant{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: defaultName,
@@ -210,8 +169,7 @@ func (r *DBaaSTenantReconciler) createDefaultTenant(ctx context.Context) (ctrl.R
 			},
 		}
 
-		existingTenant := v1alpha1.DBaaSTenant{}
-		if err := r.Get(ctx, types.NamespacedName{Name: defaultTenant.Name}, &existingTenant); err != nil {
+		if err := r.Get(ctx, types.NamespacedName{Name: defaultTenant.Name}, &v1alpha1.DBaaSTenant{}); err != nil {
 			if errors.IsNotFound(err) {
 				logger.Info("resource not found", "Name", defaultTenant.Name)
 				if err := r.Create(ctx, &defaultTenant); err != nil {
@@ -294,14 +252,4 @@ func getAllAuthzFromInventoryList(inventoryList v1alpha1.DBaaSInventoryList, ten
 		inventoryAuthz.Groups = append(inventoryAuthz.Groups, tenant.Spec.Authz.Developer.Groups...)
 	}
 	return inventoryAuthz
-}
-
-// get latest Tenant names and inventoryNamespaces, add to global slice vars
-func getTenantNamesandNS() {
-	TenantNames = []string{}
-	TenantInventoryNS = []string{}
-	for _, tenant := range TenantList.Items {
-		TenantNames = append(TenantNames, tenant.Name)
-		TenantInventoryNS = append(TenantInventoryNS, tenant.Spec.InventoryNamespace)
-	}
 }
