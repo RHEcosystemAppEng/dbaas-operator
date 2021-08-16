@@ -36,4 +36,12 @@ resources:
   kind: DBaaSProvider
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+  controller: true
+  domain: redhat.com
+  group: dbaas
+  kind: DBaaSTenant
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"
