@@ -56,7 +56,7 @@ bindable in Topology view.
 - Once the Atlas operator has completed its resource fetch of resources available in the cloud via your provided Atlas
   credentials, the dbaas-operator will read the response & update the DBaaSInventory `status` section with the resulting
   information. You can view an example of what a return status would look like in the
-  [DBaaSInventory template](config/samples/dbaas_v1_DBaaSInventory.yaml).
+  [DBaaSInventory template](config/samples/dbaas_v1alpha1_dbaasinventory.yaml).
 
 **Specifying a cluster instance for import:**
 - At this point in the workflow, the cluster instances available for import would be displayed to the OCP Admin for
