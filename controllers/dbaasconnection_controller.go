@@ -102,14 +102,14 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	var DBaaSProviderConnection v1alpha1.DBaaSProviderConnection
-	if err := r.parseProviderObject(&DBaaSProviderConnection, providerConnection); err != nil {
+	if err := r.parseProviderObject(providerConnection, &DBaaSProviderConnection); err != nil {
 		logger.Error(err, "Error parsing the Provider Connection resource")
 		return ctrl.Result{}, err
 	}
-	if err := r.reconcileDBaaSObjectStatus(&connection, ctx, func() error {
+	if err := r.reconcileDBaaSObjectStatus(&connection, func() error {
 		DBaaSProviderConnection.Status.DeepCopyInto(&connection.Status)
 		return nil
-	}); err != nil {
+	}, ctx); err != nil {
 		if errors.IsConflict(err) {
 			logger.Info("DBaaS Connection modified, retry syncing status")
 			return ctrl.Result{Requeue: true}, nil

@@ -17,21 +17,25 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
+	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -41,8 +45,20 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var ctx context.Context
+var dRec *DBaaSReconciler
+var iCtrl *SpyController
+var cCtrl *SpyController
 
-func TestAPIs(t *testing.T) {
+const (
+	testNamespace = "default"
+
+	timeout  = time.Second * 10
+	duration = time.Second * 10
+	interval = time.Millisecond * 250
+)
+
+func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecsWithDefaultAndCustomReporters(t,
@@ -55,7 +71,10 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "config", "crd", "bases"),
+			filepath.Join("..", "test", "crd"),
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -68,16 +87,54 @@ var _ = BeforeSuite(func() {
 
 	//+kubebuilder:scaffold:scheme
 
+	ctx = context.Background()
+
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	err = os.Setenv(InstallNamespaceEnvVar, testNamespace)
+	Expect(err).NotTo(HaveOccurred())
 
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
 	})
 	Expect(err).ToNot(HaveOccurred())
 
+	dRec = &DBaaSReconciler{
+		Client:           k8sManager.GetClient(),
+		Scheme:           k8sManager.GetScheme(),
+		InstallNamespace: testNamespace,
+	}
+
+	inventoryCtrl, err := (&DBaaSInventoryReconciler{
+		DBaaSReconciler: dRec,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	connectionCtrl, err := (&DBaaSConnectionReconciler{
+		DBaaSReconciler: dRec,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	iCtrl = newSpyController(inventoryCtrl)
+	cCtrl = newSpyController(connectionCtrl)
+
+	err = (&DBaaSProviderReconciler{
+		DBaaSReconciler: dRec,
+		InventoryCtrl:   iCtrl,
+		ConnectionCtrl:  cCtrl,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DBaaSTenantReconciler{
+		DBaaSReconciler: dRec,
+		InventoryCtrl:   inventoryCtrl,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	go func() {
+		defer GinkgoRecover()
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
 		Expect(err).ToNot(HaveOccurred())
 	}()
@@ -86,5 +143,7 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
+	Expect(err).NotTo(HaveOccurred())
+	err = os.Unsetenv(InstallNamespaceEnvVar)
 	Expect(err).NotTo(HaveOccurred())
 })

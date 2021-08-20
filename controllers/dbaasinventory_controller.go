@@ -122,14 +122,14 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 
 		var DBaaSProviderInventory v1alpha1.DBaaSProviderInventory
-		if err := r.parseProviderObject(&DBaaSProviderInventory, providerInventory); err != nil {
+		if err := r.parseProviderObject(providerInventory, &DBaaSProviderInventory); err != nil {
 			logger.Error(err, "Error parsing the Provider Inventory resource")
 			return ctrl.Result{}, err
 		}
-		if err := r.reconcileDBaaSObjectStatus(&inventory, ctx, func() error {
+		if err := r.reconcileDBaaSObjectStatus(&inventory, func() error {
 			DBaaSProviderInventory.Status.DeepCopyInto(&inventory.Status)
 			return nil
-		}); err != nil {
+		}, ctx); err != nil {
 			if errors.IsConflict(err) {
 				logger.V(1).Info("DBaaS Inventory modified, retry syncing status")
 				return ctrl.Result{Requeue: true}, nil
