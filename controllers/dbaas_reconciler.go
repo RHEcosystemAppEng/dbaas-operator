@@ -24,6 +24,7 @@ import (
 
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
+var inventoryNamespaceKey = ".spec.inventoryNamespace"
 
 type DBaaSReconciler struct {
 	client.Client
@@ -149,14 +150,9 @@ func (r *DBaaSReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx
 
 // populate Tenant List based on spec.inventoryNamespace
 func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventoryNamespace string) (v1alpha1.DBaaSTenantList, error) {
-	var tenantList, tenantListByNS v1alpha1.DBaaSTenantList
-	if err := r.List(ctx, &tenantList); err != nil {
-		return tenantList, err
-	}
-	for _, tenant := range tenantList.Items {
-		if tenant.Spec.InventoryNamespace == inventoryNamespace {
-			tenantListByNS.Items = append(tenantListByNS.Items, tenant)
-		}
+	var tenantListByNS v1alpha1.DBaaSTenantList
+	if err := r.List(ctx, &tenantListByNS, client.MatchingFields{inventoryNamespaceKey: inventoryNamespace}); err != nil {
+		return v1alpha1.DBaaSTenantList{}, err
 	}
 	return tenantListByNS, nil
 }
