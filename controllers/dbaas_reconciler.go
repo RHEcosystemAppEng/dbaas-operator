@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -18,8 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
@@ -145,6 +145,115 @@ func (r *DBaaSReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx
 		return true, nil
 	}
 	return false, nil
+}
+
+// populate Tenant List based on spec.inventoryNamespace
+func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventoryNamespace string) (v1alpha1.DBaaSTenantList, error) {
+	var tenantList, tenantListByNS v1alpha1.DBaaSTenantList
+	if err := r.List(ctx, &tenantList); err != nil {
+		return tenantList, err
+	}
+	for _, tenant := range tenantList.Items {
+		if tenant.Spec.InventoryNamespace == inventoryNamespace {
+			tenantListByNS.Items = append(tenantListByNS.Items, tenant)
+		}
+	}
+	return tenantListByNS, nil
+}
+
+// Reconcile tenant to ensure proper RBAC is created
+func (r *DBaaSReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryAuthz v1alpha1.DBaasUsersGroups) error {
+	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
+
+	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, inventoryAuthz)
+	var clusterRoleObj rbacv1.ClusterRole
+	if exists, err := r.createRbacObj(&clusterRole, &clusterRoleObj, &tenant, ctx); err != nil {
+		return err
+	} else if exists {
+		if !reflect.DeepEqual(clusterRole.Rules, clusterRoleObj.Rules) {
+			clusterRoleObj.Rules = clusterRole.Rules
+			if err := r.updateObject(&clusterRoleObj, ctx); err != nil {
+				logger.Error(err, "Error updating resource", "Name", clusterRoleObj.Name)
+				return err
+			}
+			logger.Info(clusterRoleObj.Kind+" resource updated", "Name", clusterRoleObj.Name)
+		}
+	}
+	var clusterRoleBindingObj rbacv1.ClusterRoleBinding
+	if exists, err := r.createRbacObj(&clusterRolebinding, &clusterRoleBindingObj, &tenant, ctx); err != nil {
+		return err
+	} else if exists {
+		if !reflect.DeepEqual(clusterRolebinding.RoleRef, clusterRoleBindingObj.RoleRef) ||
+			!reflect.DeepEqual(clusterRolebinding.Subjects, clusterRoleBindingObj.Subjects) {
+			clusterRoleBindingObj.RoleRef = clusterRolebinding.RoleRef
+			clusterRoleBindingObj.Subjects = clusterRolebinding.Subjects
+			if err := r.updateObject(&clusterRoleBindingObj, ctx); err != nil {
+				logger.Error(err, "Error updating resource", "Name", clusterRoleBindingObj.Name)
+				return err
+			}
+			logger.Info(clusterRoleBindingObj.Kind+" resource updated", "Name", clusterRoleBindingObj.Name)
+		}
+	}
+
+	return nil
+}
+
+// Reconcile inventory to ensure proper RBAC is created
+func (r *DBaaSReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
+	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", inventory.Name)
+
+	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
+	var roleObj rbacv1.Role
+	if exists, err := r.createRbacObj(&role, &roleObj, &inventory, ctx); err != nil {
+		return err
+	} else if exists {
+		if !reflect.DeepEqual(role.Rules, roleObj.Rules) {
+			roleObj.Rules = role.Rules
+			if err := r.updateObject(&roleObj, ctx); err != nil {
+				logger.Error(err, "Error updating resource", roleObj.Name, roleObj.Namespace)
+				return err
+			}
+			logger.V(1).Info(roleObj.Kind+" resource updated", roleObj.Name, roleObj.Namespace)
+		}
+	}
+	var roleBindingObj rbacv1.RoleBinding
+	if exists, err := r.createRbacObj(&rolebinding, &roleBindingObj, &inventory, ctx); err != nil {
+		return err
+	} else if exists {
+		if !reflect.DeepEqual(rolebinding.RoleRef, roleBindingObj.RoleRef) ||
+			!reflect.DeepEqual(rolebinding.Subjects, roleBindingObj.Subjects) {
+			roleBindingObj.RoleRef = rolebinding.RoleRef
+			roleBindingObj.Subjects = rolebinding.Subjects
+			if err := r.updateObject(&roleBindingObj, ctx); err != nil {
+				logger.Error(err, "Error updating resource", roleBindingObj.Name, roleBindingObj.Namespace)
+				return err
+			}
+			logger.V(1).Info(roleBindingObj.Kind+" resource updated", roleBindingObj.Name, roleBindingObj.Namespace)
+		}
+	}
+
+	return nil
+}
+
+// get tenant names and namespaces from list
+func getTenantNamesAndNamespaces(tenantList v1alpha1.DBaaSTenantList) (tenantNames, tenantNamespaces []string) {
+	return getTenantNames(tenantList), getTenantNamespaces(tenantList)
+}
+
+// get tenant names from list
+func getTenantNames(tenantList v1alpha1.DBaaSTenantList) (tenantNames []string) {
+	for _, tenant := range tenantList.Items {
+		tenantNames = append(tenantNames, tenant.Name)
+	}
+	return tenantNames
+}
+
+// get tenant namespaces from list
+func getTenantNamespaces(tenantList v1alpha1.DBaaSTenantList) (tenantNamespaces []string) {
+	for _, tenant := range tenantList.Items {
+		tenantNamespaces = append(tenantNamespaces, tenant.Spec.InventoryNamespace)
+	}
+	return tenantNamespaces
 }
 
 // GetInstallNamespace returns the operator's install Namespace
