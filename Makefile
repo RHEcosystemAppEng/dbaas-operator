@@ -29,7 +29,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # redhat.com/dbaas-operator-bundle:$VERSION and redhat.com/dbaas-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= quay.io/ecosystem-appeng/dbaas-operator
+IMAGE_TAG_BASE ?= quay.io/ahameed/dbaas-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)

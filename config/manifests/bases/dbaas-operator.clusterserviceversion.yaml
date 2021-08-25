@@ -26,6 +26,11 @@ spec:
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSPlatform is the Schema for the dbaasplatforms API
+      displayName: DBaa SPlatform
+      kind: DBaaSPlatform
+      name: dbaasplatforms.dbaas.redhat.com
+      version: v1alpha1
     - description: DBaaSProvider is the Schema for the dbaasproviders API
       displayName: DBaaSProvider
       kind: DBaaSProvider

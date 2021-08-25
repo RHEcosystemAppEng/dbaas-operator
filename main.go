@@ -20,18 +20,23 @@ import (
 	"flag"
 	"os"
 
+	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
+	operatorframwork "github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -44,6 +49,10 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	utilruntime.Must(operatorframwork.AddToScheme(scheme))
+	utilruntime.Must(coreosv1.AddToScheme(scheme))
+
+	utilruntime.Must(dbaasv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -108,15 +117,27 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSProvider")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1.DBaaSConnection{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
-		os.Exit(1)
+	//We'll just make sure to set `ENABLE_WEBHOOKS=false` when we run locally.
+
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&v1alpha1.DBaaSConnection{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
+			os.Exit(1)
+		}
 	}
 	err = (&controllers.DBaaSTenantReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
+		os.Exit(1)
+	}
+	if err = (&controllers.DBaaSPlatformReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		Log:    ctrl.Log.WithName("controllers").WithName("DBaaSPlatform"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSPlatform")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
