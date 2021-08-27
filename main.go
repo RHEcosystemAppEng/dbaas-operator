@@ -20,9 +20,6 @@ import (
 	"flag"
 	"os"
 
-	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
-	operatorframwork "github.com/operator-framework/api/pkg/operators/v1alpha1"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -34,8 +31,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
+	operatorv1 "github.com/openshift/api/operator/v1"
+	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
+	operatorframwork "github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -51,8 +52,9 @@ func init() {
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframwork.AddToScheme(scheme))
 	utilruntime.Must(coreosv1.AddToScheme(scheme))
+	utilruntime.Must(consolev1alpha1.Install(scheme))
+	utilruntime.Must(operatorv1.Install(scheme))
 
-	utilruntime.Must(dbaasv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
