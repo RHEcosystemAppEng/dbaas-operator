@@ -113,6 +113,14 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &v1alpha1.DBaaSTenant{}, inventoryNamespaceKey, func(rawObj client.Object) []string {
+		tenant := rawObj.(*v1alpha1.DBaaSTenant)
+		inventoryNS := tenant.Spec.InventoryNamespace
+		return []string{inventoryNS}
+	}); err != nil {
+		return err
+	}
+
 	// watch deployments if owned by a csv and installed to the operator's namespace
 	csvType := &unstructured.Unstructured{}
 	csvType.SetGroupVersionKind(schema.GroupVersionKind{

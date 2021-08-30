@@ -58,8 +58,7 @@ var _ = Describe("Create provider object", func() {
 var _ = Describe("Get DBaaSProvider", func() {
 	provider := &v1alpha1.DBaaSProvider{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-provider",
-			Namespace: testNamespace,
+			Name: "test-provider",
 		},
 		Spec: v1alpha1.DBaaSProviderSpec{
 			Provider: v1alpha1.DatabaseProvider{
@@ -74,9 +73,14 @@ var _ = Describe("Get DBaaSProvider", func() {
 	AfterEach(assertResourceDeletion(provider))
 
 	It("should get the expected DBaaSProvider", func() {
+		provider.TypeMeta = metav1.TypeMeta{
+			Kind:       "DBaaSProvider",
+			APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
+		}
+
 		p, err := dRec.getDBaaSProvider("test-provider", ctx)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(p.Spec).Should(Equal(provider.Spec))
+		Expect(p).Should(Equal(provider))
 	})
 })
 
@@ -285,5 +289,67 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 		case <-time.After(timeout):
 			Fail("failed to watch with the expected owner")
 		}
+	})
+})
+
+var _ = Describe("list tenants by inventory namespace", func() {
+	Context("after creating DBaaSTenants", func() {
+		ns := "test-namespace"
+		tenant1 := &v1alpha1.DBaaSTenant{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-tenant-1",
+			},
+			Spec: v1alpha1.DBaaSTenantSpec{
+				InventoryNamespace: ns,
+				Authz: v1alpha1.DBaasAuthz{
+					Developer: v1alpha1.DBaasUsersGroups{
+						Groups: []string{"system:authenticated"},
+					},
+				},
+			},
+		}
+		tenant2 := &v1alpha1.DBaaSTenant{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-tenant-2",
+			},
+			Spec: v1alpha1.DBaaSTenantSpec{
+				InventoryNamespace: ns,
+				Authz: v1alpha1.DBaasAuthz{
+					Developer: v1alpha1.DBaasUsersGroups{
+						Groups: []string{"system:authenticated"},
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(tenant1))
+		AfterEach(assertResourceDeletion(tenant1))
+		BeforeEach(assertResourceCreation(tenant2))
+		AfterEach(assertResourceDeletion(tenant2))
+
+		Context("when listing the tenants with the inventory namespace", func() {
+			It("should return all the tenants matching the inventory namespace", func() {
+				tenant1.TypeMeta = metav1.TypeMeta{
+					Kind:       "DBaaSTenant",
+					APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
+				}
+				tenant2.TypeMeta = metav1.TypeMeta{
+					Kind:       "DBaaSTenant",
+					APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
+				}
+
+				tenantList, err := dRec.tenantListByInventoryNS(ctx, ns)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tenantList.Items).Should(HaveLen(2))
+				Expect(tenantList.Items).Should(ConsistOf(*tenant1, *tenant2))
+			})
+		})
+
+		Context("when listing the tenants with an invalid namespace", func() {
+			It("should return no tenants", func() {
+				tenantList, err := dRec.tenantListByInventoryNS(ctx, "not-test-namespace")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tenantList.Items).Should(HaveLen(0))
+			})
+		})
 	})
 })
