@@ -25,10 +25,11 @@ type PlatformsName string
 type PlatformsInstlnStatus string
 
 const (
-	CrunchyBridgeInstallation      PlatformsName = "crunchy-bridge"
-	MongoDBAtlasInstallation       PlatformsName = "mongodb-atlas"
-	DBassDynamicPluginInstallation PlatformsName = "dbaas-dynamic-plugin"
-	Csv                            PlatformsName = "Csv"
+	CrunchyBridgeInstallation         PlatformsName = "crunchy-bridge"
+	MongoDBAtlasInstallation          PlatformsName = "mongodb-atlas"
+	DBassDynamicPluginInstallation    PlatformsName = "dbaas-dynamic-plugin"
+	Csv                               PlatformsName = "Csv"
+	ConsolTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 )
 
 const (

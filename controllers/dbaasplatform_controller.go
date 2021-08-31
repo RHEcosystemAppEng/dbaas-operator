@@ -20,11 +20,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/csv"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/dbaas_dynamic_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
 	"github.com/go-logr/logr"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -188,7 +189,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 	if err != nil {
 		return nil, fmt.Errorf("Could not get a list of dbaas platform intallation CR: %w", err)
 	}
-	owner, _ := csv.GetDBaaSOperatorCSV(ctx, serverClient)
+	owner, _ := csv.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
 	cr := &dbaasv1alpha1.DBaaSPlatform{}
 	if len(platformList.Items) == 0 {
 
@@ -231,6 +232,7 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBassDynamicPluginInstallation,
+		dbaasv1alpha1.ConsolTelemetryPluginInstallation,
 	}
 
 }
@@ -240,6 +242,7 @@ func (r *DBaaSPlatformReconciler) getCleanupPlatforms() []dbaasv1alpha1.Platform
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBassDynamicPluginInstallation,
+		dbaasv1alpha1.ConsolTelemetryPluginInstallation,
 		dbaasv1alpha1.Csv,
 	}
 
@@ -254,8 +257,14 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
 		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.DBassDynamicPluginInstallation:
-		return dbaas_dynamic_plugin.NewReconciler(r.Client, r.Log)
-
+		return console_plugin.NewReconciler(r.Client, r.Log,
+			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, reconcilers.DBAAS_DYNAMIC_PLUGIN_NAMESPACE,
+			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME)
+	case dbaasv1alpha1.ConsolTelemetryPluginInstallation:
+		return console_plugin.NewReconciler(r.Client, r.Log,
+			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAMESPACE,
+			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
+			v1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
 	}
 
 	return nil
