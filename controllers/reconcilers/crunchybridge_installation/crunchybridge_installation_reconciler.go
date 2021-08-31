@@ -115,8 +115,6 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	operatorgroup := GetCrunchyBridgeOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{
-			//TargetNamespaces: []string{"openshift-operators"},
-
 		}
 
 		return nil
@@ -144,10 +142,9 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 }
 
 func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	// We have to remove the prometheus operator deployment manually
+
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		//Namespace: cr.Namespace,
 		Namespace: reconcilers.INSTALL_NAMESPACE,
 	}
 	err := r.client.List(ctx, deployments, opts)

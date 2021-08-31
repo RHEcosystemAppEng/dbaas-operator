@@ -49,15 +49,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.reconcileConsolePlugin(ctx)
+
+	status, err = r.waitForDBaaSPlugin(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.reconcileConsole(ctx)
+	// create Console Plugin CR resource that includes DBaaS Dynamic Plugin service name.
+	status, err = r.createConsolePluginCR(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.waitForConsole(ctx)
+	// enabled DBaaS plugins the console operator config
+	status, err = r.enableDBaaSPluginConfig(ctx)
+	if status != v1alpha1.ResultSuccess {
+		return status, err
+	}
+	status, err = r.waitForConsoleOperator(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -228,7 +235,7 @@ func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.Platform
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileConsolePlugin(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) createConsolePluginCR(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	plugin := GetDBaaSDynamicPluginConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
 		plugin.Spec.DisplayName = "OpenShift DataBase as a Service Dynamic Plugin"
@@ -247,7 +254,7 @@ func (r *Reconciler) reconcileConsolePlugin(ctx context.Context) (v1alpha1.Platf
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileConsole(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) enableDBaaSPluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	console := GetOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
@@ -267,7 +274,28 @@ func (r *Reconciler) reconcileConsole(ctx context.Context) (v1alpha1.PlatformsIn
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForConsole(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) waitForDBaaSPlugin(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+
+	deployments := &appv1.DeploymentList{}
+	opts := &client.ListOptions{
+		Namespace: DBaaSDynamicPluginName,
+	}
+	err := r.client.List(ctx, deployments, opts)
+	if err != nil {
+		return v1alpha1.ResultFailed, err
+	}
+
+	for _, deployment := range deployments.Items {
+		if deployment.Name == DBaaSDynamicPluginName {
+			if deployment.Status.ReadyReplicas > 0 {
+				return v1alpha1.ResultSuccess, nil
+			}
+		}
+	}
+	return v1alpha1.ResultInProgress, nil
+}
+
+func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	console := GetOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {

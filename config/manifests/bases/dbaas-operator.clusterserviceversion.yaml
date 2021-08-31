@@ -8,7 +8,7 @@ metadata:
     description: Import provider cloud instances for easy coupling with developer
       applications.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com"]'
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:

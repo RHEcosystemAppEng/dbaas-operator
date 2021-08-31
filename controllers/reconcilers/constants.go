@@ -5,5 +5,5 @@ const (
 	CATALOG_NAMESPACE         = "openshift-marketplace"
 	MONGODB_ATLAS_CATLOG_IMG  = "quay.io/ecosystem-appeng/mongodb-atlas-operator-catalog:0.6.25"
 	CRUNCHY_BRIDGE_CATLOG_IMG = "quay.io/ahameed/crunchy-bridge-operator-catalog:v0.0.1"
-	DBAAS_DYNAMIC_PLUGIN_IMG  = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin"
+	DBAAS_DYNAMIC_PLUGIN_IMG  = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:latest"
 )

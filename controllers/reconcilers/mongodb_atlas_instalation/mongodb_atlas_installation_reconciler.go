@@ -114,7 +114,6 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	operatorgroup := GetMongoDBAtlasOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{
-			//TargetNamespaces: []string{"openshift-operators"},
 
 		}
 
@@ -143,7 +142,7 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 }
 
 func (r *Reconciler) waitForMongoDBAtlasOperator(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	// We have to remove the prometheus operator deployment manually
+
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
 

@@ -231,7 +231,6 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBassDynamicPluginInstallation,
-		//dbaasv1alpha1.Csv,
 	}
 
 }
