@@ -1,4 +1,4 @@
-package dbaas_dynamic_plugin
+package console_plugin
 
 import (
 	"context"
@@ -21,19 +21,28 @@ import (
 )
 
 const (
-	DBaaSDynamicPluginName       = "dbaas-dynamic-plugin"
 	consoleServingCertSecretName = "console-serving-cert"
 )
 
 type Reconciler struct {
-	client client.Client
-	logger logr.Logger
+	client          client.Client
+	logger          logr.Logger
+	pluginName      string
+	pluginNamespace string
+	pluginImage     string
+	displayName     string
+	envs            []v1.EnvVar
 }
 
-func NewReconciler(client client.Client, logger logr.Logger) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, logger logr.Logger, pluginName string, pluginNamespace string, pluginImage string, displayName string, envs ...v1.EnvVar) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client: client,
-		logger: logger,
+		client:          client,
+		logger:          logger,
+		pluginName:      pluginName,
+		pluginNamespace: pluginNamespace,
+		pluginImage:     pluginImage,
+		displayName:     displayName,
+		envs:            envs,
 	}
 }
 func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, status2 *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
@@ -50,17 +59,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 		return status, err
 	}
 
-	status, err = r.waitForDBaaSPlugin(ctx)
+	status, err = r.waitForConsolePlugin(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	// create Console Plugin CR resource that includes DBaaS Dynamic Plugin service name.
+	// create Console Plugin CR resource that includes Console Plugin service name.
 	status, err = r.createConsolePluginCR(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	// enabled DBaaS plugins the console operator config
-	status, err = r.enableDBaaSPluginConfig(ctx)
+	// enabled console plugins the console operator config
+	status, err = r.enableConsolePluginConfig(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -73,36 +82,36 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 }
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
-	console := GetOperatorConsole()
+	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
 		return v1alpha1.ResultFailed, err
 	}
-	console.Spec.Plugins = removeDBaaSDynamicPlugin(console.Spec.Plugins)
+	console.Spec.Plugins = r.removePlugin(console.Spec.Plugins)
 	err = r.client.Update(ctx, console)
 	if err != nil {
 		return v1alpha1.ResultFailed, err
 	}
 
-	plugin := GetDBaaSDynamicPluginConsolePlugin()
+	plugin := r.getConsolePlugin()
 	err = r.client.Delete(ctx, plugin)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
 	}
 
-	deployment := GetDBaaSDynamicPluginDeployment()
+	deployment := r.getDeployment()
 	err = r.client.Delete(ctx, deployment)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
 	}
 
-	service := GetDBaaSDynamicPluginService()
+	service := r.getService()
 	err = r.client.Delete(ctx, service)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
 	}
 
-	namespace := GetDBaaSDynamicPluginNamespace()
+	namespace := r.getNamespace()
 	err = r.client.Delete(ctx, namespace)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
@@ -112,28 +121,31 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 }
 
 func (r *Reconciler) reconcileNamespace(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	namespace := GetDBaaSDynamicPluginNamespace()
+	namespace := r.getNamespace()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, namespace, func() error {
 		return nil
 	})
 
 	if err != nil {
+		if errors.IsConflict(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
 		return v1alpha1.ResultFailed, err
 	}
 	return v1alpha1.ResultSuccess, nil
 }
 
 func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	service := GetDBaaSDynamicPluginService()
+	service := r.getService()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 		service.Annotations = map[string]string{
 			"service.alpha.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
 		}
 		service.Labels = map[string]string{
-			"app":                         DBaaSDynamicPluginName,
-			"app.kubernetes.io/component": DBaaSDynamicPluginName,
-			"app.kubernetes.io/instance":  DBaaSDynamicPluginName,
-			"app.kubernetes.io/part-of":   DBaaSDynamicPluginName,
+			"app":                         r.pluginName,
+			"app.kubernetes.io/component": r.pluginName,
+			"app.kubernetes.io/instance":  r.pluginName,
+			"app.kubernetes.io/part-of":   r.pluginName,
 		}
 		service.Spec.Ports = []v1.ServicePort{
 			{
@@ -144,7 +156,7 @@ func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsIn
 			},
 		}
 		service.Spec.Selector = map[string]string{
-			"app": DBaaSDynamicPluginName,
+			"app": r.pluginName,
 		}
 		service.Spec.Type = v1.ServiceTypeClusterIP
 		service.Spec.SessionAffinity = v1.ServiceAffinityNone
@@ -152,20 +164,23 @@ func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsIn
 	})
 
 	if err != nil {
+		if errors.IsConflict(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
 		return v1alpha1.ResultFailed, err
 	}
 	return v1alpha1.ResultSuccess, nil
 }
 
 func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	deployment := GetDBaaSDynamicPluginDeployment()
+	deployment := r.getDeployment()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		deployment.Labels = map[string]string{
-			"app":                                DBaaSDynamicPluginName,
-			"app.kubernetes.io/component":        DBaaSDynamicPluginName,
-			"app.kubernetes.io/instance":         DBaaSDynamicPluginName,
-			"app.kubernetes.io/part-of":          DBaaSDynamicPluginName,
-			"app.openshift.io/runtime-namespace": DBaaSDynamicPluginName,
+			"app":                                r.pluginName,
+			"app.kubernetes.io/component":        r.pluginName,
+			"app.kubernetes.io/instance":         r.pluginName,
+			"app.kubernetes.io/part-of":          r.pluginName,
+			"app.openshift.io/runtime-namespace": r.pluginNamespace,
 		}
 		replicas := int32(1)
 		defaultMode := int32(420)
@@ -173,18 +188,18 @@ func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.Platform
 		deployment.Spec.Replicas = &replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"app": DBaaSDynamicPluginName,
+				"app": r.pluginName,
 			},
 		}
 		deployment.Spec.Template.ObjectMeta = metav1.ObjectMeta{
 			Labels: map[string]string{
-				"app": DBaaSDynamicPluginName,
+				"app": r.pluginName,
 			},
 		}
 		deployment.Spec.Template.Spec.Containers = []v1.Container{
 			{
-				Name:  DBaaSDynamicPluginName,
-				Image: reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG,
+				Name:  r.pluginName,
+				Image: r.pluginImage,
 				Ports: []v1.ContainerPort{
 					{
 						ContainerPort: 9001,
@@ -204,6 +219,7 @@ func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.Platform
 						MountPath: "/var/serving-cert",
 					},
 				},
+				Env: r.envs,
 			},
 		}
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
@@ -230,18 +246,21 @@ func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.Platform
 	})
 
 	if err != nil {
+		if errors.IsConflict(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
 		return v1alpha1.ResultFailed, err
 	}
 	return v1alpha1.ResultSuccess, nil
 }
 
 func (r *Reconciler) createConsolePluginCR(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	plugin := GetDBaaSDynamicPluginConsolePlugin()
+	plugin := r.getConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
-		plugin.Spec.DisplayName = "OpenShift DataBase as a Service Dynamic Plugin"
+		plugin.Spec.DisplayName = r.displayName
 		plugin.Spec.Service = consolev1alpha1.ConsolePluginService{
-			Name:      DBaaSDynamicPluginName,
-			Namespace: DBaaSDynamicPluginName,
+			Name:      r.pluginName,
+			Namespace: r.pluginNamespace,
 			Port:      int32(9001),
 			BasePath:  "/",
 		}
@@ -249,36 +268,41 @@ func (r *Reconciler) createConsolePluginCR(ctx context.Context) (v1alpha1.Platfo
 	})
 
 	if err != nil {
+		if errors.IsConflict(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
 		return v1alpha1.ResultFailed, err
 	}
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) enableDBaaSPluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	console := GetOperatorConsole()
+func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
 		return v1alpha1.ResultFailed, err
 	}
 
 	if console.Spec.Plugins == nil {
-		console.Spec.Plugins = []string{DBaaSDynamicPluginName}
+		console.Spec.Plugins = []string{r.pluginName}
 	} else {
-		console.Spec.Plugins = addDBaaSDynamicPlugin(console.Spec.Plugins)
+		console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
 	}
 	err = r.client.Update(ctx, console)
 	if err != nil {
+		if errors.IsConflict(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
 		return v1alpha1.ResultFailed, err
 	}
 
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForDBaaSPlugin(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-
+func (r *Reconciler) waitForConsolePlugin(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	deployments := &appv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: DBaaSDynamicPluginName,
+		Namespace: r.pluginNamespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -286,7 +310,7 @@ func (r *Reconciler) waitForDBaaSPlugin(ctx context.Context) (v1alpha1.Platforms
 	}
 
 	for _, deployment := range deployments.Items {
-		if deployment.Name == DBaaSDynamicPluginName {
+		if deployment.Name == r.pluginName {
 			if deployment.Status.ReadyReplicas > 0 {
 				return v1alpha1.ResultSuccess, nil
 			}
@@ -296,7 +320,7 @@ func (r *Reconciler) waitForDBaaSPlugin(ctx context.Context) (v1alpha1.Platforms
 }
 
 func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	console := GetOperatorConsole()
+	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
 		return v1alpha1.ResultFailed, err
@@ -316,41 +340,41 @@ func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.Platf
 	return v1alpha1.ResultInProgress, nil
 }
 
-func GetDBaaSDynamicPluginNamespace() *v1.Namespace {
+func (r *Reconciler) getNamespace() *v1.Namespace {
 	return &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: DBaaSDynamicPluginName,
+			Name: r.pluginNamespace,
 		},
 	}
 }
 
-func GetDBaaSDynamicPluginService() *v1.Service {
+func (r *Reconciler) getService() *v1.Service {
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DBaaSDynamicPluginName,
-			Namespace: DBaaSDynamicPluginName,
+			Name:      r.pluginName,
+			Namespace: r.pluginNamespace,
 		},
 	}
 }
 
-func GetDBaaSDynamicPluginDeployment() *appv1.Deployment {
+func (r *Reconciler) getDeployment() *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DBaaSDynamicPluginName,
-			Namespace: DBaaSDynamicPluginName,
+			Name:      r.pluginName,
+			Namespace: r.pluginNamespace,
 		},
 	}
 }
 
-func GetDBaaSDynamicPluginConsolePlugin() *consolev1alpha1.ConsolePlugin {
+func (r *Reconciler) getConsolePlugin() *consolev1alpha1.ConsolePlugin {
 	return &consolev1alpha1.ConsolePlugin{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: DBaaSDynamicPluginName,
+			Name: r.pluginName,
 		},
 	}
 }
 
-func GetOperatorConsole() *operatorv1.Console {
+func (r *Reconciler) getOperatorConsole() *operatorv1.Console {
 	return &operatorv1.Console{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cluster",
@@ -358,19 +382,19 @@ func GetOperatorConsole() *operatorv1.Console {
 	}
 }
 
-func addDBaaSDynamicPlugin(plugins []string) []string {
+func (r *Reconciler) addPlugin(plugins []string) []string {
 	for _, p := range plugins {
-		if p == DBaaSDynamicPluginName {
+		if p == r.pluginName {
 			return plugins
 		}
 	}
 
-	return append(plugins, DBaaSDynamicPluginName)
+	return append(plugins, r.pluginName)
 }
 
-func removeDBaaSDynamicPlugin(plugins []string) []string {
+func (r *Reconciler) removePlugin(plugins []string) []string {
 	for i, p := range plugins {
-		if p == DBaaSDynamicPluginName {
+		if p == r.pluginName {
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}

@@ -59,11 +59,11 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *alpha1.DBaaSPlatform) (alp
 	return alpha1.ResultSuccess, nil
 }
 
-func GetDBaaSOperatorCSV(ctx context.Context, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
+func GetDBaaSOperatorCSV(namespace string, ctx context.Context, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
 
 	list := &v1alpha1.ClusterServiceVersionList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: namespace,
 	}
 	err := serverClient.List(ctx, list, opts)
 	if err != nil && !errors.IsNotFound(err) {
@@ -72,7 +72,7 @@ func GetDBaaSOperatorCSV(ctx context.Context, serverClient k8sclient.Client) (*v
 
 	for _, csv := range list.Items {
 		// Operator CSV
-		if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "dbaas-operator.") {
+		if csv.Namespace == namespace && strings.HasPrefix(csv.Name, "dbaas-operator.") {
 			return &csv, nil
 
 		}
