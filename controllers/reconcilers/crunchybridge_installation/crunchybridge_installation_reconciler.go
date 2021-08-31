@@ -114,8 +114,7 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 
 	operatorgroup := GetCrunchyBridgeOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
-		operatorgroup.Spec = coreosv1.OperatorGroupSpec{
-		}
+		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 
 		return nil
 	})
