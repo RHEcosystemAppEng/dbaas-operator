@@ -53,6 +53,12 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *alpha1.DBaaSPlatform) (alp
 				return alpha1.ResultFailed, err
 			}
 			return alpha1.ResultInProgress, nil
+		} else if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "service-binding-operator.") {
+			err := r.client.Delete(ctx, &csv)
+			if err != nil && !errors.IsNotFound(err) {
+				return alpha1.ResultFailed, err
+			}
+			return alpha1.ResultInProgress, nil
 		}
 	}
 

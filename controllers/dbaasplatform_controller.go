@@ -24,12 +24,12 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/csv"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/servicebinding"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -88,7 +88,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		log.Error(err, "Error in Get of DBaaSPlatform CR")
 		return ctrl.Result{}, err
 	}
-
+	// Add a cleanup finalizer if not already present
 	if cr.DeletionTimestamp == nil && len(cr.Finalizers) == 0 {
 		cr.Finalizers = append(cr.Finalizers, DBaaSPlatformFinalizer)
 		err = r.Update(ctx, cr)
@@ -181,24 +181,25 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 	if err != nil {
 		return nil, err
 	}
-	platformList := &dbaasv1alpha1.DBaaSPlatformList{}
+	dbaaSPlatformList := &dbaasv1alpha1.DBaaSPlatformList{}
 	listOpts := []k8sclient.ListOption{
 		k8sclient.InNamespace(namespace),
 	}
-	err = serverClient.List(ctx, platformList, listOpts...)
+	err = serverClient.List(ctx, dbaaSPlatformList, listOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("Could not get a list of dbaas platform intallation CR: %w", err)
 	}
-	owner, _ := csv.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
-	cr := &dbaasv1alpha1.DBaaSPlatform{}
-	if len(platformList.Items) == 0 {
+	//owner, _ := csv.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
+	var cr *dbaasv1alpha1.DBaaSPlatform
+	if len(dbaaSPlatformList.Items) == 0 {
 
 		cr = &dbaasv1alpha1.DBaaSPlatform{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dbaas-platform",
 				Namespace: strings.TrimSpace(namespace),
 				Labels:    map[string]string{"managed-by": "dbaas-operator"},
-				OwnerReferences: []metav1.OwnerReference{
+				// committing owner reference to avoid partially cleanup issue, to clean the platform remove the CR manually,
+				/*OwnerReferences: []metav1.OwnerReference{
 					{
 						APIVersion:         owner.APIVersion,
 						Kind:               owner.Kind,
@@ -207,7 +208,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 						Controller:         pointer.BoolPtr(true),
 						BlockOwnerDeletion: pointer.BoolPtr(false),
 					},
-				},
+				},*/
 			},
 
 			Spec: dbaasv1alpha1.DBaaSPlatformSpec{
@@ -217,10 +218,12 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 		err = serverClient.Create(ctx, cr)
 		if err != nil {
-			return nil, fmt.Errorf("Could not create  CR in %s namespace: %w", namespace, err)
+			return nil, fmt.Errorf("could not create  CR in %s namespace: %w", namespace, err)
 		}
-	} else if len(platformList.Items) == 1 {
-		cr = &platformList.Items[0]
+	} else if len(dbaaSPlatformList.Items) == 1 {
+		cr = &dbaaSPlatformList.Items[0]
+	} else {
+		return nil, fmt.Errorf("too many DBaaSPlafrom resources found. Expecting 1, found %d DBaaSPlatform resources in %s namespace", len(dbaaSPlatformList.Items), namespace)
 	}
 	return cr, nil
 
@@ -232,7 +235,8 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBassDynamicPluginInstallation,
-		dbaasv1alpha1.ConsolTelemetryPluginInstallation,
+		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
+		dbaasv1alpha1.ServiceBindingInstallation,
 	}
 
 }
@@ -242,7 +246,8 @@ func (r *DBaaSPlatformReconciler) getCleanupPlatforms() []dbaasv1alpha1.Platform
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBassDynamicPluginInstallation,
-		dbaasv1alpha1.ConsolTelemetryPluginInstallation,
+		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
+		dbaasv1alpha1.ServiceBindingInstallation,
 		dbaasv1alpha1.Csv,
 	}
 
@@ -260,11 +265,14 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, reconcilers.DBAAS_DYNAMIC_PLUGIN_NAMESPACE,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME)
-	case dbaasv1alpha1.ConsolTelemetryPluginInstallation:
+	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAMESPACE,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			v1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
+	case dbaasv1alpha1.ServiceBindingInstallation:
+		return servicebinding.NewReconciler(r.Client, r.Scheme, r.Log)
+
 	}
 
 	return nil

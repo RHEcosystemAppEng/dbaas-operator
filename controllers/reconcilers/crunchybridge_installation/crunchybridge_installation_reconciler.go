@@ -57,13 +57,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 }
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetCrunchyBridgeSubscription()
+	subscription := getCrunchyBridgeSubscription()
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 
-	catalogSource := GetCrunchyBridgeCatalogSource()
+	catalogSource := getCrunchyBridgeCatalogSource()
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -91,8 +91,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 
 func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetCrunchyBridgeSubscription()
-	catalogsource := GetCrunchyBridgeCatalogSource()
+	subscription := getCrunchyBridgeSubscription()
+	catalogsource := getCrunchyBridgeCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
@@ -112,7 +112,7 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 }
 func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	operatorgroup := GetCrunchyBridgeOperatorGroup()
+	operatorgroup := getCrunchyBridgeOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 
@@ -125,7 +125,7 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := GetCrunchyBridgeCatalogSource()
+	catalogsource := getCrunchyBridgeCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
@@ -161,7 +161,7 @@ func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.Platf
 	return v1.ResultInProgress, nil
 }
 
-func GetCrunchyBridgeSubscription() *v1alpha1.Subscription {
+func getCrunchyBridgeSubscription() *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-subscription",
@@ -169,7 +169,7 @@ func GetCrunchyBridgeSubscription() *v1alpha1.Subscription {
 		},
 	}
 }
-func GetCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
+func getCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
 	return &coreosv1.OperatorGroup{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "global-operators",
@@ -178,7 +178,7 @@ func GetCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
 	}
 }
 
-func GetCrunchyBridgeCatalogSource() *v1alpha1.CatalogSource {
+func getCrunchyBridgeCatalogSource() *v1alpha1.CatalogSource {
 	return &v1alpha1.CatalogSource{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-catalogsource",

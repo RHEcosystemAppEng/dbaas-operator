@@ -57,13 +57,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetMongoDBAtlasSubscription()
+	subscription := getMongoDBAtlasSubscription()
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 
-	catalogSource := GetMongoDBAtlasCatalogSource()
+	catalogSource := getMongoDBAtlasCatalogSource()
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -90,8 +90,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 }
 func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetMongoDBAtlasSubscription()
-	catalogsource := GetMongoDBAtlasCatalogSource()
+	subscription := getMongoDBAtlasSubscription()
+	catalogsource := getMongoDBAtlasCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
@@ -111,7 +111,7 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 }
 func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	operatorgroup := GetMongoDBAtlasOperatorGroup()
+	operatorgroup := getMongoDBAtlasOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 
@@ -124,7 +124,7 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := GetMongoDBAtlasCatalogSource()
+	catalogsource := getMongoDBAtlasCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
@@ -161,7 +161,7 @@ func (r *Reconciler) waitForMongoDBAtlasOperator(ctx context.Context) (v1.Platfo
 	return v1.ResultInProgress, nil
 }
 
-func GetMongoDBAtlasSubscription() *v1alpha1.Subscription {
+func getMongoDBAtlasSubscription() *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "mongodb-atlas-subscription",
@@ -169,7 +169,7 @@ func GetMongoDBAtlasSubscription() *v1alpha1.Subscription {
 		},
 	}
 }
-func GetMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
+func getMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
 	return &coreosv1.OperatorGroup{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "global-operators",
@@ -178,7 +178,7 @@ func GetMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
 	}
 }
 
-func GetMongoDBAtlasCatalogSource() *v1alpha1.CatalogSource {
+func getMongoDBAtlasCatalogSource() *v1alpha1.CatalogSource {
 	return &v1alpha1.CatalogSource{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "mongodb-atlas-catalogsource",

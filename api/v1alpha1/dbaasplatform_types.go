@@ -25,11 +25,12 @@ type PlatformsName string
 type PlatformsInstlnStatus string
 
 const (
-	CrunchyBridgeInstallation         PlatformsName = "crunchy-bridge"
-	MongoDBAtlasInstallation          PlatformsName = "mongodb-atlas"
-	DBassDynamicPluginInstallation    PlatformsName = "dbaas-dynamic-plugin"
-	Csv                               PlatformsName = "Csv"
-	ConsolTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
+	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
+	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
+	DBassDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
+	Csv                                PlatformsName = "Csv"
+	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
+	ServiceBindingInstallation         PlatformsName = "service-binding"
 )
 
 const (
@@ -53,6 +54,7 @@ type DBaaSPlatformStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
+//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 // DBaaSPlatform is the Schema for the dbaasplatforms API
 type DBaaSPlatform struct {
 	metav1.TypeMeta   `json:",inline"`
