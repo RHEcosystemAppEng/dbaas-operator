@@ -27,9 +27,10 @@ bindable in Topology view.
 
 **Deploy via OLM on cluster:**
 - **Make sure to edit `Makefile` and replace `ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
+- **Next `make release-build`
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
 - Edit the [catalog-operator-group.yaml](config/samples/catalog-operator-group.yaml) to indicate your target namespace
-- `make install release catalog-update`
+- `make install release-push catalog-update`
 - `oc project <your_target_namespace>`
 - `make deploy-olm`
 - Continue below by following the [Using the Operator](#using-the-operator) section

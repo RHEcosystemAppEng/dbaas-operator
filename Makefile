@@ -55,8 +55,12 @@ SHELL = /usr/bin/env bash -o pipefail
 
 all: build
 
-.PHONY: release
-release: build generate bundle docker-build docker-push bundle-build bundle-push catalog-build catalog-push
+.PHONY: release-build
+release-build: build generate bundle docker-build bundle-build catalog-build
+
+PHONY: release-push
+release-push: docker-push bundle-push catalog-push
+
 
 ##@ General
 
