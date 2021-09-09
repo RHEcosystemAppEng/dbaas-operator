@@ -53,8 +53,7 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 
 			By("checking DBaaSConnection created")
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnection), &DBaaSConnection{})
-				if err != nil {
+				if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnection), &DBaaSConnection{}); err != nil {
 					return false
 				}
 				return true
