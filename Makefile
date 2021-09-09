@@ -55,12 +55,6 @@ SHELL = /usr/bin/env bash -o pipefail
 
 all: build
 
-.PHONY: release-build
-release-build: build generate bundle docker-build bundle-build catalog-build
-
-PHONY: release-push
-release-push: docker-push bundle-push catalog-push
-
 
 ##@ General
 
@@ -99,6 +93,7 @@ test: manifests generate fmt vet ## Run tests.
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##@ Build
+release-build: build generate bundle docker-build bundle-build catalog-build ## Build operator docker, bundle, catalog images
 
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
@@ -113,6 +108,8 @@ docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
 ##@ Deployment
+
+release-push: docker-push bundle-push catalog-push ## Push operator docker, bundle, catalog images
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
