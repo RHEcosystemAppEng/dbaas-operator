@@ -41,7 +41,7 @@ type DBaasUsersGroups struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSInventory"
+//+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
 // DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid Tenant namespace.
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`

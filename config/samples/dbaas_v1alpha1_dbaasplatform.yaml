@@ -1,0 +1,7 @@
+apiVersion: dbaas.redhat.com/v1alpha1
+kind: DBaaSPlatform
+metadata:
+  name: dbaasplatform-sample
+spec:
+  # Add fields here
+  foo: bar

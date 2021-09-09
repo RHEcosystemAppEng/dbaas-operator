@@ -13,7 +13,7 @@ options), you can create a DBaaSInventory & will receive a DBaaSConnection, but 
 bindable in Topology view.
 
 **Run as a local instance**:
-- `make install run WATCH_NAMESPACE=<your_target_namespace>`
+- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
 - Continue below by following the [Using the Operator](#using-the-operator) section
 - When finished, remove created resources via:
   - `make clean-namespace`

@@ -1,0 +1,24 @@
+# permissions for end users to edit dbaasplatforms.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaasplatform-editor-role
+rules:
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasplatforms
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasplatforms/status
+  verbs:
+  - get

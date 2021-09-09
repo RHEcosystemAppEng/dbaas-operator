@@ -1,0 +1,20 @@
+# permissions for end users to view dbaasplatforms.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaasplatform-viewer-role
+rules:
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasplatforms
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasplatforms/status
+  verbs:
+  - get
