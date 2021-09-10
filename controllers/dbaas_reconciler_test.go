@@ -23,15 +23,16 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 var _ = Describe("Create provider object", func() {
@@ -391,4 +392,46 @@ var _ = Describe("Check hasNoEditOrListVerbs function", func() {
 		},
 	}
 	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
+})
+
+var _ = Describe("Check isOwner function", func() {
+	defer GinkgoRecover()
+	scheme := runtime.NewScheme()
+
+	// error should be thrown due to missing scheme
+	ownedObj := &unstructured.Unstructured{}
+	owned, err := isOwner(&defaultTenant, ownedObj, scheme)
+	Expect(err).NotTo(BeNil())
+	Expect(owned).To(BeFalse())
+
+	// with scheme added, error is nil, but owner check should be false
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	owned, err = isOwner(&defaultTenant, ownedObj, scheme)
+	Expect(err).To(BeNil())
+	Expect(owned).To(BeFalse())
+
+	// with ownership set, owner check should be true
+	Expect(ctrl.SetControllerReference(&defaultTenant, ownedObj, scheme)).To(BeNil())
+	owned, err = isOwner(&defaultTenant, ownedObj, scheme)
+	Expect(err).To(BeNil())
+	Expect(owned).To(BeTrue())
+
+	// setting namespaced object as owner of a cluster-scoped object should error
+	//   owner check should return false
+	inventory := &v1alpha1.DBaaSInventory{
+		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test-ns"},
+	}
+	ownedObj = &unstructured.Unstructured{}
+	Expect(ctrl.SetControllerReference(inventory, ownedObj, scheme)).NotTo(BeNil())
+	owned, err = isOwner(inventory, ownedObj, scheme)
+	Expect(err).To(BeNil())
+	Expect(owned).To(BeFalse())
+
+	// changing to a namespaced object should allow ownership to be set
+	//   owner check should return true
+	ownedObj.SetNamespace(inventory.GetNamespace())
+	Expect(ctrl.SetControllerReference(inventory, ownedObj, scheme)).To(BeNil())
+	owned, err = isOwner(inventory, ownedObj, scheme)
+	Expect(err).To(BeNil())
+	Expect(owned).To(BeTrue())
 })
