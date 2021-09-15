@@ -129,23 +129,52 @@ func (r *DBaaSReconciler) updateObject(k8sObj client.Object, ctx context.Context
 func (r *DBaaSReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
 	name := newObj.GetName()
 	namespace := newObj.GetNamespace()
+	kind := newObj.GetObjectKind().GroupVersionKind().Kind
 	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind+" RBAC", types.NamespacedName{Name: name, Namespace: namespace})
-	if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
-		if errors.IsNotFound(err) {
-			logger.V(1).Info("resource not found", name, namespace)
-			if err = r.createObject(newObj, owner, ctx); err != nil {
-				logger.Error(err, "Error creating resource", name, namespace)
+	if hasNoEditOrListVerbs(newObj) {
+		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
+			if errors.IsNotFound(err) {
+				logger.V(1).Info("resource not found", name, namespace)
+				if err = r.createObject(newObj, owner, ctx); err != nil {
+					logger.Error(err, "Error creating resource", name, namespace)
+					return false, err
+				}
+				logger.V(1).Info("resource created", name, namespace)
+			} else {
+				logger.Error(err, "Error getting the resource", name, namespace)
 				return false, err
 			}
-			logger.V(1).Info("resource created", name, namespace)
 		} else {
-			logger.Error(err, "Error getting the resource", name, namespace)
-			return false, err
+			return true, nil
 		}
 	} else {
-		return true, nil
+		logger.V(1).Info(kind+" contains edit or list verbs, will not create", name, namespace)
 	}
 	return false, nil
+}
+
+// verify no edit or list permissions are assigned to a role
+func hasNoEditOrListVerbs(roleObj client.Object) bool {
+	var verbs []string
+	var roleRules []rbacv1.PolicyRule
+	editVerbs := []string{"create", "patch", "update", "delete", "list"}
+
+	kind := roleObj.GetObjectKind().GroupVersionKind().Kind
+	if kind == "Role" {
+		roleRules = roleObj.(*rbacv1.Role).Rules
+	}
+	if kind == "ClusterRole" {
+		roleRules = roleObj.(*rbacv1.ClusterRole).Rules
+	}
+	for _, rules := range roleRules {
+		verbs = append(verbs, rules.Verbs...)
+	}
+	for _, verb := range editVerbs {
+		if contains(verbs, verb) {
+			return false
+		}
+	}
+	return true
 }
 
 // populate Tenant List based on spec.inventoryNamespace

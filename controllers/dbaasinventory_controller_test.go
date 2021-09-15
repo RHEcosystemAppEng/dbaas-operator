@@ -34,23 +34,7 @@ func TestInventoryRbacObjs(t *testing.T) {
 
 	// Expect(err).NotTo(HaveOccurred())
 	namespace := "test-ns"
-	tenantList := v1alpha1.DBaaSTenantList{
-		Items: []v1alpha1.DBaaSTenant{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "cluster",
-				},
-				Spec: v1alpha1.DBaaSTenantSpec{
-					InventoryNamespace: "wrong",
-					Authz: v1alpha1.DBaasAuthz{
-						Developer: v1alpha1.DBaasUsersGroups{
-							Groups: []string{"system:authenticated"},
-						},
-					},
-				},
-			},
-		},
-	}
+	tenantList := createTestTenantList()
 
 	// nil spec.authz w/ default tenant set to wrong namespace
 	inventory := v1alpha1.DBaaSInventory{
@@ -253,3 +237,11 @@ var _ = Describe("DBaaSInventory controller", func() {
 		})
 	})
 })
+
+func createTestTenantList() v1alpha1.DBaaSTenantList {
+	return v1alpha1.DBaaSTenantList{
+		Items: []v1alpha1.DBaaSTenant{
+			getDefaultTenant("wrong"),
+		},
+	}
+}

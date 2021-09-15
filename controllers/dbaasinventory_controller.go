@@ -154,13 +154,7 @@ func inventoryRbacObjs(inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DB
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups:     []string{v1alpha1.GroupVersion.Group},
-				Resources:     []string{"dbaasinventories"},
-				ResourceNames: []string{inventory.Name},
-				Verbs:         []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups:     []string{v1alpha1.GroupVersion.Group},
-				Resources:     []string{"dbaasinventories/status"},
+				Resources:     []string{"dbaasinventories", "dbaasinventories/status"},
 				ResourceNames: []string{inventory.Name},
 				Verbs:         []string{"get"},
 			},

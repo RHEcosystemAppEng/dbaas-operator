@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -352,4 +353,62 @@ var _ = Describe("list tenants by inventory namespace", func() {
 			})
 		})
 	})
+})
+
+var _ = Describe("Check hasNoEditOrListVerbs function", func() {
+	defer GinkgoRecover()
+
+	// ClusterRoles created by operator should not grant 'edit' or 'list' rights
+	inventoryList := createInventoryList()
+	inventoryAuthz := getAllAuthzFromInventoryList(inventoryList, *defaultTenant)
+	clusterRole, clusterRolebinding := tenantRbacObjs(*defaultTenant, inventoryAuthz)
+	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
+	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
+		Verbs: []string{"watch"},
+	})
+	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
+
+	// ClusterRoles with edit rights should return 'false'
+	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
+		Verbs: []string{"patch"},
+	})
+	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeFalse())
+
+	// Bindings should be ignored, return 'true'
+	Expect(hasNoEditOrListVerbs(&clusterRolebinding)).To(BeTrue())
+
+	// Roles created by operator should not grant 'edit' or 'list' rights
+	tenantList := createTestTenantList()
+	role, rolebinding := inventoryRbacObjs(inventoryList.Items[0], tenantList)
+	Expect(hasNoEditOrListVerbs(&role)).To(BeTrue())
+
+	// Bindings should be ignored, return 'true'
+	Expect(hasNoEditOrListVerbs(&rolebinding)).To(BeTrue())
+
+	// Roles with edit rights should return 'false'
+	role.Rules = append(role.Rules, rbacv1.PolicyRule{
+		Verbs: []string{"create"},
+	})
+	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
+
+	role.Rules = []rbacv1.PolicyRule{
+		{
+			Verbs: []string{"delete"},
+		},
+	}
+	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
+
+	role.Rules = []rbacv1.PolicyRule{
+		{
+			Verbs: []string{"update"},
+		},
+	}
+	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
+
+	role.Rules = []rbacv1.PolicyRule{
+		{
+			Verbs: []string{"list"},
+		},
+	}
+	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
 })
