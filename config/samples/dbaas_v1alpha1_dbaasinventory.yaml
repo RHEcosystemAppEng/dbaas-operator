@@ -1,10 +1,10 @@
 apiVersion: dbaas.redhat.com/v1alpha1
 kind: DBaaSInventory
 metadata:
-  name: atlas-inventory
+  name: crunchy-inventory
 spec:
   providerRef:
-    name: atlas-provider-registration
+    name: crunchy-bridge-registration
   credentialsRef:
-    namespace: openshift-dbaas-operator
-    name: atlas-inventory-credentials
+    name: crunchy-bridge-api-key
+    namespace: openshift-operators
