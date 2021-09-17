@@ -1,5 +1,5 @@
-# Database-as-a-Service Operator
-The DBaaS Operator is a proof-of-concept golang kubernetes operator. The intent of the PoC is to show how we could
+# Red Hat OpenShift Database Access Operator
+Red Hat OpenShift Database Access Operator is a proof-of-concept golang kubernetes operator. The intent of the PoC is to show how we could
 scan & import off-cluster cloud database instances hosted by various third-party providers & make those instances
 available to developers for binding to their applications.
 
@@ -98,7 +98,7 @@ bindable in Topology view.
 
 ## Contributing
 
-- Fork DBaas Operator repository
+- Fork Red Hat OpenShift Database Access Operator repository
   - https://github.com/RHEcosystemAppEng/dbaas-operator
 - Check out code from your new fork
   - `git clone git@github.com:<your-user-name>/dbaas-operator.git`
