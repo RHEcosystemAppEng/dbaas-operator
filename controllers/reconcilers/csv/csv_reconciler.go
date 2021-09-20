@@ -2,6 +2,8 @@ package csv
 
 import (
 	"context"
+	"strings"
+
 	alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/go-logr/logr"
@@ -9,7 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type Reconciler struct {
@@ -40,7 +41,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *alpha1.DBaaSPlatform) (alp
 		return alpha1.ResultFailed, err
 	}
 
-	for _, csv := range list.Items {
+	for c := range list.Items {
+		csv := list.Items[c]
 		if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "crunchy-bridge-operator.") {
 			err := r.client.Delete(ctx, &csv)
 			if err != nil && !errors.IsNotFound(err) {

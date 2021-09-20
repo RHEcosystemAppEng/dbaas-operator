@@ -2,6 +2,7 @@ package crunchybridge_installation
 
 import (
 	"context"
+
 	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/go-logr/logr"
@@ -77,9 +78,9 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 		return v1.ResultFailed, err
 	}
 
-	for _, deployment := range deployments.Items {
-		if deployment.Name == "crunchy-bridge-operator-controller-manager" {
-			err = r.client.Delete(ctx, &deployment)
+	for d := range deployments.Items {
+		if deployments.Items[d].Name == "crunchy-bridge-operator-controller-manager" {
+			err = r.client.Delete(ctx, &deployments.Items[d])
 			if err != nil && !errors.IsNotFound(err) {
 				return v1.ResultFailed, err
 			}

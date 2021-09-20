@@ -1,18 +1,20 @@
-name: golangci-lint
+name: Golangci-lint and Gosec
 on:
   push:
-    tags:
-      - v*
     branches:
       - main
   pull_request:
+    branches:
+      - main
+
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: golangci-lint
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run GolangCI Linter
         uses: golangci/golangci-lint-action@v2
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
@@ -36,3 +38,7 @@ jobs:
 
           # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
           # skip-build-cache: true
+      - name: Install Gosec Security Scanner
+        run: curl -sfL https://raw.githubusercontent.com/securego/gosec/v2.8.1/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
+      - name: Run Gosec Security Scanner
+        run: gosec ./...
