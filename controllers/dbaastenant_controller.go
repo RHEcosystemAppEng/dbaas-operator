@@ -158,25 +158,11 @@ func (r *DBaaSTenantReconciler) ignoreOtherDeployments() predicate.Predicate {
 
 // create a default Tenant if one doesn't exist
 func (r *DBaaSTenantReconciler) createDefaultTenant(ctx context.Context, tenantList v1alpha1.DBaaSTenantList) (ctrl.Result, error) {
-	defaultName := "cluster"
-	logger := ctrl.LoggerFrom(ctx, "default DBaaS Tenant", defaultName)
+	defaultTenant := getDefaultTenant(r.InstallNamespace)
+	logger := ctrl.LoggerFrom(ctx, "default DBaaS Tenant", defaultTenant.Name)
 
 	tenantNames, tenantNamespaces := getTenantNamesAndNamespaces(tenantList)
-	if !contains(tenantNames, defaultName) && !contains(tenantNamespaces, r.InstallNamespace) {
-		defaultTenant := v1alpha1.DBaaSTenant{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: defaultName,
-			},
-			Spec: v1alpha1.DBaaSTenantSpec{
-				InventoryNamespace: r.InstallNamespace,
-				Authz: v1alpha1.DBaasAuthz{
-					Developer: v1alpha1.DBaasUsersGroups{
-						Groups: []string{"system:authenticated"},
-					},
-				},
-			},
-		}
-
+	if !contains(tenantNames, defaultTenant.Name) && !contains(tenantNamespaces, defaultTenant.Spec.InventoryNamespace) {
 		if err := r.Get(ctx, types.NamespacedName{Name: defaultTenant.Name}, &v1alpha1.DBaaSTenant{}); err != nil {
 			if errors.IsNotFound(err) {
 				logger.Info("resource not found", "Name", defaultTenant.Name)
@@ -194,6 +180,22 @@ func (r *DBaaSTenantReconciler) createDefaultTenant(ctx context.Context, tenantL
 	return ctrl.Result{}, nil
 }
 
+func getDefaultTenant(inventoryNamespace string) v1alpha1.DBaaSTenant {
+	return v1alpha1.DBaaSTenant{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "cluster",
+		},
+		Spec: v1alpha1.DBaaSTenantSpec{
+			InventoryNamespace: inventoryNamespace,
+			Authz: v1alpha1.DBaasAuthz{
+				Developer: v1alpha1.DBaasUsersGroups{
+					Groups: []string{"system:authenticated"},
+				},
+			},
+		},
+	}
+}
+
 // gets rbac objects for a tenant's users
 func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, inventoryAuthz v1alpha1.DBaasUsersGroups) (rbacv1.ClusterRole, rbacv1.ClusterRoleBinding) {
 	clusterRole := rbacv1.ClusterRole{
@@ -203,13 +205,7 @@ func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, inventoryAuthz v1alpha1.DBaasUs
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups:     []string{v1alpha1.GroupVersion.Group},
-				Resources:     []string{"dbaastenants"},
-				ResourceNames: []string{tenant.Name},
-				Verbs:         []string{"get", "list", "watch"},
-			},
-			{
-				APIGroups:     []string{v1alpha1.GroupVersion.Group},
-				Resources:     []string{"dbaastenants/status"},
+				Resources:     []string{"dbaastenants", "dbaastenants/status"},
 				ResourceNames: []string{tenant.Name},
 				Verbs:         []string{"get"},
 			},
