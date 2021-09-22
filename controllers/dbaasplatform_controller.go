@@ -30,6 +30,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"os"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,9 +51,10 @@ const (
 // DBaaSPlatformReconciler reconciles a DBaaSPlatform object
 type DBaaSPlatformReconciler struct {
 	client.Client
-	Scheme          *runtime.Scheme
-	Log             logr.Logger
-	installComplete bool
+	Scheme              *runtime.Scheme
+	Log                 logr.Logger
+	installComplete     bool
+	operatorNameVersion string
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms,verbs=get;list;watch;create;update;patch;delete
@@ -170,6 +172,14 @@ func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return err
 	}
+
+	// envVar set for all operators
+	if operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME"); !found {
+		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
+		return err
+	} else {
+		r.operatorNameVersion = operatorNameEnvVar
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&dbaasv1alpha1.DBaaSPlatform{}).
 		Complete(r)
@@ -264,7 +274,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 	case dbaasv1alpha1.DBassDynamicPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, reconcilers.DBAAS_DYNAMIC_PLUGIN_NAMESPACE,
-			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME)
+			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
+			v1.EnvVar{Name: reconcilers.DBAAS_OPERATOR_VERSION_KEY_ENV, Value: r.operatorNameVersion})
 	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAMESPACE,
