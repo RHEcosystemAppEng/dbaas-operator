@@ -8,6 +8,7 @@
 bin
 testbin/*
 bundle/
+bundle_*
 
 # Test binary, build with `go test -c`
 *.test
