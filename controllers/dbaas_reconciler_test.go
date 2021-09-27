@@ -209,7 +209,7 @@ var _ = Describe("Reconcile DBaaS Object Status", func() {
 
 		updatedInventory := &v1alpha1.DBaaSInventory{}
 		Eventually(func() v1alpha1.DBaaSInventoryStatus {
-			err = k8sClient.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
+			err = dRec.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
 			Expect(err).NotTo(HaveOccurred())
 			return updatedInventory.Status
 		}, timeout, interval).Should(Equal(status))
@@ -258,7 +258,7 @@ var _ = Describe("Reconcile provider Object", func() {
 		updatedInventory.SetNamespace(testNamespace)
 		updatedInventory.SetName("test-reconcile-provider")
 		Eventually(func() interface{} {
-			err = k8sClient.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
+			err = dRec.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
 			Expect(err).NotTo(HaveOccurred())
 			return updatedInventory.UnstructuredContent()["spec"]
 		}, timeout, interval).Should(Equal(spec))
@@ -296,36 +296,14 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 var _ = Describe("list tenants by inventory namespace", func() {
 	Context("after creating DBaaSTenants", func() {
 		ns := "test-namespace"
-		tenant1 := &v1alpha1.DBaaSTenant{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-tenant-1",
-			},
-			Spec: v1alpha1.DBaaSTenantSpec{
-				InventoryNamespace: ns,
-				Authz: v1alpha1.DBaasAuthz{
-					Developer: v1alpha1.DBaasUsersGroups{
-						Groups: []string{"system:authenticated"},
-					},
-				},
-			},
-		}
-		tenant2 := &v1alpha1.DBaaSTenant{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "test-tenant-2",
-			},
-			Spec: v1alpha1.DBaaSTenantSpec{
-				InventoryNamespace: ns,
-				Authz: v1alpha1.DBaasAuthz{
-					Developer: v1alpha1.DBaasUsersGroups{
-						Groups: []string{"system:authenticated"},
-					},
-				},
-			},
-		}
-		BeforeEach(assertResourceCreation(tenant1))
-		AfterEach(assertResourceDeletion(tenant1))
-		BeforeEach(assertResourceCreation(tenant2))
-		AfterEach(assertResourceDeletion(tenant2))
+		tenant1 := getDefaultTenant(ns)
+		tenant1.Name = "test-tenant-1"
+		tenant2 := getDefaultTenant(ns)
+		tenant2.Name = "test-tenant-2"
+		BeforeEach(assertResourceCreation(&tenant1))
+		AfterEach(assertResourceDeletion(&tenant1))
+		BeforeEach(assertResourceCreation(&tenant2))
+		AfterEach(assertResourceDeletion(&tenant2))
 
 		Context("when listing the tenants with the inventory namespace", func() {
 			It("should return all the tenants matching the inventory namespace", func() {
@@ -341,7 +319,7 @@ var _ = Describe("list tenants by inventory namespace", func() {
 				tenantList, err := dRec.tenantListByInventoryNS(ctx, ns)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tenantList.Items).Should(HaveLen(2))
-				Expect(tenantList.Items).Should(ConsistOf(*tenant1, *tenant2))
+				Expect(tenantList.Items).Should(ConsistOf(tenant1, tenant2))
 			})
 		})
 
@@ -360,8 +338,10 @@ var _ = Describe("Check hasNoEditOrListVerbs function", func() {
 
 	// ClusterRoles created by operator should not grant 'edit' or 'list' rights
 	inventoryList := createInventoryList()
-	inventoryAuthz := getAllAuthzFromInventoryList(inventoryList, *defaultTenant)
-	clusterRole, clusterRolebinding := tenantRbacObjs(*defaultTenant, inventoryAuthz)
+	inventoryAuthz := getDevAuthzFromInventoryList(inventoryList, defaultTenant)
+	serviceAdminAuthz := v1alpha1.DBaasUsersGroups{}
+	tenantListAuthz := v1alpha1.DBaasUsersGroups{}
+	clusterRole, clusterRolebinding := tenantRbacObjs(defaultTenant, serviceAdminAuthz, inventoryAuthz, tenantListAuthz)
 	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
 	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
 		Verbs: []string{"watch"},

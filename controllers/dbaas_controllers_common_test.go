@@ -61,24 +61,12 @@ var defaultProvider = &v1alpha1.DBaaSProvider{
 	},
 }
 
-var defaultTenant = &v1alpha1.DBaaSTenant{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: "cluster",
-	},
-	Spec: v1alpha1.DBaaSTenantSpec{
-		InventoryNamespace: testNamespace,
-		Authz: v1alpha1.DBaasAuthz{
-			Developer: v1alpha1.DBaasUsersGroups{
-				Groups: []string{"system:authenticated"},
-			},
-		},
-	},
-}
+var defaultTenant = getDefaultTenant(testNamespace)
 
 func assertResourceCreationIfNotExists(object client.Object) func() {
 	return func() {
 		By("checking the resource exists")
-		if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+		if err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
 			if errors.IsNotFound(err) {
 				assertResourceCreation(object)()
 			} else {
@@ -92,11 +80,11 @@ func assertResourceCreation(object client.Object) func() {
 	return func() {
 		By("creating resource")
 		object.SetResourceVersion("")
-		Expect(k8sClient.Create(ctx, object)).Should(Succeed())
+		Expect(dRec.Create(ctx, object)).Should(Succeed())
 
 		By("checking the resource created")
 		Eventually(func() bool {
-			if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+			if err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
 				return false
 			}
 			return true
@@ -107,11 +95,11 @@ func assertResourceCreation(object client.Object) func() {
 func assertResourceDeletion(object client.Object) func() {
 	return func() {
 		By("deleting resource")
-		Expect(k8sClient.Delete(ctx, object)).Should(Succeed())
+		Expect(dRec.Delete(ctx, object)).Should(Succeed())
 
 		By("checking the resource deleted")
 		Eventually(func() bool {
-			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object)
+			err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object)
 			if err != nil && errors.IsNotFound(err) {
 				return true
 			}
@@ -131,7 +119,7 @@ func assertProviderResourceCreated(object client.Object, providerResourceKind st
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
-			if err := k8sClient.Get(ctx, objectKey, providerResource); err != nil {
+			if err := dRec.Get(ctx, objectKey, providerResource); err != nil {
 				return false
 			}
 			return true
@@ -167,7 +155,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, providerResourceKind
 		By("checking the DBaaS resource status has no conditions")
 		objectKey := client.ObjectKeyFromObject(object)
 		Consistently(func() (int, error) {
-			err := k8sClient.Get(ctx, objectKey, object)
+			err := dRec.Get(ctx, objectKey, object)
 			if err != nil {
 				return -1, err
 			}
@@ -190,7 +178,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, providerResourceKind
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
-			err := k8sClient.Get(ctx, objectKey, providerResource)
+			err := dRec.Get(ctx, objectKey, providerResource)
 			if err != nil {
 				if errors.IsNotFound(err) {
 					return false
@@ -201,7 +189,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, providerResourceKind
 			By("updating the provider resource status")
 			providerResource.UnstructuredContent()["status"] = providerResourceStatus
 
-			err = k8sClient.Status().Update(ctx, providerResource)
+			err = dRec.Status().Update(ctx, providerResource)
 			if err != nil {
 				if errors.IsConflict(err) {
 					return false
@@ -213,7 +201,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, providerResourceKind
 
 		By("checking the DBaaS resource status updated")
 		Eventually(func() (int, error) {
-			err := k8sClient.Get(ctx, objectKey, object)
+			err := dRec.Get(ctx, objectKey, object)
 			if err != nil {
 				return -1, err
 			}
@@ -243,7 +231,7 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 		By("updating the DBaaS resource spec")
 		objectKey := client.ObjectKeyFromObject(object)
 		Eventually(func() bool {
-			err := k8sClient.Get(ctx, objectKey, object)
+			err := dRec.Get(ctx, objectKey, object)
 			Expect(err).NotTo(HaveOccurred())
 
 			switch v := object.(type) {
@@ -255,7 +243,7 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 				Fail("invalid test object")
 			}
 
-			err = k8sClient.Update(ctx, object)
+			err = dRec.Update(ctx, object)
 			if err != nil {
 				if errors.IsConflict(err) {
 					return false
@@ -273,7 +261,7 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
-			err := k8sClient.Get(ctx, objectKey, providerResource)
+			err := dRec.Get(ctx, objectKey, providerResource)
 			if err != nil {
 				return false
 			}

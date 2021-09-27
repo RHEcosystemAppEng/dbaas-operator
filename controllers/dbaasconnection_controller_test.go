@@ -30,7 +30,7 @@ import (
 
 var _ = Describe("DBaaSConnection controller", func() {
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {

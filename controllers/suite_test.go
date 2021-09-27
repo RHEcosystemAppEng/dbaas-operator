@@ -26,23 +26,24 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/client-go/kubernetes/scheme"
+	oauthzv1 "github.com/openshift/api/authorization/v1"
+	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var k8sClient client.Client
 var testEnv *envtest.Environment
 var ctx context.Context
 var dRec *DBaaSReconciler
@@ -52,7 +53,7 @@ var cCtrl *SpyController
 const (
 	testNamespace = "default"
 
-	timeout  = time.Second * 10
+	timeout  = time.Second * 60
 	duration = time.Second * 10
 	interval = time.Millisecond * 250
 )
@@ -68,6 +69,16 @@ func TestControllers(t *testing.T) {
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
+	scheme := runtime.NewScheme()
+	err := v1alpha1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = clientgoscheme.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = oauthzv1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = rbacv1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
@@ -81,40 +92,42 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = v1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = dbaasv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	//+kubebuilder:scaffold:scheme
 
 	ctx = context.Background()
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	authzClient, err := oauthzclientv1.NewForConfig(cfg)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(k8sClient).NotTo(BeNil())
+	Expect(authzClient).NotTo(BeNil())
 
 	err = os.Setenv(InstallNamespaceEnvVar, testNamespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: scheme.Scheme,
-	})
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme})
 	Expect(err).ToNot(HaveOccurred())
+	Expect(k8sManager).NotTo(BeNil())
 
 	dRec = &DBaaSReconciler{
 		Client:           k8sManager.GetClient(),
 		Scheme:           k8sManager.GetScheme(),
 		InstallNamespace: testNamespace,
 	}
+	tenantReconciler := &DBaaSTenantReconciler{
+		DBaaSReconciler:       dRec,
+		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
+	}
 
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
-		DBaaSReconciler: dRec,
+		DBaaSTenantReconciler: tenantReconciler,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	connectionCtrl, err := (&DBaaSConnectionReconciler{
+		DBaaSReconciler: dRec,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DBaaSDefaultTenantReconciler{
 		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
@@ -129,9 +142,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DBaaSTenantReconciler{
-		DBaaSReconciler: dRec,
-	}).SetupWithManager(k8sManager)
+	err = (tenantReconciler).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

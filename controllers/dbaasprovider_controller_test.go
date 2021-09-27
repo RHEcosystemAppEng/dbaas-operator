@@ -87,15 +87,15 @@ var _ = Describe("DBaaSProvider controller", func() {
 						Namespace: testNamespace,
 					},
 				}
-				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(updatedProvider), updatedProvider)
+				err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), updatedProvider)
 				Expect(err).NotTo(HaveOccurred())
 
 				updatedProvider.Spec.InventoryKind = "CrunchyBridgeInventory"
 				updatedProvider.Spec.ConnectionKind = "CrunchyBridgeConnection"
-				Expect(k8sClient.Update(ctx, updatedProvider)).Should(Succeed())
+				Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
 				pProvider := &v1alpha1.DBaaSProvider{}
 				Eventually(func() v1alpha1.DBaaSProviderSpec {
-					err := k8sClient.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
+					err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
 					if err != nil {
 						return v1alpha1.DBaaSProviderSpec{}
 					}
