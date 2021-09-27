@@ -37,13 +37,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
 const (
-	DBaaSPlatformFinalizer = "dbaasplaform-cleanup"
+	DBaaSPlatformFinalizer = "dbaasplatform.dbaas.redhat.com/finalizer"
 	RequeueDelaySuccess    = 10 * time.Second
 	RequeueDelayError      = 5 * time.Second
 )
@@ -90,10 +91,12 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 	// Add a cleanup finalizer if not already present
-	if cr.DeletionTimestamp == nil && len(cr.Finalizers) == 0 {
-		cr.Finalizers = append(cr.Finalizers, DBaaSPlatformFinalizer)
-		err = r.Update(ctx, cr)
-		return ctrl.Result{}, err
+	if cr.DeletionTimestamp.IsZero() {
+		if !contains(cr.GetFinalizers(), DBaaSPlatformFinalizer) {
+			controllerutil.AddFinalizer(cr, DBaaSPlatformFinalizer)
+			err = r.Update(ctx, cr)
+			return ctrl.Result{}, err
+		}
 	}
 	var finished = true
 
@@ -149,12 +152,14 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	// Ready for deletion?
 	// Only remove the finalizer when all platforms were successful
-	if cr.DeletionTimestamp != nil && finished {
+	if !cr.DeletionTimestamp.IsZero() && finished {
 		log.Info("cleanup platforms complete, removing finalizer")
-		cr.Finalizers = []string{}
-		err = r.Update(ctx, cr)
-		r.installComplete = false
-		return ctrl.Result{}, err
+		if contains(cr.GetFinalizers(), DBaaSPlatformFinalizer) {
+			controllerutil.RemoveFinalizer(cr, DBaaSPlatformFinalizer)
+			err = r.Update(ctx, cr)
+			r.installComplete = false
+			return ctrl.Result{}, err
+		}
 	}
 
 	return r.updateStatus(cr, nextStatus)
