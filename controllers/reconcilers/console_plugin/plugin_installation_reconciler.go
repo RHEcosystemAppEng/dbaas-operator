@@ -139,7 +139,7 @@ func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsIn
 	service := r.getService()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 		service.Annotations = map[string]string{
-			"service.alpha.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
+			"service.beta.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
 		}
 		service.Labels = map[string]string{
 			"app":                         r.pluginName,
@@ -283,11 +283,7 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 		return v1alpha1.ResultFailed, err
 	}
 
-	if console.Spec.Plugins == nil {
-		console.Spec.Plugins = []string{r.pluginName}
-	} else {
-		console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
-	}
+	console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
 	err = r.client.Update(ctx, console)
 	if err != nil {
 		if errors.IsConflict(err) {

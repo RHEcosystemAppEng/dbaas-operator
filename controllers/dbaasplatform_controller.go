@@ -29,12 +29,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"os"
 	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
 	"time"
@@ -43,15 +42,14 @@ import (
 )
 
 const (
-	DBaaSPlatformFinalizer = "dbaasplaform-cleanup"
+	DBaaSPlatformFinalizer = "dbaasplatform.dbaas.redhat.com/finalizer"
 	RequeueDelaySuccess    = 10 * time.Second
 	RequeueDelayError      = 5 * time.Second
 )
 
 // DBaaSPlatformReconciler reconciles a DBaaSPlatform object
 type DBaaSPlatformReconciler struct {
-	client.Client
-	Scheme              *runtime.Scheme
+	*DBaaSReconciler
 	Log                 logr.Logger
 	installComplete     bool
 	operatorNameVersion string
@@ -91,10 +89,12 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 	// Add a cleanup finalizer if not already present
-	if cr.DeletionTimestamp == nil && len(cr.Finalizers) == 0 {
-		cr.Finalizers = append(cr.Finalizers, DBaaSPlatformFinalizer)
-		err = r.Update(ctx, cr)
-		return ctrl.Result{}, err
+	if cr.DeletionTimestamp.IsZero() {
+		if !contains(cr.GetFinalizers(), DBaaSPlatformFinalizer) {
+			controllerutil.AddFinalizer(cr, DBaaSPlatformFinalizer)
+			err = r.Update(ctx, cr)
+			return ctrl.Result{}, err
+		}
 	}
 	var finished = true
 
@@ -150,12 +150,14 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	// Ready for deletion?
 	// Only remove the finalizer when all platforms were successful
-	if cr.DeletionTimestamp != nil && finished {
+	if !cr.DeletionTimestamp.IsZero() && finished {
 		log.Info("cleanup platforms complete, removing finalizer")
-		cr.Finalizers = []string{}
-		err = r.Update(ctx, cr)
-		r.installComplete = false
-		return ctrl.Result{}, err
+		if contains(cr.GetFinalizers(), DBaaSPlatformFinalizer) {
+			controllerutil.RemoveFinalizer(cr, DBaaSPlatformFinalizer)
+			err = r.Update(ctx, cr)
+			r.installComplete = false
+			return ctrl.Result{}, err
+		}
 	}
 
 	return r.updateStatus(cr, nextStatus)
