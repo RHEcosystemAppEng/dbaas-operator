@@ -33,6 +33,7 @@ spec:
         - --leader-elect
         - --log-level=INFO
         image: controller:latest
+        imagePullPolicy: Always
         name: manager
         imagePullPolicy: Always
         securityContext:
