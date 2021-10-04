@@ -131,6 +131,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				SetPlatformStatusMetric(platform, status)
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
+				CleanPlatformStatusMetric(platform, status)
 			}
 
 			if err != nil {

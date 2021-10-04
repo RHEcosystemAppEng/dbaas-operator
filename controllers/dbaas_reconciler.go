@@ -8,8 +8,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -236,6 +237,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 		return
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", providerName)
+	//execution = NewExecution(provider.Spec.Provider.Name,providerObjectKindFn(provider), DBaaSObject.GetName())
 
 	providerObject := r.createProviderObject(DBaaSObject, providerObjectKindFn(provider))
 	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn())); err != nil {
