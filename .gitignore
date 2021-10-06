@@ -7,7 +7,6 @@
 *.dylib
 bin
 testbin/*
-bundle/
 bundle_tmp*
 
 # Test binary, build with `go test -c`

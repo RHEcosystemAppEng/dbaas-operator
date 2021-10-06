@@ -1,0 +1,88 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: dbaastenants.dbaas.redhat.com
+spec:
+  group: dbaas.redhat.com
+  names:
+    kind: DBaaSTenant
+    listKind: DBaaSTenantList
+    plural: dbaastenants
+    singular: dbaastenant
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DBaaSTenant is the Schema for the dbaastenants API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: DBaaSTenantSpec defines Tenant inventory namespace and user
+              authorizations
+            properties:
+              authz:
+                description: DBaasAuthz designates the level of authorization for
+                  Tenant personas
+                properties:
+                  developer:
+                    description: Specify a Tenant’s default Developers for DBaaSInventory
+                      “viewer” access
+                    properties:
+                      groups:
+                        items:
+                          type: string
+                        type: array
+                      users:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  serviceAdmin:
+                    description: Specify a Tenant’s Service Admins for DBaaSTenant
+                      “viewer” access
+                    properties:
+                      groups:
+                        items:
+                          type: string
+                        type: array
+                      users:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              inventoryNamespace:
+                description: Namespace to watch for DBaaSInventories
+                type: string
+            required:
+            - inventoryNamespace
+            type: object
+          status:
+            description: DBaaSTenantStatus defines the observed state of DBaaSTenant
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

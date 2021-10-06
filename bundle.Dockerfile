@@ -1,5 +1,9 @@
 FROM scratch
 
+# RH OLM annotations
+LABEL com.redhat.openshift.versions="v4.8"
+LABEL com.redhat.delivery.operator.bundle=true
+
 # Core bundle labels.
 LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
 LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/

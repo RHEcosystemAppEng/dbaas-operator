@@ -2,17 +2,128 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[]'
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSConnection",
+          "metadata": {
+            "name": "dbaasconnection-sample"
+          },
+          "spec": {
+            "instanceID": "atlas-instance",
+            "inventoryRef": {
+              "name": "atlas-inventory",
+              "namespace": "openshift-dbaas-operator"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSInventory",
+          "metadata": {
+            "name": "atlas-inventory"
+          },
+          "spec": {
+            "credentialsRef": {
+              "name": "atlas-inventory-credentials",
+              "namespace": "openshift-dbaas-operator"
+            },
+            "providerRef": {
+              "name": "atlas-provider-registration"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSPlatform",
+          "metadata": {
+            "name": "dbaasplatform-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSProvider",
+          "metadata": {
+            "labels": {
+              "related-to": "dbaas-operator",
+              "type": "dbaas-provider-registration"
+            },
+            "name": "atlas-provider-registration"
+          },
+          "spec": {
+            "connectionKind": "MongoDBAtlasConnection",
+            "credentialFields": [
+              {
+                "displayName": "Organization ID",
+                "key": "organizationId",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Public Key",
+                "key": "publicApiKey",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Private Key",
+                "key": "privateApiKey",
+                "required": true,
+                "type": "maskedstring"
+              }
+            ],
+            "inventoryKind": "MongoDBAtlasInventory",
+            "provider": {
+              "displayDescription": "Some nice description show to dev users in UX when selecting which provider from catalog.",
+              "displayName": "MongoDB Atlas",
+              "icon": {
+                "base64data": "\u003cbase64-encoded image data\u003e",
+                "mediatype": "image/png"
+              },
+              "name": "Red Hat DBaaS / MongoDB Atlas"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSTenant",
+          "metadata": {
+            "name": "sample"
+          },
+          "spec": {
+            "authz": {
+              "developer": {
+                "groups": [
+                  "system:authenticated"
+                ]
+              },
+              "serviceAdmin": {
+                "users": [
+                  "admin1",
+                  "admin2"
+                ]
+              }
+            },
+            "inventoryNamespace": "foo"
+          }
+        }
+      ]
     capabilities: Basic Install
     categories: Database
     containerImage: quay.io/ecosystem-appeng/dbaas-operator:latest
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
+    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
     operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
     support: dbaas-alpha-support@redhat.com
-  name: dbaas-operator.v0.0.0
+  name: dbaas-operator.v0.1.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -115,8 +226,284 @@ spec:
     mediatype: image/png
   install:
     spec:
-      deployments: null
-    strategy: ""
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - apps
+          resources:
+          - daemonsets
+          - deployments
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consoleplugins
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          - services
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*'
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*/finalizers'
+          verbs:
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*/status'
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - operator.openshift.io
+          resources:
+          - consoles
+          verbs:
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - catalogsources
+          - clusterserviceversions
+          - operatorgroups
+          - subscriptions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrolebindings
+          - clusterroles
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrolebindings/finalizers
+          - clusterroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings/finalizers
+          - roles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: dbaas-operator-controller-manager
+      deployments:
+      - name: dbaas-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+              type: dbaas-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                control-plane: controller-manager
+                type: dbaas-operator
+            spec:
+              containers:
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
+                - --upstream=http://127.0.0.1:8080/
+                - --logtostderr=true
+                - --v=10
+                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.8
+                name: kube-rbac-proxy
+                ports:
+                - containerPort: 8443
+                  name: https
+                resources: {}
+              - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                env:
+                - name: INSTALL_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                image: quay.io/ecosystem-appeng/dbaas-operator:v0.1.1
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 100m
+                    memory: 250Mi
+                  requests:
+                    cpu: 100m
+                    memory: 100Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: dbaas-operator-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: dbaas-operator-controller-manager
+    strategy: deployment
   installModes:
   - supported: false
     type: OwnNamespace
@@ -138,4 +525,24 @@ spec:
   provider:
     name: Red Hat
     url: https://www.redhat.com
-  version: 0.0.0
+  version: 0.1.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: dbaas-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdbaasconnection.kb.io
+    rules:
+    - apiGroups:
+      - dbaas.redhat.com
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - dbaasconnections
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
