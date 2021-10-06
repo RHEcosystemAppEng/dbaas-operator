@@ -3,7 +3,27 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.1.1
+VERSION ?= 0.1.2
+
+# OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
+#
+# This is NOT required if you are incrementally building the catalog index. If you need to increment on
+# a catalog that already HAS old bundles, such as when building/pushing the official release, then you do NOT
+# need to uncomment & add the old bundles - the existing "from-index" catalog already has those.
+#
+# If you are developing and pushing against your OWN quay for testing, you likely need to uncomment
+#OLD_BUNDLE_VERSIONS ?= 0.1.0,0.1.1
+
+# CATALOG_VERSION defines the version of the index image.
+CATALOG_VERSION ?= 0.1
+
+# QUAY_ORG indicates the organization that docker images will be build for & pushed to
+# CHANGE THIS TO YOUR OWN QUAY USERNAME FOR DEV/TESTING/PUSHING
+QUAY_ORG ?= ecosystem-appeng
+
+# CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
+CATALOG_BASE_IMG ?= quay.io/$(QUAY_ORG)/dbaas-operator-catalog:v$(CATALOG_VERSION)
+
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -30,11 +50,18 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # redhat.com/dbaas-operator-bundle:$VERSION and redhat.com/dbaas-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= quay.io/ecosystem-appeng/dbaas-operator
+IMAGE_TAG_BASE ?= quay.io/$(QUAY_ORG)/dbaas-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+
+# OLD_BUNDLE_IMGS defines the comma separated list of old bundles to add to the index.
+COMMA := ,
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+OLD_BUNDLE_IMG_TAG_BASE ?= $(IMAGE_TAG_BASE)-bundle
+OLD_BUNDLE_IMGS ?= $(patsubst %$(COMMA),%$(EMPTY),$(subst $(SPACE),$(EMPTY),$(foreach ver,$(subst $(COMMA),$(SPACE),$(OLD_BUNDLE_VERSIONS)),$(OLD_BUNDLE_IMG_TAG_BASE):v$(ver),)))
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
@@ -94,7 +121,7 @@ test: manifests generate fmt vet ## Run tests.
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##@ Build
-release-build: build generate bundle docker-build bundle-build catalog-build ## Build operator docker, bundle, catalog images
+release-build: build generate bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
 
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
@@ -213,10 +240,14 @@ endif
 
 # A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
 # These images MUST exist in a registry and be pull-able.
+ifeq ($(OLD_BUNDLE_IMGS),)
 BUNDLE_IMGS ?= $(BUNDLE_IMG)
+else
+BUNDLE_IMGS ?= $(BUNDLE_IMG),$(OLD_BUNDLE_IMGS)
+endif
 
 # The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
-CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(CATALOG_VERSION)
 
 # Set CATALOG_BASE_IMG to an existing catalog image tag to add $BUNDLE_IMGS to that image.
 ifneq ($(origin CATALOG_BASE_IMG), undefined)
