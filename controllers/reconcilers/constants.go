@@ -3,8 +3,8 @@ package reconcilers
 const (
 	INSTALL_NAMESPACE                        = "openshift-operators"
 	CATALOG_NAMESPACE                        = "openshift-marketplace"
-	MONGODB_ATLAS_CATLOG_IMG                 = "quay.io/ecosystem-appeng/mongodb-atlas-operator-catalog:0.6.25"
-	CRUNCHY_BRIDGE_CATLOG_IMG                = "quay.io/ecosystem-appeng/crunchy-bridge-operator-catalog:v0.0.1"
+	MONGODB_ATLAS_CATLOG_IMG                 = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:latest"
+	CRUNCHY_BRIDGE_CATLOG_IMG                = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.1"
 	DBAAS_DYNAMIC_PLUGIN_IMG                 = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.1"
 	DBAAS_DYNAMIC_PLUGIN_NAME                = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_NAMESPACE           = "dbaas-dynamic-plugin"

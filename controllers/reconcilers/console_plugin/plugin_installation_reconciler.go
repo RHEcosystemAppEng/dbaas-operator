@@ -182,7 +182,7 @@ func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.Platform
 			"app.kubernetes.io/part-of":          r.pluginName,
 			"app.openshift.io/runtime-namespace": r.pluginNamespace,
 		}
-		replicas := int32(1)
+		replicas := int32(3)
 		defaultMode := int32(420)
 		percentageOfPods := intstr.FromString("25%")
 		deployment.Spec.Replicas = &replicas
@@ -311,7 +311,7 @@ func (r *Reconciler) waitForConsolePlugin(ctx context.Context) (v1alpha1.Platfor
 
 	for _, deployment := range deployments.Items {
 		if deployment.Name == r.pluginName {
-			if deployment.Status.ReadyReplicas > 0 {
+			if deployment.Status.ReadyReplicas == deployment.Status.Replicas {
 				return v1alpha1.ResultSuccess, nil
 			}
 		}
