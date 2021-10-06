@@ -1,0 +1,548 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSConnection",
+          "metadata": {
+            "name": "dbaasconnection-sample"
+          },
+          "spec": {
+            "instanceID": "atlas-instance",
+            "inventoryRef": {
+              "name": "atlas-inventory",
+              "namespace": "openshift-dbaas-operator"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSInventory",
+          "metadata": {
+            "name": "atlas-inventory"
+          },
+          "spec": {
+            "credentialsRef": {
+              "name": "atlas-inventory-credentials",
+              "namespace": "openshift-dbaas-operator"
+            },
+            "providerRef": {
+              "name": "atlas-provider-registration"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSPlatform",
+          "metadata": {
+            "name": "dbaasplatform-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSProvider",
+          "metadata": {
+            "labels": {
+              "related-to": "dbaas-operator",
+              "type": "dbaas-provider-registration"
+            },
+            "name": "atlas-provider-registration"
+          },
+          "spec": {
+            "connectionKind": "MongoDBAtlasConnection",
+            "credentialFields": [
+              {
+                "displayName": "Organization ID",
+                "key": "organizationId",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Public Key",
+                "key": "publicApiKey",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Private Key",
+                "key": "privateApiKey",
+                "required": true,
+                "type": "maskedstring"
+              }
+            ],
+            "inventoryKind": "MongoDBAtlasInventory",
+            "provider": {
+              "displayDescription": "Some nice description show to dev users in UX when selecting which provider from catalog.",
+              "displayName": "MongoDB Atlas",
+              "icon": {
+                "base64data": "\u003cbase64-encoded image data\u003e",
+                "mediatype": "image/png"
+              },
+              "name": "Red Hat DBaaS / MongoDB Atlas"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSTenant",
+          "metadata": {
+            "name": "sample"
+          },
+          "spec": {
+            "authz": {
+              "developer": {
+                "groups": [
+                  "system:authenticated"
+                ]
+              },
+              "serviceAdmin": {
+                "users": [
+                  "admin1",
+                  "admin2"
+                ]
+              }
+            },
+            "inventoryNamespace": "foo"
+          }
+        }
+      ]
+    capabilities: Basic Install
+    categories: Database
+    containerImage: quay.io/ecosystem-appeng/dbaas-operator:latest
+    description: Discover & connect with database instances hosted on 3rd-party ISV
+      cloud platforms.
+    operatorframework.io/suggested-namespace: openshift-dbaas-operator
+    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+    repository: https://github.com/RHEcosystemAppEng/dbaas-operator
+    support: dbaas-alpha-support@redhat.com
+  name: dbaas-operator.v0.1.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: DBaaSConnection is the Schema for the dbaasconnections API
+      displayName: DBaaSConnection
+      kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
+        objects must be created in a valid Tenant namespace.
+      displayName: Provider Account
+      kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSPlatform is the Schema for the dbaasplatforms API
+      displayName: DBaaSPlatform
+      kind: DBaaSPlatform
+      name: dbaasplatforms.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSProvider is the Schema for the dbaasproviders API
+      displayName: DBaaSProvider
+      kind: DBaaSProvider
+      name: dbaasproviders.dbaas.redhat.com
+      version: v1alpha1
+    - description: DBaaSTenant is the Schema for the dbaastenants API
+      displayName: DBaaSTenant
+      kind: DBaaSTenant
+      name: dbaastenants.dbaas.redhat.com
+      version: v1alpha1
+  description: |
+    The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
+    hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas & CrunchyData Bridge.
+
+    ## Release Status
+
+    Project is currently in **Alpha**. This is an early evaluation release that enables OpenShift users to
+    discover & utilize database instances created via their respective ISV cloud platforms. Our OpenShift Database Access Operator project
+    is new, however, our partners' cloud platforms aren't & should not be considered 'alpha'. Please refer to platform
+    documentation for each provider for latest information regarding product offerings.
+
+    ## Feedback & Support
+
+    Please contact us at [dbaas-alpha-support@redhat.com](mailto:dbaas-alpha-support@redhat.com)
+
+    ## Installation
+
+    **1.** Deploy Operator by clicking the Install button, taking note of the installation namespace for future steps.
+
+    **2.** Await installation of dependency operators & OpenShift Console Plugins. Adminstrators can monitor the
+    `manager` container logs of the operator's deployment pod to track status of full stack installation. Once all
+    dependencies have been installed & configured, logs will report with `DBaaS platform stack installation complete`.
+
+    ## OpenShift Administrator Discovery Workflow
+
+    **1.** In order to discover & import 3rd party database instances as an OpenShift Adminstrator, **START BY SWITCHING
+    TO THE NAMESPACE/PROJECT NOTED IN STEP 1 ABOVE**. After switching to this project, visit the
+    `Red Hat OpenShift Database Access Operator` details page under `Installed Operators`.
+
+    **2.** Under the `Provider Account` operand description, click on the `Create instance` link to create a new
+    provider account instance.
+
+    **3.** On the Create Provider Account page, specify a name for the new Provider Account, select the desired
+    target Database provider & provide all the required account credentials to proceed.
+
+    **4.** Click on the `Create` button to create the Provider Account resource and fetch available database instances
+    associated with the credentials provided in the last step. If fetching is successful, the list of available instances
+    will be displayed, indicating a successful discovery.
+
+    **5.** Click the `View Provider Accounts` button to view a list of resources that have been created via this workflow
+     or proceed with Developer Connection Workflow to utilize the discovered instances.
+
+    ## OpenShift Developer Connection Workflow
+
+    **1.** As a Developer user, access the project/namespace where the application requiring connectivity to the instance
+    currently resides or will be created.
+
+    **2.** After selecting the correct project, access the Developer Catalog by hitting the `Add+` navigation link.
+    Click on the `Connected Database` tile to see a list of providers currently configured for the cluster.
+    Alternatively, provider entries can also be found under the `Database` tile.
+
+    **3.** Select the provider tile aligning with the provider choice used during the Discovery workflow above & click
+    `Connect`.
+
+    **4.** Select the previously configured Provider Account for the target database instance from the drop-down box.
+    Next, click on the database instance ID, and then click on the Connect button.
+
+    **5.** Upon success, the Topology page will be displayed with a new Deployment representing the bindable connection
+    now visible.
+
+    **6.** Drag-and-drop an arrowhead/line from the target developer's application into the semi-transparent box
+    surrounding the DBaaS deployment resulting from steps 1-4, which should prompt to creating a binding connector.
+
+    **7.** Lastly, the Service Binding Operator will automate the process of retrieving database instance connectivity
+    information & injecting into the target application's pod as volume mounts.
+  displayName: OpenShift Database Access Operator
+  icon:
+  - base64data: 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
+    mediatype: image/png
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - apps
+          resources:
+          - daemonsets
+          - deployments
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - console.openshift.io
+          resources:
+          - consoleplugins
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          - services
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*'
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*/finalizers'
+          verbs:
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - '*/status'
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - dbaas.redhat.com
+          resources:
+          - dbaasplatforms/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - operator.openshift.io
+          resources:
+          - consoles
+          verbs:
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - catalogsources
+          - clusterserviceversions
+          - operatorgroups
+          - subscriptions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrolebindings
+          - clusterroles
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterrolebindings/finalizers
+          - clusterroles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings
+          - roles
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - rolebindings/finalizers
+          - roles/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: dbaas-operator-controller-manager
+      deployments:
+      - name: dbaas-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+              type: dbaas-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                control-plane: controller-manager
+                type: dbaas-operator
+            spec:
+              containers:
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
+                - --upstream=http://127.0.0.1:8080/
+                - --logtostderr=true
+                - --v=10
+                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.8
+                name: kube-rbac-proxy
+                ports:
+                - containerPort: 8443
+                  name: https
+                resources: {}
+              - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                env:
+                - name: INSTALL_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                image: quay.io/ecosystem-appeng/dbaas-operator:v0.1.1
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 100m
+                    memory: 250Mi
+                  requests:
+                    cpu: 100m
+                    memory: 100Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: dbaas-operator-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: dbaas-operator-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - dbaas
+  links:
+  - name: GitHub
+    url: https://github.com/RHEcosystemAppEng/dbaas-operator
+  maintainers:
+  - email: ecosystem-appeng@redhat.com
+    name: Red Hat Ecosystem App Engineering
+  maturity: alpha
+  provider:
+    name: Red Hat
+    url: https://www.redhat.com
+  version: 0.1.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: dbaas-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdbaasconnection.kb.io
+    rules:
+    - apiGroups:
+      - dbaas.redhat.com
+      apiVersions:
+      - v1alpha1
+      operations:
+      - UPDATE
+      resources:
+      - dbaasconnections
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
