@@ -29,6 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 # Build the operator image
 FROM registry.access.redhat.com/ubi8-minimal:8.4
 
+COPY LICENSE /licenses/LICENSE
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
