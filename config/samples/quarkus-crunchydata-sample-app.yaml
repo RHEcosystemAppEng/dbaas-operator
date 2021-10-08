@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: List
+items:
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: postgresql-orm-quarkus
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: postgresql-orm-quarkus
+      template:
+        metadata:
+          labels:
+            name: postgresql-orm-quarkus
+        spec:
+          containers:
+            - name: postgresql-orm-quarkus
+              # Replace this with the built image name
+              image: quay.io/ecosystem-appeng/postgresql-orm-quarkus:v0.1
+              imagePullPolicy: Always
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: postgresql-orm-quarkus
+      labels:
+        name: postgresql-orm-quarkus
+    spec:
+      ports:
+        - port: 8080
+          protocol: TCP
+          targetPort: 8080
+      selector:
+        name: postgresql-orm-quarkus
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: postgresql-orm-quarkus
+      labels:
+        name: postgresql-orm-quarkus
+    spec:
+      port:
+        targetPort: 8080
+      to:
+        kind: Service
+        name: postgresql-orm-quarkus
