@@ -138,5 +138,5 @@ spec:
   provider:
     name: Red Hat
     url: https://www.redhat.com
-  replaces: dbaas-operator.v0.1.1
+  replaces: dbaas-operator.v0.1.2
   version: 0.0.0
