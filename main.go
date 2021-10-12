@@ -33,6 +33,7 @@ import (
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -100,6 +101,7 @@ func main() {
 		LeaderElectionID:       "e4addb06.redhat.com",
 		ClientDisableCacheFor: []client.Object{
 			&operatorframework.ClusterServiceVersion{},
+			&corev1.Secret{},
 		},
 	})
 	if err != nil {
@@ -157,6 +159,10 @@ func main() {
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = (&v1alpha1.DBaaSConnection{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
+			os.Exit(1)
+		}
+		if err = (&v1alpha1.DBaaSInventory{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInventory")
 			os.Exit(1)
 		}
 	}
