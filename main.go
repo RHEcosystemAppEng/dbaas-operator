@@ -147,9 +147,8 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSPlatformReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("DBaaSPlatform"),
+		DBaaSReconciler: DBaaSReconciler,
+		Log:             ctrl.Log.WithName("controllers").WithName("DBaaSPlatform"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSPlatform")
 		os.Exit(1)

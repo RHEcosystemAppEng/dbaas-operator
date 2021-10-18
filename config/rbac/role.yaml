@@ -26,7 +26,6 @@ rules:
   - statefulsets
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -47,7 +46,6 @@ rules:
   - consoleplugins
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -55,11 +53,9 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - namespaces
   - services
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -134,7 +130,6 @@ rules:
   - subscriptions
   verbs:
   - create
-  - delete
   - get
   - list
   - update

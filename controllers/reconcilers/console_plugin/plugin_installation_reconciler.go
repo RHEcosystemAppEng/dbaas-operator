@@ -46,11 +46,7 @@ func NewReconciler(client client.Client, logger logr.Logger, pluginName string, 
 	}
 }
 func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, status2 *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
-	status, err := r.reconcileNamespace(ctx)
-	if status != v1alpha1.ResultSuccess {
-		return status, err
-	}
-	status, err = r.reconcileService(ctx)
+	status, err := r.reconcileService(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -111,27 +107,6 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 		return v1alpha1.ResultFailed, err
 	}
 
-	namespace := r.getNamespace()
-	err = r.client.Delete(ctx, namespace)
-	if err != nil && !errors.IsNotFound(err) {
-		return v1alpha1.ResultFailed, err
-	}
-
-	return v1alpha1.ResultSuccess, nil
-}
-
-func (r *Reconciler) reconcileNamespace(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	namespace := r.getNamespace()
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, namespace, func() error {
-		return nil
-	})
-
-	if err != nil {
-		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
-		}
-		return v1alpha1.ResultFailed, err
-	}
 	return v1alpha1.ResultSuccess, nil
 }
 
@@ -139,7 +114,7 @@ func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsIn
 	service := r.getService()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 		service.Annotations = map[string]string{
-			"service.alpha.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
+			"service.beta.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
 		}
 		service.Labels = map[string]string{
 			"app":                         r.pluginName,
@@ -283,11 +258,7 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 		return v1alpha1.ResultFailed, err
 	}
 
-	if console.Spec.Plugins == nil {
-		console.Spec.Plugins = []string{r.pluginName}
-	} else {
-		console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
-	}
+	console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
 	err = r.client.Update(ctx, console)
 	if err != nil {
 		if errors.IsConflict(err) {
@@ -338,14 +309,6 @@ func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.Platf
 	}
 
 	return v1alpha1.ResultInProgress, nil
-}
-
-func (r *Reconciler) getNamespace() *v1.Namespace {
-	return &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: r.pluginNamespace,
-		},
-	}
 }
 
 func (r *Reconciler) getService() *v1.Service {

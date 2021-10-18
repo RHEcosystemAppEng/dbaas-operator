@@ -50,8 +50,7 @@ const (
 
 // DBaaSPlatformReconciler reconciles a DBaaSPlatform object
 type DBaaSPlatformReconciler struct {
-	k8sclient.Client
-	Scheme              *runtime.Scheme
+	*DBaaSReconciler
 	Log                 logr.Logger
 	installComplete     bool
 	operatorNameVersion string
@@ -60,10 +59,10 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/finalizers,verbs=update
-//+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources;subscriptions;operatorgroups;clusterserviceversions,verbs=get;list;create;update;delete;watch
-//+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;delete;watch
-//+kubebuilder:rbac:groups=core,resources=namespaces;services,verbs=get;list;create;update;delete;watch
-//+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins,verbs=get;list;create;update;delete;watch
+//+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources;subscriptions;operatorgroups;clusterserviceversions,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -187,15 +186,12 @@ func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverClient k8sclient.Client) (*dbaasv1alpha1.DBaaSPlatform, error) {
 
-	namespace, err := GetInstallNamespace()
-	if err != nil {
-		return nil, err
-	}
+	namespace := r.InstallNamespace
 	dbaaSPlatformList := &dbaasv1alpha1.DBaaSPlatformList{}
 	listOpts := []k8sclient.ListOption{
 		k8sclient.InNamespace(namespace),
 	}
-	err = serverClient.List(ctx, dbaaSPlatformList, listOpts...)
+	err := serverClient.List(ctx, dbaaSPlatformList, listOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get a list of dbaas platform intallation CR: %w", err)
 	}
@@ -251,15 +247,20 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 
 }
 func (r *DBaaSPlatformReconciler) getCleanupPlatforms() []dbaasv1alpha1.PlatformsName {
+	// since the operator cannot clean up resources automatically
+	// disable the cleanup to reduce the permission the operator needs
 
-	return []dbaasv1alpha1.PlatformsName{
-		dbaasv1alpha1.CrunchyBridgeInstallation,
-		dbaasv1alpha1.MongoDBAtlasInstallation,
-		dbaasv1alpha1.DBassDynamicPluginInstallation,
-		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
-		dbaasv1alpha1.ServiceBindingInstallation,
-		dbaasv1alpha1.Csv,
-	}
+	// will consider changing the scope of the dbaasplatform CR to be cluster-scoped
+	// and use ownerreferences to support auto cleanup in the future
+	return nil
+	//return []dbaasv1alpha1.PlatformsName{
+	//	dbaasv1alpha1.CrunchyBridgeInstallation,
+	//	dbaasv1alpha1.MongoDBAtlasInstallation,
+	//	dbaasv1alpha1.DBassDynamicPluginInstallation,
+	//	dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
+	//	dbaasv1alpha1.ServiceBindingInstallation,
+	//	dbaasv1alpha1.Csv,
+	//}
 
 }
 
@@ -273,12 +274,12 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.DBassDynamicPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
-			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, reconcilers.DBAAS_DYNAMIC_PLUGIN_NAMESPACE,
+			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, r.InstallNamespace,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.DBAAS_OPERATOR_VERSION_KEY_ENV, Value: r.operatorNameVersion})
 	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
-			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAMESPACE,
+			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, r.InstallNamespace,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
 	case dbaasv1alpha1.ServiceBindingInstallation:
