@@ -14,14 +14,16 @@ import (
 )
 
 type Reconciler struct {
-	client client.Client
-	logger logr.Logger
+	client    client.Client
+	logger    logr.Logger
+	namespace string
 }
 
-func NewReconciler(client client.Client, logger logr.Logger) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, logger logr.Logger, namespace string) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client: client,
-		logger: logger,
+		client:    client,
+		logger:    logger,
+		namespace: namespace,
 	}
 }
 
@@ -34,7 +36,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *alpha1.DBaaSPlatform) (alp
 
 	list := &v1alpha1.ClusterServiceVersionList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: r.namespace,
 	}
 	err := r.client.List(ctx, list, opts)
 	if err != nil && !errors.IsNotFound(err) {
@@ -43,19 +45,19 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *alpha1.DBaaSPlatform) (alp
 
 	for c := range list.Items {
 		csv := list.Items[c]
-		if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "crunchy-bridge-operator.") {
+		if csv.Namespace == r.namespace && strings.HasPrefix(csv.Name, "crunchy-bridge-operator.") {
 			err := r.client.Delete(ctx, &csv)
 			if err != nil && !errors.IsNotFound(err) {
 				return alpha1.ResultFailed, err
 			}
 			return alpha1.ResultInProgress, nil
-		} else if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "mongodb-atlas-kubernetes.") {
+		} else if csv.Namespace == r.namespace && strings.HasPrefix(csv.Name, "mongodb-atlas-kubernetes.") {
 			err := r.client.Delete(ctx, &csv)
 			if err != nil && !errors.IsNotFound(err) {
 				return alpha1.ResultFailed, err
 			}
 			return alpha1.ResultInProgress, nil
-		} else if csv.Namespace == reconcilers.INSTALL_NAMESPACE && strings.HasPrefix(csv.Name, "service-binding-operator.") {
+		} else if csv.Namespace == r.namespace && strings.HasPrefix(csv.Name, "service-binding-operator.") {
 			err := r.client.Delete(ctx, &csv)
 			if err != nil && !errors.IsNotFound(err) {
 				return alpha1.ResultFailed, err

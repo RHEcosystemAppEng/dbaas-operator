@@ -17,16 +17,18 @@ import (
 )
 
 type Reconciler struct {
-	client client.Client
-	logger logr.Logger
-	scheme *runtime.Scheme
+	client    client.Client
+	logger    logr.Logger
+	scheme    *runtime.Scheme
+	namespace string
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, namespace string) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client: client,
-		scheme: scheme,
-		logger: logger,
+		client:    client,
+		scheme:    scheme,
+		logger:    logger,
+		namespace: namespace,
 	}
 }
 
@@ -58,20 +60,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := getMongoDBAtlasSubscription()
+	subscription := r.getMongoDBAtlasSubscription()
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 
-	catalogSource := getMongoDBAtlasCatalogSource()
+	catalogSource := r.getMongoDBAtlasCatalogSource()
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: r.namespace,
 	}
 	err = r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -91,8 +93,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 }
 func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := getMongoDBAtlasSubscription()
-	catalogsource := getMongoDBAtlasCatalogSource()
+	subscription := r.getMongoDBAtlasSubscription()
+	catalogsource := r.getMongoDBAtlasCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
@@ -112,7 +114,7 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 }
 func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	operatorgroup := getMongoDBAtlasOperatorGroup()
+	operatorgroup := r.getMongoDBAtlasOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 
@@ -125,7 +127,7 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := getMongoDBAtlasCatalogSource()
+	catalogsource := r.getMongoDBAtlasCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
@@ -145,7 +147,7 @@ func (r *Reconciler) waitForMongoDBAtlasOperator(ctx context.Context) (v1.Platfo
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
 
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: r.namespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -162,15 +164,15 @@ func (r *Reconciler) waitForMongoDBAtlasOperator(ctx context.Context) (v1.Platfo
 	return v1.ResultInProgress, nil
 }
 
-func getMongoDBAtlasSubscription() *v1alpha1.Subscription {
+func (r *Reconciler) getMongoDBAtlasSubscription() *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "mongodb-atlas-subscription",
-			Namespace: reconcilers.INSTALL_NAMESPACE,
+			Namespace: r.namespace,
 		},
 	}
 }
-func getMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
+func (r *Reconciler) getMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
 	return &coreosv1.OperatorGroup{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "global-operators",
@@ -179,7 +181,7 @@ func getMongoDBAtlasOperatorGroup() *coreosv1.OperatorGroup {
 	}
 }
 
-func getMongoDBAtlasCatalogSource() *v1alpha1.CatalogSource {
+func (r *Reconciler) getMongoDBAtlasCatalogSource() *v1alpha1.CatalogSource {
 	return &v1alpha1.CatalogSource{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "mongodb-atlas-catalogsource",

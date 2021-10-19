@@ -16,16 +16,18 @@ import (
 )
 
 type Reconciler struct {
-	client client.Client
-	logger logr.Logger
-	scheme *runtime.Scheme
+	client    client.Client
+	logger    logr.Logger
+	scheme    *runtime.Scheme
+	namespace string
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, namespace string) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client: client,
-		scheme: scheme,
-		logger: logger,
+		client:    client,
+		scheme:    scheme,
+		logger:    logger,
+		namespace: namespace,
 	}
 }
 
@@ -45,14 +47,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 }
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetServiceBindingSubscription()
+	subscription := r.GetServiceBindingSubscription()
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: r.namespace,
 	}
 	err = r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -73,8 +75,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 
 func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := GetServiceBindingSubscription()
-	catalogsource := GetServiceBindingCatalogSource()
+	subscription := r.GetServiceBindingSubscription()
+	catalogsource := r.GetServiceBindingCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
@@ -93,16 +95,16 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 	return v1.ResultSuccess, nil
 }
 
-func GetServiceBindingSubscription() *v1alpha1.Subscription {
+func (r *Reconciler) GetServiceBindingSubscription() *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "rh-service-binding-operator-subscription",
-			Namespace: reconcilers.INSTALL_NAMESPACE,
+			Namespace: r.namespace,
 		},
 	}
 }
 
-func GetServiceBindingCatalogSource() *v1alpha1.CatalogSource {
+func (r *Reconciler) GetServiceBindingCatalogSource() *v1alpha1.CatalogSource {
 	return &v1alpha1.CatalogSource{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "redhat-operators",
@@ -115,7 +117,7 @@ func (r *Reconciler) waitFoServiceBindingOperator(ctx context.Context) (v1.Platf
 
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: r.namespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {

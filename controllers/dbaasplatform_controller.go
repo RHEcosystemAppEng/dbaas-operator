@@ -267,11 +267,11 @@ func (r *DBaaSPlatformReconciler) getCleanupPlatforms() []dbaasv1alpha1.Platform
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName) reconcilers.PlatformReconciler {
 	switch provider {
 	case dbaasv1alpha1.CrunchyBridgeInstallation:
-		return crunchybridge_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return crunchybridge_installation.NewReconciler(r.Client, r.Scheme, r.Log, r.InstallNamespace)
 	case dbaasv1alpha1.Csv:
-		return csv.NewReconciler(r.Client, r.Log)
+		return csv.NewReconciler(r.Client, r.Log, r.InstallNamespace)
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
-		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log, r.InstallNamespace)
 	case dbaasv1alpha1.DBassDynamicPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, r.InstallNamespace,
@@ -283,7 +283,7 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
 	case dbaasv1alpha1.ServiceBindingInstallation:
-		return servicebinding.NewReconciler(r.Client, r.Scheme, r.Log)
+		return servicebinding.NewReconciler(r.Client, r.Scheme, r.Log, r.InstallNamespace)
 
 	}
 
