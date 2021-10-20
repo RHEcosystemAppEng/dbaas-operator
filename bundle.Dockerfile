@@ -1,7 +1,7 @@
 FROM scratch
 
 # RH OLM annotations
-LABEL com.redhat.openshift.versions="v4.8"
+LABEL com.redhat.openshift.versions="v4.9"
 LABEL com.redhat.delivery.operator.bundle=true
 
 # Core bundle labels.
