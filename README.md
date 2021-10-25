@@ -1,16 +1,32 @@
 # Red Hat OpenShift Database Access Operator
-Red Hat OpenShift Database Access Operator is a proof-of-concept golang kubernetes operator. The intent of the PoC is to show how we could
-scan & import off-cluster cloud database instances hosted by various third-party providers & make those instances
+Red Hat OpenShift Database Access Operator is a Alpha release. The intent of the alpha release is to show how we could
+scan & import off-cluster cloud database instances hosted by partner providers CrunchyBridge and MongoDB Atlas & make those instances
 available to developers for binding to their applications.
 
+## Architecture Diagram
+
+![Conceptual Diagram of the Components](docs/images/dbaas-arch.png)
+
+## Associated Github Repositories
+Component |Git Repo	| Description
+---  | ------ | ----
+MongoDB Atlas Operator  |[MongoDB Atlas](https://github.com/mongodb/mongodb-atlas-kubernetes) | Operator responsible for establishing API communications with MongoDB Atlas Database.
+Crunchy Bridge Operator |[Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)|Operator responsible for establishing API communications with Crunchy Bridge Managed Postgres Database.
+DBaaS Console Plugin    |[DBaaS Dynamic Plugin](https://github.com/RHEcosystemAppEng/dbaas-dynamic-plugin) | DBaaS UI console plugin, creation for “Provider Account” and a bindable “Connection” resource.
+OpenShift Console Telemetry Plugin|[Console Telemetry Plugin](https://github.com/RHEcosystemAppEng/console-telemetry-plugin)|An OpenShift Console plugin for tracking user activity such as page changes, property changes, & specific UI events in segment.
+Service Binding Operator|[Service Binding Operator](https://github.com/redhat-developer/service-binding-operator)|Red Hat operator for binding resources together via Topology View. 
+
 ## Building the Operator
+Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
 - `make build`
+- `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
 ## Running the Operator
-**NOTE**: The topology portion of the workflow described below will *only* work if your operator is installed via OLM.
-An OLM-operator-backed resource is required for this bit to function. If you run locally or via direct deploy (first 2
-options), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see the DBaaSConnection as
-bindable in Topology view.
+
+**NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
+If you run locally or via direct deploy (first 2
+options), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see DBaaS console UI and bindable in Topology view.
+
 
 **Run as a local instance**:
 - `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
@@ -27,75 +43,51 @@ bindable in Topology view.
 
 **Deploy via OLM on cluster:**
 - **Make sure to edit `Makefile` and replace `ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
-- **Next `make release-build`
+- **Next `make release-build`**
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
-- Edit the [catalog-operator-group.yaml](config/samples/catalog-operator-group.yaml) to indicate your target namespace
-- `make install release-push catalog-update`
-- `oc project <your_target_namespace>`
-- `make deploy-olm`
+- `make release-push catalog-update`
+- Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
+- Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
+  The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
+- On successful installation of RHODA operator, will automatically install all its dependencies and the operator logs shows: *DBaaS platform stack installation complete*.
 - Continue below by following the [Using the Operator](#using-the-operator) section
-- If you wish to uninstall operator from your project:
-  - `make clean-namespace undeploy-olm`
+- If you wish to uninstall operator and dependencies from your cluster: delete dbaas-platform(DBaaSPlatform) CR manually wait for the operator to uninstall its dependencies and then uninstall RHODA operators by going →**Operators → Installed Operators → Actions → Uninstall Operator**.
+  Then delete the catalog source.
+
 
 ## Using the Operator
 
 **Prerequisites:**
-- In this initial phase of PoC, we're working with MongoDB Atlas as our first cloud instances provider.
-- The full workflow assumes that you're using a cluster with a modified MongoDB Atlas operator also running. The Atlas
-  operator is used to fetch details about Atlas resources via API (with Organization public/private key-pair auth).
-  - [MongoDB Atlas](https://github.com/RHEcosystemAppEng/mongodb-atlas-kubernetes)
-  - [Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)
+- An instance of OpenShift Container Platform (OCP) 4.9 or higher
+- A database instance created using either the MongoDB Atlas or Crunchy Data Bridge cloud database provider.
 
 **Creating a DBaaSInventory:**
-- The DBaaSInventory resource indicates a request for the Atlas operator to fetch available resources. Eventually, we'll
-  utilize the OpenShift console Administrator workflow to create & modify these resources, but for the sake of running
-  locally or purely via CLI, you can create this resource as follows
-- Once created, the `dbaas-operator` will reconcile this new DBaaSInventory resource & create an `MongoDBAtlasInventory` resource
-  for the Atlas operator to consume.
+- Click Operators → Installed Operators.
+- Set the Project dropdown to the openshift-dbaas-operator project.
+- Click the name of the OpenShift Database Access Operator to view the details page.
+- Under Provided APIs, on the Provider Account tile, click Create instance to create a new provider account instance.
+- Refresh the page if you are not seeing the DBaaS Console UI, this required only once to reload the plugin.
+- On the Create Provider Account page, specify a name for the new Provider Account resource.
+  ![provider account creation](docs/images/provider-account-setup.png)
+- Select your cloud database provider from the drop-down menu and provide the credentials for that provider.
+- Click on the Create button to create the Provider Account resource and fetch the available database instances.
+- If fetching is successful, then you can click on the View Provider Accounts button to display the exposed database instances that developers can import.
+- For more understanding see the demo: [IT Operations preview demo of Red Hat OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift)  
 
-**Reading resulting Atlas information:**
-- Once the Atlas operator has completed its resource fetch of resources available in the cloud via your provided Atlas
-  credentials, the dbaas-operator will read the response & update the DBaaSInventory `status` section with the resulting
-  information. You can view an example of what a return status would look like in the
-  [DBaaSInventory template](config/samples/dbaas_v1alpha1_dbaasinventory.yaml).
-
-**Specifying a cluster instance for import:**
-- At this point in the workflow, the cluster instances available for import would be displayed to the OCP Admin for
-  selecting which instances to import. We can mock this action manually as follows:
-  - Pick a cluster instance ID from the DBaaSInventory `status` section to indicate for import
-    - an example in the template status would be `6086aa1528fd4b1234aed133`
-  - Update the DBaaSInventory `spec` to include the instance ID & save
-
-**DBaaSConnection resource:**
-- The `dbaas-operator` will read the import request and create four objects:
-  - a ConfigMap containing the host URI and database selected for import
-    - name: `dbaas-atlas-connection-<instance_id>`
-  - a Secret containing the database user credentials for connecting
-    - name: `dbaas-atlas-connection-<instance_id>`
-  - a DBaaSConnection resource with a `spec` detailing the cluster instance information & `status` indicating references
-    to the ConfigMap & Secret also created.
-    - the DBaaSConnection CRD contains a series of annotations that mark the resource as bindable by the
-      [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator):
-      ```
-      service.binding/database: 'path={.status.dbConfigMap},objectType=ConfigMap'
-      service.binding/host: 'path={.status.dbConfigMap},objectType=ConfigMap'
-      service.binding/password: 'path={.status.dbCredentials},objectType=Secret'
-      service.binding/provider: 'path={.spec.provider}'
-      service.binding/type: 'path={.spec.type}'
-      service.binding/username: 'path={.status.dbCredentials},objectType=Secret'
-      ```
-  - a zero-replica Deployment resource owned by the DBaaSConnection resource to make it viewable in the OCP Developer
-    topology view as a bindable resource
-    - NOTE: this deployment serves as a temporary PoC workaround to make the DBaaSConnection viewable, eventually it will
-      become part of the developer workflow as a standalone component.
-
-**Cleaning up:**
-- Removing the sample binding & Quarkus application:
-  - `make undeploy-sample-app`
-- Remove DBaaS created resources:
-  - `make clean-namespace`
-- Remove the operator via whichever method you used for deployment (see above)
-
+**Creating a DBaaSConnection:**
+- Change into the Developer perspective. Click +Add.
+- Select/Create the project to the application that you want to add the database to. Sample Quarkus application deployment for [mongo-db](config/samples/quarkus-mongodb-sample-app.yaml) & [crunchy-bridge](config/samples/quarkus-crunchydata-sample-app.yaml)
+- From **Developer Catalog** Click on the **Database** category or select the **Connected Database**
+  ![database-provider](docs/images/connected-database.png)
+- Select the database provider and click Connect.  
+  ![connect-database](docs/images/connected.png)
+- Select the database provider and click Connect.  
+  ![connection-list](docs/images/connection-list.png)
+- Upon successful connection, you are taken to the Topology page.
+- Click and drag the arrow from the application to the new database instance to create a binding connector.
+  ![topology-view](docs/images/topology-view-example.png)
+- For more understanding see the demo: [Developer preview demo of Red Hat OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift)  
+ 
 ## Contributing
 
 - Fork Red Hat OpenShift Database Access Operator repository
