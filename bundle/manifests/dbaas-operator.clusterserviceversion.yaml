@@ -114,7 +114,7 @@ metadata:
       ]
     capabilities: Basic Install
     categories: Database
-    containerImage: quay.io/ecosystem-appeng/dbaas-operator:v0.1.2
+    containerImage: quay.io/ecosystem-appeng/dbaas-operator:v0.1.3
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
