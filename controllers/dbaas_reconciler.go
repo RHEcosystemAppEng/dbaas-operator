@@ -8,7 +8,11 @@ import (
 	"reflect"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/go-logr/logr"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -65,15 +69,15 @@ type DBaaSReconciler struct {
 	InstallNamespace string
 }
 
-func (p *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (*v1alpha1.DBaaSProvider, error) {
+func (r *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (*v1alpha1.DBaaSProvider, error) {
 	provider := &v1alpha1.DBaaSProvider{}
-	if err := p.Get(ctx, types.NamespacedName{Name: providerName}, provider); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, provider); err != nil {
 		return nil, err
 	}
 	return provider, nil
 }
 
-func (p *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, object runtime.Object, providerObjectKind string) error {
+func (r *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, object runtime.Object, providerObjectKind string) error {
 	providerObject := unstructured.Unstructured{}
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   v1alpha1.GroupVersion.Group,
@@ -95,7 +99,7 @@ func (p *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, o
 	return nil
 }
 
-func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string) *unstructured.Unstructured {
+func (r *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string) *unstructured.Unstructured {
 	var providerObject unstructured.Unstructured
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   v1alpha1.GroupVersion.Group,
@@ -107,22 +111,18 @@ func (p *DBaaSReconciler) createProviderObject(object client.Object, providerObj
 	return &providerObject
 }
 
-func (p *DBaaSReconciler) reconcileProviderObject(providerObject *unstructured.Unstructured, mutateFn controllerutil.MutateFn, ctx context.Context) (controllerutil.OperationResult, error) {
-	return controllerutil.CreateOrUpdate(ctx, p.Client, providerObject, mutateFn)
-}
-
-func (p *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerObject *unstructured.Unstructured, spec interface{}) controllerutil.MutateFn {
+func (r *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerObject *unstructured.Unstructured, spec interface{}) controllerutil.MutateFn {
 	return func() error {
 		providerObject.UnstructuredContent()["spec"] = spec
 		providerObject.SetOwnerReferences(nil)
-		if err := ctrl.SetControllerReference(object, providerObject, p.Scheme); err != nil {
+		if err := ctrl.SetControllerReference(object, providerObject, r.Scheme); err != nil {
 			return err
 		}
 		return nil
 	}
 }
 
-func (p *DBaaSReconciler) parseProviderObject(unstructured *unstructured.Unstructured, object interface{}) error {
+func (r *DBaaSReconciler) parseProviderObject(unstructured *unstructured.Unstructured, object interface{}) error {
 	b, err := unstructured.MarshalJSON()
 	if err != nil {
 		return err
@@ -158,6 +158,118 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 		return v1alpha1.DBaaSTenantList{}, err
 	}
 	return tenantListByNS, nil
+}
+
+func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSObject client.Object,
+	providerObjectKindFn func(*v1alpha1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
+	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,
+	DBaaSObjectConditionsFn func() *[]metav1.Condition, DBaaSObjectReadyType string,
+	ctx context.Context, logger logr.Logger) (result ctrl.Result, recErr error) {
+
+	var condition *metav1.Condition
+	if cond := apimeta.FindStatusCondition(*DBaaSObjectConditionsFn(), DBaaSObjectReadyType); cond != nil {
+		condition = cond.DeepCopy()
+	} else {
+		condition = &metav1.Condition{
+			Type:    DBaaSObjectReadyType,
+			Status:  metav1.ConditionFalse,
+			Reason:  v1alpha1.ProviderReconcileInprogress,
+			Message: v1alpha1.MsgProviderCRReconcileInProgress,
+		}
+	}
+
+	// This update will make sure the status is always updated in case of any errors or successful result
+	defer func(cond *metav1.Condition) {
+		apimeta.SetStatusCondition(DBaaSObjectConditionsFn(), *cond)
+		if err := r.Client.Status().Update(ctx, DBaaSObject); err != nil {
+			if errors.IsConflict(err) {
+				logger.V(1).Info("DBaaS object modified, retry syncing status", "DBaaS Object", DBaaSObject)
+				// Re-queue and preserve existing recErr
+				result = ctrl.Result{Requeue: true}
+				return
+			}
+			logger.Error(err, "Error updating the DBaaS resource status", "DBaaS Object", DBaaSObject)
+			if recErr == nil {
+				// There is no existing recErr. Set it to the status update error
+				recErr = err
+			}
+		}
+	}(condition)
+
+	provider, err := r.getDBaaSProvider(providerName, ctx)
+	if err != nil {
+		recErr = err
+		if errors.IsNotFound(err) {
+			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", providerName)
+			*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.DBaaSProviderNotFound, Message: err.Error()}
+			return
+		}
+		logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", providerName)
+		return
+	}
+	logger.Info("Found DBaaS Provider", "DBaaS Provider", providerName)
+
+	providerObject := r.createProviderObject(DBaaSObject, providerObjectKindFn(provider))
+	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn())); err != nil {
+		if errors.IsConflict(err) {
+			logger.V(1).Info("Provider object modified, retry syncing spec", "Provider Object", providerObject)
+			result = ctrl.Result{Requeue: true}
+			return
+		}
+		logger.Error(err, "Error reconciling the Provider resource", "Provider Object", providerObject)
+		recErr = err
+		return
+	} else if res != controllerutil.OperationResultNone {
+		logger.Info("Provider resource reconciled", "Provider Object", providerObject, "result", res)
+	}
+
+	DBaaSProviderObject := providerObjectFn()
+	if err := r.parseProviderObject(providerObject, DBaaSProviderObject); err != nil {
+		logger.Error(err, "Error parsing the Provider object", "Provider Object", providerObject)
+		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.ProviderParsingError, Message: err.Error()}
+		recErr = err
+		return
+	}
+
+	*condition = DBaaSObjectSyncStatusFn(DBaaSProviderObject)
+	return
+}
+
+func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
+	conditionFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, err error) {
+	inventory = &v1alpha1.DBaaSInventory{}
+	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
+		if errors.IsNotFound(err) {
+			logger.Error(err, "DBaaS Inventory resource not found for DBaaS Object", "DBaaS Object", DBaaSObject, "DBaaS Inventory", inventoryRef)
+			conditionFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
+			if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
+				if errors.IsConflict(errCond) {
+					logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
+				} else {
+					logger.Error(errCond, "Error updating the DBaaS Object status", "DBaaS Object", DBaaSObject)
+				}
+			}
+			return
+		}
+		logger.Error(err, "Error fetching DBaaS Inventory resource reference for DBaaS Object", "DBaaS Object", DBaaSObject, "DBaaS Inventory", inventoryRef)
+		return
+	}
+
+	// The inventory must be in ready status before we can move on
+	invCond := apimeta.FindStatusCondition(inventory.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+	if invCond == nil || invCond.Status == metav1.ConditionFalse {
+		err = fmt.Errorf("inventory %v is not ready", inventoryRef)
+		logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
+		conditionFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
+		if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
+			if errors.IsConflict(errCond) {
+				logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
+			} else {
+				logger.Error(errCond, "Error updating the DBaaS Object resource status", "DBaaS Object", DBaaSObject)
+			}
+		}
+	}
+	return
 }
 
 // update object upon ownerReference verification

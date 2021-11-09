@@ -24,15 +24,15 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+
 	rbacv1 "k8s.io/api/rbac/v1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Create provider object", func() {
@@ -66,9 +66,14 @@ var _ = Describe("Get DBaaSProvider", func() {
 			Provider: v1alpha1.DatabaseProvider{
 				Name: "test-provider",
 			},
-			InventoryKind:    "testInventoryKind",
-			ConnectionKind:   "testConnectionKind",
-			CredentialFields: []v1alpha1.CredentialField{},
+			InventoryKind:                "testInventoryKind",
+			ConnectionKind:               "testConnectionKind",
+			InstanceKind:                 "testInstanceKind",
+			CredentialFields:             []v1alpha1.CredentialField{},
+			AllowsFreeTrial:              false,
+			ExternalProvisionURL:         "",
+			ExternalProvisionDescription: "",
+			InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
 		},
 	}
 	BeforeEach(assertResourceCreation(provider))
@@ -156,55 +161,6 @@ var _ = Describe("Provider object MutateFn", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(providerObject).Should(Equal(expected))
-	})
-})
-
-var _ = Describe("Reconcile provider Object", func() {
-	inventory := &unstructured.Unstructured{}
-	inventory.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "dbaas.redhat.com",
-		Version: "v1alpha1",
-		Kind:    testInventoryKind,
-	})
-	inventory.SetNamespace(testNamespace)
-	inventory.SetName("test-reconcile-provider")
-	inventory.UnstructuredContent()["spec"] = map[string]interface{}{
-		"credentialsRef": map[string]interface{}{
-			"name":      "test-credential-ref",
-			"namespace": "test-namespace",
-		},
-	}
-
-	BeforeEach(assertResourceCreation(inventory))
-	AfterEach(assertResourceDeletion(inventory))
-
-	It("should update the provider object as expected", func() {
-		spec := map[string]interface{}{
-			"credentialsRef": map[string]interface{}{
-				"name":      "updated-test-credential-ref",
-				"namespace": "updated-test-namespace",
-			},
-		}
-		r, err := dRec.reconcileProviderObject(inventory, func() error {
-			inventory.UnstructuredContent()["spec"] = spec
-			return nil
-		}, ctx)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(r).Should(Equal(controllerutil.OperationResultUpdated))
-
-		updatedInventory := &unstructured.Unstructured{}
-		updatedInventory.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   "dbaas.redhat.com",
-			Version: "v1alpha1",
-			Kind:    testInventoryKind,
-		})
-		updatedInventory.SetNamespace(testNamespace)
-		updatedInventory.SetName("test-reconcile-provider")
-		Eventually(func() interface{} {
-			err = dRec.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
-			Expect(err).NotTo(HaveOccurred())
-			return updatedInventory.UnstructuredContent()["spec"]
-		}, timeout, interval).Should(Equal(spec))
 	})
 })
 
@@ -370,6 +326,239 @@ var _ = Describe("Check isOwner function", func() {
 	owned, err = isOwner(inventory, ownedObj, scheme)
 	Expect(err).To(BeNil())
 	Expect(owned).To(BeTrue())
+})
+
+var _ = Describe("Check inventory", func() {
+	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+
+	Context("after creating DBaaSInventory", func() {
+		inventoryName := "test-check-inventory"
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha1.NamespacedName{
+						Name:      "test-credentialsRef",
+						Namespace: testNamespace,
+					},
+				},
+			},
+		}
+		lastTransitionTime := getLastTransitionTimeForTest()
+		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+			Instances: []v1alpha1.Instance{
+				{
+					InstanceID: "testInstanceID",
+					Name:       "testInstance",
+					InstanceInfo: map[string]string{
+						"testInstanceInfo": "testInstanceInfo",
+					},
+				},
+			},
+			Conditions: []metav1.Condition{
+				{
+					Type:               "SpecSynced",
+					Status:             metav1.ConditionTrue,
+					Reason:             "SyncOK",
+					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+				},
+			},
+		}
+		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
+		Context("after creating DBaaSConnection", func() {
+			connectionName := "test-check-inventory-connection"
+			instanceID := "test-instanceID"
+			DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+				InventoryRef: v1alpha1.NamespacedName{
+					Name:      inventoryName,
+					Namespace: testNamespace,
+				},
+				InstanceID: instanceID,
+			}
+			createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      connectionName,
+					Namespace: testNamespace,
+				},
+				Spec: *DBaaSConnectionSpec,
+			}
+			BeforeEach(assertResourceCreation(createdDBaaSConnection))
+			AfterEach(assertResourceDeletion(createdDBaaSConnection))
+
+			When("check the right inventory", func() {
+				It("should return the inventory without error", func() {
+					i, err := dRec.checkInventory(v1alpha1.NamespacedName{
+						Name:      inventoryName,
+						Namespace: testNamespace,
+					}, createdDBaaSConnection, func(reason string, message string) {
+						cond := metav1.Condition{
+							Type:    v1alpha1.DBaaSConnectionReadyType,
+							Status:  metav1.ConditionFalse,
+							Reason:  reason,
+							Message: message,
+						}
+						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+					}, ctx, ctrl.LoggerFrom(ctx))
+
+					Expect(err).NotTo(HaveOccurred())
+					Expect(i.Name).Should(Equal(createdDBaaSInventory.Name))
+					Expect(i.Spec).Should(Equal(createdDBaaSInventory.Spec))
+				})
+			})
+
+			When("check an inventory not exists", func() {
+				It("should return error", func() {
+					_, err := dRec.checkInventory(v1alpha1.NamespacedName{
+						Name:      "test-check-not-exist-inventory",
+						Namespace: testNamespace,
+					}, createdDBaaSConnection, func(reason string, message string) {
+						cond := metav1.Condition{
+							Type:    v1alpha1.DBaaSConnectionReadyType,
+							Status:  metav1.ConditionFalse,
+							Reason:  reason,
+							Message: message,
+						}
+						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+					}, ctx, ctrl.LoggerFrom(ctx))
+
+					Expect(err).To(HaveOccurred())
+					assertConnectionDBaaSStatus(createdDBaaSConnection.Name, createdDBaaSConnection.Namespace, metav1.ConditionFalse)
+				})
+			})
+		})
+	})
+
+	Context("after creating not ready DBaaSInventory", func() {
+		inventoryName := "test-check-inventory-not-ready"
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha1.NamespacedName{
+						Name:      "test-credentialsRef",
+						Namespace: testNamespace,
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(createdDBaaSInventory))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
+		Context("after creating DBaaSConnection", func() {
+			connectionName := "test-check-not-ready-inventory-connection"
+			instanceID := "test-instanceID"
+			DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+				InventoryRef: v1alpha1.NamespacedName{
+					Name:      inventoryName,
+					Namespace: testNamespace,
+				},
+				InstanceID: instanceID,
+			}
+			createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      connectionName,
+					Namespace: testNamespace,
+				},
+				Spec: *DBaaSConnectionSpec,
+			}
+			BeforeEach(assertResourceCreation(createdDBaaSConnection))
+			AfterEach(assertResourceDeletion(createdDBaaSConnection))
+
+			When("check an not ready inventory", func() {
+				It("should return error", func() {
+					_, err := dRec.checkInventory(v1alpha1.NamespacedName{
+						Name:      inventoryName,
+						Namespace: testNamespace,
+					}, createdDBaaSConnection, func(reason string, message string) {
+						cond := metav1.Condition{
+							Type:    v1alpha1.DBaaSConnectionReadyType,
+							Status:  metav1.ConditionFalse,
+							Reason:  reason,
+							Message: message,
+						}
+						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+					}, ctx, ctrl.LoggerFrom(ctx))
+
+					Expect(err).To(HaveOccurred())
+					assertConnectionDBaaSStatus(createdDBaaSConnection.Name, createdDBaaSConnection.Namespace, metav1.ConditionFalse)
+				})
+			})
+		})
+	})
+})
+
+var _ = Describe("Reconcile Provider Resource", func() {
+	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+
+	Context("after creating DBaaSInventory", func() {
+		inventoryName := "test-reconcile-provider-resource-inventory"
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha1.NamespacedName{
+						Name:      "test-credentialsRef",
+						Namespace: testNamespace,
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(createdDBaaSInventory))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
+		When("reconcile provider resource with invalid provider", func() {
+			It("should return error", func() {
+				createdDBaaSInventory.Spec.ProviderRef.Name = "test-reconcile-provider-resource-invalid-provider"
+				_, err := dRec.reconcileProviderResource(createdDBaaSInventory.Spec.ProviderRef.Name,
+					createdDBaaSInventory,
+					func(provider *v1alpha1.DBaaSProvider) string {
+						return provider.Spec.InventoryKind
+					},
+					func() interface{} {
+						return createdDBaaSInventory.Spec.DeepCopy()
+					},
+					func() interface{} {
+						return &v1alpha1.DBaaSProviderInventory{}
+					},
+					func(i interface{}) metav1.Condition {
+						providerInventory := i.(*v1alpha1.DBaaSProviderInventory)
+						return mergeInventoryStatus(createdDBaaSInventory, providerInventory)
+					},
+					func() *[]metav1.Condition {
+						return &createdDBaaSInventory.Status.Conditions
+					},
+					v1alpha1.DBaaSInventoryReadyType,
+					ctx,
+					ctrl.LoggerFrom(ctx),
+				)
+
+				Expect(err).To(HaveOccurred())
+				assertInventoryDBaaSStatus(createdDBaaSInventory.Name, createdDBaaSInventory.Namespace, metav1.ConditionFalse)
+			})
+		})
+	})
 })
 
 func getLastTransitionTimeForTest() time.Time {

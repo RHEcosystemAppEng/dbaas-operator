@@ -49,6 +49,7 @@ var ctx context.Context
 var dRec *DBaaSReconciler
 var iCtrl *spyctrl
 var cCtrl *spyctrl
+var inCtrl *spyctrl
 
 const (
 	testNamespace = "default"
@@ -131,6 +132,11 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
+	instanceCtrl, err := (&DBaaSInstanceReconciler{
+		DBaaSReconciler: dRec,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	err = (&DBaaSDefaultTenantReconciler{
 		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
@@ -138,11 +144,13 @@ var _ = BeforeSuite(func() {
 
 	iCtrl = newSpyController(inventoryCtrl)
 	cCtrl = newSpyController(connectionCtrl)
+	inCtrl = newSpyController(instanceCtrl)
 
 	err = (&DBaaSProviderReconciler{
 		DBaaSReconciler: dRec,
 		InventoryCtrl:   iCtrl,
 		ConnectionCtrl:  cCtrl,
+		InstanceCtrl:    inCtrl,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
