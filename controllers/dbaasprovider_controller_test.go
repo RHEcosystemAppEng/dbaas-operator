@@ -93,8 +93,8 @@ var _ = Describe("DBaaSProvider controller", func() {
 				updatedProvider.Spec.InventoryKind = "CrunchyBridgeInventory"
 				updatedProvider.Spec.ConnectionKind = "CrunchyBridgeConnection"
 				Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
-				pProvider := &v1alpha1.DBaaSProvider{}
 				Eventually(func() v1alpha1.DBaaSProviderSpec {
+					pProvider := &v1alpha1.DBaaSProvider{}
 					err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
 					if err != nil {
 						return v1alpha1.DBaaSProviderSpec{}

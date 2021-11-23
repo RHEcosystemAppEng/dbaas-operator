@@ -55,7 +55,7 @@ const (
 
 	timeout  = time.Second * 60
 	duration = time.Second * 10
-	interval = time.Millisecond * 250
+	interval = time.Millisecond * 500
 )
 
 func TestControllers(t *testing.T) {

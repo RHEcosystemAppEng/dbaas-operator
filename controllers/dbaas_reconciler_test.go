@@ -159,64 +159,6 @@ var _ = Describe("Provider object MutateFn", func() {
 	})
 })
 
-var _ = Describe("Reconcile DBaaS Object Status", func() {
-	inventory := &v1alpha1.DBaaSInventory{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-reconcile-status",
-			Namespace: testNamespace,
-		},
-		Spec: v1alpha1.DBaaSOperatorInventorySpec{
-			ProviderRef: v1alpha1.NamespacedName{},
-			DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-				CredentialsRef: &v1alpha1.NamespacedName{},
-			},
-		},
-		Status: v1alpha1.DBaaSInventoryStatus{
-			Conditions: []metav1.Condition{},
-			Instances:  []v1alpha1.Instance{},
-		},
-	}
-	BeforeEach(assertResourceCreation(inventory))
-	AfterEach(assertResourceDeletion(inventory))
-
-	It("should update the status of the object as expected", func() {
-		lastTransitionTime, err := time.Parse(time.RFC3339, "2021-06-30T22:17:55-04:00")
-		Expect(err).NotTo(HaveOccurred())
-		lastTransitionTime = lastTransitionTime.In(time.Local)
-		status := v1alpha1.DBaaSInventoryStatus{
-			Conditions: []metav1.Condition{
-				{
-					Type:               "test",
-					Status:             metav1.ConditionTrue,
-					Reason:             "test",
-					Message:            "test",
-					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
-				},
-			},
-			Instances: []v1alpha1.Instance{
-				{
-					InstanceID:   "test-instance-id",
-					Name:         "test-instance",
-					InstanceInfo: nil,
-				},
-			},
-		}
-
-		err = dRec.reconcileDBaaSObjectStatus(inventory, func() error {
-			inventory.Status = status
-			return nil
-		}, ctx)
-		Expect(err).NotTo(HaveOccurred())
-
-		updatedInventory := &v1alpha1.DBaaSInventory{}
-		Eventually(func() v1alpha1.DBaaSInventoryStatus {
-			err = dRec.Get(ctx, client.ObjectKeyFromObject(inventory), updatedInventory)
-			Expect(err).NotTo(HaveOccurred())
-			return updatedInventory.Status
-		}, timeout, interval).Should(Equal(status))
-	})
-})
-
 var _ = Describe("Reconcile provider Object", func() {
 	inventory := &unstructured.Unstructured{}
 	inventory.SetGroupVersionKind(schema.GroupVersionKind{
@@ -435,3 +377,9 @@ var _ = Describe("Check isOwner function", func() {
 	Expect(err).To(BeNil())
 	Expect(owned).To(BeTrue())
 })
+
+func getLastTransitionTimeForTest() time.Time {
+	lastTransitionTime, err := time.Parse(time.RFC3339, "2021-06-30T22:17:55-04:00")
+	Expect(err).NotTo(HaveOccurred())
+	return lastTransitionTime.In(time.Local)
+}
