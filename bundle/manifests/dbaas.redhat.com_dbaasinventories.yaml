@@ -17,8 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-          objects must be created in a valid Tenant namespace.
+        description: DBaaSInventory is the Schema for the dbaasinventory API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,19 +34,6 @@ spec:
           spec:
             description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
-              authz:
-                description: Optionally define developer user and group access to
-                  this inventory
-                properties:
-                  groups:
-                    items:
-                      type: string
-                    type: array
-                  users:
-                    items:
-                      type: string
-                    type: array
-                type: object
               credentialsRef:
                 description: The Secret containing the provider-specific connection
                   credentials to use with its API endpoint. The format of the Secret

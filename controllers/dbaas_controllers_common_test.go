@@ -61,20 +61,6 @@ var defaultProvider = &v1alpha1.DBaaSProvider{
 	},
 }
 
-var defaultTenant = &v1alpha1.DBaaSTenant{
-	ObjectMeta: metav1.ObjectMeta{
-		Name: "cluster",
-	},
-	Spec: v1alpha1.DBaaSTenantSpec{
-		InventoryNamespace: testNamespace,
-		Authz: v1alpha1.DBaasAuthz{
-			Developer: v1alpha1.DBaasUsersGroups{
-				Groups: []string{"system:authenticated"},
-			},
-		},
-	},
-}
-
 func assertResourceCreationIfNotExists(object client.Object) func() {
 	return func() {
 		By("checking the resource exists")

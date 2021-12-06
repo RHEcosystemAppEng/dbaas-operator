@@ -25,24 +25,15 @@ type DBaaSOperatorInventorySpec struct {
 	// A reference to a DBaaSProvider CR
 	ProviderRef NamespacedName `json:"providerRef"`
 
-	// Optionally define developer user and group access to this inventory
-	Authz DBaasUsersGroups `json:"authz,omitempty"`
-
 	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
-}
-
-// DBaasUsersGroups designates which OpenShift users and groups to authorize
-type DBaasUsersGroups struct {
-	Users  []string `json:"users,omitempty"`
-	Groups []string `json:"groups,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
 //+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
-// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid Tenant namespace.
+// DBaaSInventory is the Schema for the dbaasinventory API.
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

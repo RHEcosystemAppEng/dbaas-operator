@@ -5,7 +5,7 @@ const (
 	CATALOG_NAMESPACE                        = "openshift-marketplace"
 	MONGODB_ATLAS_CATLOG_IMG                 = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:latest"
 	CRUNCHY_BRIDGE_CATLOG_IMG                = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.1"
-	DBAAS_DYNAMIC_PLUGIN_IMG                 = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.3"
+	DBAAS_DYNAMIC_PLUGIN_IMG                 = "quay.io/tchughesiv/dbaas-dynamic-plugin:0.1.4"
 	DBAAS_DYNAMIC_PLUGIN_NAME                = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_NAMESPACE           = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME        = "OpenShift Database as a Service Dynamic Plugin"

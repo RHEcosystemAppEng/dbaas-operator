@@ -9,7 +9,7 @@ metadata:
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
     support: dbaas-alpha-support@redhat.com
   name: dbaas-operator.v0.0.0
@@ -23,8 +23,7 @@ spec:
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-        objects must be created in a valid Tenant namespace.
+    - description: DBaaSInventory is the Schema for the dbaasinventory API.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
@@ -38,11 +37,6 @@ spec:
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
-      version: v1alpha1
-    - description: DBaaSTenant is the Schema for the dbaastenants API
-      displayName: DBaaSTenant
-      kind: DBaaSTenant
-      name: dbaastenants.dbaas.redhat.com
       version: v1alpha1
   description: |
     The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances

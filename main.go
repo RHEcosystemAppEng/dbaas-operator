@@ -93,7 +93,7 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}
 	if DBaaSReconciler.InstallNamespace, err = controllers.GetInstallNamespace(); err != nil {
-		setupLog.Error(err, "unable to retrieve install namespace. default Tenant object cannot be installed")
+		setupLog.Error(err, "unable to retrieve install namespace.")
 	}
 
 	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
@@ -126,13 +126,6 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
 			os.Exit(1)
 		}
-	}
-	err = (&controllers.DBaaSTenantReconciler{
-		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr)
-	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
-		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSPlatformReconciler{
 		Client: mgr.GetClient(),
