@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaas-developer
+rules:
+- apiGroups:
+  - ""
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - namespaces/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasinventories
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasinventories/status
+  verbs:
+  - get

@@ -22,7 +22,8 @@ CATALOG_VERSION ?= 0.1
 QUAY_ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-CATALOG_BASE_IMG ?= quay.io/$(QUAY_ORG)/dbaas-operator-catalog:v$(CATALOG_VERSION)
+#CATALOG_BASE_IMG ?= quay.io/$(QUAY_ORG)/dbaas-operator-catalog:v$(CATALOG_VERSION)
+CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:v$(CATALOG_VERSION)
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
