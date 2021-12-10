@@ -4,21 +4,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dbaasinventories.dbaas.redhat.com
+  name: dbaasinstances.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSInventory
-    listKind: DBaaSInventoryList
-    plural: dbaasinventories
-    singular: dbaasinventory
+    kind: DBaaSInstance
+    listKind: DBaaSInstanceList
+    plural: dbaasinstances
+    singular: dbaasinstance
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-          objects must be created in a valid Tenant namespace.
+        description: DBaaSInstance is the Schema for the dbaasinstances API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,27 +32,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
+            description: DBaaSInstanceSpec defines the desired state of DBaaSInstance
             properties:
-              authz:
-                description: Optionally define developer user and group access to
-                  this inventory
-                properties:
-                  groups:
-                    items:
-                      type: string
-                    type: array
-                  users:
-                    items:
-                      type: string
-                    type: array
-                type: object
-              credentialsRef:
-                description: The Secret containing the provider-specific connection
-                  credentials to use with its API endpoint. The format of the Secret
-                  is specified in the provider’s operator in its DBaaSProvider CR
-                  (CredentialFields key). It is recommended to place the Secret in
-                  a namespace with limited accessibility.
+              inventoryRef:
+                description: A reference to the relevant DBaaSInventory CR
                 properties:
                   name:
                     description: The name for object of known type
@@ -62,8 +44,9 @@ spec:
                     description: The namespace where object of known type is stored
                     type: string
                 type: object
-              providerRef:
-                description: A reference to a DBaaSProvider CR
+              parametersRef:
+                description: A configmap containing all parameters needed to provision
+                  a cluster
                 properties:
                   name:
                     description: The name for object of known type
@@ -72,18 +55,12 @@ spec:
                     description: The namespace where object of known type is stored
                     type: string
                 type: object
-              requestTimestamp:
-                description: RequestTimestamp request time for inventory status to
-                  be refreshed.
-                format: date-time
-                type: string
             required:
-            - credentialsRef
-            - providerRef
+            - inventoryRef
+            - parametersRef
             type: object
           status:
-            description: DBaaSInventoryStatus defines the Inventory status to be used
-              by provider operators
+            description: DBaaSInstanceStatus defines the observed state of DBaaSInstance
             properties:
               conditions:
                 items:
@@ -154,33 +131,26 @@ spec:
                   - type
                   type: object
                 type: array
-              instances:
-                description: A list of instances returned from querying the DB provider
-                items:
-                  properties:
-                    instanceID:
-                      description: A provider-specific identifier for this instance
-                        in the database service. It may contain one or more pieces
-                        of information used by the provider operator to identify the
-                        instance on the database service.
-                      type: string
-                    instanceInfo:
-                      additionalProperties:
-                        type: string
-                      description: Any other provider-specific information related
-                        to this instance
-                      type: object
-                    name:
-                      description: The name of this instance in the database service
-                      type: string
-                  required:
-                  - instanceID
-                  type: object
-                type: array
-              processedTimestamp:
-                description: ProcessedTimestamp time when the inventory gets refreshed
-                format: date-time
+              instanceID:
+                description: The ID of the instance,
                 type: string
+              instanceInfo:
+                additionalProperties:
+                  type: string
+                description: Any other provider-specific information related to this
+                  instance
+                type: object
+              name:
+                description: The name of this instance in the database service
+                type: string
+              phase:
+                description: represents the cluster creation phase pending - creation
+                  not yet started creating - provisioning in progress ready - cluster
+                  provisioning complete
+                type: string
+            required:
+            - instanceID
+            - phase
             type: object
         type: object
     served: true

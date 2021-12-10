@@ -4,6 +4,7 @@
 resources:
 - bases/dbaas.redhat.com_dbaasconnections.yaml
 - bases/dbaas.redhat.com_dbaasinventories.yaml
+- bases/dbaas.redhat.com_dbaasinstances.yaml
 - bases/dbaas.redhat.com_dbaasproviders.yaml
 - bases/dbaas.redhat.com_dbaastenants.yaml
 - bases/dbaas.redhat.com_dbaasplatforms.yaml

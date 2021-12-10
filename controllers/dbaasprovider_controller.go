@@ -34,6 +34,7 @@ type DBaaSProviderReconciler struct {
 	*DBaaSReconciler
 	ConnectionCtrl controller.Controller
 	InventoryCtrl  controller.Controller
+	InstanceCtrl   controller.Controller
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -71,6 +72,11 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	logger.Info("Watching Provider Connection CR")
 
+	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1alpha1.DBaaSInstance{}, provider.Spec.InstanceKind); err != nil {
+		logger.Error(err, "Error watching Provider Instance CR")
+		return ctrl.Result{}, err
+	}
+	logger.Info("Watching Provider Instance CR")
 	return ctrl.Result{}, nil
 }
 

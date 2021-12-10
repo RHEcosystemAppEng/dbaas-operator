@@ -34,6 +34,10 @@ spec:
           spec:
             description: DBaaSProviderSpec defines the desired state of DBaaSProvider
             properties:
+              allowsFreeTrial:
+                description: AllowsFreeTrial indicates whether the provider provides
+                  free trials
+                type: boolean
               connectionKind:
                 description: ConnectionKind is the name of the connection resource
                   (CRD) defined by the provider
@@ -61,6 +65,64 @@ spec:
                   - key
                   - required
                   - type
+                  type: object
+                type: array
+              instanceKind:
+                description: InstanceKind is the name of the instance resource (CRD)
+                  defined by the provider for provisioning
+                type: string
+              instanceParameterSpecs:
+                description: InstanceParameterSpecs  indicates what parameters to
+                  collect from UX & how to display fields in a form in order to provision
+                  an instance
+                items:
+                  properties:
+                    displayName:
+                      description: A user-friendly name for this parameter
+                      type: string
+                    name:
+                      description: The name for this field
+                      type: string
+                    required:
+                      description: If this field is required or not
+                      type: boolean
+                    type:
+                      description: The type of parameter (string, maskedstring, integer,
+                        boolean)
+                      type: string
+                  required:
+                  - displayName
+                  - name
+                  - required
+                  - type
+                  type: object
+                type: array
+              instanceParameterValues:
+                description: InstanceParameterValues  indicates what parameter values
+                  are displayed in UX for users to select
+                items:
+                  properties:
+                    displayValue:
+                      type: string
+                    id:
+                      description: Unique ID for the value
+                      type: integer
+                    isDefault:
+                      description: Indicate whether this is a default for the same
+                        parent value
+                      type: boolean
+                    name:
+                      type: string
+                    parent:
+                      description: Parent parameter value
+                      type: integer
+                    value:
+                      type: string
+                  required:
+                  - id
+                  - isDefault
+                  - name
+                  - value
                   type: object
                 type: array
               inventoryKind:
@@ -102,8 +164,12 @@ spec:
                 - name
                 type: object
             required:
+            - allowsFreeTrial
             - connectionKind
             - credentialFields
+            - instanceKind
+            - instanceParameterSpecs
+            - instanceParameterValues
             - inventoryKind
             - provider
             type: object

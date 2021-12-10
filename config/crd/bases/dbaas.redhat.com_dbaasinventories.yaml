@@ -74,6 +74,11 @@ spec:
                     description: The namespace where object of known type is stored
                     type: string
                 type: object
+              requestTimestamp:
+                description: RequestTimestamp request time for inventory status to
+                  be refreshed.
+                format: date-time
+                type: string
             required:
             - credentialsRef
             - providerRef
@@ -174,6 +179,10 @@ spec:
                   - instanceID
                   type: object
                 type: array
+              processedTimestamp:
+                description: ProcessedTimestamp time when the inventory gets refreshed
+                format: date-time
+                type: string
             type: object
         type: object
     served: true
