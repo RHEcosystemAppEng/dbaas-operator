@@ -229,6 +229,18 @@ spec:
       clusterPermissions:
       - rules:
         - apiGroups:
+          - ""
+          - authorization.openshift.io
+          resources:
+          - localresourceaccessreviews
+          - localsubjectaccessreviews
+          - resourceaccessreviews
+          - selfsubjectrulesreviews
+          - subjectaccessreviews
+          - subjectrulesreviews
+          verbs:
+          - create
+        - apiGroups:
           - apps
           resources:
           - daemonsets
@@ -366,6 +378,8 @@ spec:
           resources:
           - clusterrolebindings/finalizers
           - clusterroles/finalizers
+          - rolebindings/finalizers
+          - roles/finalizers
           verbs:
           - update
         - apiGroups:
@@ -380,13 +394,6 @@ spec:
           - patch
           - update
           - watch
-        - apiGroups:
-          - rbac.authorization.k8s.io
-          resources:
-          - rolebindings/finalizers
-          - roles/finalizers
-          verbs:
-          - update
         - apiGroups:
           - authentication.k8s.io
           resources:
@@ -460,7 +467,7 @@ spec:
                 resources:
                   limits:
                     cpu: 100m
-                    memory: 250Mi
+                    memory: 500Mi
                   requests:
                     cpu: 100m
                     memory: 100Mi

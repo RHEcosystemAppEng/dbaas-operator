@@ -7,6 +7,18 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  - authorization.openshift.io
+  resources:
+  - localresourceaccessreviews
+  - localsubjectaccessreviews
+  - resourceaccessreviews
+  - selfsubjectrulesreviews
+  - subjectaccessreviews
+  - subjectrulesreviews
+  verbs:
+  - create
+- apiGroups:
   - apps
   resources:
   - daemonsets
@@ -144,6 +156,8 @@ rules:
   resources:
   - clusterrolebindings/finalizers
   - clusterroles/finalizers
+  - rolebindings/finalizers
+  - roles/finalizers
   verbs:
   - update
 - apiGroups:
@@ -158,10 +172,3 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings/finalizers
-  - roles/finalizers
-  verbs:
-  - update

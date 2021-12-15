@@ -16,7 +16,14 @@ spec:
     singular: dbaastenant
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.inventoryNamespace
+      name: Inventory_NS
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: DBaaSTenant is the Schema for the dbaastenants API
@@ -38,35 +45,17 @@ spec:
               authorizations
             properties:
               authz:
-                description: DBaasAuthz designates the level of authorization for
-                  Tenant personas
+                description: Specify a Tenant’s default Developers for DBaaSInventory
+                  “viewer” access
                 properties:
-                  developer:
-                    description: Specify a Tenant’s default Developers for DBaaSInventory
-                      “viewer” access
-                    properties:
-                      groups:
-                        items:
-                          type: string
-                        type: array
-                      users:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  serviceAdmin:
-                    description: Specify a Tenant’s Service Admins for DBaaSTenant
-                      “viewer” access
-                    properties:
-                      groups:
-                        items:
-                          type: string
-                        type: array
-                      users:
-                        items:
-                          type: string
-                        type: array
-                    type: object
+                  groups:
+                    items:
+                      type: string
+                    type: array
+                  users:
+                    items:
+                      type: string
+                    type: array
                 type: object
               inventoryNamespace:
                 description: Namespace to watch for DBaaSInventories

@@ -27,17 +27,9 @@ import (
 type DBaaSTenantSpec struct {
 	// Namespace to watch for DBaaSInventories
 	// +kubebuilder:validation:Required
-	InventoryNamespace string     `json:"inventoryNamespace"`
-	Authz              DBaasAuthz `json:"authz,omitempty"`
-}
-
-// DBaasAuthz designates the level of authorization for Tenant personas
-type DBaasAuthz struct {
+	InventoryNamespace string `json:"inventoryNamespace"`
 	// Specify a Tenant’s default Developers for DBaaSInventory “viewer” access
-	Developer DBaasUsersGroups `json:"developer,omitempty"`
-
-	// Specify a Tenant’s Service Admins for DBaaSTenant “viewer” access
-	ServiceAdmin DBaasUsersGroups `json:"serviceAdmin,omitempty"`
+	Authz DBaasUsersGroups `json:"authz,omitempty"`
 }
 
 // DBaaSTenantStatus defines the observed state of DBaaSTenant
@@ -47,6 +39,8 @@ type DBaaSTenantStatus struct {
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:printcolumn:name="Inventory_NS",type=string,JSONPath=`.spec.inventoryNamespace`
+//+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster
 

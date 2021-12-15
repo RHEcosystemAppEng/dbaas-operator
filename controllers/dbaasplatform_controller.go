@@ -19,6 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
@@ -26,18 +31,13 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/servicebinding"
 	"github.com/go-logr/logr"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"os"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"strings"
-	"time"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
@@ -50,7 +50,7 @@ const (
 
 // DBaaSPlatformReconciler reconciles a DBaaSPlatform object
 type DBaaSPlatformReconciler struct {
-	client.Client
+	k8sclient.Client
 	Scheme              *runtime.Scheme
 	Log                 logr.Logger
 	installComplete     bool
@@ -197,7 +197,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 	}
 	err = serverClient.List(ctx, dbaaSPlatformList, listOpts...)
 	if err != nil {
-		return nil, fmt.Errorf("Could not get a list of dbaas platform intallation CR: %w", err)
+		return nil, fmt.Errorf("could not get a list of dbaas platform intallation CR: %w", err)
 	}
 	//owner, _ := csv.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
 	var cr *dbaasv1alpha1.DBaaSPlatform
@@ -275,12 +275,12 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME, reconcilers.DBAAS_DYNAMIC_PLUGIN_NAMESPACE,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
-			v1.EnvVar{Name: reconcilers.DBAAS_OPERATOR_VERSION_KEY_ENV, Value: r.operatorNameVersion})
+			corev1.EnvVar{Name: reconcilers.DBAAS_OPERATOR_VERSION_KEY_ENV, Value: r.operatorNameVersion})
 	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Log,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME, reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAMESPACE,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
-			v1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
+			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
 	case dbaasv1alpha1.ServiceBindingInstallation:
 		return servicebinding.NewReconciler(r.Client, r.Scheme, r.Log)
 
