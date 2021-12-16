@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -129,6 +130,39 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 		return v1alpha1.DBaaSTenantList{}, err
 	}
 	return tenantListByNS, nil
+}
+
+// update object upon ownerReference verification
+func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.Object) error {
+	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind, owner.GetName())
+	name := obj.GetName()
+	kind := obj.GetObjectKind().GroupVersionKind().Kind
+	if owns, err := isOwner(owner, obj, r.Scheme); !owns {
+		logger.V(1).Info(kind+" ownership not verified, won't be updated", "Name", name)
+		return err
+	}
+	if err := r.updateObject(obj, ctx); err != nil {
+		logger.Error(err, "Error updating resource", "Name", name)
+		return err
+	}
+	logger.Info(kind+" resource updated", "Name", name)
+	return nil
+}
+
+// checks if one object is set as owner/controller of another
+func isOwner(owner, ownedObj client.Object, scheme *runtime.Scheme) (owns bool, err error) {
+	exampleObj := &unstructured.Unstructured{}
+	exampleObj.SetNamespace(owner.GetNamespace())
+	if err = ctrl.SetControllerReference(owner, exampleObj, scheme); err == nil {
+		for _, ownerRef := range exampleObj.GetOwnerReferences() {
+			for _, ref := range ownedObj.GetOwnerReferences() {
+				if reflect.DeepEqual(ownerRef, ref) {
+					owns = true
+				}
+			}
+		}
+	}
+	return owns, err
 }
 
 // GetInstallNamespace returns the operator's install Namespace

@@ -172,8 +172,6 @@ func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1
 
 // Reconcile tenant to ensure proper RBAC is created
 func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) error {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
-
 	developerAuthz := r.getDeveloperAuthz(ctx, tenant, inventoryList)
 	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant)
 	tenantListAuthz := r.getTenantListAuthz(ctx)
@@ -184,11 +182,9 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 	} else if exists {
 		if !reflect.DeepEqual(clusterRole.Rules, clusterRoleObj.Rules) {
 			clusterRoleObj.Rules = clusterRole.Rules
-			if err := r.updateObject(&clusterRoleObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", "Name", clusterRoleObj.Name)
+			if err := r.updateIfOwned(ctx, &tenant, &clusterRoleObj); err != nil {
 				return err
 			}
-			logger.Info(clusterRoleObj.Kind+" resource updated", "Name", clusterRoleObj.Name)
 		}
 	}
 	var clusterRoleBindingObj rbacv1.ClusterRoleBinding
@@ -199,11 +195,9 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 			!reflect.DeepEqual(clusterRolebinding.Subjects, clusterRoleBindingObj.Subjects) {
 			clusterRoleBindingObj.RoleRef = clusterRolebinding.RoleRef
 			clusterRoleBindingObj.Subjects = clusterRolebinding.Subjects
-			if err := r.updateObject(&clusterRoleBindingObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", "Name", clusterRoleBindingObj.Name)
+			if err := r.updateIfOwned(ctx, &tenant, &clusterRoleObj); err != nil {
 				return err
 			}
-			logger.Info(clusterRoleBindingObj.Kind+" resource updated", "Name", clusterRoleBindingObj.Name)
 		}
 	}
 
@@ -212,8 +206,6 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 
 // Reconcile inventory to ensure proper RBAC is created
 func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", inventory.Name)
-
 	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
 	var roleObj rbacv1.Role
 	if exists, err := r.createRbacObj(&role, &roleObj, &inventory, ctx); err != nil {
@@ -221,11 +213,9 @@ func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, 
 	} else if exists {
 		if !reflect.DeepEqual(role.Rules, roleObj.Rules) {
 			roleObj.Rules = role.Rules
-			if err := r.updateObject(&roleObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", roleObj.Name, roleObj.Namespace)
+			if err := r.updateIfOwned(ctx, &inventory, &roleObj); err != nil {
 				return err
 			}
-			logger.V(1).Info(roleObj.Kind+" resource updated", roleObj.Name, roleObj.Namespace)
 		}
 	}
 	var roleBindingObj rbacv1.RoleBinding
@@ -236,11 +226,9 @@ func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, 
 			!reflect.DeepEqual(rolebinding.Subjects, roleBindingObj.Subjects) {
 			roleBindingObj.RoleRef = rolebinding.RoleRef
 			roleBindingObj.Subjects = rolebinding.Subjects
-			if err := r.updateObject(&roleBindingObj, ctx); err != nil {
-				logger.Error(err, "Error updating resource", roleBindingObj.Name, roleBindingObj.Namespace)
+			if err := r.updateIfOwned(ctx, &inventory, &roleObj); err != nil {
 				return err
 			}
-			logger.V(1).Info(roleBindingObj.Kind+" resource updated", roleBindingObj.Name, roleBindingObj.Namespace)
 		}
 	}
 
