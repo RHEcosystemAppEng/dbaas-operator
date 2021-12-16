@@ -195,7 +195,7 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 			!reflect.DeepEqual(clusterRolebinding.Subjects, clusterRoleBindingObj.Subjects) {
 			clusterRoleBindingObj.RoleRef = clusterRolebinding.RoleRef
 			clusterRoleBindingObj.Subjects = clusterRolebinding.Subjects
-			if err := r.updateIfOwned(ctx, &tenant, &clusterRoleObj); err != nil {
+			if err := r.updateIfOwned(ctx, &tenant, &clusterRoleBindingObj); err != nil {
 				return err
 			}
 		}
@@ -226,7 +226,7 @@ func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, 
 			!reflect.DeepEqual(rolebinding.Subjects, roleBindingObj.Subjects) {
 			roleBindingObj.RoleRef = rolebinding.RoleRef
 			roleBindingObj.Subjects = rolebinding.Subjects
-			if err := r.updateIfOwned(ctx, &inventory, &roleObj); err != nil {
+			if err := r.updateIfOwned(ctx, &inventory, &roleBindingObj); err != nil {
 				return err
 			}
 		}
