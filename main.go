@@ -22,6 +22,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	oauthzv1 "github.com/openshift/api/authorization/v1"
@@ -66,13 +67,23 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var logLevel string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&logLevel, "log-level", "info", "Log level.")
+
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
+	var level zapcore.Level
+	if err := level.UnmarshalText([]byte(logLevel)); err != nil {
+		//default to info level
+		level = zapcore.InfoLevel
+	}
 	opts := zap.Options{
 		Development: true,
+		Level:       level,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()

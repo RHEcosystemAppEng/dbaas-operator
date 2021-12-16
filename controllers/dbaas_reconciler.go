@@ -99,13 +99,6 @@ func (p *DBaaSReconciler) parseProviderObject(unstructured *unstructured.Unstruc
 	return nil
 }
 
-func (p *DBaaSReconciler) reconcileDBaaSObjectStatus(object client.Object, f controllerutil.MutateFn, ctx context.Context) error {
-	if err := f(); err != nil {
-		return err
-	}
-	return p.Status().Update(ctx, object)
-}
-
 func (r *DBaaSReconciler) createOwnedObject(k8sObj, owner client.Object, ctx context.Context) error {
 	if err := ctrl.SetControllerReference(owner, k8sObj, r.Scheme); err != nil {
 		return err

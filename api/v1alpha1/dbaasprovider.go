@@ -21,6 +21,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// DBaaS condition types
+	DBaaSInventoryReadyType         string = "InventoryReady"
+	DBaaSInventoryProviderSyncType  string = "SpecSynced"
+	DBaaSConnectionProviderSyncType string = "ReadyForBinding"
+	DBaaSConnectionReadyType        string = "ConnectionReady"
+
+	// DBaaS condition reasons
+	Ready                       string = "Ready"
+	DBaaSTenantNotFound         string = "DBaaSTenantNotFound"
+	DBaaSProviderNotFound       string = "DBaaSProviderNotFound"
+	DBaaSInventoryNotFound      string = "DBaaSInventoryNotFound"
+	DBaaSInventoryNotReady      string = "DBaaSInventoryNotReady"
+	ProviderReconcileInprogress string = "ProviderReconcileInprogress"
+	ProviderParsingError        string = "ProviderParsingError"
+
+	// DBaaS condition messages
+	MsgProviderCRStatusSyncDone      string = "Provider Custom Resource status sync completed"
+	MsgProviderCRCreatedOrUpdated    string = "DBaaS Provider Custom Resource created or updated"
+	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
+	MsgInventoryNotReady             string = "Inventory discovery not done"
+	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
+)
+
 // DBaaSProviderSpec defines the desired state of DBaaSProvider
 type DBaaSProviderSpec struct {
 	// Provider contains information about database provider & platform
