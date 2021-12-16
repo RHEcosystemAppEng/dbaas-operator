@@ -3,7 +3,7 @@ Red Hat OpenShift Database Access Operator is a Alpha release. The intent of the
 scan & import off-cluster cloud database instances hosted by partner providers CrunchyBridge and MongoDB Atlas & make those instances
 available to developers for binding to their applications.
 
-## Architecture Diagram
+## Architecture Diagram 
 
 ![Conceptual Diagram of the Components](docs/images/dbaas-arch.png)
 
