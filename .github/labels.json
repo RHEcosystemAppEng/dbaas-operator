@@ -1,0 +1,20 @@
+{
+  "labels": {
+    "example": {
+      "name": "draft",
+      "colour": "#BA6ADA",
+      "description": "draft PR"
+    }
+  },
+  "pr": {
+    "example": {
+      "requires": 1,
+      "conditions": [
+        {
+          "type": "isDraft",
+          "value": true
+        }
+      ]
+    }
+  }
+}
