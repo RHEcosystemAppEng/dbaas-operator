@@ -26,7 +26,6 @@ rules:
   - statefulsets
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -47,7 +46,6 @@ rules:
   - consoleplugins
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -55,11 +53,9 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - namespaces
   - services
   verbs:
   - create
-  - delete
   - get
   - list
   - update
@@ -129,8 +125,17 @@ rules:
   - operators.coreos.com
   resources:
   - catalogsources
-  - clusterserviceversions
   - operatorgroups
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
   - subscriptions
   verbs:
   - create
@@ -139,6 +144,12 @@ rules:
   - list
   - update
   - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions/finalizers
+  verbs:
+  - update
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:

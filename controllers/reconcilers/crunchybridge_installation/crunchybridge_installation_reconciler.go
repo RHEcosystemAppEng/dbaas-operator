@@ -8,11 +8,12 @@ import (
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	apiv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -40,16 +41,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	}
 
 	// crunchybridge subscription
-	status, err = r.reconcileSubscription(ctx)
+	status, err = r.reconcileSubscription(cr, ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
 	// crunchybridge operator group
-	status, err = r.reconcileOperatorgroup(ctx)
+	status, err = r.reconcileOperatorGroup(ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.waitForCrunchyBridgeOperator(ctx)
+	status, err = r.waitForCrunchyBridgeOperator(cr, ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
@@ -58,20 +59,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 }
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := getCrunchyBridgeSubscription()
+	subscription := r.getCrunchyBridgeSubscription(cr)
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 
-	catalogSource := getCrunchyBridgeCatalogSource()
+	catalogSource := r.getCrunchyBridgeCatalogSource()
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: cr.Namespace,
 	}
 	err = r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -90,11 +91,14 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 	return v1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := getCrunchyBridgeSubscription()
-	catalogsource := getCrunchyBridgeCatalogSource()
+	subscription := r.getCrunchyBridgeSubscription(cr)
+	catalogsource := r.getCrunchyBridgeCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
+		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
+			return err
+		}
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
 			CatalogSourceNamespace: catalogsource.Namespace,
@@ -111,9 +115,9 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 	}
 	return v1.ResultSuccess, nil
 }
-func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	operatorgroup := getCrunchyBridgeOperatorGroup()
+	operatorgroup := r.getCrunchyBridgeOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 
@@ -126,7 +130,7 @@ func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := getCrunchyBridgeCatalogSource()
+	catalogsource := r.getCrunchyBridgeCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
@@ -141,11 +145,11 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) waitForCrunchyBridgeOperator(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: reconcilers.INSTALL_NAMESPACE,
+		Namespace: cr.Namespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -162,15 +166,15 @@ func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.Platf
 	return v1.ResultInProgress, nil
 }
 
-func getCrunchyBridgeSubscription() *v1alpha1.Subscription {
+func (r *Reconciler) getCrunchyBridgeSubscription(cr *v1.DBaaSPlatform) *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-subscription",
-			Namespace: reconcilers.INSTALL_NAMESPACE,
+			Namespace: cr.Namespace,
 		},
 	}
 }
-func getCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
+func (r *Reconciler) getCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
 	return &coreosv1.OperatorGroup{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "global-operators",
@@ -179,7 +183,7 @@ func getCrunchyBridgeOperatorGroup() *coreosv1.OperatorGroup {
 	}
 }
 
-func getCrunchyBridgeCatalogSource() *v1alpha1.CatalogSource {
+func (r *Reconciler) getCrunchyBridgeCatalogSource() *v1alpha1.CatalogSource {
 	return &v1alpha1.CatalogSource{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-catalogsource",

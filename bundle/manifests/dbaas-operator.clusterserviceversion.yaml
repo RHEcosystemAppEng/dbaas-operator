@@ -248,7 +248,6 @@ spec:
           - statefulsets
           verbs:
           - create
-          - delete
           - get
           - list
           - update
@@ -269,7 +268,6 @@ spec:
           - consoleplugins
           verbs:
           - create
-          - delete
           - get
           - list
           - update
@@ -277,11 +275,9 @@ spec:
         - apiGroups:
           - ""
           resources:
-          - namespaces
           - services
           verbs:
           - create
-          - delete
           - get
           - list
           - update
@@ -351,8 +347,17 @@ spec:
           - operators.coreos.com
           resources:
           - catalogsources
-          - clusterserviceversions
           - operatorgroups
+          verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions
           - subscriptions
           verbs:
           - create
@@ -361,6 +366,12 @@ spec:
           - list
           - update
           - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions/finalizers
+          verbs:
+          - update
         - apiGroups:
           - rbac.authorization.k8s.io
           resources:
