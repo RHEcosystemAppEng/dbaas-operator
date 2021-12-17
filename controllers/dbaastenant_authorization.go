@@ -249,7 +249,7 @@ func (r *DBaaSTenantReconciler) createRbacObj(newObj, getObj, owner client.Objec
 					logger.Error(err, "Error creating resource", name, namespace)
 					return false, err
 				}
-				logger.V(1).Info("resource created", name, namespace)
+				logger.Info("resource created", name, namespace)
 			} else {
 				logger.Error(err, "Error getting the resource", name, namespace)
 				return false, err

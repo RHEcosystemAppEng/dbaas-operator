@@ -2,13 +2,13 @@ package reconcilers
 
 import (
 	"context"
+
 	alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
@@ -49,7 +49,7 @@ func GetDBaaSOperatorCSV(namespace string, ctx context.Context, serverClient k8s
 			Namespace: namespace,
 		},
 	}
-	if err := serverClient.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
+	if err := serverClient.Get(ctx, k8sclient.ObjectKeyFromObject(csv), csv); err != nil {
 		return nil, err
 	}
 	return csv, nil

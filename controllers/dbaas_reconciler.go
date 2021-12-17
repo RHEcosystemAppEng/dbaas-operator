@@ -131,7 +131,7 @@ func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.O
 	name := obj.GetName()
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if owns, err := isOwner(owner, obj, r.Scheme); !owns {
-		logger.V(1).Info(kind+" ownership not verified, won't be updated", "Name", name)
+		logger.Info(kind+" ownership not verified, won't be updated", "Name", name)
 		return err
 	}
 	if err := r.updateObject(obj, ctx); err != nil {
