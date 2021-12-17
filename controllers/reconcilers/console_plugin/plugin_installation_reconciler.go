@@ -7,9 +7,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -27,42 +25,42 @@ const (
 )
 
 type Reconciler struct {
-	client      client.Client
-	logger      logr.Logger
-	scheme      *runtime.Scheme
-	pluginName  string
-	pluginImage string
-	displayName string
-	envs        []v1.EnvVar
+	client          client.Client
+	logger          logr.Logger
+	pluginName      string
+	pluginNamespace string
+	pluginImage     string
+	displayName     string
+	envs            []v1.EnvVar
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, pluginName string, pluginImage string, displayName string, envs ...v1.EnvVar) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, logger logr.Logger, pluginName string, pluginNamespace string, pluginImage string, displayName string, envs ...v1.EnvVar) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client:      client,
-		scheme:      scheme,
-		logger:      logger,
-		pluginName:  pluginName,
-		pluginImage: pluginImage,
-		displayName: displayName,
-		envs:        envs,
+		client:          client,
+		logger:          logger,
+		pluginName:      pluginName,
+		pluginNamespace: pluginNamespace,
+		pluginImage:     pluginImage,
+		displayName:     displayName,
+		envs:            envs,
 	}
 }
 func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, status2 *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
-	status, err := r.reconcileService(cr, ctx)
+	status, err := r.reconcileService(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.reconcileDeployment(cr, ctx)
+	status, err = r.reconcileDeployment(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
 
-	status, err = r.waitForConsolePlugin(cr, ctx)
+	status, err = r.waitForConsolePlugin(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
 	// create Console Plugin CR resource that includes Console Plugin service name.
-	status, err = r.createConsolePluginCR(cr, ctx)
+	status, err = r.createConsolePluginCR(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -97,13 +95,13 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 		return v1alpha1.ResultFailed, err
 	}
 
-	deployment := r.getDeployment(cr)
+	deployment := r.getDeployment()
 	err = r.client.Delete(ctx, deployment)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
 	}
 
-	service := r.getService(cr)
+	service := r.getService()
 	err = r.client.Delete(ctx, service)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1alpha1.ResultFailed, err
@@ -112,12 +110,9 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	service := r.getService(cr)
+func (r *Reconciler) reconcileService(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+	service := r.getService()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
-		if err := ctrl.SetControllerReference(cr, service, r.scheme); err != nil {
-			return err
-		}
 		service.Annotations = map[string]string{
 			"service.beta.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
 		}
@@ -152,18 +147,15 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	deployment := r.getDeployment(cr)
+func (r *Reconciler) reconcileDeployment(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+	deployment := r.getDeployment()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
-		if err := ctrl.SetControllerReference(cr, deployment, r.scheme); err != nil {
-			return err
-		}
 		deployment.Labels = map[string]string{
 			"app":                                r.pluginName,
 			"app.kubernetes.io/component":        r.pluginName,
 			"app.kubernetes.io/instance":         r.pluginName,
 			"app.kubernetes.io/part-of":          r.pluginName,
-			"app.openshift.io/runtime-namespace": cr.Namespace,
+			"app.openshift.io/runtime-namespace": r.pluginNamespace,
 		}
 		replicas := int32(3)
 		defaultMode := int32(420)
@@ -237,13 +229,13 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) createConsolePluginCR(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	plugin := r.getConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
 		plugin.Spec.DisplayName = r.displayName
 		plugin.Spec.Service = consolev1alpha1.ConsolePluginService{
 			Name:      r.pluginName,
-			Namespace: cr.Namespace,
+			Namespace: r.pluginNamespace,
 			Port:      int32(9001),
 			BasePath:  "/",
 		}
@@ -278,10 +270,10 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForConsolePlugin(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) waitForConsolePlugin(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	deployments := &appv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: cr.Namespace,
+		Namespace: r.pluginNamespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -319,20 +311,20 @@ func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.Platf
 	return v1alpha1.ResultInProgress, nil
 }
 
-func (r *Reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
+func (r *Reconciler) getService() *v1.Service {
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.pluginName,
-			Namespace: cr.Namespace,
+			Namespace: r.pluginNamespace,
 		},
 	}
 }
 
-func (r *Reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment {
+func (r *Reconciler) getDeployment() *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.pluginName,
-			Namespace: cr.Namespace,
+			Namespace: r.pluginNamespace,
 		},
 	}
 }

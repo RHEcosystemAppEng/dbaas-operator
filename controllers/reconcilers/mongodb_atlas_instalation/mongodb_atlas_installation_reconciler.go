@@ -8,27 +8,27 @@ import (
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
-
 	apiv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type Reconciler struct {
-	client client.Client
-	logger logr.Logger
-	scheme *runtime.Scheme
+	client    client.Client
+	logger    logr.Logger
+	scheme    *runtime.Scheme
+	namespace string
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, namespace string) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client: client,
-		scheme: scheme,
-		logger: logger,
+		client:    client,
+		scheme:    scheme,
+		logger:    logger,
+		namespace: namespace,
 	}
 }
 
@@ -41,16 +41,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	}
 
 	// MongoDBAtlas subscription
-	status, err = r.reconcileSubscription(cr, ctx)
+	status, err = r.reconcileSubscription(ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
 	// MongoDBAtlas operator group
-	status, err = r.reconcileOperatorGroup(ctx)
+	status, err = r.reconcileOperatorgroup(ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.waitForMongoDBAtlasOperator(cr, ctx)
+	status, err = r.waitForMongoDBAtlasOperator(ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
@@ -60,7 +60,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := r.getMongoDBAtlasSubscription(cr)
+	subscription := r.getMongoDBAtlasSubscription()
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -73,7 +73,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 	}
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: cr.Namespace,
+		Namespace: r.namespace,
 	}
 	err = r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -91,14 +91,11 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 
 	return v1.ResultSuccess, nil
 }
-func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := r.getMongoDBAtlasSubscription(cr)
+	subscription := r.getMongoDBAtlasSubscription()
 	catalogsource := r.getMongoDBAtlasCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
-		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
-			return err
-		}
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
 			CatalogSourceNamespace: catalogsource.Namespace,
@@ -115,7 +112,7 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 	}
 	return v1.ResultSuccess, nil
 }
-func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
 	operatorgroup := r.getMongoDBAtlasOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
@@ -145,11 +142,12 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForMongoDBAtlasOperator(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) waitForMongoDBAtlasOperator(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: cr.Namespace,
+
+		Namespace: r.namespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -166,11 +164,11 @@ func (r *Reconciler) waitForMongoDBAtlasOperator(cr *v1.DBaaSPlatform, ctx conte
 	return v1.ResultInProgress, nil
 }
 
-func (r *Reconciler) getMongoDBAtlasSubscription(cr *v1.DBaaSPlatform) *v1alpha1.Subscription {
+func (r *Reconciler) getMongoDBAtlasSubscription() *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "mongodb-atlas-subscription",
-			Namespace: cr.Namespace,
+			Namespace: r.namespace,
 		},
 	}
 }
