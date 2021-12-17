@@ -31,7 +31,6 @@ spec:
         - /manager
         args:
         - --leader-elect
-        - --log-level=INFO
         image: controller:latest
         name: manager
         imagePullPolicy: Always

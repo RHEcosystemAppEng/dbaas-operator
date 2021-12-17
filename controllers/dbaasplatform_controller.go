@@ -242,10 +242,10 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.PlatformsName {
 
 	return []dbaasv1alpha1.PlatformsName{
-		dbaasv1alpha1.DBassDynamicPluginInstallation,
-		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
+		dbaasv1alpha1.DBassDynamicPluginInstallation,
+		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
 		dbaasv1alpha1.ServiceBindingInstallation,
 	}
 

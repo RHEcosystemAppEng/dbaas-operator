@@ -17,74 +17,17 @@ limitations under the License.
 package controllers
 
 import (
-	. "github.com/onsi/ginkgo"
+	"time"
 
-	v1 "k8s.io/api/core/v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
-var _ = Describe("DBaaSInventory controller with errors", func() {
-	Context("after creating DBaaSInventory without tenant in the target namespace", func() {
-		inventoryName := "test-inventory-no-tenant"
-		credentialsRefName := "test-credentials-ref"
-		ns := "testns-no-tenant"
-		nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
-
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      credentialsRefName,
-				Namespace: ns,
-			},
-		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      inventoryName,
-				Namespace: ns,
-			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
-					Name: testProviderName,
-				},
-				DBaaSInventorySpec: *DBaaSInventorySpec,
-			},
-		}
-
-		BeforeEach(assertResourceCreationIfNotExists(nsSpec))
-		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSTenantNotFound))
-	})
-
-	Context("after creating DBaaSInventory without valid provider", func() {
-		inventoryName := "test-inventory-no-provider"
-		credentialsRefName := "test-credentials-ref"
-		providerName := "provider-no-exist"
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      credentialsRefName,
-				Namespace: testNamespace,
-			},
-		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      inventoryName,
-				Namespace: testNamespace,
-			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
-					Name: providerName,
-				},
-				DBaaSInventorySpec: *DBaaSInventorySpec,
-			},
-		}
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
-		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSProviderNotFound))
-	})
-})
-
-var _ = Describe("DBaaSInventory controller - nominal", func() {
+var _ = Describe("DBaaSInventory controller", func() {
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
@@ -117,7 +60,9 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 			It("should create a provider inventory", assertProviderResourceCreated(createdDBaaSInventory, testInventoryKind, DBaaSInventorySpec))
 
 			Context("when updating provider inventory status", func() {
-				lastTransitionTime := getLastTransitionTimeForTest()
+				lastTransitionTime, err := time.Parse(time.RFC3339, "2021-06-30T22:17:55-04:00")
+				Expect(err).NotTo(HaveOccurred())
+				lastTransitionTime = lastTransitionTime.In(time.Local)
 				status := &v1alpha1.DBaaSInventoryStatus{
 					Instances: []v1alpha1.Instance{
 						{
@@ -137,7 +82,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 						},
 					},
 				}
-				It("should update DBaaSInventory status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, status))
+				It("should update DBaaSInventory status", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, testInventoryKind, status))
 			})
 
 			Context("when updating DBaaSInventory spec", func() {
