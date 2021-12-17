@@ -125,31 +125,15 @@ rules:
   - operators.coreos.com
   resources:
   - catalogsources
-  - operatorgroups
-  verbs:
-  - create
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - operators.coreos.com
-  resources:
   - clusterserviceversions
+  - operatorgroups
   - subscriptions
   verbs:
   - create
-  - delete
   - get
   - list
   - update
   - watch
-- apiGroups:
-  - operators.coreos.com
-  resources:
-  - clusterserviceversions/finalizers
-  verbs:
-  - update
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
