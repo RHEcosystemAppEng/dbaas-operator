@@ -5,7 +5,6 @@ import (
 
 	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	reconcilerscsv "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/csv"
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
@@ -57,10 +56,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	}
 	// crunchybridge csv
 	status, err = r.reconcileCSV(cr, ctx)
-	if status != v1.ResultSuccess {
-		return status, err
-	}
-	status, err = r.waitForCrunchyBridgeCSV(cr, ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
@@ -184,30 +179,24 @@ func (r *Reconciler) waitForCrunchyBridgeOperator(cr *v1.DBaaSPlatform, ctx cont
 
 func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 	csv := r.getCrunchyBridgeCSV(cr)
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, csv, func() error {
-		if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
-			return err
+	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
+		if errors.IsNotFound(err) {
+			return v1.ResultInProgress, nil
 		}
-		return nil
-	})
-	if err != nil {
 		return v1.ResultFailed, err
 	}
 
-	return v1.ResultSuccess, nil
-}
-
-func (r *Reconciler) waitForCrunchyBridgeCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	csv := r.getCrunchyBridgeCSV(cr)
-	err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv)
-	if err != nil {
-		return v1.ResultFailed, err
-	}
-
-	if set, err := reconcilerscsv.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
+	if set, err := reconcilers.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
 		return v1.ResultFailed, err
 	} else if set {
 		return v1.ResultSuccess, nil
+	}
+
+	if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
+		return v1.ResultFailed, err
+	}
+	if err := r.client.Update(ctx, csv); err != nil {
+		return v1.ResultFailed, err
 	}
 	return v1.ResultInProgress, nil
 }

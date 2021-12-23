@@ -5,7 +5,6 @@ import (
 
 	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	reconcilerscsv "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/csv"
 	"github.com/go-logr/logr"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 
@@ -49,7 +48,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	if status != v1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.waitForServiceBindingCSV(cr, ctx)
 	return v1.ResultSuccess, nil
 
 }
@@ -153,30 +151,24 @@ func (r *Reconciler) waitFoServiceBindingOperator(cr *v1.DBaaSPlatform, ctx cont
 
 func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 	csv := r.getServiceBindingCSV(cr)
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, csv, func() error {
-		if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
-			return err
+	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
+		if errors.IsNotFound(err) {
+			return v1.ResultInProgress, nil
 		}
-		return nil
-	})
-	if err != nil {
 		return v1.ResultFailed, err
 	}
 
-	return v1.ResultSuccess, nil
-}
-
-func (r *Reconciler) waitForServiceBindingCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	csv := r.getServiceBindingCSV(cr)
-	err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv)
-	if err != nil {
-		return v1.ResultFailed, err
-	}
-
-	if set, err := reconcilerscsv.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
+	if set, err := reconcilers.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
 		return v1.ResultFailed, err
 	} else if set {
 		return v1.ResultSuccess, nil
+	}
+
+	if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
+		return v1.ResultFailed, err
+	}
+	if err := r.client.Update(ctx, csv); err != nil {
+		return v1.ResultFailed, err
 	}
 	return v1.ResultInProgress, nil
 }

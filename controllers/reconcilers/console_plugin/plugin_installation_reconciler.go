@@ -57,10 +57,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 		return status, err
 	}
 
-	status, err = r.waitForConsolePlugin(cr, ctx)
-	if status != v1alpha1.ResultSuccess {
-		return status, err
-	}
 	// create Console Plugin CR resource that includes Console Plugin service name.
 	status, err = r.createConsolePluginCR(cr, ctx)
 	if status != v1alpha1.ResultSuccess {
@@ -68,10 +64,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 	}
 	// enabled console plugins the console operator config
 	status, err = r.enableConsolePluginConfig(ctx)
-	if status != v1alpha1.ResultSuccess {
-		return status, err
-	}
-	status, err = r.waitForConsoleOperator(ctx)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -227,14 +219,24 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		}
 		return nil
 	})
-
 	if err != nil {
 		if errors.IsConflict(err) {
 			return v1alpha1.ResultInProgress, nil
 		}
 		return v1alpha1.ResultFailed, err
 	}
-	return v1alpha1.ResultSuccess, nil
+
+	err = r.client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return v1alpha1.ResultInProgress, nil
+		}
+		return v1alpha1.ResultFailed, err
+	}
+	if deployment.Status.ReadyReplicas == deployment.Status.Replicas {
+		return v1alpha1.ResultSuccess, nil
+	}
+	return v1alpha1.ResultInProgress, nil
 }
 
 func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
@@ -266,43 +268,16 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 		return v1alpha1.ResultFailed, err
 	}
 
-	console.Spec.Plugins = r.addPlugin(console.Spec.Plugins)
-	err = r.client.Update(ctx, console)
-	if err != nil {
-		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
-		}
-		return v1alpha1.ResultFailed, err
-	}
-
-	return v1alpha1.ResultSuccess, nil
-}
-
-func (r *Reconciler) waitForConsolePlugin(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	deployments := &appv1.DeploymentList{}
-	opts := &client.ListOptions{
-		Namespace: cr.Namespace,
-	}
-	err := r.client.List(ctx, deployments, opts)
-	if err != nil {
-		return v1alpha1.ResultFailed, err
-	}
-
-	for _, deployment := range deployments.Items {
-		if deployment.Name == r.pluginName {
-			if deployment.Status.ReadyReplicas == deployment.Status.Replicas {
-				return v1alpha1.ResultSuccess, nil
+	if plugins, add := r.addPlugin(console.Spec.Plugins); add {
+		console.Spec.Plugins = plugins
+		err := r.client.Update(ctx, console)
+		if err != nil {
+			if errors.IsConflict(err) {
+				return v1alpha1.ResultInProgress, nil
 			}
+			return v1alpha1.ResultFailed, err
 		}
-	}
-	return v1alpha1.ResultInProgress, nil
-}
-
-func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	console := r.getOperatorConsole()
-	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
-	if err != nil {
-		return v1alpha1.ResultFailed, err
+		return v1alpha1.ResultInProgress, nil
 	}
 
 	if console.Status.Conditions != nil {
@@ -315,7 +290,6 @@ func (r *Reconciler) waitForConsoleOperator(ctx context.Context) (v1alpha1.Platf
 			}
 		}
 	}
-
 	return v1alpha1.ResultInProgress, nil
 }
 
@@ -353,14 +327,14 @@ func (r *Reconciler) getOperatorConsole() *operatorv1.Console {
 	}
 }
 
-func (r *Reconciler) addPlugin(plugins []string) []string {
+func (r *Reconciler) addPlugin(plugins []string) ([]string, bool) {
 	for _, p := range plugins {
 		if p == r.pluginName {
-			return plugins
+			return plugins, false
 		}
 	}
 
-	return append(plugins, r.pluginName)
+	return append(plugins, r.pluginName), true
 }
 
 func (r *Reconciler) removePlugin(plugins []string) []string {

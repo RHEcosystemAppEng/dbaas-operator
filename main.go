@@ -36,11 +36,13 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
+	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -98,6 +100,9 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "e4addb06.redhat.com",
+		ClientDisableCacheFor: []client.Object{
+			&operatorsv1alpha1.ClusterServiceVersion{},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

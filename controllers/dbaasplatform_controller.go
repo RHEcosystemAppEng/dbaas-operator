@@ -28,7 +28,6 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/csv"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/servicebinding"
 
@@ -81,7 +80,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/finalizers,verbs=update
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources;operatorgroups,verbs=get;list;create;update;watch
-//+kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions;clusterserviceversions,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;update;delete
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch
@@ -115,9 +115,6 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	if cr.DeletionTimestamp == nil {
 		platforms = r.getInstallationPlatforms()
-
-	} else {
-		platforms = r.getCleanupPlatforms()
 	}
 
 	nextStatus := cr.Status.DeepCopy()
@@ -216,9 +213,12 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 			},
 		}
 
-		if owner, err := csv.GetDBaaSOperatorCSV(namespace, ctx, serverClient); err != nil {
+		owner, err := reconcilers.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
+		if err != nil {
 			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
-		} else if err := ctrl.SetControllerReference(owner, cr, r.Scheme); err != nil {
+		}
+		err = ctrl.SetControllerReference(owner, cr, r.Scheme)
+		if err != nil {
 			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
 		}
 
@@ -238,26 +238,18 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.PlatformsName {
 
 	return []dbaasv1alpha1.PlatformsName{
-		dbaasv1alpha1.CrunchyBridgeInstallation,
-		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.DBaaSDynamicPluginInstallation,
 		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
+		dbaasv1alpha1.CrunchyBridgeInstallation,
+		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.ServiceBindingInstallation,
 	}
-}
-
-// Cleanup will be done by setting the dbaasplatform CR as the owner references for the namespace-scoped resources in the same namespace
-// Cluster-scoped resources and resources in other namespaces will not be removed or updated
-func (r *DBaaSPlatformReconciler) getCleanupPlatforms() []dbaasv1alpha1.PlatformsName {
-	return nil
 }
 
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName) reconcilers.PlatformReconciler {
 	switch provider {
 	case dbaasv1alpha1.CrunchyBridgeInstallation:
 		return crunchybridge_installation.NewReconciler(r.Client, r.Scheme, r.Log)
-	case dbaasv1alpha1.Csv:
-		return csv.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
 		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.DBaaSDynamicPluginInstallation:
