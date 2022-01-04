@@ -59,6 +59,10 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	var dbaasCond metav1.Condition
 	// This update will make sure the status is always updated in case of any errors or successful result
 	defer func(inv *v1alpha1.DBaaSInventory, cond *metav1.Condition) {
+		if len(dbaasCond.Type) == 0 {
+			// dbaasCond is not populated or updated. No status update is needed.
+			return
+		}
 		apimeta.SetStatusCondition(&inv.Status.Conditions, *cond)
 		if err := r.Client.Status().Update(ctx, inv); err != nil {
 			if errors.IsConflict(err) {
