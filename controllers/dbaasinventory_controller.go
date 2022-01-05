@@ -25,11 +25,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
 type DBaaSInventoryReconciler struct {
-	*DBaaSTenantReconciler
+	*DBaaSReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -42,7 +43,7 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, recErr error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
@@ -120,7 +121,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		logger.Error(err, "Error reconciling the Provider Inventory resource")
 		result, recErr = ctrl.Result{}, err
 		return
-	} else {
+	} else if res != controllerutil.OperationResultNone {
 		logger.Info("Provider Inventory resource reconciled", "result", res)
 	}
 
@@ -141,6 +142,9 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInventory{}).
+		WithOptions(
+			controller.Options{MaxConcurrentReconciles: 2},
+		).
 		Build(r)
 }
 

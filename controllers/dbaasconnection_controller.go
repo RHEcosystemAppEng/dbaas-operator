@@ -50,7 +50,7 @@ type DBaaSConnectionReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, recErr error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Connection", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx)
 
 	var connection v1alpha1.DBaaSConnection
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
@@ -148,7 +148,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Error reconciling Provider Connection resource")
 		result, recErr = ctrl.Result{}, err
 		return
-	} else {
+	} else if res != controllerutil.OperationResultNone {
 		logger.Info("Provider Connection resource reconciled", "result", res)
 	}
 
@@ -168,6 +168,9 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSConnection{}).
+		WithOptions(
+			controller.Options{MaxConcurrentReconciles: 2},
+		).
 		Build(r)
 }
 

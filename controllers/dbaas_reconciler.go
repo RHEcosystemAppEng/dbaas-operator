@@ -16,13 +16,46 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 var inventoryNamespaceKey = ".spec.inventoryNamespace"
+var ignoreCreateEvents = predicate.Funcs{
+	CreateFunc: func(e event.CreateEvent) bool {
+		return false
+	},
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		if e.ObjectOld == nil || e.ObjectNew == nil {
+			return false
+		}
+		return e.ObjectNew.GetResourceVersion() != e.ObjectOld.GetResourceVersion()
+	},
+	DeleteFunc: func(e event.DeleteEvent) bool {
+		return true
+	},
+	GenericFunc: func(e event.GenericEvent) bool {
+		return true
+	},
+}
+var ignoreAllEvents = predicate.Funcs{
+	CreateFunc: func(e event.CreateEvent) bool {
+		return false
+	},
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		return false
+	},
+	DeleteFunc: func(e event.DeleteEvent) bool {
+		return false
+	},
+	GenericFunc: func(e event.GenericEvent) bool {
+		return false
+	},
+}
 
 type DBaaSReconciler struct {
 	client.Client
@@ -127,7 +160,7 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 
 // update object upon ownerReference verification
 func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.Object) error {
-	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind, owner.GetName())
+	logger := ctrl.LoggerFrom(ctx)
 	name := obj.GetName()
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if owns, err := isOwner(owner, obj, r.Scheme); !owns {

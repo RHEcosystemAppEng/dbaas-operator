@@ -46,7 +46,7 @@ type DBaaSProviderReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Provider", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx)
 
 	var provider v1alpha1.DBaaSProvider
 	if err := r.Get(ctx, req.NamespacedName, &provider); err != nil {
