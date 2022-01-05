@@ -168,6 +168,12 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSConnection{}).
+		WithOptions(
+			controller.Options{
+				MaxConcurrentReconciles: 2,
+				CacheSyncTimeout:        cacheSyncTimeout,
+			},
+		).
 		Build(r)
 }
 

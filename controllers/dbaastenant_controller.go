@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -93,6 +94,11 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			&source.Kind{Type: &rbacv1.RoleBinding{}},
 			&handler.EnqueueRequestForObject{},
 			builder.OnlyMetadata,
+		).
+		WithOptions(
+			controller.Options{
+				CacheSyncTimeout: cacheSyncTimeout,
+			},
 		).
 		Complete(r); err != nil {
 		return err

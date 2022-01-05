@@ -170,7 +170,7 @@ func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1
 	}
 }
 
-// Reconcile tenant to ensure proper RBAC is created
+// Reconcile tenant to ensure proper RBAC is created. inventoryList should only contain inventory objects for the corresponding tenant namespace.
 func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) error {
 	developerAuthz := r.getDeveloperAuthz(ctx, tenant, inventoryList)
 	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant)
@@ -204,7 +204,7 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 	return nil
 }
 
-// Reconcile inventory to ensure proper RBAC is created
+// Reconcile inventory to ensure proper RBAC is created. tenantList should only contain tenant objects for the corresponding inventory namespace.
 func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
 	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
 	var roleObj rbacv1.Role
@@ -416,6 +416,9 @@ func getSubjects(users, groups []string, namespace string) []rbacv1.Subject {
 	}
 	for _, group := range groups {
 		subjects = append(subjects, getSubject(group, namespace, "Group"))
+	}
+	if len(subjects) == 0 {
+		subjects = nil
 	}
 
 	return subjects

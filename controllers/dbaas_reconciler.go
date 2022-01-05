@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -23,6 +24,7 @@ import (
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 var inventoryNamespaceKey = ".spec.inventoryNamespace"
+var cacheSyncTimeout = 5 * time.Minute
 
 type DBaaSReconciler struct {
 	client.Client

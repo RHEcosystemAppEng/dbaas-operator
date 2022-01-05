@@ -51,7 +51,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding).NotTo(BeNil())
 	Expect(clusterRolebinding.Name).To(Equal(clusterRoleBindingName))
 	Expect(clusterRolebinding.RoleRef.Name).To(Equal(clusterRoleName))
-	Expect(clusterRolebinding.Subjects).To(BeEmpty())
+	Expect(clusterRolebinding.Subjects).To(BeNil())
 
 	// nil serviceAdminAuthz & inventory.spec.authz
 	developerAuthz = getDevAuthzFromInventoryList(v1alpha1.DBaaSInventoryList{Items: []v1alpha1.DBaaSInventory{{ObjectMeta: metav1.ObjectMeta{Name: "test"}}}}, tenant)
@@ -207,7 +207,7 @@ func TestInventoryRbacObjs(t *testing.T) {
 	Expect(rolebinding.Name).To(Equal(roleBindingName))
 	Expect(rolebinding.Namespace).To(Equal(namespace))
 	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.Subjects).To(BeEmpty())
+	Expect(rolebinding.Subjects).To(BeNil())
 
 	// nil spec.authz w/ correct default tenant
 	tenantList.Items[0].Spec.InventoryNamespace = namespace
