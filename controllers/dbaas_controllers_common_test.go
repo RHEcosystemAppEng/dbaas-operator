@@ -68,12 +68,21 @@ var defaultTenant = getDefaultTenant(testNamespace)
 func assertResourceCreationIfNotExists(object client.Object) func() {
 	return func() {
 		By("checking the resource exists")
-		if err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
-			if errors.IsNotFound(err) {
-				assertResourceCreation(object)()
-			} else {
-				Fail(err.Error())
+		var create bool
+		Eventually(func() bool {
+			if err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+				if errors.IsNotFound(err) {
+					create = true
+					return true
+				} else {
+					return false
+				}
 			}
+			return true
+		}, timeout, interval).Should(BeTrue())
+
+		if create {
+			assertResourceCreation(object)()
 		}
 	}
 }
