@@ -27,6 +27,7 @@ import (
 type DBaaSTenantSpec struct {
 	// Namespace to watch for DBaaSInventories
 	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=2
 	InventoryNamespace string `json:"inventoryNamespace"`
 	// Specify a Tenant’s default Developers for DBaaSInventory “viewer” access
 	Authz DBaasUsersGroups `json:"authz,omitempty"`
