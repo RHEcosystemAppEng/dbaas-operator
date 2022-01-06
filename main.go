@@ -30,7 +30,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
-	operatorframwork "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -42,7 +42,6 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
-	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -55,7 +54,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	utilruntime.Must(operatorframwork.AddToScheme(scheme))
+	utilruntime.Must(operatorframework.AddToScheme(scheme))
 	utilruntime.Must(coreosv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1alpha1.Install(scheme))
 	utilruntime.Must(operatorv1.Install(scheme))
@@ -101,7 +100,7 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "e4addb06.redhat.com",
 		ClientDisableCacheFor: []client.Object{
-			&operatorsv1alpha1.ClusterServiceVersion{},
+			&operatorframework.ClusterServiceVersion{},
 		},
 	})
 	if err != nil {
