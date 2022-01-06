@@ -55,18 +55,10 @@ type DBaaSAuthzReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS RBAC", req.NamespacedName)
 
-	tenantList, err := r.tenantListByInventoryNS(ctx, req.Namespace)
-	if err != nil {
-		logger.Error(err, "unable to list tenants")
+	// Reconcile RBAC
+	if err := r.reconcileAuthz(ctx, req.Namespace); err != nil {
 		return ctrl.Result{}, err
-	}
-
-	for _, tenant := range tenantList.Items {
-		r.DBaaSTenantReconciler.Reconcile(ctx, ctrl.Request{
-			NamespacedName: types.NamespacedName{Name: tenant.Name}},
-		)
 	}
 
 	return ctrl.Result{}, nil
