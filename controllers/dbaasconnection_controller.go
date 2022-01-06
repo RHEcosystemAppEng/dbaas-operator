@@ -170,8 +170,7 @@ func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controll
 		For(&v1alpha1.DBaaSConnection{}).
 		WithOptions(
 			controller.Options{
-				MaxConcurrentReconciles: 2,
-				CacheSyncTimeout:        cacheSyncTimeout,
+				CacheSyncTimeout: cacheSyncTimeout,
 			},
 		).
 		Build(r)

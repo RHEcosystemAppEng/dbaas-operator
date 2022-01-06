@@ -24,7 +24,7 @@ import (
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 var inventoryNamespaceKey = ".spec.inventoryNamespace"
-var cacheSyncTimeout = 5 * time.Minute
+var cacheSyncTimeout = 10 * time.Minute
 
 type DBaaSReconciler struct {
 	client.Client
