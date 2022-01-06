@@ -59,6 +59,7 @@ spec:
                 type: object
               inventoryNamespace:
                 description: Namespace to watch for DBaaSInventories
+                minLength: 2
                 type: string
             required:
             - inventoryNamespace

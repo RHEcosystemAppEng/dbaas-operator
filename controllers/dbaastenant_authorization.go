@@ -384,12 +384,14 @@ func hasNoEditOrListVerbs(roleObj client.Object) bool {
 func getDevAuthzFromInventoryList(inventoryList v1alpha1.DBaaSInventoryList, tenant v1alpha1.DBaaSTenant) (developerAuthz v1alpha1.DBaasUsersGroups) {
 	var tenantDefaults bool
 	for _, inventory := range inventoryList.Items {
-		// if inventory.spec.authz is nil, apply authz from tenant.spec.authz.developer as a default
-		if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
-			tenantDefaults = true
-		} else {
-			developerAuthz.Users = append(developerAuthz.Users, inventory.Spec.Authz.Users...)
-			developerAuthz.Groups = append(developerAuthz.Groups, inventory.Spec.Authz.Groups...)
+		if inventory.Namespace == tenant.Spec.InventoryNamespace {
+			// if inventory.spec.authz is nil, apply authz from tenant.spec.authz.developer as a default
+			if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
+				tenantDefaults = true
+			} else {
+				developerAuthz.Users = append(developerAuthz.Users, inventory.Spec.Authz.Users...)
+				developerAuthz.Groups = append(developerAuthz.Groups, inventory.Spec.Authz.Groups...)
+			}
 		}
 	}
 	if tenantDefaults {
