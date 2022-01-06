@@ -118,7 +118,7 @@ var _ = BeforeSuite(func() {
 	}
 
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
-		DBaaSReconciler: dRec,
+		DBaaSTenantReconciler: tenantReconciler,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

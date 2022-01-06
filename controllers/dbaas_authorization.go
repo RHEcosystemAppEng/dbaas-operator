@@ -29,8 +29,73 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
+
+// DBaaSAuthzReconciler reconciles Tenant Rbac
+type DBaaSAuthzReconciler struct {
+	*DBaaSTenantReconciler
+}
+
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles;clusterrolebindings,verbs=get;list;watch;create;update;patch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles/finalizers;rolebindings/finalizers;clusterroles/finalizers;clusterrolebindings/finalizers,verbs=update
+//+kubebuilder:rbac:groups="";authorization.openshift.io,resources=localresourceaccessreviews;localsubjectaccessreviews;resourceaccessreviews;selfsubjectrulesreviews;subjectaccessreviews;subjectrulesreviews,verbs=create
+
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
+//
+// For more details, check Reconcile and its Result here:
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
+func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := ctrl.LoggerFrom(ctx, "DBaaS RBAC", req.NamespacedName)
+
+	tenantList, err := r.tenantListByInventoryNS(ctx, req.Namespace)
+	if err != nil {
+		logger.Error(err, "unable to list tenants")
+		return ctrl.Result{}, err
+	}
+
+	for _, tenant := range tenantList.Items {
+		r.DBaaSTenantReconciler.Reconcile(ctx, ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: tenant.Name}},
+		)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := ctrl.NewControllerManagedBy(mgr).
+		Named("controller.dbaasrbac").
+		For(&v1alpha1.DBaaSInventory{}).
+		Owns(&rbacv1.Role{}).
+		Owns(&rbacv1.RoleBinding{}).
+		// for rolebindings, only cache metadata for most bindings... to reduce memory footprint
+		Watches(
+			&source.Kind{Type: &rbacv1.RoleBinding{}},
+			&handler.EnqueueRequestForObject{},
+			builder.OnlyMetadata,
+		).
+		WithOptions(
+			controller.Options{
+				CacheSyncTimeout: cacheSyncTimeout,
+			},
+		).
+		Complete(r); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (r *DBaaSTenantReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
 	logger := ctrl.LoggerFrom(ctx, "Authorization", namespace)

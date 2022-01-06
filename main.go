@@ -116,10 +116,11 @@ func main() {
 	if DBaaSReconciler.InstallNamespace, err = controllers.GetInstallNamespace(); err != nil {
 		setupLog.Error(err, "unable to retrieve install namespace. default Tenant object cannot be installed")
 	}
-	if err = (&controllers.DBaaSTenantReconciler{
+	tenantReconciler := &controllers.DBaaSTenantReconciler{
 		DBaaSReconciler:       DBaaSReconciler,
 		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
-	}).SetupWithManager(mgr); err != nil {
+	}
+	if err = (tenantReconciler).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
 		os.Exit(1)
 	}
@@ -129,8 +130,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultTenant")
 		os.Exit(1)
 	}
+	if err = (&controllers.DBaaSAuthzReconciler{
+		DBaaSTenantReconciler: tenantReconciler,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSAuthzReconciler")
+		os.Exit(1)
+	}
 	inventoryCtrl, err := (&controllers.DBaaSInventoryReconciler{
-		DBaaSReconciler: DBaaSReconciler,
+		DBaaSTenantReconciler: tenantReconciler,
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")

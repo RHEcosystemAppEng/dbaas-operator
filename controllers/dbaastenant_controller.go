@@ -24,11 +24,8 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DBaaSTenantReconciler reconciles a DBaaSTenant object
@@ -53,22 +50,18 @@ type DBaaSTenantReconciler struct {
 func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", req.NamespacedName)
 
-	namespace := req.Namespace
-	if len(namespace) == 0 {
-		var tenant v1alpha1.DBaaSTenant
-		if err := r.Get(ctx, req.NamespacedName, &tenant); err != nil {
-			if errors.IsNotFound(err) {
-				// CR deleted since request queued, child objects getting GC'd, no requeue
-				return ctrl.Result{}, nil
-			}
-			logger.Error(err, "Error fetching DBaaS Tenant for reconcile")
-			return ctrl.Result{}, err
+	var tenant v1alpha1.DBaaSTenant
+	if err := r.Get(ctx, req.NamespacedName, &tenant); err != nil {
+		if errors.IsNotFound(err) {
+			// CR deleted since request queued, child objects getting GC'd, no requeue
+			return ctrl.Result{}, nil
 		}
-		namespace = tenant.Spec.InventoryNamespace
+		logger.Error(err, "Error fetching DBaaS Tenant for reconcile")
+		return ctrl.Result{}, err
 	}
 
 	// Reconcile tenant related RBAC
-	if err := r.reconcileAuthz(ctx, namespace); err != nil {
+	if err := r.reconcileAuthz(ctx, tenant.Spec.InventoryNamespace); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -78,23 +71,10 @@ func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
+		Named("controller.dbaastenant").
 		For(&v1alpha1.DBaaSTenant{}).
 		Owns(&rbacv1.ClusterRole{}).
 		Owns(&rbacv1.ClusterRoleBinding{}).
-		Watches(
-			&source.Kind{Type: &v1alpha1.DBaaSInventory{}},
-			&handler.EnqueueRequestForObject{},
-		).
-		Watches(
-			&source.Kind{Type: &rbacv1.Role{}},
-			&handler.EnqueueRequestForOwner{OwnerType: &v1alpha1.DBaaSInventory{}, IsController: true},
-		).
-		// for rolebindings, only cache metadata for most bindings... to reduce memory footprint
-		Watches(
-			&source.Kind{Type: &rbacv1.RoleBinding{}},
-			&handler.EnqueueRequestForObject{},
-			builder.OnlyMetadata,
-		).
 		WithOptions(
 			controller.Options{
 				CacheSyncTimeout: cacheSyncTimeout,

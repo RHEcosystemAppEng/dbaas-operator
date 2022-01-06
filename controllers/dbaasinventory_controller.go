@@ -29,7 +29,7 @@ import (
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
 type DBaaSInventoryReconciler struct {
-	*DBaaSReconciler
+	*DBaaSTenantReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -140,11 +140,11 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("controller.dbaasinventory").
 		For(&v1alpha1.DBaaSInventory{}).
 		WithOptions(
 			controller.Options{
-				MaxConcurrentReconciles: 2,
-				CacheSyncTimeout:        cacheSyncTimeout,
+				CacheSyncTimeout: cacheSyncTimeout,
 			},
 		).
 		Build(r)
