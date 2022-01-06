@@ -25,6 +25,8 @@ import (
 	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
@@ -39,9 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
