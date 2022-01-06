@@ -56,7 +56,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
-			logger.Info("DBaaS Connection resource not found, has been deleted")
+			logger.V(1).Info("DBaaS Connection resource not found, has been deleted")
 			result, recErr = ctrl.Result{}, nil
 			return
 		}
@@ -141,7 +141,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	providerConnection := r.createProviderObject(&connection, provider.Spec.ConnectionKind)
 	if res, err := r.reconcileProviderObject(providerConnection, r.providerObjectMutateFn(&connection, providerConnection, connection.Spec.DeepCopy()), ctx); err != nil {
 		if errors.IsConflict(err) {
-			logger.Info("Provider Connection modified, retry syncing spec")
+			logger.V(1).Info("Provider Connection modified, retry syncing spec")
 			result, recErr = ctrl.Result{Requeue: true}, nil
 			return
 		}

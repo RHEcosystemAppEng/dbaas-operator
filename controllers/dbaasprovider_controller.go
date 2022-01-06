@@ -52,7 +52,7 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err := r.Get(ctx, req.NamespacedName, &provider); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
-			logger.Info("DBaaS Provider resource not found, has been deleted")
+			logger.V(1).Info("DBaaS Provider resource not found, has been deleted")
 			return ctrl.Result{}, nil
 		}
 		logger.Error(err, "Error fetching DBaaS Provider for reconcile")

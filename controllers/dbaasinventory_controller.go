@@ -121,7 +121,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		result, recErr = ctrl.Result{}, err
 		return
 	} else {
-		logger.V(1).Info("Provider Inventory resource reconciled", "result", res)
+		logger.Info("Provider Inventory resource reconciled", "result", res)
 	}
 
 	var DBaaSProviderInventory v1alpha1.DBaaSProviderInventory
