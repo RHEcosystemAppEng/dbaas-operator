@@ -140,7 +140,6 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
-		Named("controller.dbaasinventory").
 		For(&v1alpha1.DBaaSInventory{}).
 		WithOptions(
 			controller.Options{

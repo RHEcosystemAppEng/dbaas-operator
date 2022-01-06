@@ -75,7 +75,6 @@ func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
-		Named("controller.dbaasrbac").
 		For(&v1alpha1.DBaaSInventory{}).
 		Owns(&rbacv1.Role{}).
 		Owns(&rbacv1.RoleBinding{}).

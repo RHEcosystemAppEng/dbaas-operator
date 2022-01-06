@@ -77,7 +77,6 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSProviderReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		Named("controller.dbaasprovider").
 		For(&v1alpha1.DBaaSProvider{}, builder.WithPredicates(filterEventPredicate)).
 		Complete(r)
 }

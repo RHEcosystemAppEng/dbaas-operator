@@ -167,7 +167,6 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
-		Named("controller.dbaasconnection").
 		For(&v1alpha1.DBaaSConnection{}).
 		WithOptions(
 			controller.Options{
