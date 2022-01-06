@@ -27,7 +27,7 @@ type PlatformsInstlnStatus string
 const (
 	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
 	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
-	DBassDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
+	DBaaSDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
 	Csv                                PlatformsName = "Csv"
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 	ServiceBindingInstallation         PlatformsName = "service-binding"

@@ -8,28 +8,27 @@ import (
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	apiv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type Reconciler struct {
-	client    client.Client
-	logger    logr.Logger
-	scheme    *runtime.Scheme
-	namespace string
+	client client.Client
+	logger logr.Logger
+	scheme *runtime.Scheme
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, namespace string) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client:    client,
-		scheme:    scheme,
-		logger:    logger,
-		namespace: namespace,
+		client: client,
+		scheme: scheme,
+		logger: logger,
 	}
 }
 
@@ -42,16 +41,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	}
 
 	// crunchybridge subscription
-	status, err = r.reconcileSubscription(ctx)
+	status, err = r.reconcileSubscription(cr, ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
 	// crunchybridge operator group
-	status, err = r.reconcileOperatorgroup(ctx)
+	status, err = r.reconcileOperatorGroup(ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.waitForCrunchyBridgeOperator(ctx)
+	status, err = r.waitForCrunchyBridgeOperator(cr, ctx)
+	if status != v1.ResultSuccess {
+		return status, err
+	}
+	// crunchybridge csv
+	status, err = r.reconcileCSV(cr, ctx)
 	if status != v1.ResultSuccess {
 		return status, err
 	}
@@ -60,7 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 }
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := r.getCrunchyBridgeSubscription()
+	subscription := r.getCrunchyBridgeSubscription(cr)
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -73,7 +77,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 	}
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: r.namespace,
+		Namespace: cr.Namespace,
 	}
 	err = r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -89,14 +93,23 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 		}
 	}
 
+	csv := r.getCrunchyBridgeCSV(cr)
+	err = r.client.Delete(ctx, csv)
+	if err != nil && !errors.IsNotFound(err) {
+		return v1.ResultFailed, err
+	}
+
 	return v1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := r.getCrunchyBridgeSubscription()
+	subscription := r.getCrunchyBridgeSubscription(cr)
 	catalogsource := r.getCrunchyBridgeCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
+		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
+			return err
+		}
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
 			CatalogSourceNamespace: catalogsource.Namespace,
@@ -113,7 +126,7 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1.PlatformsIns
 	}
 	return v1.ResultSuccess, nil
 }
-func (r *Reconciler) reconcileOperatorgroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
 	operatorgroup := r.getCrunchyBridgeOperatorGroup()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
@@ -143,11 +156,11 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 
-func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+func (r *Reconciler) waitForCrunchyBridgeOperator(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: r.namespace,
+		Namespace: cr.Namespace,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -164,11 +177,35 @@ func (r *Reconciler) waitForCrunchyBridgeOperator(ctx context.Context) (v1.Platf
 	return v1.ResultInProgress, nil
 }
 
-func (r *Reconciler) getCrunchyBridgeSubscription() *v1alpha1.Subscription {
+func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
+	csv := r.getCrunchyBridgeCSV(cr)
+	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
+		if errors.IsNotFound(err) {
+			return v1.ResultInProgress, nil
+		}
+		return v1.ResultFailed, err
+	}
+
+	if set, err := reconcilers.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
+		return v1.ResultFailed, err
+	} else if set {
+		return v1.ResultSuccess, nil
+	}
+
+	if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
+		return v1.ResultFailed, err
+	}
+	if err := r.client.Update(ctx, csv); err != nil {
+		return v1.ResultFailed, err
+	}
+	return v1.ResultInProgress, nil
+}
+
+func (r *Reconciler) getCrunchyBridgeSubscription(cr *v1.DBaaSPlatform) *v1alpha1.Subscription {
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-subscription",
-			Namespace: r.namespace,
+			Namespace: cr.Namespace,
 		},
 	}
 }
@@ -186,6 +223,15 @@ func (r *Reconciler) getCrunchyBridgeCatalogSource() *v1alpha1.CatalogSource {
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "crunchy-bridge-catalogsource",
 			Namespace: reconcilers.CATALOG_NAMESPACE,
+		},
+	}
+}
+
+func (r *Reconciler) getCrunchyBridgeCSV(cr *v1.DBaaSPlatform) *v1alpha1.ClusterServiceVersion {
+	return &v1alpha1.ClusterServiceVersion{
+		ObjectMeta: apimv1.ObjectMeta{
+			Name:      reconcilers.CRUNCHY_BRIDGE_CSV,
+			Namespace: cr.Namespace,
 		},
 	}
 }

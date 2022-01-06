@@ -14,4 +14,8 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
 	DBAAS_OPERATOR_VERSION_KEY_ENV           = "DBAAS_OPERATOR_VERSION"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
+	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.1.0"
+	CRUNCHY_BRIDGE_CSV                       = "crunchy-bridge-operator.v0.0.2-dev"
+	SERVICE_BINDING_CSV                      = "service-binding-operator.v0.10.0"
+	DBAAS_CSV                                = "dbaas-operator.v0.1.3"
 )

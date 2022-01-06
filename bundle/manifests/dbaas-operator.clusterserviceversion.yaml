@@ -347,11 +347,34 @@ spec:
           - operators.coreos.com
           resources:
           - catalogsources
-          - clusterserviceversions
           - operatorgroups
+          verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions
+          verbs:
+          - delete
+          - get
+          - update
+        - apiGroups:
+          - operators.coreos.com
+          resources:
+          - clusterserviceversions/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - operators.coreos.com
+          resources:
           - subscriptions
           verbs:
           - create
+          - delete
           - get
           - list
           - update
