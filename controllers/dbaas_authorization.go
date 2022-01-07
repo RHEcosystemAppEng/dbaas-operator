@@ -57,7 +57,6 @@ type DBaaSAuthzReconciler struct {
 func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
 
-	// Reconcile RBAC
 	if err := r.reconcileAuthz(ctx, req.Namespace); err != nil {
 		if errors.IsConflict(err) {
 			logger.Info("Requeued due to update conflict")
@@ -77,7 +76,7 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&rbacv1.RoleBinding{}, builder.OnlyMetadata).
 		WithOptions(
 			controller.Options{
-				MaxConcurrentReconciles: 5,
+				MaxConcurrentReconciles: 3,
 			},
 		).
 		Complete(r); err != nil {
@@ -87,6 +86,7 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
+// Reconcile all tenant and inventory RBAC
 func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
 	logger := ctrl.LoggerFrom(ctx)
 
@@ -129,6 +129,7 @@ func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace str
 	return nil
 }
 
+// Reconcile inventory and related tenant RBAC
 func (r *DBaaSAuthzReconciler) reconcileInvAuthz(ctx context.Context, inventory v1alpha1.DBaaSInventory) (v1alpha1.DBaaSTenantList, error) {
 	logger := ctrl.LoggerFrom(ctx)
 
@@ -170,6 +171,7 @@ func (r *DBaaSAuthzReconciler) reconcileInvAuthz(ctx context.Context, inventory 
 	return tenantList, nil
 }
 
+// Reconcile tenant and related inventory RBAC
 func (r *DBaaSAuthzReconciler) reconcileTenantAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) (err error) {
 	logger := ctrl.LoggerFrom(ctx)
 

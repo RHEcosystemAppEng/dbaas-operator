@@ -54,12 +54,12 @@ func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	// Reconcile tenant related RBAC
 	if err := r.reconcileTenantAuthz(ctx, tenant); err != nil {
 		if errors.IsConflict(err) {
 			logger.Info("Requeued due to update conflict")
 			return ctrl.Result{Requeue: true}, err
 		}
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -73,7 +73,7 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.ClusterRoleBinding{}).
 		WithOptions(
 			controller.Options{
-				MaxConcurrentReconciles: 5,
+				MaxConcurrentReconciles: 3,
 			},
 		).
 		Complete(r); err != nil {

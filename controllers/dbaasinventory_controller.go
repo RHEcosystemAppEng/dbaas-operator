@@ -80,14 +80,15 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}(&inventory, &dbaasCond)
 
-	// Reconcile RBAC
 	tenantList, err := r.reconcileInvAuthz(ctx, inventory)
 	if err != nil {
+		result, recErr = ctrl.Result{}, err
 		if errors.IsConflict(err) {
 			logger.Info("Requeued due to update conflict")
-			return ctrl.Result{Requeue: true}, err
+			result = ctrl.Result{Requeue: true}
+			return
 		}
-		return ctrl.Result{}, err
+		return
 	}
 
 	if len(tenantList.Items) == 0 {
