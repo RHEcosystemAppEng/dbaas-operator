@@ -42,7 +42,7 @@ type DBaaSTenantReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx)
 
 	var tenant v1alpha1.DBaaSTenant
 	if err := r.Get(ctx, req.NamespacedName, &tenant); err != nil {
@@ -70,7 +70,7 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.ClusterRoleBinding{}).
 		WithOptions(
 			controller.Options{
-				CacheSyncTimeout: cacheSyncTimeout,
+				MaxConcurrentReconciles: 10,
 			},
 		).
 		Complete(r); err != nil {

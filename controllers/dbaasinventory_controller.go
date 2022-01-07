@@ -42,7 +42,7 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, recErr error) {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Inventory", req.NamespacedName)
+	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
@@ -143,7 +143,7 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controlle
 		For(&v1alpha1.DBaaSInventory{}).
 		WithOptions(
 			controller.Options{
-				CacheSyncTimeout: cacheSyncTimeout,
+				MaxConcurrentReconciles: 3,
 			},
 		).
 		Build(r)

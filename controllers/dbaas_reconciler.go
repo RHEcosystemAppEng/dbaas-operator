@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"time"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,7 +23,6 @@ import (
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 var inventoryNamespaceKey = ".spec.inventoryNamespace"
-var cacheSyncTimeout = 10 * time.Minute
 
 type DBaaSReconciler struct {
 	client.Client
@@ -129,7 +127,7 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 
 // update object upon ownerReference verification
 func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.Object) error {
-	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind, owner.GetName())
+	logger := ctrl.LoggerFrom(ctx)
 	name := obj.GetName()
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if owns, err := isOwner(owner, obj, r.Scheme); !owns {

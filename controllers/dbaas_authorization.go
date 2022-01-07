@@ -32,7 +32,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -79,11 +78,6 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			&handler.EnqueueRequestForObject{},
 			builder.OnlyMetadata,
 		).
-		WithOptions(
-			controller.Options{
-				CacheSyncTimeout: cacheSyncTimeout,
-			},
-		).
 		Complete(r); err != nil {
 		return err
 	}
@@ -92,7 +86,7 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
-	logger := ctrl.LoggerFrom(ctx, "Authorization", namespace)
+	logger := ctrl.LoggerFrom(ctx)
 
 	tenantList, err := r.tenantListByInventoryNS(ctx, namespace)
 	if err != nil {
@@ -136,7 +130,7 @@ func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace str
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
 func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) v1alpha1.DBaasUsersGroups {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
+	logger := ctrl.LoggerFrom(ctx)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
 		Action: oauthzv1.Action{
@@ -174,7 +168,7 @@ func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, tenant 
 // ResourceAccessReview for Developer Authz
 // return users/groups who can list inventories in the tenant namespace
 func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
+	logger := ctrl.LoggerFrom(ctx)
 
 	// inventory access review
 	rar := &oauthzv1.ResourceAccessReview{
@@ -299,7 +293,7 @@ func (r *DBaaSAuthzReconciler) createRbacObj(newObj, getObj, owner client.Object
 	name := newObj.GetName()
 	namespace := newObj.GetNamespace()
 	kind := newObj.GetObjectKind().GroupVersionKind().Kind
-	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind+" RBAC", types.NamespacedName{Name: name, Namespace: namespace})
+	logger := ctrl.LoggerFrom(ctx)
 	if hasNoEditOrListVerbs(newObj) {
 		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
 			if errors.IsNotFound(err) {
