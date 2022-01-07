@@ -50,6 +50,7 @@ func (r *DBaaSDefaultTenantReconciler) Reconcile(ctx context.Context, req ctrl.R
 func (r *DBaaSDefaultTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// watch deployments if installed to the operator's namespace
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("defaulttenant").
 		For(
 			&appsv1.Deployment{},
 			builder.WithPredicates(r.ignoreOtherDeployments()),
