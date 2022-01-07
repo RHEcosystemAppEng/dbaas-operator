@@ -122,16 +122,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSAuthz")
 		os.Exit(1)
 	}
-	if err = (&controllers.DBaaSTenantReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
-		os.Exit(1)
-	}
-	if err = (&controllers.DBaaSDefaultTenantReconciler{
+	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultTenant")
+	}).SetupWithManager(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
 		os.Exit(1)
 	}
 	inventoryCtrl, err := (&controllers.DBaaSInventoryReconciler{
@@ -141,11 +136,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)
 	}
-	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
+	if err = (&controllers.DBaaSDefaultTenantReconciler{
 		DBaaSReconciler: DBaaSReconciler,
-	}).SetupWithManager(mgr)
-	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSConnection")
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultTenant")
 		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSProviderReconciler{
@@ -163,6 +157,12 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
 			os.Exit(1)
 		}
+	}
+	if err = (&controllers.DBaaSTenantReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
+		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSPlatformReconciler{
 		DBaaSReconciler: DBaaSReconciler,
