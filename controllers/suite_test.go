@@ -53,7 +53,7 @@ var cCtrl *SpyController
 const (
 	testNamespace = "default"
 
-	timeout  = time.Second * 60
+	timeout  = time.Second * 120
 	duration = time.Second * 10
 	interval = time.Millisecond * 500
 )

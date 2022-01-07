@@ -71,7 +71,7 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&v1alpha1.DBaaSInventory{}).
 		Owns(&rbacv1.Role{}).
 		Owns(&rbacv1.RoleBinding{}).
-		// for rolebindings, only cache metadata for most bindings... to reduce memory footprint
+		// only cache metadata for most rolebindings... to reduce memory footprint
 		Watches(
 			&source.Kind{Type: &rbacv1.RoleBinding{}},
 			&handler.EnqueueRequestForObject{},
@@ -301,12 +301,12 @@ func (r *DBaaSTenantReconciler) createRbacObj(newObj, getObj, owner client.Objec
 	if hasNoEditOrListVerbs(newObj) {
 		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
 			if errors.IsNotFound(err) {
-				logger.V(1).Info("resource not found", name, namespace)
+				logger.V(1).Info(kind+" resource not found", name, namespace)
 				if err = r.createOwnedObject(newObj, owner, ctx); err != nil {
 					logger.Error(err, "Error creating resource", name, namespace)
 					return false, err
 				}
-				logger.Info("resource created", name, namespace)
+				logger.Info(kind+" resource created", name, namespace)
 			} else {
 				logger.Error(err, "Error getting the resource", name, namespace)
 				return false, err
