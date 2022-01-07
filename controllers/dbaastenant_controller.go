@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -30,8 +29,7 @@ import (
 
 // DBaaSTenantReconciler reconciles a DBaaSTenant object
 type DBaaSTenantReconciler struct {
-	*DBaaSReconciler
-	*oauthzclientv1.AuthorizationV1Client
+	*DBaaSAuthzReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete

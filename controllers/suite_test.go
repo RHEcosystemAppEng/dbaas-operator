@@ -112,13 +112,18 @@ var _ = BeforeSuite(func() {
 		Scheme:           k8sManager.GetScheme(),
 		InstallNamespace: testNamespace,
 	}
-	tenantReconciler := &DBaaSTenantReconciler{
+	authzReconciler := &DBaaSAuthzReconciler{
 		DBaaSReconciler:       dRec,
 		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
 	}
 
+	err = (&DBaaSTenantReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
-		DBaaSTenantReconciler: tenantReconciler,
+		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -142,7 +147,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (tenantReconciler).SetupWithManager(k8sManager)
+	err = (authzReconciler).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

@@ -23,6 +23,7 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
+	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -38,7 +39,8 @@ import (
 
 // DBaaSAuthzReconciler reconciles Tenant Rbac
 type DBaaSAuthzReconciler struct {
-	*DBaaSTenantReconciler
+	*DBaaSReconciler
+	*oauthzclientv1.AuthorizationV1Client
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -89,7 +91,7 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-func (r *DBaaSTenantReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
+func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
 	logger := ctrl.LoggerFrom(ctx, "Authorization", namespace)
 
 	tenantList, err := r.tenantListByInventoryNS(ctx, namespace)
@@ -133,7 +135,7 @@ func (r *DBaaSTenantReconciler) reconcileAuthz(ctx context.Context, namespace st
 
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSTenantReconciler) getServiceAdminAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) v1alpha1.DBaasUsersGroups {
+func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) v1alpha1.DBaasUsersGroups {
 	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
@@ -171,7 +173,7 @@ func (r *DBaaSTenantReconciler) getServiceAdminAuthz(ctx context.Context, tenant
 
 // ResourceAccessReview for Developer Authz
 // return users/groups who can list inventories in the tenant namespace
-func (r *DBaaSTenantReconciler) getDeveloperAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
+func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
 	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
 
 	// inventory access review
@@ -203,7 +205,7 @@ func (r *DBaaSTenantReconciler) getDeveloperAuthz(ctx context.Context, tenant v1
 
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.DBaasUsersGroups {
+func (r *DBaaSAuthzReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.DBaasUsersGroups {
 	logger := ctrl.LoggerFrom(ctx)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
@@ -228,7 +230,7 @@ func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1
 }
 
 // Reconcile tenant to ensure proper RBAC is created. inventoryList should only contain inventory objects for the corresponding tenant namespace.
-func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) error {
+func (r *DBaaSAuthzReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) error {
 	developerAuthz := r.getDeveloperAuthz(ctx, tenant, inventoryList)
 	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant)
 	tenantListAuthz := r.getTenantListAuthz(ctx)
@@ -262,7 +264,7 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 }
 
 // Reconcile inventory to ensure proper RBAC is created. tenantList should only contain tenant objects for the corresponding inventory namespace.
-func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
+func (r *DBaaSAuthzReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
 	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
 	var roleObj rbacv1.Role
 	if exists, err := r.createRbacObj(&role, &roleObj, &inventory, ctx); err != nil {
@@ -293,7 +295,7 @@ func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, 
 }
 
 // create RBAC object, return true if already exists
-func (r *DBaaSTenantReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
+func (r *DBaaSAuthzReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
 	name := newObj.GetName()
 	namespace := newObj.GetNamespace()
 	kind := newObj.GetObjectKind().GroupVersionKind().Kind
