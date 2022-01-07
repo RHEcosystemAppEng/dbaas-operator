@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +30,7 @@ import (
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
 type DBaaSInventoryReconciler struct {
-	*DBaaSReconciler
+	*DBaaSAuthzReconciler
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -79,11 +80,14 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 	}(&inventory, &dbaasCond)
 
-	tenantList, err := r.tenantListByInventoryNS(ctx, req.Namespace)
+	// Reconcile RBAC
+	tenantList, err := r.reconcileInvAuthz(ctx, inventory)
 	if err != nil {
-		logger.Error(err, "unable to list tenants")
-		result, recErr = ctrl.Result{}, err
-		return
+		if errors.IsConflict(err) {
+			logger.Info("Requeued due to update conflict")
+			return ctrl.Result{Requeue: true}, err
+		}
+		return ctrl.Result{}, err
 	}
 
 	if len(tenantList.Items) == 0 {
@@ -141,6 +145,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInventory{}).
+		Owns(&rbacv1.Role{}).
+		Owns(&rbacv1.RoleBinding{}).
 		WithOptions(
 			controller.Options{
 				MaxConcurrentReconciles: 3,

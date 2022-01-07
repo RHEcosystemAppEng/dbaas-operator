@@ -33,8 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DBaaSAuthzReconciler reconciles Rbac
@@ -57,9 +55,14 @@ type DBaaSAuthzReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := ctrl.LoggerFrom(ctx)
 
 	// Reconcile RBAC
 	if err := r.reconcileAuthz(ctx, req.Namespace); err != nil {
+		if errors.IsConflict(err) {
+			logger.Info("Requeued due to update conflict")
+			return ctrl.Result{Requeue: true}, err
+		}
 		return ctrl.Result{}, err
 	}
 
@@ -70,14 +73,8 @@ func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
 		Named("dbaasauthz").
-		For(&v1alpha1.DBaaSInventory{}).
-		Owns(&rbacv1.Role{}).
 		// only cache metadata for most rolebindings... to reduce memory footprint
-		Watches(
-			&source.Kind{Type: &rbacv1.RoleBinding{}},
-			&handler.EnqueueRequestForObject{},
-			builder.OnlyMetadata,
-		).
+		For(&rbacv1.RoleBinding{}, builder.OnlyMetadata).
 		WithOptions(
 			controller.Options{
 				MaxConcurrentReconciles: 5,
@@ -116,6 +113,87 @@ func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace str
 			if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList); err != nil {
 				return err
 			}
+		}
+
+		//
+		// Inventory RBAC
+		//
+		// Reconcile each inventory in the tenant's namespace to ensure proper RBAC is created
+		for _, inventory := range inventoryList.Items {
+			if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *DBaaSAuthzReconciler) reconcileInvAuthz(ctx context.Context, inventory v1alpha1.DBaaSInventory) (v1alpha1.DBaaSTenantList, error) {
+	logger := ctrl.LoggerFrom(ctx)
+
+	tenantList, err := r.tenantListByInventoryNS(ctx, inventory.Namespace)
+	if err != nil {
+		logger.Error(err, "unable to list tenants")
+		return v1alpha1.DBaaSTenantList{}, err
+	}
+
+	//
+	// Inventory RBAC
+	//
+	// Reconcile each inventory ensure proper RBAC is created
+	if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
+		return tenantList, err
+	}
+
+	// continue only if the request is in a valid tenant namespace
+	if len(tenantList.Items) > 0 {
+
+		// Get list of DBaaSInventories from tenant namespace
+		var inventoryList v1alpha1.DBaaSInventoryList
+		if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: inventory.Namespace}); err != nil {
+			logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")
+			return tenantList, err
+		}
+
+		//
+		// Tenant RBAC
+		//
+		for _, tenant := range tenantList.Items {
+			if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList); err != nil {
+				return tenantList, err
+			}
+		}
+
+	}
+
+	return tenantList, nil
+}
+
+func (r *DBaaSAuthzReconciler) reconcileTenantAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) (err error) {
+	logger := ctrl.LoggerFrom(ctx)
+
+	// Get list of DBaaSInventories from tenant namespace
+	var inventoryList v1alpha1.DBaaSInventoryList
+	if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: tenant.Spec.InventoryNamespace}); err != nil {
+		logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")
+		return err
+	}
+
+	//
+	// Tenant RBAC
+	//
+	if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList); err != nil {
+		return err
+	}
+
+	// continue only if inventories exist in the namespace
+	if len(inventoryList.Items) > 0 {
+
+		tenantList, err := r.tenantListByInventoryNS(ctx, tenant.Spec.InventoryNamespace)
+		if err != nil {
+			logger.Error(err, "unable to list tenants")
+			return err
 		}
 
 		//
@@ -476,7 +554,7 @@ func getSubjects(users, groups []string, namespace string) []rbacv1.Subject {
 		subjects = append(subjects, getSubject(group, namespace, "Group"))
 	}
 	if len(subjects) == 0 {
-		subjects = nil
+		return nil
 	}
 
 	return subjects

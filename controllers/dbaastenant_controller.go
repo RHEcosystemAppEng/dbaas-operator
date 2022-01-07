@@ -55,8 +55,11 @@ func (r *DBaaSTenantReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	// Reconcile tenant related RBAC
-	if err := r.reconcileAuthz(ctx, tenant.Spec.InventoryNamespace); err != nil {
-		return ctrl.Result{}, err
+	if err := r.reconcileTenantAuthz(ctx, tenant); err != nil {
+		if errors.IsConflict(err) {
+			logger.Info("Requeued due to update conflict")
+			return ctrl.Result{Requeue: true}, err
+		}
 	}
 
 	return ctrl.Result{}, nil

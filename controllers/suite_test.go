@@ -123,7 +123,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
-		DBaaSReconciler: dRec,
+		DBaaSAuthzReconciler: authzReconciler,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
