@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -71,12 +72,16 @@ func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Named("dbaasauthz").
 		For(&v1alpha1.DBaaSInventory{}).
 		Owns(&rbacv1.Role{}).
-		Owns(&rbacv1.RoleBinding{}).
 		// only cache metadata for most rolebindings... to reduce memory footprint
 		Watches(
 			&source.Kind{Type: &rbacv1.RoleBinding{}},
 			&handler.EnqueueRequestForObject{},
 			builder.OnlyMetadata,
+		).
+		WithOptions(
+			controller.Options{
+				MaxConcurrentReconciles: 5,
+			},
 		).
 		Complete(r); err != nil {
 		return err
