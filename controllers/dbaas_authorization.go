@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// DBaaSAuthzReconciler reconciles Tenant Rbac
+// DBaaSAuthzReconciler reconciles Rbac
 type DBaaSAuthzReconciler struct {
 	*DBaaSReconciler
 	*oauthzclientv1.AuthorizationV1Client

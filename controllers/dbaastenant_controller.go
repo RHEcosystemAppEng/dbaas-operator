@@ -35,10 +35,6 @@ type DBaaSTenantReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles;clusterrolebindings,verbs=get;list;watch;create;update;patch
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles/finalizers;rolebindings/finalizers;clusterroles/finalizers;clusterrolebindings/finalizers,verbs=update
-//+kubebuilder:rbac:groups="";authorization.openshift.io,resources=localresourceaccessreviews;localsubjectaccessreviews;resourceaccessreviews;selfsubjectrulesreviews;subjectaccessreviews;subjectrulesreviews,verbs=create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
