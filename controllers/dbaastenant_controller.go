@@ -73,7 +73,7 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.ClusterRoleBinding{}).
 		WithOptions(
 			controller.Options{
-				MaxConcurrentReconciles: 3,
+				MaxConcurrentReconciles: 10,
 			},
 		).
 		Complete(r); err != nil {
