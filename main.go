@@ -130,7 +130,7 @@ func main() {
 		os.Exit(1)
 	}
 	inventoryCtrl, err := (&controllers.DBaaSInventoryReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
+		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")

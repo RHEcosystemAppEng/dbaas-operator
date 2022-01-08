@@ -134,51 +134,6 @@ func (r *DBaaSAuthzReconciler) reconcileAuthz(ctx context.Context, namespace str
 	return nil
 }
 
-// Reconcile a specific inventory and all related tenant RBAC
-func (r *DBaaSAuthzReconciler) reconcileInvAuthz(ctx context.Context, inventory v1alpha1.DBaaSInventory) (v1alpha1.DBaaSTenantList, error) {
-	logger := ctrl.LoggerFrom(ctx)
-
-	tenantList, err := r.tenantListByInventoryNS(ctx, inventory.Namespace)
-	if err != nil {
-		logger.Error(err, "unable to list tenants")
-		return v1alpha1.DBaaSTenantList{}, err
-	}
-
-	//
-	// Inventory RBAC
-	//
-	// Reconcile each inventory ensure proper RBAC is created
-	if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
-		return tenantList, err
-	}
-
-	// continue only if the request is in a valid tenant namespace
-	if len(tenantList.Items) > 0 {
-
-		// Get list of DBaaSInventories from tenant namespace
-		var inventoryList v1alpha1.DBaaSInventoryList
-		if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: inventory.Namespace}); err != nil {
-			logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")
-			return tenantList, err
-		}
-
-		//
-		// Tenant RBAC
-		//
-		serviceAdminAuthz := r.getServiceAdminAuthz(ctx, inventory.Namespace)
-		developerAuthz := r.getDeveloperAuthz(ctx, inventory.Namespace, inventoryList)
-		tenantListAuthz := r.getTenantListAuthz(ctx)
-		for _, tenant := range tenantList.Items {
-			if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
-				return tenantList, err
-			}
-		}
-
-	}
-
-	return tenantList, nil
-}
-
 // Reconcile a specific tenant and all related inventory RBAC
 func (r *DBaaSAuthzReconciler) reconcileTenantAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) (err error) {
 	logger := ctrl.LoggerFrom(ctx)
