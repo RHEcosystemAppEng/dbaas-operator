@@ -72,6 +72,8 @@ func (r *DBaaSAuthzReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *DBaaSAuthzReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
 		Named("dbaasauthz").
+		For(&v1alpha1.DBaaSInventory{}).
+		Owns(&rbacv1.Role{}).
 		// only cache metadata for most rolebindings... to reduce memory footprint
 		For(&rbacv1.RoleBinding{}, builder.OnlyMetadata).
 		WithOptions(
