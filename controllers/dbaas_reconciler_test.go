@@ -221,18 +221,12 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 
 		err := dRec.watchDBaaSProviderObject(spyController, owner, "test-kind")
 		Expect(err).NotTo(HaveOccurred())
-		select {
-		case s := <-spyController.source:
-			Expect(s).Should(Equal(source))
-		case <-time.After(timeout):
-			Fail("failed to watch with the expected source")
-		}
-		select {
-		case o := <-spyController.owner:
-			Expect(o).Should(Equal(owner))
-		case <-time.After(timeout):
-			Fail("failed to watch with the expected owner")
-		}
+		Eventually(func() bool {
+			return spyController.watched(&watchable{
+				source: source,
+				owner:  owner,
+			})
+		}, timeout, interval).Should(BeTrue())
 	})
 })
 

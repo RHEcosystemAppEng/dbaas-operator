@@ -17,8 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -32,66 +30,83 @@ import (
 )
 
 var _ = Describe("DBaaSProvider controller", func() {
-	BeforeEach(func() {
-		iCtrl.reset()
-		cCtrl.reset()
-	})
-
 	Describe("trigger reconcile", func() {
+		createdInventoryKind := "createdInventoryKind"
+		createdConnectionKind := "createdConnectionKind"
+
 		provider := &v1alpha1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-provider",
+				Name:      "test-create-update-provider",
 				Namespace: testNamespace,
 			},
 			Spec: v1alpha1.DBaaSProviderSpec{
 				Provider: v1alpha1.DatabaseProvider{
-					Name: "test-provider",
+					Name: "test-create-update-provider",
 				},
-				InventoryKind:    testInventoryKind,
-				ConnectionKind:   testConnectionKind,
+				InventoryKind:    createdInventoryKind,
+				ConnectionKind:   createdConnectionKind,
 				CredentialFields: []v1alpha1.CredentialField{},
 			},
 		}
+
+		iSrc := &unstructured.Unstructured{}
+		iSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    createdInventoryKind,
+		})
+		iOwner := &v1alpha1.DBaaSInventory{}
+		cSrc := &unstructured.Unstructured{}
+		cSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    createdConnectionKind,
+		})
+		cOwner := &v1alpha1.DBaaSConnection{}
+
+		BeforeEach(func() { assertNotWatched(iSrc, iOwner, cSrc, cOwner) })
 		BeforeEach(assertResourceCreation(provider))
 		AfterEach(assertResourceDeletion(provider))
+		AfterEach(func() { reset(iSrc, iOwner, cSrc, cOwner) })
 
 		Context("after creating a DBaaSProvider", func() {
 			It("should make DBaaSInventory and DBaaSConnection watch the provider inventory and connection", func() {
-				iSrc := &unstructured.Unstructured{}
-				iSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    testInventoryKind,
-				})
-				iOwner := &v1alpha1.DBaaSInventory{}
-				cSrc := &unstructured.Unstructured{}
-				cSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    testConnectionKind,
-				})
-				cOwner := &v1alpha1.DBaaSConnection{}
-
-				assertWatch(iSrc, iOwner, cSrc, cOwner)
+				assertWatched(iSrc, iOwner, cSrc, cOwner)
 			})
 		})
 
 		Context("after updating a DBaaSProvider", func() {
-			It("should make DBaaSInventory and DBaaSConnection watch the provider inventory and connection", func() {
-				iCtrl.reset()
-				cCtrl.reset()
+			updatedInventoryKind := "updatedInventoryKind"
+			updatedConnectionKind := "updatedConnectionKind"
 
+			uiSrc := &unstructured.Unstructured{}
+			uiSrc.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   v1alpha1.GroupVersion.Group,
+				Version: v1alpha1.GroupVersion.Version,
+				Kind:    updatedInventoryKind,
+			})
+			ucSrc := &unstructured.Unstructured{}
+			ucSrc.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   v1alpha1.GroupVersion.Group,
+				Version: v1alpha1.GroupVersion.Version,
+				Kind:    updatedConnectionKind,
+			})
+
+			BeforeEach(func() { assertNotWatched(uiSrc, iOwner, ucSrc, cOwner) })
+			AfterEach(func() { reset(uiSrc, iOwner, ucSrc, cOwner) })
+
+			It("should make DBaaSInventory and DBaaSConnection watch the provider inventory and connection", func() {
 				updatedProvider := &v1alpha1.DBaaSProvider{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test-provider",
+						Name:      "test-create-update-provider",
 						Namespace: testNamespace,
 					},
 				}
 				err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), updatedProvider)
 				Expect(err).NotTo(HaveOccurred())
 
-				updatedProvider.Spec.InventoryKind = "CrunchyBridgeInventory"
-				updatedProvider.Spec.ConnectionKind = "CrunchyBridgeConnection"
+				updatedProvider.Spec.InventoryKind = updatedInventoryKind
+				updatedProvider.Spec.ConnectionKind = updatedConnectionKind
 				Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
 				Eventually(func() v1alpha1.DBaaSProviderSpec {
 					pProvider := &v1alpha1.DBaaSProvider{}
@@ -102,22 +117,7 @@ var _ = Describe("DBaaSProvider controller", func() {
 					return pProvider.Spec
 				}, timeout, interval).Should(Equal(updatedProvider.Spec))
 
-				iSrc := &unstructured.Unstructured{}
-				iSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    "CrunchyBridgeInventory",
-				})
-				iOwner := &v1alpha1.DBaaSInventory{}
-				cSrc := &unstructured.Unstructured{}
-				cSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    "CrunchyBridgeConnection",
-				})
-				cOwner := &v1alpha1.DBaaSConnection{}
-
-				assertWatch(iSrc, iOwner, cSrc, cOwner)
+				assertWatched(uiSrc, iOwner, ucSrc, cOwner)
 			})
 		})
 	})
@@ -125,63 +125,91 @@ var _ = Describe("DBaaSProvider controller", func() {
 	Describe("not trigger reconcile", func() {
 		Context("after deleting a DBaaSProvider", func() {
 			It("should not watch the provider inventory and connection", func() {
+				deletedInventoryKind := "deletedInventoryKind"
+				deletedConnectionKind := "deletedConnectionKind"
+
 				provider := &v1alpha1.DBaaSProvider{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test-provider",
+						Name:      "test-delete-provider",
 						Namespace: testNamespace,
 					},
 					Spec: v1alpha1.DBaaSProviderSpec{
 						Provider: v1alpha1.DatabaseProvider{
-							Name: "test-provider",
+							Name: "test-delete-provider",
 						},
-						InventoryKind:    testInventoryKind,
-						ConnectionKind:   testConnectionKind,
+						InventoryKind:    deletedInventoryKind,
+						ConnectionKind:   deletedConnectionKind,
 						CredentialFields: []v1alpha1.CredentialField{},
 					},
 				}
-				assertResourceCreation(provider)
 
-				iCtrl.reset()
-				cCtrl.reset()
-				assertResourceDeletion(provider)
+				iSrc := &unstructured.Unstructured{}
+				iSrc.SetGroupVersionKind(schema.GroupVersionKind{
+					Group:   v1alpha1.GroupVersion.Group,
+					Version: v1alpha1.GroupVersion.Version,
+					Kind:    deletedInventoryKind,
+				})
+				iOwner := &v1alpha1.DBaaSInventory{}
+				cSrc := &unstructured.Unstructured{}
+				cSrc.SetGroupVersionKind(schema.GroupVersionKind{
+					Group:   v1alpha1.GroupVersion.Group,
+					Version: v1alpha1.GroupVersion.Version,
+					Kind:    deletedConnectionKind,
+				})
+				cOwner := &v1alpha1.DBaaSConnection{}
 
-				assertNotWatch()
+				assertNotWatched(iSrc, iOwner, cSrc, cOwner)
+				assertResourceCreation(provider)()
+				assertWatched(iSrc, iOwner, cSrc, cOwner)
+
+				reset(iSrc, iOwner, cSrc, cOwner)
+
+				assertResourceDeletion(provider)()
+				assertNotWatched(iSrc, iOwner, cSrc, cOwner)
 			})
 		})
 	})
 })
 
-func assertWatch(iSrc client.Object, iOwner runtime.Object, cSrc client.Object, cOwner runtime.Object) {
-	select {
-	case s := <-iCtrl.source:
-		Expect(s).Should(Equal(iSrc))
-	case <-time.After(timeout):
-		Fail("failed to watch with the expected source")
-	}
-	select {
-	case o := <-iCtrl.owner:
-		Expect(o).Should(Equal(iOwner))
-	case <-time.After(timeout):
-		Fail("failed to watch with the expected owner")
-	}
-	select {
-	case s := <-cCtrl.source:
-		Expect(s).Should(Equal(cSrc))
-	case <-time.After(timeout):
-		Fail("failed to watch with the expected source")
-	}
-	select {
-	case o := <-cCtrl.owner:
-		Expect(o).Should(Equal(cOwner))
-	case <-time.After(timeout):
-		Fail("failed to watch with the expected owner")
-	}
+func assertWatched(iSrc client.Object, iOwner runtime.Object, cSrc client.Object, cOwner runtime.Object) {
+	Eventually(func() bool {
+		return iCtrl.watched(&watchable{
+			source: iSrc,
+			owner:  iOwner,
+		})
+	}, timeout, interval).Should(BeTrue())
+
+	Eventually(func() bool {
+		return cCtrl.watched(&watchable{
+			source: cSrc,
+			owner:  cOwner,
+		})
+	}, timeout, interval).Should(BeTrue())
 }
 
-func assertNotWatch() {
-	Expect(len(iCtrl.source)).Should(Equal(0))
-	Expect(len(iCtrl.owner)).Should(Equal(0))
+func assertNotWatched(iSrc client.Object, iOwner runtime.Object, cSrc client.Object, cOwner runtime.Object) {
+	Consistently(func() bool {
+		return !iCtrl.watched(&watchable{
+			source: iSrc,
+			owner:  iOwner,
+		})
+	}, duration, interval).Should(BeTrue())
 
-	Expect(len(cCtrl.source)).Should(Equal(0))
-	Expect(len(cCtrl.owner)).Should(Equal(0))
+	Consistently(func() bool {
+		return !cCtrl.watched(&watchable{
+			source: cSrc,
+			owner:  cOwner,
+		})
+	}, duration, interval).Should(BeTrue())
+}
+
+func reset(iSrc client.Object, iOwner runtime.Object, cSrc client.Object, cOwner runtime.Object) {
+	iCtrl.delete(&watchable{
+		source: iSrc,
+		owner:  iOwner,
+	})
+	cCtrl.delete(&watchable{
+		source: cSrc,
+		owner:  cOwner,
+	})
 }

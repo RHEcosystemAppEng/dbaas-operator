@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -392,28 +393,65 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 	}
 }
 
-type SpyController struct {
-	controller.Controller
-	source chan client.Object
-	owner  chan runtime.Object
+type watchable struct {
+	source client.Object
+	owner  runtime.Object
 }
 
-func (c *SpyController) Watch(src source.Source, evthdler handler.EventHandler, prct ...predicate.Predicate) error {
-	c.reset()
+type spyctrl struct {
+	controller.Controller
+	channel chan *watchable
+	values  []*watchable
+	mutex   sync.Mutex
+}
+
+func (c *spyctrl) watched(w *watchable) bool {
+	c.mutex.Lock()
+	values := c.values
+	c.mutex.Unlock()
+
+	for _, value := range values {
+		if reflect.DeepEqual(w, value) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *spyctrl) delete(w *watchable) bool {
+	c.mutex.Lock()
+
+	var nValues []*watchable
+	for _, value := range c.values {
+		if !reflect.DeepEqual(w, value) {
+			nValues = append(nValues, value)
+		}
+	}
+
+	c.values = nValues
+	c.mutex.Unlock()
+
+	return false
+}
+
+func (c *spyctrl) Watch(src source.Source, evthdler handler.EventHandler, prct ...predicate.Predicate) error {
+	w := &watchable{}
 
 	switch s := src.(type) {
 	case *source.Kind:
-		c.source <- s.Type
+		w.source = s.Type
 	default:
 		Fail("unexpected source type")
 	}
 
 	switch h := evthdler.(type) {
 	case *handler.EnqueueRequestForOwner:
-		c.owner <- h.OwnerType
+		w.owner = h.OwnerType
 	default:
 		Fail("unexpected handler type")
 	}
+
+	c.channel <- w
 
 	if c.Controller != nil {
 		return c.Controller.Watch(src, evthdler, prct...)
@@ -422,7 +460,7 @@ func (c *SpyController) Watch(src source.Source, evthdler handler.EventHandler, 
 	}
 }
 
-func (c *SpyController) Start(ctx context.Context) error {
+func (c *spyctrl) Start(ctx context.Context) error {
 	if c.Controller != nil {
 		return c.Controller.Start(ctx)
 	} else {
@@ -430,7 +468,7 @@ func (c *SpyController) Start(ctx context.Context) error {
 	}
 }
 
-func (c *SpyController) GetLogger() logr.Logger {
+func (c *spyctrl) GetLogger() logr.Logger {
 	if c.Controller != nil {
 		return c.Controller.GetLogger()
 	} else {
@@ -438,7 +476,7 @@ func (c *SpyController) GetLogger() logr.Logger {
 	}
 }
 
-func (c *SpyController) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
+func (c *spyctrl) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	if c.Controller != nil {
 		return c.Controller.Reconcile(ctx, req)
 	} else {
@@ -446,19 +484,21 @@ func (c *SpyController) Reconcile(ctx context.Context, req reconcile.Request) (r
 	}
 }
 
-func (c *SpyController) reset() {
-	if len(c.source) > 0 {
-		<-c.source
-	}
-	if len(c.owner) > 0 {
-		<-c.owner
-	}
-}
-
-func newSpyController(ctrl controller.Controller) *SpyController {
-	return &SpyController{
+func newSpyController(ctrl controller.Controller) *spyctrl {
+	c := &spyctrl{
 		Controller: ctrl,
-		source:     make(chan client.Object, 1),
-		owner:      make(chan runtime.Object, 1),
+		channel:    make(chan *watchable, 10),
 	}
+
+	go func() {
+		defer GinkgoRecover()
+
+		for w := range c.channel {
+			c.mutex.Lock()
+			c.values = append(c.values, w)
+			c.mutex.Unlock()
+		}
+	}()
+
+	return c
 }
