@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   name: dbaasconnection-viewer-role
   labels:
-    service.binding/controller: "true"
+    servicebinding.io/controller: "true"
 rules:
 - apiGroups:
   - dbaas.redhat.com

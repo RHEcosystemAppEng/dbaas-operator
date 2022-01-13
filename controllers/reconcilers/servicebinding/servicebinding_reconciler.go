@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -43,11 +42,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 		return status, err
 	}
 
-	// ServiceBinding csv
-	status, err = r.reconcileCSV(cr, ctx)
-	if status != v1.ResultSuccess {
-		return status, err
-	}
 	return v1.ResultSuccess, nil
 
 }
@@ -90,14 +84,11 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 	subscription := r.GetServiceBindingSubscription(cr)
 	catalogsource := r.GetServiceBindingCatalogSource()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
-		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
-			return err
-		}
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
 			CatalogSourceNamespace: catalogsource.Namespace,
 			Package:                "rh-service-binding-operator",
-			Channel:                "preview",
+			Channel:                "stable",
 			InstallPlanApproval:    v1alpha1.ApprovalAutomatic,
 		}
 
@@ -114,7 +105,7 @@ func (r *Reconciler) GetServiceBindingSubscription(cr *v1.DBaaSPlatform) *v1alph
 	return &v1alpha1.Subscription{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      "rh-service-binding-operator-subscription",
-			Namespace: cr.Namespace,
+			Namespace: reconcilers.INSTALL_NAMESPACE,
 		},
 	}
 }
@@ -132,7 +123,7 @@ func (r *Reconciler) waitFoServiceBindingOperator(cr *v1.DBaaSPlatform, ctx cont
 
 	deployments := &apiv1.DeploymentList{}
 	opts := &client.ListOptions{
-		Namespace: cr.Namespace,
+		Namespace: reconcilers.INSTALL_NAMESPACE,
 	}
 	err := r.client.List(ctx, deployments, opts)
 	if err != nil {
@@ -149,35 +140,11 @@ func (r *Reconciler) waitFoServiceBindingOperator(cr *v1.DBaaSPlatform, ctx cont
 	return v1.ResultInProgress, nil
 }
 
-func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	csv := r.getServiceBindingCSV(cr)
-	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
-		if errors.IsNotFound(err) {
-			return v1.ResultInProgress, nil
-		}
-		return v1.ResultFailed, err
-	}
-
-	if set, err := reconcilers.CheckOwnerReferenceSet(cr, csv, r.scheme); err != nil {
-		return v1.ResultFailed, err
-	} else if set {
-		return v1.ResultSuccess, nil
-	}
-
-	if err := ctrl.SetControllerReference(cr, csv, r.scheme); err != nil {
-		return v1.ResultFailed, err
-	}
-	if err := r.client.Update(ctx, csv); err != nil {
-		return v1.ResultFailed, err
-	}
-	return v1.ResultInProgress, nil
-}
-
 func (r *Reconciler) getServiceBindingCSV(cr *v1.DBaaSPlatform) *v1alpha1.ClusterServiceVersion {
 	return &v1alpha1.ClusterServiceVersion{
 		ObjectMeta: apimv1.ObjectMeta{
 			Name:      reconcilers.SERVICE_BINDING_CSV,
-			Namespace: cr.Namespace,
+			Namespace: reconcilers.INSTALL_NAMESPACE,
 		},
 	}
 }

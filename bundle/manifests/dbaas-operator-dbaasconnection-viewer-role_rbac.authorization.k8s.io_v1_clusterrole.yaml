@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   labels:
-    service.binding/controller: "true"
+    servicebinding.io/controller: "true"
   name: dbaas-operator-dbaasconnection-viewer-role
 rules:
 - apiGroups:
