@@ -16,5 +16,4 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
 	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.1.0"
 	CRUNCHY_BRIDGE_CSV                       = "crunchy-bridge-operator.v0.0.2-dev"
-
 )

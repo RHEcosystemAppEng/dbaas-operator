@@ -26,3 +26,4 @@ bundle_tmp*
 *.swo
 *~
 .vscode/
+.DS_Store
