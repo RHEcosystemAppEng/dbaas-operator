@@ -16,4 +16,6 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
 	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.7.1-dev"
 	CRUNCHY_BRIDGE_CSV                       = "crunchy-bridge-operator.v0.0.2-dev"
+	COCKROACHDB_CSV                          = "ccapi-k8s-operator.v0.0.1"
+	COCKROACHDB_CATALOG_IMG                  = "quay.io/ecosystem-appeng/ccapi-k8s-operator-catalog:v0.0.1"
 )

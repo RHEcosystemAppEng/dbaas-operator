@@ -31,6 +31,7 @@ const (
 	Csv                                PlatformsName = "Csv"
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 	ServiceBindingInstallation         PlatformsName = "service-binding"
+	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
 )
 
 const (
