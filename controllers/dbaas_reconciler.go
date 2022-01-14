@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,6 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -175,6 +179,144 @@ func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.O
 	return nil
 }
 
+// gets rbac objects for an inventory's users
+func inventoryRbacObjs(inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) (rbacv1.Role, rbacv1.RoleBinding) {
+	role := rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dbaas-" + inventory.Name + "-inventory-viewer",
+			Namespace: inventory.Namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups:     []string{v1alpha1.GroupVersion.Group},
+				Resources:     []string{"dbaasinventories", "dbaasinventories/status"},
+				ResourceNames: []string{inventory.Name},
+				Verbs:         []string{"get"},
+			},
+		},
+	}
+	role.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("Role"))
+
+	roleBinding := rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      role.Name + "s",
+			Namespace: role.Namespace,
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.SchemeGroupVersion.Group,
+			Kind:     "Role",
+			Name:     role.Name,
+		},
+	}
+	roleBinding.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
+
+	// if inventory.Spec.Authz is nil, use tenant defaults for view access to the Inventory object
+	var users, groups []string
+	if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
+		for _, tenant := range tenantList.Items {
+			if tenant.Spec.InventoryNamespace == inventory.Namespace {
+				users = append(users, tenant.Spec.Authz.Users...)
+				groups = append(groups, tenant.Spec.Authz.Groups...)
+			}
+		}
+	} else {
+		users = inventory.Spec.Authz.Users
+		groups = inventory.Spec.Authz.Groups
+	}
+	users = uniqueStrSlice(users)
+	groups = uniqueStrSlice(groups)
+
+	roleBinding.Subjects = getSubjects(users, groups, role.Namespace)
+
+	return role, roleBinding
+}
+
+// gets rbac objects for a tenant's users
+func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, serviceAdminAuthz, developerAuthz, tenantListAuthz v1alpha1.DBaasUsersGroups) (rbacv1.ClusterRole, rbacv1.ClusterRoleBinding) {
+	clusterRole := rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dbaas-" + tenant.Name + "-tenant-viewer",
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups:     []string{v1alpha1.GroupVersion.Group},
+				Resources:     []string{"dbaastenants", "dbaastenants/status"},
+				ResourceNames: []string{tenant.Name},
+				Verbs:         []string{"get"},
+			},
+		},
+	}
+	clusterRole.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("ClusterRole"))
+
+	clusterRoleBinding := rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clusterRole.Name + "s",
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: rbacv1.SchemeGroupVersion.Group,
+			Kind:     "ClusterRole",
+			Name:     clusterRole.Name,
+		},
+	}
+	clusterRoleBinding.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("ClusterRoleBinding"))
+
+	// give view access to all inventory devs and tenant service admins for the Tenant object
+	users := uniqueStrSlice(append(serviceAdminAuthz.Users, developerAuthz.Users...))
+	groups := uniqueStrSlice(append(serviceAdminAuthz.Groups, developerAuthz.Groups...))
+	// remove results of tenant access review, as they don't need the addtl the perms
+	users = removeFromSlice(tenantListAuthz.Users, users)
+	groups = removeFromSlice(tenantListAuthz.Groups, groups)
+
+	clusterRoleBinding.Subjects = getSubjects(users, groups, "")
+
+	return clusterRole, clusterRoleBinding
+}
+
+// verify no edit or list permissions are assigned to a role
+func hasNoEditOrListVerbs(roleObj client.Object) bool {
+	var verbs []string
+	var roleRules []rbacv1.PolicyRule
+	editVerbs := []string{"create", "patch", "update", "delete", "list"}
+
+	kind := roleObj.GetObjectKind().GroupVersionKind().Kind
+	if kind == "Role" {
+		roleRules = roleObj.(*rbacv1.Role).Rules
+	}
+	if kind == "ClusterRole" {
+		roleRules = roleObj.(*rbacv1.ClusterRole).Rules
+	}
+	for _, rules := range roleRules {
+		verbs = append(verbs, rules.Verbs...)
+	}
+	for _, verb := range editVerbs {
+		if contains(verbs, verb) {
+			return false
+		}
+	}
+	return true
+}
+
+// get cumulative authz from all inventories in namespace
+func getDevAuthzFromInventoryList(inventoryList v1alpha1.DBaaSInventoryList, tenant v1alpha1.DBaaSTenant) (developerAuthz v1alpha1.DBaasUsersGroups) {
+	var tenantDefaults bool
+	for _, inventory := range inventoryList.Items {
+		if inventory.Namespace == tenant.Spec.InventoryNamespace {
+			// if inventory.spec.authz is nil, apply authz from tenant.spec.authz.developer as a default
+			if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
+				tenantDefaults = true
+			} else {
+				developerAuthz.Users = append(developerAuthz.Users, inventory.Spec.Authz.Users...)
+				developerAuthz.Groups = append(developerAuthz.Groups, inventory.Spec.Authz.Groups...)
+			}
+		}
+	}
+	if tenantDefaults {
+		developerAuthz.Users = append(developerAuthz.Users, tenant.Spec.Authz.Users...)
+		developerAuthz.Groups = append(developerAuthz.Groups, tenant.Spec.Authz.Groups...)
+	}
+	return developerAuthz
+}
+
 // checks if one object is set as owner/controller of another
 func isOwner(owner, ownedObj client.Object, scheme *runtime.Scheme) (owns bool, err error) {
 	exampleObj := &unstructured.Unstructured{}
@@ -198,6 +340,102 @@ func GetInstallNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", InstallNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+// create a slice of rbac subjects for use in role bindings
+func getSubjects(users, groups []string, namespace string) []rbacv1.Subject {
+	subjects := []rbacv1.Subject{}
+	for _, user := range users {
+		if strings.HasPrefix(user, "system:serviceaccount:") {
+			sa := strings.Split(user, ":")
+			if len(sa) > 3 {
+				subjects = append(subjects, getSubject(sa[3], sa[2], "ServiceAccount"))
+			}
+		} else {
+			subjects = append(subjects, getSubject(user, namespace, "User"))
+		}
+	}
+	for _, group := range groups {
+		subjects = append(subjects, getSubject(group, namespace, "Group"))
+	}
+	if len(subjects) == 0 {
+		return nil
+	}
+
+	return subjects
+}
+
+// create an rbac subject for use in role bindings
+func getSubject(name, namespace, rbacObjectKind string) rbacv1.Subject {
+	subject := rbacv1.Subject{
+		Kind:      rbacObjectKind,
+		Name:      name,
+		Namespace: namespace,
+	}
+	if subject.Kind != "ServiceAccount" {
+		subject.APIGroup = rbacv1.SchemeGroupVersion.Group
+	}
+	return subject
+}
+
+// returns a unique matching subset of the provided slices
+func matchSlices(input1, input2 []string) []string {
+	m := []string{}
+	for _, val1 := range input1 {
+		for _, val2 := range input2 {
+			if val1 == val2 {
+				m = append(m, val1)
+			}
+		}
+	}
+
+	return uniqueStrSlice(m)
+}
+
+// returns a unique subset of the provided slice
+func uniqueStrSlice(input []string) []string {
+	u := make([]string, 0, len(input))
+	m := make(map[string]bool)
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = true
+			u = append(u, val)
+		}
+	}
+
+	return u
+}
+
+// returns a subset of the provided slices, after removing certain entries
+func removeFromSlice(entriesToRemove, fromSlice []string) []string {
+	r := []string{}
+	for _, val := range fromSlice {
+		if !contains(entriesToRemove, val) {
+			r = append(r, val)
+		}
+
+	}
+
+	return r
+}
+
+// changes name to match an object's namespace. ensures a namespace is only queued once,
+// instead of once for each object in a namespace
+var nsMapFunc = func(o client.Object) []reconcile.Request {
+	namespace := o.GetNamespace()
+	return getRequest(namespace)
+}
+
+func getRequest(nameNS string) []reconcile.Request {
+	return []reconcile.Request{
+		{
+			NamespacedName: types.NamespacedName{
+				Name:      nameNS,
+				Namespace: nameNS,
+			},
+		},
+	}
 }
 
 // checks if a string is present in a slice
