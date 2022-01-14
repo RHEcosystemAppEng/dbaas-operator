@@ -146,7 +146,9 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (authzReconciler).SetupWithManager(k8sManager)
+	err = (&DBaaSTenantAuthzReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
