@@ -118,8 +118,10 @@ func main() {
 		DBaaSReconciler:       DBaaSReconciler,
 		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
 	}
-	if err = (authzReconciler).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSAuthz")
+	if err = (&controllers.DBaaSTenantAuthzReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenantAuthz")
 		os.Exit(1)
 	}
 	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{

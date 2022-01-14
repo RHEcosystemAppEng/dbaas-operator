@@ -20,10 +20,12 @@ import (
 	"context"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // DBaaSTenantReconciler reconciles a DBaaSTenant object
@@ -80,10 +82,26 @@ func (r *DBaaSTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-// get tenant names from list
-func getTenantNames(tenantList v1alpha1.DBaaSTenantList) (tenantNames []string) {
-	for _, tenant := range tenantList.Items {
-		tenantNames = append(tenantNames, tenant.Name)
+// Reconcile a specific tenant and all related inventory RBAC
+func (r *DBaaSTenantReconciler) reconcileTenantAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) (err error) {
+	logger := ctrl.LoggerFrom(ctx)
+
+	// Get list of DBaaSInventories from tenant namespace
+	var inventoryList v1alpha1.DBaaSInventoryList
+	if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: tenant.Spec.InventoryNamespace}); err != nil {
+		logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")
+		return err
 	}
-	return
+
+	//
+	// Tenant RBAC
+	//
+	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant.Spec.InventoryNamespace)
+	developerAuthz := r.getDeveloperAuthz(ctx, tenant.Spec.InventoryNamespace, inventoryList)
+	tenantListAuthz := r.getTenantListAuthz(ctx)
+	if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -123,3 +123,11 @@ func getDefaultTenant(inventoryNamespace string) v1alpha1.DBaaSTenant {
 		},
 	}
 }
+
+// get tenant names from list
+func getTenantNames(tenantList v1alpha1.DBaaSTenantList) (tenantNames []string) {
+	for _, tenant := range tenantList.Items {
+		tenantNames = append(tenantNames, tenant.Name)
+	}
+	return
+}
