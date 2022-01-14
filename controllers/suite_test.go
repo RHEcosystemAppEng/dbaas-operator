@@ -47,8 +47,8 @@ import (
 var testEnv *envtest.Environment
 var ctx context.Context
 var dRec *DBaaSReconciler
-var iCtrl *SpyController
-var cCtrl *SpyController
+var iCtrl *spyctrl
+var cCtrl *spyctrl
 
 const (
 	testNamespace = "default"
