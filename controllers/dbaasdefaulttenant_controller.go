@@ -50,6 +50,7 @@ func (r *DBaaSDefaultTenantReconciler) Reconcile(ctx context.Context, req ctrl.R
 func (r *DBaaSDefaultTenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// watch deployments if installed to the operator's namespace
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("defaulttenant").
 		For(
 			&appsv1.Deployment{},
 			builder.WithPredicates(r.ignoreOtherDeployments()),
@@ -121,4 +122,12 @@ func getDefaultTenant(inventoryNamespace string) v1alpha1.DBaaSTenant {
 			},
 		},
 	}
+}
+
+// get tenant names from list
+func getTenantNames(tenantList v1alpha1.DBaaSTenantList) (tenantNames []string) {
+	for _, tenant := range tenantList.Items {
+		tenantNames = append(tenantNames, tenant.Name)
+	}
+	return
 }

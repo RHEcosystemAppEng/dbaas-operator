@@ -8,21 +8,56 @@ import (
 	"reflect"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
 var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 var inventoryNamespaceKey = ".spec.inventoryNamespace"
+var ignoreCreateEvents = predicate.Funcs{
+	CreateFunc: func(e event.CreateEvent) bool {
+		return false
+	},
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		if e.ObjectOld == nil || e.ObjectNew == nil {
+			return false
+		}
+		return e.ObjectNew.GetResourceVersion() != e.ObjectOld.GetResourceVersion()
+	},
+	DeleteFunc: func(e event.DeleteEvent) bool {
+		return true
+	},
+	GenericFunc: func(e event.GenericEvent) bool {
+		return true
+	},
+}
+var ignoreAllEvents = predicate.Funcs{
+	CreateFunc: func(e event.CreateEvent) bool {
+		return false
+	},
+	UpdateFunc: func(e event.UpdateEvent) bool {
+		return false
+	},
+	DeleteFunc: func(e event.DeleteEvent) bool {
+		return false
+	},
+	GenericFunc: func(e event.GenericEvent) bool {
+		return false
+	},
+}
 
 type DBaaSReconciler struct {
 	client.Client
@@ -127,7 +162,7 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 
 // update object upon ownerReference verification
 func (r *DBaaSReconciler) updateIfOwned(ctx context.Context, owner, obj client.Object) error {
-	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind, owner.GetName())
+	logger := ctrl.LoggerFrom(ctx)
 	name := obj.GetName()
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if owns, err := isOwner(owner, obj, r.Scheme); !owns {
@@ -165,6 +200,48 @@ func GetInstallNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", InstallNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+// returns a unique matching subset of the provided slices
+func matchSlices(input1, input2 []string) []string {
+	m := []string{}
+	for _, val1 := range input1 {
+		for _, val2 := range input2 {
+			if val1 == val2 {
+				m = append(m, val1)
+			}
+		}
+	}
+
+	return uniqueStrSlice(m)
+}
+
+// returns a unique subset of the provided slice
+func uniqueStrSlice(input []string) []string {
+	u := make([]string, 0, len(input))
+	m := make(map[string]bool)
+
+	for _, val := range input {
+		if _, ok := m[val]; !ok {
+			m[val] = true
+			u = append(u, val)
+		}
+	}
+
+	return u
+}
+
+// returns a subset of the provided slices, after removing certain entries
+func removeFromSlice(entriesToRemove, fromSlice []string) []string {
+	r := []string{}
+	for _, val := range fromSlice {
+		if !contains(entriesToRemove, val) {
+			r = append(r, val)
+		}
+
+	}
+
+	return r
 }
 
 // checks if a string is present in a slice

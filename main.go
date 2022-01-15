@@ -25,12 +25,14 @@ import (
 	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
-	operatorframwork "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -39,10 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
-	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -55,7 +53,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	utilruntime.Must(operatorframwork.AddToScheme(scheme))
+	utilruntime.Must(operatorframework.AddToScheme(scheme))
 	utilruntime.Must(coreosv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1alpha1.Install(scheme))
 	utilruntime.Must(operatorv1.Install(scheme))
@@ -101,7 +99,7 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "e4addb06.redhat.com",
 		ClientDisableCacheFor: []client.Object{
-			&operatorsv1alpha1.ClusterServiceVersion{},
+			&operatorframework.ClusterServiceVersion{},
 		},
 	})
 	if err != nil {
@@ -116,9 +114,15 @@ func main() {
 	if DBaaSReconciler.InstallNamespace, err = controllers.GetInstallNamespace(); err != nil {
 		setupLog.Error(err, "unable to retrieve install namespace. default Tenant object cannot be installed")
 	}
-	tenantReconciler := &controllers.DBaaSTenantReconciler{
+	authzReconciler := &controllers.DBaaSAuthzReconciler{
 		DBaaSReconciler:       DBaaSReconciler,
 		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
+	}
+	if err = (&controllers.DBaaSTenantAuthzReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenantAuthz")
+		os.Exit(1)
 	}
 	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
 		DBaaSReconciler: DBaaSReconciler,
@@ -128,7 +132,7 @@ func main() {
 		os.Exit(1)
 	}
 	inventoryCtrl, err := (&controllers.DBaaSInventoryReconciler{
-		DBaaSTenantReconciler: tenantReconciler,
+		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
@@ -140,12 +144,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultTenant")
 		os.Exit(1)
 	}
-	err = (&controllers.DBaaSProviderReconciler{
+	if err = (&controllers.DBaaSProviderReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 		ConnectionCtrl:  connectionCtrl,
 		InventoryCtrl:   inventoryCtrl,
-	}).SetupWithManager(mgr)
-	if err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSProvider")
 		os.Exit(1)
 	}
@@ -157,8 +160,9 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	err = (tenantReconciler).SetupWithManager(mgr)
-	if err != nil {
+	if err = (&controllers.DBaaSTenantReconciler{
+		DBaaSAuthzReconciler: authzReconciler,
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
 		os.Exit(1)
 	}

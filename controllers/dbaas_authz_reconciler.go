@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
+	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -32,58 +34,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *DBaaSTenantReconciler) reconcileAuthz(ctx context.Context, namespace string) (err error) {
-	logger := ctrl.LoggerFrom(ctx, "Authorization", namespace)
-
-	tenantList, err := r.tenantListByInventoryNS(ctx, namespace)
-	if err != nil {
-		logger.Error(err, "unable to list tenants")
-		return err
-	}
-
-	// continue only if the request is in a valid tenant namespace
-	if len(tenantList.Items) > 0 {
-
-		// Get list of DBaaSInventories from tenant namespace
-		var inventoryList v1alpha1.DBaaSInventoryList
-		if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: namespace}); err != nil {
-			logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")
-			return err
-		}
-
-		//
-		// Tenant RBAC
-		//
-		for _, tenant := range tenantList.Items {
-			if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList); err != nil {
-				return err
-			}
-		}
-
-		//
-		// Inventory RBAC
-		//
-		// Reconcile each inventory in the tenant's namespace to ensure proper RBAC is created
-		for _, inventory := range inventoryList.Items {
-			if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+type DBaaSAuthzReconciler struct {
+	*DBaaSReconciler
+	*oauthzclientv1.AuthorizationV1Client
 }
 
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSTenantReconciler) getServiceAdminAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant) v1alpha1.DBaasUsersGroups {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
+func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, namespace string) v1alpha1.DBaasUsersGroups {
+	logger := ctrl.LoggerFrom(ctx)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
 		Action: oauthzv1.Action{
 			Resource:  "dbaasinventories",
 			Verb:      "create",
-			Namespace: tenant.Spec.InventoryNamespace,
+			Namespace: namespace,
 			Group:     v1alpha1.GroupVersion.Group,
 			Version:   v1alpha1.GroupVersion.Version,
 		},
@@ -114,15 +79,15 @@ func (r *DBaaSTenantReconciler) getServiceAdminAuthz(ctx context.Context, tenant
 
 // ResourceAccessReview for Developer Authz
 // return users/groups who can list inventories in the tenant namespace
-func (r *DBaaSTenantReconciler) getDeveloperAuthz(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
-	logger := ctrl.LoggerFrom(ctx, "DBaaS Tenant", tenant.Name)
+func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, namespace string, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
+	logger := ctrl.LoggerFrom(ctx)
 
 	// inventory access review
 	rar := &oauthzv1.ResourceAccessReview{
 		Action: oauthzv1.Action{
 			Resource:  "dbaasinventories",
 			Verb:      "list",
-			Namespace: tenant.Spec.InventoryNamespace,
+			Namespace: namespace,
 			Group:     v1alpha1.GroupVersion.Group,
 			Version:   v1alpha1.GroupVersion.Version,
 		},
@@ -134,19 +99,15 @@ func (r *DBaaSTenantReconciler) getDeveloperAuthz(ctx context.Context, tenant v1
 		return v1alpha1.DBaasUsersGroups{}
 	}
 
-	developerAuthz := getDevAuthzFromInventoryList(inventoryList, tenant)
-	users := append(inventoryResponse.UsersSlice, developerAuthz.Users...)
-	groups := append(inventoryResponse.GroupsSlice, developerAuthz.Groups...)
-
 	return v1alpha1.DBaasUsersGroups{
-		Users:  uniqueStrSlice(users),
-		Groups: uniqueStrSlice(groups),
+		Users:  inventoryResponse.UsersSlice,
+		Groups: inventoryResponse.GroupsSlice,
 	}
 }
 
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.DBaasUsersGroups {
+func (r *DBaaSAuthzReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.DBaasUsersGroups {
 	logger := ctrl.LoggerFrom(ctx)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
@@ -170,12 +131,10 @@ func (r *DBaaSTenantReconciler) getTenantListAuthz(ctx context.Context) v1alpha1
 	}
 }
 
-// Reconcile tenant to ensure proper RBAC is created
-func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList) error {
-	developerAuthz := r.getDeveloperAuthz(ctx, tenant, inventoryList)
-	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant)
-	tenantListAuthz := r.getTenantListAuthz(ctx)
-	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
+// Reconcile tenant to ensure proper RBAC is created. inventoryList should only contain inventory objects for the corresponding tenant namespace.
+func (r *DBaaSAuthzReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz v1alpha1.DBaasUsersGroups) error {
+	devAuthz := consolidateDevAuthz(tenant, inventoryList, developerAuthz)
+	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, serviceAdminAuthz, devAuthz, tenantListAuthz)
 	var clusterRoleObj rbacv1.ClusterRole
 	if exists, err := r.createRbacObj(&clusterRole, &clusterRoleObj, &tenant, ctx); err != nil {
 		return err
@@ -204,8 +163,8 @@ func (r *DBaaSTenantReconciler) reconcileTenantRbacObjs(ctx context.Context, ten
 	return nil
 }
 
-// Reconcile inventory to ensure proper RBAC is created
-func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
+// Reconcile inventory to ensure proper RBAC is created. tenantList should only contain tenant objects for the corresponding inventory namespace.
+func (r *DBaaSAuthzReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
 	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
 	var roleObj rbacv1.Role
 	if exists, err := r.createRbacObj(&role, &roleObj, &inventory, ctx); err != nil {
@@ -236,20 +195,20 @@ func (r *DBaaSTenantReconciler) reconcileInventoryRbacObjs(ctx context.Context, 
 }
 
 // create RBAC object, return true if already exists
-func (r *DBaaSTenantReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
+func (r *DBaaSAuthzReconciler) createRbacObj(newObj, getObj, owner client.Object, ctx context.Context) (exists bool, err error) {
 	name := newObj.GetName()
 	namespace := newObj.GetNamespace()
 	kind := newObj.GetObjectKind().GroupVersionKind().Kind
-	logger := ctrl.LoggerFrom(ctx, owner.GetObjectKind().GroupVersionKind().Kind+" RBAC", types.NamespacedName{Name: name, Namespace: namespace})
+	logger := ctrl.LoggerFrom(ctx)
 	if hasNoEditOrListVerbs(newObj) {
 		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, getObj); err != nil {
 			if errors.IsNotFound(err) {
-				logger.V(1).Info("resource not found", name, namespace)
+				logger.V(1).Info(kind+" resource not found", name, namespace)
 				if err = r.createOwnedObject(newObj, owner, ctx); err != nil {
 					logger.Error(err, "Error creating resource", name, namespace)
 					return false, err
 				}
-				logger.Info("resource created", name, namespace)
+				logger.Info(kind+" resource created", name, namespace)
 			} else {
 				logger.Error(err, "Error getting the resource", name, namespace)
 				return false, err
@@ -261,6 +220,17 @@ func (r *DBaaSTenantReconciler) createRbacObj(newObj, getObj, owner client.Objec
 		logger.V(1).Info(kind+" contains edit or list verbs, will not create", name, namespace)
 	}
 	return false, nil
+}
+
+func consolidateDevAuthz(tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList, developerAuthz v1alpha1.DBaasUsersGroups) v1alpha1.DBaasUsersGroups {
+	newDevAuthz := getDevAuthzFromInventoryList(inventoryList, tenant)
+	users := append(developerAuthz.Users, newDevAuthz.Users...)
+	groups := append(developerAuthz.Groups, newDevAuthz.Groups...)
+
+	return v1alpha1.DBaasUsersGroups{
+		Users:  uniqueStrSlice(users),
+		Groups: uniqueStrSlice(groups),
+	}
 }
 
 // gets rbac objects for an inventory's users
@@ -417,6 +387,9 @@ func getSubjects(users, groups []string, namespace string) []rbacv1.Subject {
 	for _, group := range groups {
 		subjects = append(subjects, getSubject(group, namespace, "Group"))
 	}
+	if len(subjects) == 0 {
+		return nil
+	}
 
 	return subjects
 }
@@ -432,46 +405,4 @@ func getSubject(name, namespace, rbacObjectKind string) rbacv1.Subject {
 		subject.APIGroup = rbacv1.SchemeGroupVersion.Group
 	}
 	return subject
-}
-
-// returns a unique matching subset of the provided slices
-func matchSlices(input1, input2 []string) []string {
-	m := []string{}
-	for _, val1 := range input1 {
-		for _, val2 := range input2 {
-			if val1 == val2 {
-				m = append(m, val1)
-			}
-		}
-	}
-
-	return uniqueStrSlice(m)
-}
-
-// returns a unique subset of the provided slice
-func uniqueStrSlice(input []string) []string {
-	u := make([]string, 0, len(input))
-	m := make(map[string]bool)
-
-	for _, val := range input {
-		if _, ok := m[val]; !ok {
-			m[val] = true
-			u = append(u, val)
-		}
-	}
-
-	return u
-}
-
-// returns a subset of the provided slices, after removing certain entries
-func removeFromSlice(entriesToRemove, fromSlice []string) []string {
-	r := []string{}
-	for _, val := range fromSlice {
-		if !contains(entriesToRemove, val) {
-			r = append(r, val)
-		}
-
-	}
-
-	return r
 }
