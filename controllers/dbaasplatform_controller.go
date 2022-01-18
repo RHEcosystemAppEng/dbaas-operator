@@ -164,6 +164,13 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// envVar set for all operators
+	if operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME"); !found {
+		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
+		return err
+	} else {
+		r.operatorNameVersion = operatorNameEnvVar
+	}
 	// Creates a new managed install CR if it is not available
 	kubeConfig := mgr.GetConfig()
 	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
@@ -172,14 +179,6 @@ func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	_, err := r.createPlatformCR(context.Background(), client)
 	if err != nil {
 		return err
-	}
-
-	// envVar set for all operators
-	if operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME"); !found {
-		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
-		return err
-	} else {
-		r.operatorNameVersion = operatorNameEnvVar
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&dbaasv1alpha1.DBaaSPlatform{}).
@@ -213,7 +212,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 			},
 		}
 
-		owner, err := reconcilers.GetDBaaSOperatorCSV(namespace, ctx, serverClient)
+		owner, err := reconcilers.GetDBaaSOperatorCSV(namespace, r.operatorNameVersion, ctx, serverClient)
 		if err != nil {
 			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
 		}

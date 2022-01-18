@@ -42,10 +42,10 @@ func CheckOwnerReferenceSet(cr *alpha1.DBaaSPlatform, csv *v1alpha1.ClusterServi
 	return equal, nil
 }
 
-func GetDBaaSOperatorCSV(namespace string, ctx context.Context, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
+func GetDBaaSOperatorCSV(namespace string, name string, ctx context.Context, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
 	csv := &v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      DBAAS_CSV,
+			Name:      name,
 			Namespace: namespace,
 		},
 	}
