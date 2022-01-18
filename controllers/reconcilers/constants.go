@@ -17,5 +17,4 @@ const (
 	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.1.0"
 	CRUNCHY_BRIDGE_CSV                       = "crunchy-bridge-operator.v0.0.2-dev"
 	SERVICE_BINDING_CSV                      = "service-binding-operator.v0.10.0"
-	DBAAS_CSV                                = "dbaas-operator.v0.1.3"
 )
