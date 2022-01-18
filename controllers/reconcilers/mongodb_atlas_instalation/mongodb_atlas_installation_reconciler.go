@@ -145,7 +145,7 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
-			Image:       reconcilers.MONGODB_ATLAS_CATLOG_IMG,
+			Image:       reconcilers.MONGODB_ATLAS_CATALOG_IMG,
 			DisplayName: "MongoDB Atlas Operator",
 		}
 		return nil

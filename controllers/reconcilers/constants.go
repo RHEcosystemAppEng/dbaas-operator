@@ -3,8 +3,8 @@ package reconcilers
 const (
 	INSTALL_NAMESPACE                        = "openshift-operators"
 	CATALOG_NAMESPACE                        = "openshift-marketplace"
-	MONGODB_ATLAS_CATLOG_IMG                 = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:latest"
-	CRUNCHY_BRIDGE_CATLOG_IMG                = "quay.io/ecosystem-appeng/crunchy-bridge-operator-catalog:v0.0.2-dev"
+	MONGODB_ATLAS_CATALOG_IMG                = "quay.io/ecosystem-appeng/mongodb-atlas-operator-catalog:0.7.1-dev"
+	CRUNCHY_BRIDGE_CATALOG_IMG               = "quay.io/ecosystem-appeng/crunchy-bridge-operator-catalog:v0.0.2-dev"
 	DBAAS_DYNAMIC_PLUGIN_IMG                 = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.3"
 	DBAAS_DYNAMIC_PLUGIN_NAME                = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME        = "OpenShift Database as a Service Dynamic Plugin"
@@ -14,6 +14,6 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
 	DBAAS_OPERATOR_VERSION_KEY_ENV           = "DBAAS_OPERATOR_VERSION"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
-	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.1.0"
+	MONGODB_ATLAS_CSV                        = "mongodb-atlas-kubernetes.v0.7.1-dev"
 	CRUNCHY_BRIDGE_CSV                       = "crunchy-bridge-operator.v0.0.2-dev"
 )

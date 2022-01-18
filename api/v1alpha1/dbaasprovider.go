@@ -129,7 +129,7 @@ type NamespacedName struct {
 	Namespace string `json:"namespace,omitempty"`
 
 	// The name for object of known type
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // DBaaSConnectionSpec defines the desired state of DBaaSConnection
