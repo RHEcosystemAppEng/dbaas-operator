@@ -29,7 +29,6 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/servicebinding"
 
 	"github.com/go-logr/logr"
 
@@ -241,7 +240,6 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
-		dbaasv1alpha1.ServiceBindingInstallation,
 	}
 }
 
@@ -261,8 +259,6 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
-	case dbaasv1alpha1.ServiceBindingInstallation:
-		return servicebinding.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
