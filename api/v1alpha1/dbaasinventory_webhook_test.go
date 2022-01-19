@@ -31,6 +31,7 @@ const (
 	testProviderName     = "mongodb-atlas"
 	testInventoryKind    = "MongoDBAtlasInventory"
 	testConnectionKind   = "MongoDBAtlasConnection"
+	testInstaneKind      = "MongoDBAtlasInstance"
 )
 
 var (
@@ -45,6 +46,7 @@ var (
 			},
 			InventoryKind:  testInventoryKind,
 			ConnectionKind: testConnectionKind,
+			InstanceKind:   testInstaneKind,
 			CredentialFields: []CredentialField{
 				{
 					Key:      "field1",
@@ -57,6 +59,10 @@ var (
 					Required: false,
 				},
 			},
+			AllowsFreeTrial:              false,
+			ExternalProvisionURL:         "",
+			ExternalProvisionDescription: "",
+			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
 	testSecret = corev1.Secret{

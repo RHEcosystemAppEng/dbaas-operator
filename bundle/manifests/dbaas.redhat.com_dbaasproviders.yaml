@@ -34,6 +34,10 @@ spec:
           spec:
             description: DBaaSProviderSpec defines the desired state of DBaaSProvider
             properties:
+              allowsFreeTrial:
+                description: AllowsFreeTrial indicates whether the provider provides
+                  free trials
+                type: boolean
               connectionKind:
                 description: ConnectionKind is the name of the connection resource
                   (CRD) defined by the provider
@@ -59,6 +63,47 @@ spec:
                   required:
                   - displayName
                   - key
+                  - required
+                  - type
+                  type: object
+                type: array
+              externalProvisionDescription:
+                description: ExternalProvisionDescription instructions on how to provision
+                  instances using provider web portal
+                type: string
+              externalProvisionURL:
+                description: ExternalProvisionURL URL for provisioning instances through
+                  database provider web portal
+                type: string
+              instanceKind:
+                description: InstanceKind is the name of the instance resource (CRD)
+                  defined by the provider for provisioning
+                type: string
+              instanceParameterSpecs:
+                description: InstanceParameterSpecs  indicates what parameters to
+                  collect from UX & how to display fields in a form in order to provision
+                  an instance
+                items:
+                  properties:
+                    defaultValue:
+                      description: Default value for this field
+                      type: string
+                    displayName:
+                      description: A user-friendly name for this parameter
+                      type: string
+                    name:
+                      description: The name for this field
+                      type: string
+                    required:
+                      description: If this field is required or not
+                      type: boolean
+                    type:
+                      description: The type of parameter (string, maskedstring, integer,
+                        boolean)
+                      type: string
+                  required:
+                  - displayName
+                  - name
                   - required
                   - type
                   type: object
@@ -102,8 +147,13 @@ spec:
                 - name
                 type: object
             required:
+            - allowsFreeTrial
             - connectionKind
             - credentialFields
+            - externalProvisionDescription
+            - externalProvisionURL
+            - instanceKind
+            - instanceParameterSpecs
             - inventoryKind
             - provider
             type: object

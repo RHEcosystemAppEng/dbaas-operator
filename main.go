@@ -25,14 +25,11 @@ import (
 	"go.uber.org/zap/zapcore"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
-	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,6 +39,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -140,6 +141,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInventory")
 		os.Exit(1)
 	}
+	instanceCtrl, err := (&controllers.DBaaSInstanceReconciler{
+		DBaaSReconciler: DBaaSReconciler,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInstance")
+		os.Exit(1)
+	}
 	if err = (&controllers.DBaaSDefaultTenantReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr); err != nil {
@@ -150,6 +158,7 @@ func main() {
 		DBaaSReconciler: DBaaSReconciler,
 		ConnectionCtrl:  connectionCtrl,
 		InventoryCtrl:   inventoryCtrl,
+		InstanceCtrl:    instanceCtrl,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSProvider")
 		os.Exit(1)

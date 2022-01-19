@@ -34,6 +34,7 @@ type DBaaSProviderReconciler struct {
 	*DBaaSReconciler
 	ConnectionCtrl controller.Controller
 	InventoryCtrl  controller.Controller
+	InstanceCtrl   controller.Controller
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -60,16 +61,22 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1alpha1.DBaaSInventory{}, provider.Spec.InventoryKind); err != nil {
-		logger.Error(err, "Error watching Provider Inventory CR")
+		logger.Error(err, "Error watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 		return ctrl.Result{}, err
 	}
-	logger.Info("Watching Provider Inventory CR")
+	logger.Info("Watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 
 	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1alpha1.DBaaSConnection{}, provider.Spec.ConnectionKind); err != nil {
-		logger.Error(err, "Error watching Provider Connection CR")
+		logger.Error(err, "Error watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 		return ctrl.Result{}, err
 	}
-	logger.Info("Watching Provider Connection CR")
+	logger.Info("Watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
+
+	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1alpha1.DBaaSInstance{}, provider.Spec.InstanceKind); err != nil {
+		logger.Error(err, "Error watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
+		return ctrl.Result{}, err
+	}
+	logger.Info("Watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
 
 	return ctrl.Result{}, nil
 }

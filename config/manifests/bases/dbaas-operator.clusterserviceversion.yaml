@@ -23,6 +23,11 @@ spec:
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSInstance is the Schema for the dbaasinstances API
+      displayName: DBaaSInstance
+      kind: DBaaSInstance
+      name: dbaasinstances.dbaas.redhat.com
+      version: v1alpha1
     - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
         objects must be created in a valid Tenant namespace.
       displayName: Provider Account

@@ -1,0 +1,24 @@
+# permissions for end users to edit dbaasinstances.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dbaasinstance-editor-role
+rules:
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasinstances
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dbaas.redhat.com
+  resources:
+  - dbaasinstances/status
+  verbs:
+  - get

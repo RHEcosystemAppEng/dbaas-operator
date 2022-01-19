@@ -75,15 +75,15 @@ type DBaaSPlatformReconciler struct {
 	operatorNameVersion string
 }
 
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=dbaasplatforms/finalizers,verbs=update
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources;operatorgroups,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;update;delete
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions/finalizers,verbs=update
-//+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch
-//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
 
@@ -100,7 +100,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
-			logger.Info("DBaaSPlatform CR not found, has been deleted")
+			logger.V(1).Info("DBaaSPlatform CR not found, has been deleted")
 			return ctrl.Result{}, nil
 		}
 		// error fetching DBaaSPlatform instance, requeue and try again

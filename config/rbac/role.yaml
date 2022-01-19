@@ -32,6 +32,7 @@ rules:
   - statefulsets
   verbs:
   - create
+  - delete
   - get
   - list
   - update
@@ -62,6 +63,7 @@ rules:
   - services
   verbs:
   - create
+  - delete
   - get
   - list
   - update
@@ -88,32 +90,6 @@ rules:
   - dbaas.redhat.com
   resources:
   - '*/status'
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasplatforms
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasplatforms/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - dbaas.redhat.com
-  resources:
-  - dbaasplatforms/status
   verbs:
   - get
   - patch
