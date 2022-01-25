@@ -25,3 +25,15 @@ patchesJson6902:
     # Update the indices in this path if adding or removing volumes in the manager's Deployment.
     - op: remove
       path: /spec/template/spec/volumes/0
+- target:
+    group: operators.coreos.com
+    version: v1alpha1
+    kind: ClusterServiceVersion
+    name: dbaas-operator.v0.0.0
+  patch: |-
+    - op: replace
+      path: /metadata/annotations/containerImage
+      value: quay.io/ecosystem-appeng/dbaas-operator:v0.1.4
+    - op: replace
+      path: /spec/replaces
+      value: dbaas-operator.v0.1.3
