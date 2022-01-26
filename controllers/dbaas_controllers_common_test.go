@@ -86,7 +86,7 @@ func assertResourceCreationIfNotExists(object client.Object) func() {
 				}
 			}
 			return true
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 
 		if create {
 			assertResourceCreation(object)()
@@ -106,7 +106,7 @@ func assertResourceCreation(object client.Object) func() {
 				return false
 			}
 			return true
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 	}
 }
 
@@ -130,7 +130,7 @@ func assertResourceDeletion(object client.Object) func() {
 				return true
 			}
 			return false
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 	}
 }
 
@@ -149,7 +149,7 @@ func assertProviderResourceCreated(object client.Object, providerResourceKind st
 				return false
 			}
 			return true
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 
 		By("checking the provider resource spec is correct")
 		bytes, err := providerResource.MarshalJSON()
@@ -207,7 +207,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, status metav1.Condit
 				Fail("invalid test object")
 				return false, err
 			}
-		}, duration, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 	}
 }
 
@@ -215,13 +215,13 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBa
 	return func() {
 		By("retrieving current DBaaS resource")
 		objectKey := client.ObjectKeyFromObject(object)
-		Consistently(func() (int, error) {
+		Eventually(func() (int, error) {
 			err := dRec.Get(ctx, objectKey, object)
 			if err != nil {
 				return -1, err
 			}
 			return 0, nil
-		}, duration, interval).Should(Equal(0))
+		}, timeout).Should(Equal(0))
 		By("getting the provider resource")
 		providerResource := &unstructured.Unstructured{}
 		providerResource.SetGroupVersionKind(schema.GroupVersionKind{
@@ -248,7 +248,7 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBa
 				Expect(err).NotTo(HaveOccurred())
 			}
 			return true
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 
 		By("checking the DBaaS resource provider status updated")
 		Eventually(func() (int, error) {
@@ -272,7 +272,7 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBa
 				Fail("invalid test object")
 				return -1, err
 			}
-		}, timeout, interval).Should(Equal(1))
+		}, timeout).Should(Equal(1))
 		switch v := object.(type) {
 		case *v1alpha1.DBaaSInventory:
 			assertInventoryStatus(v, v1alpha1.DBaaSInventoryReadyType, inventoryDBaaSStatus, providerResourceStatus)()
@@ -310,7 +310,7 @@ func assertInventoryDBaaSStatus(name, namespace string, dbaasStatus metav1.Condi
 				return 0, nil
 			}
 			return 0, nil
-		}, timeout, interval).Should(Equal(0))
+		}, timeout).Should(Equal(0))
 	}
 }
 
@@ -327,7 +327,7 @@ func assertConnectionDBaaSStatus(name, namespace string, dbaasStatus metav1.Cond
 				return 0, nil
 			}
 			return 0, nil
-		}, timeout, interval).Should(Equal(0))
+		}, timeout).Should(Equal(0))
 	}
 }
 
@@ -344,7 +344,7 @@ func assertInstanceDBaaSStatus(name, namespace string, dbaasStatus metav1.Condit
 				return 0, nil
 			}
 			return 0, nil
-		}, timeout, interval).Should(Equal(0))
+		}, timeout).Should(Equal(0))
 	}
 }
 
@@ -407,7 +407,7 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 				Expect(err).NotTo(HaveOccurred())
 			}
 			return true
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 
 		By("checking the provider resource status updated")
 		providerResource := &unstructured.Unstructured{}
@@ -445,7 +445,7 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 				Fail("invalid test object")
 				return false
 			}
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 	}
 }
 

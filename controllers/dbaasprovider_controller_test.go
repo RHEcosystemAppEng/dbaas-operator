@@ -136,7 +136,7 @@ var _ = Describe("DBaaSProvider controller", func() {
 						return v1alpha1.DBaaSProviderSpec{}
 					}
 					return pProvider.Spec
-				}, timeout, interval).Should(Equal(updatedProvider.Spec))
+				}, timeout).Should(Equal(updatedProvider.Spec))
 
 				assertWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner)
 			})
@@ -212,21 +212,21 @@ func assertWatched(iSrc client.Object, iOwner runtime.Object,
 			source: iSrc,
 			owner:  iOwner,
 		})
-	}, timeout, interval).Should(BeTrue())
+	}, timeout).Should(BeTrue())
 
 	Eventually(func() bool {
 		return cCtrl.watched(&watchable{
 			source: cSrc,
 			owner:  cOwner,
 		})
-	}, timeout, interval).Should(BeTrue())
+	}, timeout).Should(BeTrue())
 
 	Eventually(func() bool {
 		return inCtrl.watched(&watchable{
 			source: inSrc,
 			owner:  inOwner,
 		})
-	}, timeout, interval).Should(BeTrue())
+	}, timeout).Should(BeTrue())
 }
 
 func assertNotWatched(iSrc client.Object, iOwner runtime.Object,
@@ -236,21 +236,21 @@ func assertNotWatched(iSrc client.Object, iOwner runtime.Object,
 			source: iSrc,
 			owner:  iOwner,
 		})
-	}, duration, interval).Should(BeTrue())
+	}).Should(BeTrue())
 
 	Consistently(func() bool {
 		return !cCtrl.watched(&watchable{
 			source: cSrc,
 			owner:  cOwner,
 		})
-	}, duration, interval).Should(BeTrue())
+	}).Should(BeTrue())
 
 	Consistently(func() bool {
 		return !inCtrl.watched(&watchable{
 			source: inSrc,
 			owner:  inOwner,
 		})
-	}, duration, interval).Should(BeTrue())
+	}).Should(BeTrue())
 }
 
 func reset(iSrc client.Object, iOwner runtime.Object,
