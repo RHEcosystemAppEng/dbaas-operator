@@ -44,7 +44,6 @@ func (r *DBaaSInventory) SetupWebhookWithManager(mgr ctrl.Manager) error {
 }
 
 //+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1alpha1-dbaasinventory,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasinventories,verbs=create;update,versions=v1alpha1,name=vdbaasinventory.kb.io,admissionReviewVersions=v1
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get
 
 var _ webhook.Validator = &DBaaSInventory{}
 

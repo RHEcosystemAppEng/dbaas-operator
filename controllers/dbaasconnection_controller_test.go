@@ -26,6 +26,7 @@ import (
 )
 
 var _ = Describe("DBaaSConnection controller with errors", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	Context("after creating DBaaSConnection without inventory", func() {
 		connectionName := "test-connection-no-inventory"
 		instanceID := "test-instanceID"
@@ -53,10 +54,9 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		connectionName := "test-connection-not-ready"
 		instanceID := "test-instanceID"
 		inventoryName := "test-connection-inventory-not-ready"
-		credentialsRefName := "test-credentials-ref"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
 			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      credentialsRefName,
+				Name:      testSecret.Name,
 				Namespace: testNamespace,
 			},
 		}
@@ -118,6 +118,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 })
 
 var _ = Describe("DBaaSConnection controller - nominal", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
@@ -135,7 +136,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.NamespacedName{
-							Name:      "test-credentialsRef",
+							Name:      testSecret.Name,
 							Namespace: testNamespace,
 						},
 					},
@@ -196,7 +197,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 							},
 						},
 						CredentialsRef: &v1.LocalObjectReference{
-							Name: "testCredentialsRef",
+							Name: testSecret.Name,
 						},
 						ConnectionInfoRef: &v1.LocalObjectReference{
 							Name: "testConnectionInfoRef",
