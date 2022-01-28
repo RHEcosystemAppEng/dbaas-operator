@@ -56,7 +56,7 @@ var inCtrl *spyctrl
 
 const (
 	testNamespace = "default"
-	timeout       = time.Second * 10
+	timeout       = time.Second * 30
 )
 
 func TestControllers(t *testing.T) {
