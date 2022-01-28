@@ -2,12 +2,15 @@ package mongodb_atlas_instalation
 
 import (
 	"context"
+	"strconv"
 
-	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+
+	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 
 	apiv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -116,6 +119,16 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 			Package:                "mongodb-atlas-kubernetes",
 			Channel:                "beta",
 			InstallPlanApproval:    v1alpha1.ApprovalAutomatic,
+		}
+		if cr.Spec.SyncPeriod != nil {
+			subscription.Spec.Config = &v1alpha1.SubscriptionConfig{
+				Env: []corev1.EnvVar{
+					{
+						Name:  "SYNC-PERIOD-MIN",
+						Value: strconv.Itoa(*cr.Spec.SyncPeriod),
+					},
+				},
+			}
 		}
 
 		return nil

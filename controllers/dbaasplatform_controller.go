@@ -197,6 +197,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 	}
 
 	var cr *dbaasv1alpha1.DBaaSPlatform
+	syncPeriod := 180
 	if len(dbaaSPlatformList.Items) == 0 {
 
 		cr = &dbaasv1alpha1.DBaaSPlatform{
@@ -207,7 +208,8 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 			},
 
 			Spec: dbaasv1alpha1.DBaaSPlatformSpec{
-				Name: "Database as a Service",
+
+				SyncPeriod: &syncPeriod,
 			},
 		}
 
