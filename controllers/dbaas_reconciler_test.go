@@ -182,7 +182,7 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 				source: source,
 				owner:  owner,
 			})
-		}, timeout, interval).Should(BeTrue())
+		}, timeout).Should(BeTrue())
 	})
 })
 

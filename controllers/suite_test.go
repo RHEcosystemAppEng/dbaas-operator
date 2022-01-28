@@ -28,10 +28,13 @@ import (
 
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -53,10 +56,7 @@ var inCtrl *spyctrl
 
 const (
 	testNamespace = "default"
-
-	timeout  = time.Second * 120
-	duration = time.Second * 10
-	interval = time.Millisecond * 500
+	timeout       = time.Second * 10
 )
 
 func TestControllers(t *testing.T) {
@@ -78,6 +78,8 @@ var _ = BeforeSuite(func() {
 	err = oauthzv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = rbacv1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = operatorframework.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("bootstrapping test environment")
@@ -104,7 +106,14 @@ var _ = BeforeSuite(func() {
 	err = os.Setenv(InstallNamespaceEnvVar, testNamespace)
 	Expect(err).NotTo(HaveOccurred())
 
-	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme})
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme,
+		ClientDisableCacheFor: []client.Object{
+			&operatorframework.ClusterServiceVersion{},
+			&corev1.Secret{},
+		},
+	},
+	)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sManager).NotTo(BeNil())
 
