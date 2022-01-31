@@ -35,7 +35,6 @@ var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 	inventoryNamespaceKey  = ".spec.inventoryNamespace"
 	typeLabelValue         = "credentials"
-	typeLabelKey           = "type"
 	typeLabelKeyMongo      = "atlas.mongodb.com/type"
 )
 
@@ -281,11 +280,8 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 }
 
 func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1alpha1.DBaaSInventory) error {
-	key := typeLabelKey
-	if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") {
-		key = typeLabelKeyMongo
-	}
-	if inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
+	if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") &&
+		inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
 		namespace := inventory.Spec.CredentialsRef.Namespace
 		if len(namespace) == 0 {
 			namespace = inventory.Namespace
@@ -297,11 +293,11 @@ func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1al
 		}, &secret); err != nil {
 			return err
 		}
-		if secret.GetLabels()[key] != typeLabelValue {
+		if secret.GetLabels()[typeLabelKeyMongo] != typeLabelValue {
 			patchBytes, err := json.Marshal(corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						key: typeLabelValue,
+						typeLabelKeyMongo: typeLabelValue,
 					},
 				},
 			})
@@ -313,7 +309,6 @@ func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1al
 			}
 		}
 	}
-
 	return nil
 }
 

@@ -83,15 +83,6 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSProviderNotFound))
-		It("should return the secret without error and with proper label", func() {
-			getSecret := v1.Secret{}
-			err := dRec.Get(ctx, client.ObjectKeyFromObject(&testSecret), &getSecret)
-			Expect(err).NotTo(HaveOccurred())
-			labels := getSecret.GetLabels()
-			Expect(labels).Should(Not(BeNil()))
-			Expect(labels["test"]).Should(Equal("label"))
-			Expect(labels[typeLabelKey]).Should(Equal(typeLabelValue))
-		})
 	})
 })
 
