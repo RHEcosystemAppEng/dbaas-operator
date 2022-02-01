@@ -25,6 +25,7 @@ import (
 )
 
 var _ = Describe("DBaaSInstance controller with errors", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	Context("after creating DBaaSInstance without inventory", func() {
 		instanceName := "test-instance-no-inventory"
 		inventoryRefName := "test-inventory-no-exist-ref"
@@ -55,10 +56,9 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 	Context("after creating DBaaSInstance with inventory that is not ready", func() {
 		instanceName := "test-instance-not-ready"
 		inventoryName := "test-instance-inventory-not-ready"
-		credentialsRefName := "test-credentials-ref"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
 			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      credentialsRefName,
+				Name:      testSecret.Name,
 				Namespace: testNamespace,
 			},
 		}
@@ -125,6 +125,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 })
 
 var _ = Describe("DBaaSInstance controller - nominal", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
@@ -142,7 +143,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.NamespacedName{
-							Name:      "test-credentialsRef",
+							Name:      testSecret.Name,
 							Namespace: testNamespace,
 						},
 					},

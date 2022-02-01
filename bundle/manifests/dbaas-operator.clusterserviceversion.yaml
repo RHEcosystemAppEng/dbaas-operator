@@ -303,6 +303,7 @@ spec:
           - secrets
           verbs:
           - get
+          - patch
         - apiGroups:
           - ""
           - authorization.openshift.io

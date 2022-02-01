@@ -25,6 +25,7 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +34,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var testSecret = corev1.Secret{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "test-credentials",
+		Namespace: testNamespace,
+		Labels: map[string]string{
+			"test": "label",
+		},
+	},
+}
 
 var _ = Describe("Create provider object", func() {
 	It("should create the expected provider object", func() {
@@ -329,6 +341,7 @@ var _ = Describe("Check isOwner function", func() {
 })
 
 var _ = Describe("Check inventory", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
@@ -345,7 +358,7 @@ var _ = Describe("Check inventory", func() {
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      "test-credentialsRef",
+						Name:      testSecret.Name,
 						Namespace: testNamespace,
 					},
 				},
@@ -412,6 +425,14 @@ var _ = Describe("Check inventory", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(i.Name).Should(Equal(createdDBaaSInventory.Name))
 					Expect(i.Spec).Should(Equal(createdDBaaSInventory.Spec))
+
+					getSecret := corev1.Secret{}
+					err = dRec.Get(ctx, client.ObjectKeyFromObject(&testSecret), &getSecret)
+					Expect(err).NotTo(HaveOccurred())
+					labels := getSecret.GetLabels()
+					Expect(labels).Should(Not(BeNil()))
+					Expect(labels["test"]).Should(Equal("label"))
+					Expect(labels[typeLabelKeyMongo]).Should(Equal(typeLabelValue))
 				})
 			})
 
@@ -450,7 +471,7 @@ var _ = Describe("Check inventory", func() {
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      "test-credentialsRef",
+						Name:      testSecret.Name,
 						Namespace: testNamespace,
 					},
 				},
@@ -503,6 +524,7 @@ var _ = Describe("Check inventory", func() {
 })
 
 var _ = Describe("Reconcile Provider Resource", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
@@ -519,7 +541,7 @@ var _ = Describe("Reconcile Provider Resource", func() {
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      "test-credentialsRef",
+						Name:      testSecret.Name,
 						Namespace: testNamespace,
 					},
 				},

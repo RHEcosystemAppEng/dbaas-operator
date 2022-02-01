@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,8 +31,13 @@ import (
 )
 
 // InstallNamespaceEnvVar is the constant for env variable INSTALL_NAMESPACE
-var InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
-var inventoryNamespaceKey = ".spec.inventoryNamespace"
+var (
+	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
+	inventoryNamespaceKey  = ".spec.inventoryNamespace"
+	typeLabelValue         = "credentials"
+	typeLabelKeyMongo      = "atlas.mongodb.com/type"
+)
+
 var ignoreCreateEvents = predicate.Funcs{
 	CreateFunc: func(e event.CreateEvent) bool {
 		return false
@@ -270,6 +277,39 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 		}
 	}
 	return
+}
+
+func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1alpha1.DBaaSInventory) error {
+	if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") &&
+		inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
+		namespace := inventory.Spec.CredentialsRef.Namespace
+		if len(namespace) == 0 {
+			namespace = inventory.Namespace
+		}
+		secret := corev1.Secret{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      inventory.Spec.CredentialsRef.Name,
+			Namespace: namespace,
+		}, &secret); err != nil {
+			return err
+		}
+		if secret.GetLabels()[typeLabelKeyMongo] != typeLabelValue {
+			patchBytes, err := json.Marshal(corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						typeLabelKeyMongo: typeLabelValue,
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
+			if err := r.Patch(ctx, &secret, client.RawPatch(types.StrategicMergePatchType, patchBytes)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // update object upon ownerReference verification
