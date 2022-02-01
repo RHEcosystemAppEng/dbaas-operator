@@ -34,8 +34,13 @@ spec:
           spec:
             description: DBaaSPlatformSpec defines the desired state of DBaaSPlatform
             properties:
-              name:
-                type: string
+              syncPeriod:
+                description: The SyncPeriod set The minimum interval at which the
+                  provider operator controllers reconcile, the default value is 180
+                  minutes.
+                maximum: 1440
+                minimum: 1
+                type: integer
             type: object
           status:
             description: DBaaSPlatformStatus defines the observed state of DBaaSPlatform
