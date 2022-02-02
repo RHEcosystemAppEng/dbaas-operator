@@ -2,6 +2,7 @@ package console_plugin
 
 import (
 	"context"
+	"strconv"
 
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -24,6 +25,7 @@ import (
 
 const (
 	consoleServingCertSecretName = "console-serving-cert"
+	consolePort                  = 9001
 )
 
 type Reconciler struct {
@@ -121,10 +123,10 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 		}
 		service.Spec.Ports = []v1.ServicePort{
 			{
-				Name:       "9001-tcp",
+				Name:       strconv.Itoa(consolePort) + "-tcp",
 				Protocol:   v1.ProtocolTCP,
-				Port:       int32(9001),
-				TargetPort: intstr.FromInt(9001),
+				Port:       int32(consolePort),
+				TargetPort: intstr.FromInt(consolePort),
 			},
 		}
 		service.Spec.Selector = map[string]string{
@@ -159,6 +161,8 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		}
 		replicas := int32(3)
 		defaultMode := int32(420)
+		ptrTrue := true
+		ptrFalse := false
 		percentageOfPods := intstr.FromString("25%")
 		deployment.Spec.Replicas = &replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{
@@ -171,13 +175,16 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 				"app": r.pluginName,
 			},
 		}
+		socketHandler := v1.Handler{
+			TCPSocket: &v1.TCPSocketAction{Port: intstr.FromInt(consolePort)},
+		}
 		deployment.Spec.Template.Spec.Containers = []v1.Container{
 			{
 				Name:  r.pluginName,
 				Image: r.pluginImage,
 				Ports: []v1.ContainerPort{
 					{
-						ContainerPort: 9001,
+						ContainerPort: consolePort,
 						Protocol:      v1.ProtocolTCP,
 					},
 				},
@@ -195,7 +202,25 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 					},
 				},
 				Env: r.envs,
+				SecurityContext: &v1.SecurityContext{
+					AllowPrivilegeEscalation: &ptrFalse,
+					Capabilities: &v1.Capabilities{
+						Drop: []v1.Capability{"ALL"},
+					},
+				},
+				LivenessProbe: &v1.Probe{
+					Handler:             socketHandler,
+					InitialDelaySeconds: 5,
+				},
+				ReadinessProbe: &v1.Probe{
+					Handler:             socketHandler,
+					InitialDelaySeconds: 30,
+					PeriodSeconds:       20,
+				},
 			},
+		}
+		deployment.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
+			RunAsNonRoot: &ptrTrue,
 		}
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
 			{
@@ -246,7 +271,7 @@ func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx conte
 		plugin.Spec.Service = consolev1alpha1.ConsolePluginService{
 			Name:      r.pluginName,
 			Namespace: cr.Namespace,
-			Port:      int32(9001),
+			Port:      int32(consolePort),
 			BasePath:  "/",
 		}
 		return nil
