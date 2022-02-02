@@ -18,6 +18,8 @@ Service Binding Operator|[Service Binding Operator](https://github.com/redhat-de
 
 ## Building the Operator
 Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
+
+**if you are using podman instead of docker set CONTAINER_ENGINE as podman** `export CONTAINER_ENGINE=podman`
 - `make build`
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
