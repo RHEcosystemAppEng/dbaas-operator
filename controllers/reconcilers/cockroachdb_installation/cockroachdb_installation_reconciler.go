@@ -103,7 +103,7 @@ func (r *Reconciler) waitForCockroachDBOperator(cr *v1.DBaaSPlatform, ctx contex
 	}
 
 	for _, deployment := range deployments.Items {
-		if deployment.Name == "ccapi-k8s-operator" {
+		if deployment.Name == "ccapi-k8s-operator-controller-manager" {
 			if deployment.Status.ReadyReplicas > 0 {
 				return v1.ResultSuccess, nil
 			}
