@@ -31,7 +31,7 @@ const (
 	testProviderName     = "mongodb-atlas"
 	testInventoryKind    = "MongoDBAtlasInventory"
 	testConnectionKind   = "MongoDBAtlasConnection"
-	testInstaneKind      = "MongoDBAtlasInstance"
+	testInstanceKind     = "MongoDBAtlasInstance"
 )
 
 var (
@@ -46,7 +46,7 @@ var (
 			},
 			InventoryKind:  testInventoryKind,
 			ConnectionKind: testConnectionKind,
-			InstanceKind:   testInstaneKind,
+			InstanceKind:   testInstanceKind,
 			CredentialFields: []CredentialField{
 				{
 					Key:      "field1",

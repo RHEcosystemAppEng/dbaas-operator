@@ -257,6 +257,10 @@ type InstanceParameterSpec struct {
 	// A user-friendly name for this parameter
 	DisplayName string `json:"displayName"`
 
+	// Corresponding field name in DBaaSInstanceSpec
+	// +kubebuilder:validation:Enum=name;cloudProvider;cloudRegion
+	InstanceFieldName string `json:"instanceFieldName,omitempty"`
+
 	// The type of parameter (string, maskedstring, integer, boolean)
 	Type string `json:"type"`
 

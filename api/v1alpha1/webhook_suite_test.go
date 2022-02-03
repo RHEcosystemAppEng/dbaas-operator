@@ -116,6 +116,9 @@ var _ = BeforeSuite(func() {
 	err = (&DBaaSInventory{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&DBaaSInstance{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {

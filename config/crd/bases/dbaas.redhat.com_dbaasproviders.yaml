@@ -93,6 +93,13 @@ spec:
                     displayName:
                       description: A user-friendly name for this parameter
                       type: string
+                    instanceFieldName:
+                      description: Corresponding field name in DBaaSInstanceSpec
+                      enum:
+                      - name
+                      - cloudProvider
+                      - cloudRegion
+                      type: string
                     name:
                       description: The name for this field
                       type: string

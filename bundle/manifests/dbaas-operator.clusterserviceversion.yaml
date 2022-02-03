@@ -542,6 +542,26 @@ spec:
     containerPort: 443
     deploymentName: dbaas-operator-controller-manager
     failurePolicy: Fail
+    generateName: vdbaasinstance.kb.io
+    rules:
+    - apiGroups:
+      - dbaas.redhat.com
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - dbaasinstances
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinstance
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: dbaas-operator-controller-manager
+    failurePolicy: Fail
     generateName: vdbaasinventory.kb.io
     rules:
     - apiGroups:
