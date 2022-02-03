@@ -1,4 +1,4 @@
-package mongodb_atlas_instalation
+package mongodb_atlas_installation
 
 import (
 	"context"

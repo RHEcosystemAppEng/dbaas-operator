@@ -26,9 +26,10 @@ import (
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/cockroachdb_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_instalation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_installation"
 
 	"github.com/go-logr/logr"
 
@@ -242,6 +243,7 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
+		dbaasv1alpha1.CockroachDBInstallation,
 	}
 }
 
@@ -250,7 +252,7 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 	case dbaasv1alpha1.CrunchyBridgeInstallation:
 		return crunchybridge_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
-		return mongodb_atlas_instalation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return mongodb_atlas_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.DBaaSDynamicPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME,
@@ -261,6 +263,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
+	case dbaasv1alpha1.CockroachDBInstallation:
+		return cockroachdb_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
