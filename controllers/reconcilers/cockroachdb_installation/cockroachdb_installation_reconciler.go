@@ -2,15 +2,16 @@ package cockroachdb_installation
 
 import (
 	"context"
-	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
+
 	"github.com/go-logr/logr"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 
+	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
+
 	apiv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apimv1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,7 +24,11 @@ type Reconciler struct {
 	scheme *runtime.Scheme
 }
 
-const operatorDeploymentName = "ccapi-k8s-operator-controller-manager"
+const (
+	operatorDeploymentName    = "ccapi-k8s-operator-controller-manager"
+	cockroachdb_subscription  = "ccapi-k8s-subscription"
+	cockroachdb_catalogsource = "ccapi-k8s-catalogsource"
+)
 
 func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
 	return &Reconciler{
@@ -58,12 +63,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 }
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
-	subscription := r.getCockroachDBSubscription(cr)
+	subscription := reconcilers.GetSubscription(cr.Namespace, cockroachdb_subscription)
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
-	catalogSource := r.getCockRoachDBCatalogSource()
+	catalogSource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, cockroachdb_catalogsource)
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -84,7 +89,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 			}
 		}
 	}
-	csv := r.getCockRoachDBCSV(cr)
+	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, reconcilers.COCKROACHDB_CSV)
 	err = r.client.Delete(ctx, csv)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -113,7 +118,7 @@ func (r *Reconciler) waitForCockroachDBOperator(cr *v1.DBaaSPlatform, ctx contex
 }
 
 func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	operatorgroup := r.getCockRoachDBOperatorGroup()
+	operatorgroup := reconcilers.GetOperatorGroup(reconcilers.INSTALL_NAMESPACE, "global-operators")
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, operatorgroup, func() error {
 		operatorgroup.Spec = coreosv1.OperatorGroupSpec{}
 		return nil
@@ -125,7 +130,7 @@ func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsIn
 }
 
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := r.getCockRoachDBCatalogSource()
+	catalogsource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, cockroachdb_catalogsource)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
@@ -141,8 +146,8 @@ func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsIn
 }
 
 func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	subscription := r.getCockroachDBSubscription(cr)
-	catalogSource := r.getCockRoachDBCatalogSource()
+	subscription := reconcilers.GetSubscription(cr.Namespace, cockroachdb_subscription)
+	catalogSource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, cockroachdb_catalogsource)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
 			return err
@@ -163,7 +168,7 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 }
 
 func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	csv := r.getCockRoachDBCSV(cr)
+	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, reconcilers.COCKROACHDB_CSV)
 	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
 		if errors.IsNotFound(err) {
 			return v1.ResultInProgress, nil
@@ -184,40 +189,4 @@ func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1
 		return v1.ResultFailed, err
 	}
 	return v1.ResultInProgress, nil
-}
-
-func (r *Reconciler) getCockroachDBSubscription(cr *v1.DBaaSPlatform) *v1alpha1.Subscription {
-	return &v1alpha1.Subscription{
-		ObjectMeta: apimv1.ObjectMeta{
-			Name:      "ccapi-k8s-subscription",
-			Namespace: cr.Namespace,
-		},
-	}
-}
-
-func (r *Reconciler) getCockRoachDBOperatorGroup() *coreosv1.OperatorGroup {
-	return &coreosv1.OperatorGroup{
-		ObjectMeta: apimv1.ObjectMeta{
-			Name:      "global-operators",
-			Namespace: reconcilers.INSTALL_NAMESPACE,
-		},
-	}
-}
-
-func (r *Reconciler) getCockRoachDBCatalogSource() *v1alpha1.CatalogSource {
-	return &v1alpha1.CatalogSource{
-		ObjectMeta: apimv1.ObjectMeta{
-			Name:      "ccapi-k8s-catalogsource",
-			Namespace: reconcilers.CATALOG_NAMESPACE,
-		},
-	}
-}
-
-func (r *Reconciler) getCockRoachDBCSV(cr *v1.DBaaSPlatform) *v1alpha1.ClusterServiceVersion {
-	return &v1alpha1.ClusterServiceVersion{
-		ObjectMeta: apimv1.ObjectMeta{
-			Name:      reconcilers.COCKROACHDB_CSV,
-			Namespace: cr.Namespace,
-		},
-	}
 }

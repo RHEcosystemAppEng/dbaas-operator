@@ -3,8 +3,10 @@ package reconcilers
 import (
 	"context"
 
-	alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+
+	alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -53,4 +55,47 @@ func GetDBaaSOperatorCSV(namespace string, name string, ctx context.Context, ser
 		return nil, err
 	}
 	return csv, nil
+}
+
+func GetClusterServiceVersion(namespace string, name string) *v1alpha1.ClusterServiceVersion {
+	return &v1alpha1.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+}
+
+func GetSubscription(namespace string, name string) *v1alpha1.Subscription {
+
+	return &v1alpha1.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+}
+
+func GetOperatorGroup(namespace string, name string) *coreosv1.OperatorGroup {
+
+	return &coreosv1.OperatorGroup{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+}
+
+func GetCatalogSource(namespace string, name string) *v1alpha1.CatalogSource {
+
+	return &v1alpha1.CatalogSource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
 }
