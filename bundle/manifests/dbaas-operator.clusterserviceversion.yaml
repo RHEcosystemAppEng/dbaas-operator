@@ -182,8 +182,8 @@ metadata:
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
-    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com"]'
+    operators.operatorframework.io/builder: operator-sdk-v1.10.1
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
     support: dbaas-alpha-support@redhat.com
