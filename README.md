@@ -1,6 +1,6 @@
 # Red Hat OpenShift Database Access Operator
-Red Hat OpenShift Database Access Operator is a Alpha release. The intent of the alpha release is to show how we could
-scan & import off-cluster cloud database instances hosted by partner providers CrunchyBridge and MongoDB Atlas & make those instances
+Red Hat OpenShift Database Access Operator is currently iterating early releases. The intent of these releases is to show how we could
+scan & import off-cluster cloud database instances hosted by various 3rd party ISV providers & make those instances
 available to developers for binding to their applications.
 
 ## Architecture Diagram
@@ -10,10 +10,11 @@ available to developers for binding to their applications.
 ## Associated Github Repositories
 Component |Git Repo	| Description
 ---  | ------ | ----
-MongoDB Atlas Operator  |[MongoDB Atlas](https://github.com/mongodb/mongodb-atlas-kubernetes) | Operator responsible for establishing API communications with MongoDB Atlas Database.
-Crunchy Bridge Operator |[Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)|Operator responsible for establishing API communications with Crunchy Bridge Managed Postgres Database.
 DBaaS Console Plugin    |[DBaaS Dynamic Plugin](https://github.com/RHEcosystemAppEng/dbaas-dynamic-plugin) | DBaaS UI console plugin, creation for “Provider Account” and a bindable “Connection” resource.
 OpenShift Console Telemetry Plugin|[Console Telemetry Plugin](https://github.com/RHEcosystemAppEng/console-telemetry-plugin)|An OpenShift Console plugin for tracking user activity such as page changes, property changes, & specific UI events in segment.
+MongoDB Atlas Operator  |[MongoDB Atlas](https://github.com/mongodb/mongodb-atlas-kubernetes) | Operator responsible for establishing API communications with MongoDB Atlas Database.
+Crunchy Bridge Operator |[Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)|Operator responsible for establishing API communications with Crunchy Bridge Managed Postgres Database.
+CockroachCloud Operator |[CockroachCloud Operator](https://github.com/cockroachdb/ccapi-k8s-operator/)|Operator responsible for establishing API communications with CockroachCloud Provider Platform.
 Service Binding Operator|[Service Binding Operator](https://github.com/redhat-developer/service-binding-operator)|Red Hat operator for binding resources together via Topology View. 
 
 ## Building the Operator
