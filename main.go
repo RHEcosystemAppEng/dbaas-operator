@@ -26,6 +26,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	oauthzv1 "github.com/openshift/api/authorization/v1"
+	consolev1 "github.com/openshift/api/console/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
@@ -61,6 +62,7 @@ func init() {
 	utilruntime.Must(operatorv1.Install(scheme))
 	utilruntime.Must(oauthzv1.Install(scheme))
 	utilruntime.Must(rbacv1.AddToScheme(scheme))
+	utilruntime.Must(consolev1.AddToScheme(scheme))
 
 	//+kubebuilder:scaffold:scheme
 }

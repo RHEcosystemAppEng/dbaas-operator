@@ -30,6 +30,7 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_installation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
 
 	"github.com/go-logr/logr"
 
@@ -85,7 +86,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
-//+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -244,6 +245,7 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 		dbaasv1alpha1.CrunchyBridgeInstallation,
 		dbaasv1alpha1.MongoDBAtlasInstallation,
 		dbaasv1alpha1.CockroachDBInstallation,
+		dbaasv1alpha1.DBaaSQuickStartInstallation,
 	}
 }
 
@@ -265,6 +267,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
 	case dbaasv1alpha1.CockroachDBInstallation:
 		return cockroachdb_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+	case dbaasv1alpha1.DBaaSQuickStartInstallation:
+		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
