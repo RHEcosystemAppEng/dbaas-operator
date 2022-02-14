@@ -17,10 +17,10 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 )
 
-// 2.11.22 - gunnage : go:embed getting-started-with-openshift-database-access-for-administrators-quick-start.yaml
+//go:embed getting-started-with-openshift-database-access-for-administrators-quick-start.yaml
 var gettingstartedadminQuickStart []byte
 
-// 2.11.22 - gunnage : go:embed getting-started-with-openshift-database-access-for-developers-quick-start.yaml
+//go:embed getting-started-with-openshift-database-access-for-developers-quick-start.yaml
 var gettingstarteddevQuickStart []byte
 
 var QuickStarts = map[string][]byte{
