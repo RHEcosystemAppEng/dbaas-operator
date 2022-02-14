@@ -24,9 +24,6 @@ CATALOG_VERSION ?= 0.1
 # CHANGE THIS TO YOUR OWN QUAY USERNAME FOR DEV/TESTING/PUSHING
 QUAY_ORG ?= ecosystem-appeng
 
-# CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-CATALOG_BASE_IMG ?= quay.io/$(QUAY_ORG)/dbaas-operator-catalog:v$(CATALOG_VERSION)
-
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
 # CHANNELS define the bundle channels used in the bundle.
