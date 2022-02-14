@@ -49,6 +49,7 @@ options), you can create a DBaaSInventory & will receive a DBaaSConnection, but 
 - **Next `make release-build`**
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
 - `make release-push catalog-update`
+- Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
   The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
