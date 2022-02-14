@@ -45,7 +45,7 @@ options), you can create a DBaaSInventory & will receive a DBaaSConnection, but 
   - `make clean-namespace undeploy`
 
 **Deploy via OLM on cluster:**
-- **Make sure to edit `Makefile` and replace `ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
+- **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
 - **Next `make release-build`**
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
 - `make release-push catalog-update`
