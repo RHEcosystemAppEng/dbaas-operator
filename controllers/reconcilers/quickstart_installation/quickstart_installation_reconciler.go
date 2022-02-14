@@ -24,8 +24,8 @@ var gettingstartedadminQuickStart []byte
 var gettingstarteddevQuickStart []byte
 
 var QuickStarts = map[string][]byte{
-	"getting-started-with-openshift-database-access-for-administrators":        gettingstartedadminQuickStart,
-	"getting-started-with-openshift-database-access-for-developers": gettingstarteddevQuickStart,
+	"getting-started-with-openshift-database-access-for-administrators": gettingstartedadminQuickStart,
+	"getting-started-with-openshift-database-access-for-developers":     gettingstarteddevQuickStart,
 }
 
 type Reconciler struct {
