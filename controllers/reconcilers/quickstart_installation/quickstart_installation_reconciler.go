@@ -17,15 +17,15 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 )
 
-//go:embed creating-a-provider-account-instance-quick-start.yaml
-var providerAccountQuickStart []byte
+//go:embed getting-started-with-openshift-database-access-for-administrators-quick-start.yaml
+var gettingstartedadminQuickStart []byte
 
-//go:embed connecting-to-an-external-database-instance-quick-start.yaml
-var connectionQuickStart []byte
+//go:embed getting-started-with-openshift-database-access-for-developers-quick-start.yaml
+var gettingstarteddevQuickStart []byte
 
 var QuickStarts = map[string][]byte{
-	"creating-a-provider-account-instance":        providerAccountQuickStart,
-	"connecting-to-an-external-database-instance": connectionQuickStart,
+	"getting-started-with-openshift-database-access-for-administrators": gettingstartedadminQuickStart,
+	"getting-started-with-openshift-database-access-for-developers":     gettingstarteddevQuickStart,
 }
 
 type Reconciler struct {
