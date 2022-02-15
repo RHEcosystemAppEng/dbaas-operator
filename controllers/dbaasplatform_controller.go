@@ -26,10 +26,8 @@ import (
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/cockroachdb_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/crunchybridge_installation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/mongodb_atlas_installation"
+	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers-installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
 
 	"github.com/go-logr/logr"
@@ -252,9 +250,20 @@ func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.Pla
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName) reconcilers.PlatformReconciler {
 	switch provider {
 	case dbaasv1alpha1.CrunchyBridgeInstallation:
-		return crunchybridge_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
+			reconcilers.CRUNCHY_BRIDGE_NAME, reconcilers.CRUNCHY_BRIDGE_CSV, reconcilers.CRUNCHY_BRIDGE_DEPLOYMENT,
+			reconcilers.CRUNCHY_BRIDGE_CATALOG_IMG, reconcilers.CRUNCHY_BRIDGE_PKG, reconcilers.CRUNCHY_BRIDGE_CHANNEL,
+			reconcilers.CRUNCHY_BRIDGE_DISPLAYNAME)
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
-		return mongodb_atlas_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
+			reconcilers.MONGODB_ATLAS_NAME, reconcilers.MONGODB_ATLAS_CSV, reconcilers.MONGODB_ATLAS_DEPLOYMENT,
+			reconcilers.MONGODB_ATLAS_CATALOG_IMG, reconcilers.MONGODB_ATLAS_PKG, reconcilers.MONGODB_ATLAS_CHANNEL,
+			reconcilers.MONGODB_ATLAS_DISPLAYNAME)
+	case dbaasv1alpha1.CockroachDBInstallation:
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
+			reconcilers.COCKROACHDB_NAME, reconcilers.COCKROACHDB_CSV, reconcilers.COCKROACHDB_DEPLOYMENT,
+			reconcilers.COCKROACHDB_CATALOG_IMG, reconcilers.COCKROACHDB_PKG, reconcilers.COCKROACHDB_CHANNEL,
+			reconcilers.COCKROACHDB_DISPLAYNAME)
 	case dbaasv1alpha1.DBaaSDynamicPluginInstallation:
 		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log,
 			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME,
@@ -265,8 +274,6 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME,
 			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
 			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
-	case dbaasv1alpha1.CockroachDBInstallation:
-		return cockroachdb_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.DBaaSQuickStartInstallation:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
