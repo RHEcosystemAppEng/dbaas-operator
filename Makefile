@@ -166,7 +166,10 @@ undeploy-olm:
 
 catalog-update:
 	-oc delete catalogsource dbaas-operator -n openshift-marketplace
-	oc apply -f config/samples/catalog-source.yaml
+	-oc delete catalogsource mongodb-atlas-catalogsource -n openshift-marketplace
+	-oc delete catalogsource crunchy-bridge-catalogsource -n openshift-marketplace
+	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
+	 oc apply -f config/samples/catalog-source.yaml
 
 deploy-sample-app:
 	oc apply -f config/samples/quarkus-runner/deployment.yaml
