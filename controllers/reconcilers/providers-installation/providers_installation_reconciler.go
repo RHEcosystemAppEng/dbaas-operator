@@ -134,7 +134,7 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 			subscription.Spec.Config = &v1alpha1.SubscriptionConfig{
 				Env: []corev1.EnvVar{
 					{
-						Name:  "SYNC-PERIOD-MIN",
+						Name:  "SYNC_PERIOD_MIN",
 						Value: strconv.Itoa(*cr.Spec.SyncPeriod),
 					},
 				},
