@@ -20,30 +20,18 @@ import (
 )
 
 type Reconciler struct {
-	client                 client.Client
-	logger                 logr.Logger
-	scheme                 *runtime.Scheme
-	operatorName           string
-	operatorCSV            string
-	operatorDeploymentName string
-	operatorCatalogImage   string
-	operatorPackageName    string
-	operatorChanel         string
-	operatorDisplayName    string
+	client client.Client
+	logger logr.Logger
+	scheme *runtime.Scheme
+	config v1.PlatformConfig
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, operatorName string, operatorCSV string, operatorDeploymentName string, operatorCatalogImage string, operatorPackageName string, operatorChannel string, operatorDisplayName string) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, config v1.PlatformConfig) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client:                 client,
-		scheme:                 scheme,
-		logger:                 logger,
-		operatorName:           operatorName,
-		operatorCSV:            operatorCSV,
-		operatorDeploymentName: operatorDeploymentName,
-		operatorCatalogImage:   operatorCatalogImage,
-		operatorPackageName:    operatorPackageName,
-		operatorChanel:         operatorChannel,
-		operatorDisplayName:    operatorDisplayName,
+		client: client,
+		scheme: scheme,
+		logger: logger,
+		config: config,
 	}
 }
 
@@ -78,13 +66,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 
 func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := reconcilers.GetSubscription(cr.Namespace, r.operatorName+"-subscription")
+	subscription := reconcilers.GetSubscription(cr.Namespace, r.config.Name+"-subscription")
 	err := r.client.Delete(ctx, subscription)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
 	}
 
-	catalogSource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.operatorName+"-catalogsource")
+	catalogSource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.config.Name+"-catalogsource")
 	err = r.client.Delete(ctx, catalogSource)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -99,7 +87,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 	}
 
 	for d := range deployments.Items {
-		if deployments.Items[d].Name == r.operatorDeploymentName {
+		if deployments.Items[d].Name == r.config.DeploymentName {
 			err = r.client.Delete(ctx, &deployments.Items[d])
 			if err != nil && !errors.IsNotFound(err) {
 				return v1.ResultFailed, err
@@ -107,7 +95,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 		}
 	}
 
-	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, r.operatorCSV)
+	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, r.config.CSV)
 	err = r.client.Delete(ctx, csv)
 	if err != nil && !errors.IsNotFound(err) {
 		return v1.ResultFailed, err
@@ -117,8 +105,8 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1.DBaaSPlatform) (v1.Plat
 }
 func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
 
-	subscription := reconcilers.GetSubscription(cr.Namespace, r.operatorName+"-subscription")
-	catalogsource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.operatorName+"-catalogsource")
+	subscription := reconcilers.GetSubscription(cr.Namespace, r.config.Name+"-subscription")
+	catalogsource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.config.Name+"-catalogsource")
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, subscription, func() error {
 		if err := ctrl.SetControllerReference(cr, subscription, r.scheme); err != nil {
 			return err
@@ -126,8 +114,8 @@ func (r *Reconciler) reconcileSubscription(cr *v1.DBaaSPlatform, ctx context.Con
 		subscription.Spec = &v1alpha1.SubscriptionSpec{
 			CatalogSource:          catalogsource.Name,
 			CatalogSourceNamespace: catalogsource.Namespace,
-			Package:                r.operatorPackageName,
-			Channel:                r.operatorChanel,
+			Package:                r.config.PackageName,
+			Channel:                r.config.Channel,
 			InstallPlanApproval:    v1alpha1.ApprovalAutomatic,
 		}
 		if cr.Spec.SyncPeriod != nil {
@@ -164,12 +152,12 @@ func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1.PlatformsIn
 	return v1.ResultSuccess, nil
 }
 func (r *Reconciler) reconcileCatalogSource(ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	catalogsource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.operatorName+"-catalogsource")
+	catalogsource := reconcilers.GetCatalogSource(reconcilers.CATALOG_NAMESPACE, r.config.Name+"-catalogsource")
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, catalogsource, func() error {
 		catalogsource.Spec = v1alpha1.CatalogSourceSpec{
 			SourceType:  v1alpha1.SourceTypeGrpc,
-			Image:       r.operatorCatalogImage,
-			DisplayName: r.operatorDisplayName,
+			Image:       r.config.Image,
+			DisplayName: r.config.DisplayName,
 		}
 		return nil
 	})
@@ -191,7 +179,7 @@ func (r *Reconciler) waitForOperator(cr *v1.DBaaSPlatform, ctx context.Context) 
 	}
 
 	for _, deployment := range deployments.Items {
-		if deployment.Name == r.operatorDeploymentName {
+		if deployment.Name == r.config.DeploymentName {
 			if deployment.Status.ReadyReplicas > 0 {
 				return v1.ResultSuccess, nil
 			}
@@ -201,7 +189,7 @@ func (r *Reconciler) waitForOperator(cr *v1.DBaaSPlatform, ctx context.Context) 
 }
 
 func (r *Reconciler) reconcileCSV(cr *v1.DBaaSPlatform, ctx context.Context) (v1.PlatformsInstlnStatus, error) {
-	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, r.operatorCSV)
+	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, r.config.CSV)
 	if err := r.client.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
 		if errors.IsNotFound(err) {
 			return v1.ResultInProgress, nil

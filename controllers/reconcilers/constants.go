@@ -1,5 +1,11 @@
 package reconcilers
 
+import (
+	corev1 "k8s.io/api/core/v1"
+
+	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+)
+
 const (
 	INSTALL_NAMESPACE              = "openshift-operators"
 	CATALOG_NAMESPACE              = "openshift-marketplace"
@@ -44,3 +50,45 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
 )
+
+var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
+	dbaasv1alpha1.DBaaSDynamicPluginInstallation: {
+		Name:        DBAAS_DYNAMIC_PLUGIN_NAME,
+		Image:       DBAAS_DYNAMIC_PLUGIN_IMG,
+		DisplayName: DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
+	},
+	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
+		Name:        CONSOLE_TELEMETRY_PLUGIN_NAME,
+		Image:       CONSOLE_TELEMETRY_PLUGIN_IMG,
+		DisplayName: CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
+		Envs:        []corev1.EnvVar{{Name: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY}},
+	},
+	dbaasv1alpha1.CrunchyBridgeInstallation: {
+		Name:           CRUNCHY_BRIDGE_NAME,
+		CSV:            CRUNCHY_BRIDGE_CSV,
+		DeploymentName: CRUNCHY_BRIDGE_DEPLOYMENT,
+		Image:          CRUNCHY_BRIDGE_CATALOG_IMG,
+		PackageName:    CRUNCHY_BRIDGE_PKG,
+		Channel:        CRUNCHY_BRIDGE_CHANNEL,
+		DisplayName:    CRUNCHY_BRIDGE_DISPLAYNAME,
+	},
+	dbaasv1alpha1.MongoDBAtlasInstallation: {
+		Name:           MONGODB_ATLAS_NAME,
+		CSV:            MONGODB_ATLAS_CSV,
+		DeploymentName: MONGODB_ATLAS_DEPLOYMENT,
+		Image:          MONGODB_ATLAS_CATALOG_IMG,
+		PackageName:    MONGODB_ATLAS_PKG,
+		Channel:        MONGODB_ATLAS_CHANNEL,
+		DisplayName:    MONGODB_ATLAS_DISPLAYNAME,
+	},
+	dbaasv1alpha1.CockroachDBInstallation: {
+		Name:           COCKROACHDB_NAME,
+		CSV:            COCKROACHDB_CSV,
+		DeploymentName: COCKROACHDB_DEPLOYMENT,
+		Image:          COCKROACHDB_CATALOG_IMG,
+		PackageName:    COCKROACHDB_PKG,
+		Channel:        COCKROACHDB_CHANNEL,
+		DisplayName:    COCKROACHDB_DISPLAYNAME,
+	},
+	dbaasv1alpha1.DBaaSQuickStartInstallation: {},
+}

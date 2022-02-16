@@ -32,7 +32,6 @@ import (
 
 	"github.com/go-logr/logr"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -110,17 +109,17 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	var finished = true
 
-	var platforms []dbaasv1alpha1.PlatformsName
+	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	if cr.DeletionTimestamp == nil {
-		platforms = r.getInstallationPlatforms()
+		platforms = reconcilers.InstallationPlatforms
 	}
 
 	nextStatus := cr.Status.DeepCopy()
 
-	for _, platform := range platforms {
+	for platform, platformConfig := range platforms {
 		nextStatus.PlatformName = platform
-		reconciler := r.getReconcilerForPlatform(platform)
+		reconciler := r.getReconcilerForPlatform(platform, platformConfig)
 		if reconciler != nil {
 			var status dbaasv1alpha1.PlatformsInstlnStatus
 			var err error
@@ -235,45 +234,18 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 }
 
-func (r *DBaaSPlatformReconciler) getInstallationPlatforms() []dbaasv1alpha1.PlatformsName {
-
-	return []dbaasv1alpha1.PlatformsName{
-		dbaasv1alpha1.DBaaSDynamicPluginInstallation,
-		dbaasv1alpha1.ConsoleTelemetryPluginInstallation,
-		dbaasv1alpha1.CrunchyBridgeInstallation,
-		dbaasv1alpha1.MongoDBAtlasInstallation,
-		dbaasv1alpha1.CockroachDBInstallation,
-		dbaasv1alpha1.DBaaSQuickStartInstallation,
-	}
-}
-
-func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName) reconcilers.PlatformReconciler {
+func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName, platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch provider {
 	case dbaasv1alpha1.CrunchyBridgeInstallation:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
-			reconcilers.CRUNCHY_BRIDGE_NAME, reconcilers.CRUNCHY_BRIDGE_CSV, reconcilers.CRUNCHY_BRIDGE_DEPLOYMENT,
-			reconcilers.CRUNCHY_BRIDGE_CATALOG_IMG, reconcilers.CRUNCHY_BRIDGE_PKG, reconcilers.CRUNCHY_BRIDGE_CHANNEL,
-			reconcilers.CRUNCHY_BRIDGE_DISPLAYNAME)
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.MongoDBAtlasInstallation:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
-			reconcilers.MONGODB_ATLAS_NAME, reconcilers.MONGODB_ATLAS_CSV, reconcilers.MONGODB_ATLAS_DEPLOYMENT,
-			reconcilers.MONGODB_ATLAS_CATALOG_IMG, reconcilers.MONGODB_ATLAS_PKG, reconcilers.MONGODB_ATLAS_CHANNEL,
-			reconcilers.MONGODB_ATLAS_DISPLAYNAME)
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.CockroachDBInstallation:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log,
-			reconcilers.COCKROACHDB_NAME, reconcilers.COCKROACHDB_CSV, reconcilers.COCKROACHDB_DEPLOYMENT,
-			reconcilers.COCKROACHDB_CATALOG_IMG, reconcilers.COCKROACHDB_PKG, reconcilers.COCKROACHDB_CHANNEL,
-			reconcilers.COCKROACHDB_DISPLAYNAME)
+		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.DBaaSDynamicPluginInstallation:
-		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log,
-			reconcilers.DBAAS_DYNAMIC_PLUGIN_NAME,
-			reconcilers.DBAAS_DYNAMIC_PLUGIN_IMG, reconcilers.DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
-			corev1.EnvVar{Name: reconcilers.DBAAS_OPERATOR_VERSION_KEY_ENV, Value: r.operatorNameVersion})
+		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
-		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log,
-			reconcilers.CONSOLE_TELEMETRY_PLUGIN_NAME,
-			reconcilers.CONSOLE_TELEMETRY_PLUGIN_IMG, reconcilers.CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
-			corev1.EnvVar{Name: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: reconcilers.CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY})
+		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.DBaaSQuickStartInstallation:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
