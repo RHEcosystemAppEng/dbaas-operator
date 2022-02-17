@@ -119,7 +119,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	for platform, platformConfig := range platforms {
 		nextStatus.PlatformName = platform
-		reconciler := r.getReconcilerForPlatform(platform, platformConfig)
+		reconciler := r.getReconcilerForPlatform(platformConfig)
 		if reconciler != nil {
 			var status dbaasv1alpha1.PlatformsInstlnStatus
 			var err error
@@ -234,19 +234,13 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 }
 
-func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(provider dbaasv1alpha1.PlatformsName, platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
-	switch provider {
-	case dbaasv1alpha1.CrunchyBridgeInstallation:
+func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
+	switch platformConfig.Type {
+	case dbaasv1alpha1.TypeProvider:
 		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.MongoDBAtlasInstallation:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.CockroachDBInstallation:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.DBaaSDynamicPluginInstallation:
+	case dbaasv1alpha1.TypeConsolePlugin:
 		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.ConsoleTelemetryPluginInstallation:
-		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.DBaaSQuickStartInstallation:
+	case dbaasv1alpha1.TypeQuickStart:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
