@@ -21,6 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type PlatformsName string
+type PlatformsInstlnStatus string
+type PlatformsType int
+
 const (
 	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
 	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
@@ -31,14 +35,16 @@ const (
 )
 
 const (
+	TypeQuickStart PlatformsType = iota
+	TypeConsolePlugin
+	TypeProvider
+)
+
+const (
 	ResultSuccess    PlatformsInstlnStatus = "success"
 	ResultFailed     PlatformsInstlnStatus = "failed"
 	ResultInProgress PlatformsInstlnStatus = "in progress"
 )
-
-type PlatformsName string
-
-type PlatformsInstlnStatus string
 
 type PlatformConfig struct {
 	Name           string
@@ -49,6 +55,7 @@ type PlatformConfig struct {
 	Channel        string
 	DisplayName    string
 	Envs           []v1.EnvVar
+	Type           PlatformsType
 }
 
 // DBaaSPlatformSpec defines the desired state of DBaaSPlatform

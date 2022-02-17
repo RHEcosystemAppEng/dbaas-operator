@@ -247,3 +247,5 @@ type InstanceParameterSpec struct {
 	// Default value for this field
 	DefaultValue string `json:"defaultValue,omitempty"`
 }
+
+var InstanceParameterSpecs = InstanceParameterSpec{}
