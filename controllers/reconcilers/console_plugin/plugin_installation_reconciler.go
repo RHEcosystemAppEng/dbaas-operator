@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	consoleServingCertSecretName = "console-serving-cert"
-	consolePort                  = 9001
+	serviceCertPrefix = "serve-cert-"
+	consolePort       = 9001
 )
 
 type Reconciler struct {
@@ -107,7 +107,7 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 			return err
 		}
 		service.Annotations = map[string]string{
-			"service.beta.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
+			"service.beta.openshift.io/serving-cert-secret-name": serviceCertPrefix + r.config.Name,
 		}
 		service.Labels = map[string]string{
 			"app":                         r.config.Name,
@@ -190,7 +190,7 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 				},
 				VolumeMounts: []v1.VolumeMount{
 					{
-						Name:      consoleServingCertSecretName,
+						Name:      serviceCertPrefix + r.config.Name,
 						ReadOnly:  true,
 						MountPath: "/var/serving-cert",
 					},
@@ -218,10 +218,10 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		}
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
 			{
-				Name: consoleServingCertSecretName,
+				Name: serviceCertPrefix + r.config.Name,
 				VolumeSource: v1.VolumeSource{
 					Secret: &v1.SecretVolumeSource{
-						SecretName:  consoleServingCertSecretName,
+						SecretName:  serviceCertPrefix + r.config.Name,
 						DefaultMode: &defaultMode,
 					},
 				},
