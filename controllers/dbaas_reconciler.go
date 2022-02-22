@@ -167,6 +167,29 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 	return tenantListByNS, nil
 }
 
+// check if namespace is a valid connection namespace
+func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace string, inventory *v1alpha1.DBaaSInventory) (bool, error) {
+	// valid if in same namespace as inventory
+	if namespace == inventory.Namespace {
+		return true, nil
+	}
+	validNamespaces := inventory.Spec.ConnectionNamespaces
+	if len(validNamespaces) == 0 {
+		tenantList, err := r.tenantListByInventoryNS(ctx, inventory.Namespace)
+		if err != nil {
+			return false, err
+		}
+		for _, tenant := range tenantList.Items {
+			validNamespaces = append(validNamespaces, tenant.Spec.ConnectionNamespaces...)
+		}
+	}
+	// valid if all namespaces are supported via wildcard
+	if contains(validNamespaces, "*") {
+		return true, nil
+	}
+	return contains(validNamespaces, namespace), nil
+}
+
 func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSObject client.Object,
 	providerObjectKindFn func(*v1alpha1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
 	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,
@@ -243,7 +266,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 }
 
 func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
-	conditionFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, err error) {
+	conditionFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS bool, err error) {
 	inventory = &v1alpha1.DBaaSInventory{}
 	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
 		if errors.IsNotFound(err) {
@@ -262,20 +285,37 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 		return
 	}
 
-	// The inventory must be in ready status before we can move on
-	invCond := apimeta.FindStatusCondition(inventory.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
-	if invCond == nil || invCond.Status == metav1.ConditionFalse {
-		err = fmt.Errorf("inventory %v is not ready", inventoryRef)
-		logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-		conditionFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
-		if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
-			if errors.IsConflict(errCond) {
-				logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
-			} else {
-				logger.Error(errCond, "Error updating the DBaaS Object resource status", "DBaaS Object", DBaaSObject)
-			}
+	validNS, err = r.isValidConnectionNS(ctx, DBaaSObject.GetNamespace(), inventory)
+	if err != nil {
+		return inventory, validNS, err
+	}
+	if validNS {
+		// The inventory must be in ready status before we can move on
+		invCond := apimeta.FindStatusCondition(inventory.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+		if invCond == nil || invCond.Status == metav1.ConditionFalse {
+			err = fmt.Errorf("inventory %v is not ready", inventoryRef)
+			logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
+			conditionFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
+		} else {
+			return
+		}
+	} else {
+		switch DBaaSObject.(type) {
+		case *v1alpha1.DBaaSConnection:
+			conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgConnInvalidNamespace)
+		case *v1alpha1.DBaaSInstance:
+			conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgConnInvalidNamespace)
 		}
 	}
+
+	if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
+		if errors.IsConflict(errCond) {
+			logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
+		} else {
+			logger.Error(errCond, "Error updating the DBaaS Object resource status", "DBaaS Object", DBaaSObject)
+		}
+	}
+
 	return
 }
 

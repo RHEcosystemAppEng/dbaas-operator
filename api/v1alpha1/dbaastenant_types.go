@@ -31,6 +31,10 @@ type DBaaSTenantSpec struct {
 	InventoryNamespace string `json:"inventoryNamespace"`
 	// Specify a Tenant’s default Developers for DBaaSInventory “viewer” access
 	Authz DBaasUsersGroups `json:"authz,omitempty"`
+	// Default namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a tenant's inventories.
+	// Each inventory can individually override this. Use "*" to allow all namespaces.
+	// If not set in either the tenant or inventory object, connections will only be allowed in the inventory namespace.
+	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
 }
 
 // DBaaSTenantStatus defines the observed state of DBaaSTenant

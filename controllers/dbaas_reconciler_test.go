@@ -409,7 +409,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check the right inventory", func() {
 				It("should return the inventory without error", func() {
-					i, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					i, validNS, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      inventoryName,
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {
@@ -423,6 +423,7 @@ var _ = Describe("Check inventory", func() {
 					}, ctx, ctrl.LoggerFrom(ctx))
 
 					Expect(err).NotTo(HaveOccurred())
+					Expect(validNS).To(Equal(true))
 					Expect(i.Name).Should(Equal(createdDBaaSInventory.Name))
 					Expect(i.Spec).Should(Equal(createdDBaaSInventory.Spec))
 
@@ -438,7 +439,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an inventory not exists", func() {
 				It("should return error", func() {
-					_, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					_, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      "test-check-not-exist-inventory",
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {
@@ -502,7 +503,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an not ready inventory", func() {
 				It("should return error", func() {
-					_, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					_, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      inventoryName,
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {

@@ -55,6 +55,15 @@ spec:
                       type: string
                     type: array
                 type: object
+              connectionNamespaces:
+                description: Default namespaces where DBaaSConnections/DBaaSInstances
+                  are allowed to reference a tenant's inventories. Each inventory
+                  can individually override this. Use "*" to allow all namespaces.
+                  If not set in either the tenant or inventory object, connections
+                  will only be allowed in the inventory namespace.
+                items:
+                  type: string
+                type: array
               inventoryNamespace:
                 description: Namespace to watch for DBaaSInventories
                 minLength: 2

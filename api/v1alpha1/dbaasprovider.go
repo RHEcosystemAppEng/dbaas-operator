@@ -36,6 +36,7 @@ const (
 	DBaaSProviderNotFound       string = "DBaaSProviderNotFound"
 	DBaaSInventoryNotFound      string = "DBaaSInventoryNotFound"
 	DBaaSInventoryNotReady      string = "DBaaSInventoryNotReady"
+	DBaaSInvalidNamespace       string = "InvalidNamespace"
 	ProviderReconcileInprogress string = "ProviderReconcileInprogress"
 	ProviderParsingError        string = "ProviderParsingError"
 
@@ -44,6 +45,8 @@ const (
 	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
 	MsgInventoryNotReady             string = "Inventory discovery not done"
 	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
+	MsgConnInvalidNamespace          string = "Connection is not in a valid namespace"
+	MsgInstInvalidNamespace          string = "Instance is not in a valid namespace"
 )
 
 // DBaaSProviderSpec defines the desired state of DBaaSProvider
