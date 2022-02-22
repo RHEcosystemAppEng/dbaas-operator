@@ -167,6 +167,29 @@ func (r *DBaaSReconciler) tenantListByInventoryNS(ctx context.Context, inventory
 	return tenantListByNS, nil
 }
 
+// check if namespace is a valid developer namespace
+func (r *DBaaSReconciler) checkDevNamespaces(ctx context.Context, namespace string, inventory *v1alpha1.DBaaSInventory) (bool, error) {
+	// valid if in same namespace as inventory
+	if namespace == inventory.Namespace {
+		return true, nil
+	}
+	devNamespaces := inventory.Spec.DeveloperNamespaces
+	if len(devNamespaces) == 0 {
+		if tenantList, err := r.tenantListByInventoryNS(ctx, inventory.Namespace); err != nil {
+			return false, err
+		} else {
+			for _, tenant := range tenantList.Items {
+				devNamespaces = append(devNamespaces, tenant.Spec.DeveloperNamespaces...)
+			}
+		}
+	}
+	// valid if all namespaces are supported via wildcard
+	if contains(devNamespaces, "*") {
+		return true, nil
+	}
+	return contains(devNamespaces, namespace), nil
+}
+
 func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSObject client.Object,
 	providerObjectKindFn func(*v1alpha1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
 	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,

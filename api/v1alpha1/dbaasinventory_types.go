@@ -28,6 +28,10 @@ type DBaaSOperatorInventorySpec struct {
 	// Optionally define developer user and group access to this inventory
 	Authz DBaasUsersGroups `json:"authz,omitempty"`
 
+	// Additional namespaces in which to reconcile DBaaSConnections/DBaaSInstances referencing this Inventory.
+	// If nil, will use default set in corresponding tenant object(s).
+	DeveloperNamespaces []string `json:"devNamespaces,omitempty"`
+
 	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
 }

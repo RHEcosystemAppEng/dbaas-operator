@@ -67,6 +67,10 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}, ctx, logger); err != nil {
 		return ctrl.Result{}, err
 	} else {
+		nsExists, err := r.checkDevNamespaces(ctx, instance.Namespace, inventory)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
 			&instance,
 			func(provider *v1alpha1.DBaaSProvider) string {
@@ -79,6 +83,14 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return &v1alpha1.DBaaSProviderInstance{}
 			},
 			func(i interface{}) metav1.Condition {
+				if !nsExists {
+					return metav1.Condition{
+						Type:    v1alpha1.DBaaSInstanceReadyType,
+						Status:  metav1.ConditionFalse,
+						Reason:  v1alpha1.DBaaSInvalidDevNamespace,
+						Message: v1alpha1.MsgInstInvalidDevNamespace,
+					}
+				}
 				providerInstance := i.(*v1alpha1.DBaaSProviderInstance)
 				return mergeInstanceStatus(&instance, providerInstance)
 			},

@@ -31,6 +31,8 @@ type DBaaSTenantSpec struct {
 	InventoryNamespace string `json:"inventoryNamespace"`
 	// Specify a Tenant’s default Developers for DBaaSInventory “viewer” access
 	Authz DBaasUsersGroups `json:"authz,omitempty"`
+	// Specify a Tenant’s default developer namespaces for DBaaSConnection and DBaaSInstance reconciliation
+	DeveloperNamespaces []string `json:"devNamespaces,omitempty"`
 }
 
 // DBaaSTenantStatus defines the observed state of DBaaSTenant

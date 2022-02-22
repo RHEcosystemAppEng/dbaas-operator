@@ -83,6 +83,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}, ctx, logger); err != nil {
 		return ctrl.Result{}, err
 	} else {
+		nsExists, err := r.checkDevNamespaces(ctx, connection.Namespace, inventory)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
 			&connection,
 			func(provider *v1alpha1.DBaaSProvider) string {
@@ -95,6 +99,14 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return &v1alpha1.DBaaSProviderConnection{}
 			},
 			func(i interface{}) metav1.Condition {
+				if !nsExists {
+					return metav1.Condition{
+						Type:    v1alpha1.DBaaSConnectionReadyType,
+						Status:  metav1.ConditionFalse,
+						Reason:  v1alpha1.DBaaSInvalidDevNamespace,
+						Message: v1alpha1.MsgConnInvalidDevNamespace,
+					}
+				}
 				providerConn := i.(*v1alpha1.DBaaSProviderConnection)
 				return mergeConnectionStatus(&connection, providerConn)
 			},

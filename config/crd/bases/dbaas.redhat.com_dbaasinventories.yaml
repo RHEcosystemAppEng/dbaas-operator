@@ -66,6 +66,13 @@ spec:
                 required:
                 - name
                 type: object
+              devNamespaces:
+                description: Additional namespaces in which to reconcile DBaaSConnections/DBaaSInstances
+                  referencing this Inventory. If nil, will use default set in corresponding
+                  tenant object(s).
+                items:
+                  type: string
+                type: array
               providerRef:
                 description: A reference to a DBaaSProvider CR
                 properties:

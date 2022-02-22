@@ -57,6 +57,12 @@ spec:
                       type: string
                     type: array
                 type: object
+              devNamespaces:
+                description: Specify a Tenant’s default developer namespaces for DBaaSConnection
+                  and DBaaSInstance reconciliation
+                items:
+                  type: string
+                type: array
               inventoryNamespace:
                 description: Namespace to watch for DBaaSInventories
                 minLength: 2

@@ -19,6 +19,7 @@ package controllers
 import (
 	. "github.com/onsi/ginkgo"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
@@ -121,6 +122,81 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotReady))
+	})
+	Context("after creating DBaaSInstance in an invalid namespace", func() {
+		instanceName := "test-instance-not-ready"
+		inventoryName := "test-instance-inventory-not-ready"
+		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
+			CredentialsRef: &v1alpha1.NamespacedName{
+				Name:      testSecret.Name,
+				Namespace: testNamespace,
+			},
+		}
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventorySpec: *DBaaSInventorySpec,
+			},
+		}
+		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
+			InventoryRef: v1alpha1.NamespacedName{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Name:          "test-instance",
+			CloudProvider: "aws",
+			CloudRegion:   "test-region",
+			OtherInstanceParams: map[string]string{
+				"testParam": "test-param",
+			},
+		}
+		otherNS := v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "other",
+			},
+		}
+		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      instanceName,
+				Namespace: otherNS.Name,
+			},
+			Spec: *DBaaSInstanceSpec,
+		}
+		lastTransitionTime := getLastTransitionTimeForTest()
+		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+			Instances: []v1alpha1.Instance{
+				{
+					InstanceID: "testInstanceID",
+					Name:       "testInstance",
+					InstanceInfo: map[string]string{
+						"testInstanceInfo": "testInstanceInfo",
+					},
+				},
+			},
+			Conditions: []metav1.Condition{
+				{
+					Type:               "SpecSynced",
+					Status:             metav1.ConditionTrue,
+					Reason:             "SyncOK",
+					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+				},
+			},
+		}
+
+		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
+		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
+		AfterEach(assertResourceDeletion(createdDBaaSInstance))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInvalidDevNamespace))
 	})
 })
 
