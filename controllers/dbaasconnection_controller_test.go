@@ -135,7 +135,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec:  *DBaaSInventorySpec,
-				DeveloperNamespaces: []string{"invalid"},
+				DeveloperNamespaces: []string{"valid-ns"},
 			},
 		}
 		DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{

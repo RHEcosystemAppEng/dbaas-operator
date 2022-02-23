@@ -142,7 +142,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec:  *DBaaSInventorySpec,
-				DeveloperNamespaces: []string{"invalid"},
+				DeveloperNamespaces: []string{"valid-ns"},
 			},
 		}
 		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
