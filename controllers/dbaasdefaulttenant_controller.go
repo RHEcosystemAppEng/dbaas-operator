@@ -120,6 +120,7 @@ func getDefaultTenant(inventoryNamespace string) v1alpha1.DBaaSTenant {
 			Authz: v1alpha1.DBaasUsersGroups{
 				Groups: []string{"system:authenticated"},
 			},
+			DeveloperNamespaces: []string{"*"},
 		},
 	}
 }

@@ -134,7 +134,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				ProviderRef: v1alpha1.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec: *DBaaSInventorySpec,
+				DBaaSInventorySpec:  *DBaaSInventorySpec,
+				DeveloperNamespaces: []string{"invalid"},
 			},
 		}
 		DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
@@ -516,14 +517,3 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 	})
 
 })
-
-/*
-
-test valid/invalid
-
- - tenant w/o - done
- - inventory w/o - done
- - tenant w
- - inventory w
-
-*/
