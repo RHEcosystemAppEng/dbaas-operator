@@ -232,13 +232,18 @@ type DBaaSInstanceStatus struct {
 	// Any other provider-specific information related to this instance
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 
+	// +kubebuilder:validation:Enum=Unknown;Pending;Creating;Updating;Deleting;Deleted;Ready;Error;Failed
+	// +kubebuilder:default=Unknown
 	// Represents the cluster provisioning phase
+	// Unknown - unknown cluster provisioning status
 	// Pending - provisioning not yet started
 	// Creating - provisioning in progress
 	// Updating - cluster updating in progress
 	// Deleting - cluster deletion in progress
 	// Deleted - cluster has been deleted
 	// Ready - cluster provisioning complete
+	// Error - cluster provisioning with error
+	// Failed - cluster provisioning failed
 	Phase string `json:"phase"`
 }
 
@@ -266,5 +271,3 @@ type InstanceParameterSpec struct {
 	// Default value for this field
 	DefaultValue string `json:"defaultValue,omitempty"`
 }
-
-var InstanceParameterSpecs = InstanceParameterSpec{}

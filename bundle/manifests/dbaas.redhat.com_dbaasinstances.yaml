@@ -148,10 +148,23 @@ spec:
                   instance
                 type: object
               phase:
-                description: Represents the cluster provisioning phase Pending - provisioning
-                  not yet started Creating - provisioning in progress Updating - cluster
-                  updating in progress Deleting - cluster deletion in progress Deleted
-                  - cluster has been deleted Ready - cluster provisioning complete
+                default: Unknown
+                description: Represents the cluster provisioning phase Unknown - unknown
+                  cluster provisioning status Pending - provisioning not yet started
+                  Creating - provisioning in progress Updating - cluster updating
+                  in progress Deleting - cluster deletion in progress Deleted - cluster
+                  has been deleted Ready - cluster provisioning complete Error - cluster
+                  provisioning with error Failed - cluster provisioning failed
+                enum:
+                - Unknown
+                - Pending
+                - Creating
+                - Updating
+                - Deleting
+                - Deleted
+                - Ready
+                - Error
+                - Failed
                 type: string
             required:
             - instanceID

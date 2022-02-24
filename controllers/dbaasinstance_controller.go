@@ -64,6 +64,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
+		instance.Status.Phase = "Error"
 	}, ctx, logger); err != nil {
 		return ctrl.Result{}, err
 	} else if !validNS {
