@@ -20,7 +20,7 @@ spec:
   tasks:
     - title: Install the Red Hat OpenShift Database Access add-on
       description: |-
-        The Red Hat OpenShift Database Access add-on allows you to configure and connect to a cloud database provider, and exposes database instances for developers to use for their applications.
+        The Red Hat OpenShift Database Access add-on allows you to configure a connection to cloud database providers, and exposes database instances for developers to use for their applications.
 
         1. In the Red Hat Hybrid Cloud Console, click **OpenShift** from the navigation menu.
         2. Click **Clusters** to display a list of your clusters.
@@ -40,13 +40,11 @@ spec:
 
         1. Change to the **Administrator** [Perspective switcher]{{highlight qs-perspective-switcher}}.
         2. On the navigation menu, expand **Data Services**, and click **Database Access**.
-        3. On the **Database Access** page, click the **Create Provider Account** button.
+        3. On the **Database Access** page, click the **Create** dropdown button, and select **Database Provider Account**.
         4. On the **Create Provider Account** page, specify a **Name** for the new provider account resource.
         5. Select your cloud database provider from the dropdown menu, and provide the necessary credentials for that provider.
-           You can find the the necessary credentials from your cloud database provider.
-             - [MongoDB Atlas](https://www.mongodb.com/atlas/database)
-             - [Crunchy Data Bridge](https://www.crunchydata.com)
-             - [CockroachDB](https://www.cockroachlabs.com).
+
+           **NOTE** : If you need help in finding the credentials from your cloud database provider, then see the Red Hat Customer Portal for [documentation](https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#finding-your-cloud-database-provider-account-credentials).
         6. Click the **Create** button to create the provider account resource and fetch the available database instances.
       summary:
         success: You have created a provider account resource for the database cloud provider.
@@ -57,28 +55,33 @@ spec:
         You can discover which database instance is connected to an application, along with other information by viewing the database inventory page.
 
         1. Select the **redhat-dbaas-operator** from the **Project** dropdown.
-           This is the namespace for your project.
         2. On the navigation menu, expand **Data Services**, and click **Database Access**.
         3. You can view the inventory table to find which database instance is connected to an application.
-           You can also view the unique identifier, its status, the associated project name, the database type, and the provider.
+           You can also view the database provider, the provider account resource, and the associated project name.
       summary:
         success: You can view the database instances and the applications they are connected to.
         failed: No account provider resource configured, and no database instances created.
 
     - title: Provision a new database instance
       description: |-
-        You can create a new database instance to explore, and learn more about the OpenShift Database Access solution.
+        You can create a new database instance to connect to an application for your project.
 
         1. On the navigation menu, expand **Home**, and click on **Projects**.
         2. Click the **Create Project** button.
         3. Give a **Name** to your new project, and click the **Create** button.
+           This is the namespace for your project.
         4. On the navigation menu, expand **Data Services**, and click **Database Access**.
-        5. From the database inventory page, click the **Create** dropdown button, and select **Trial Database Instance**.
-        6. Select your **Provider Account** resource, provide an **Instance Name** for the database instance, select your new **Project Name**, and click the **Create** button.
+        5. From the database inventory page, click the **Create** dropdown button, and select **Database Instance**.
+        6. Select a **Database Provider** from the dropdown menu.
+        7. Select your **Provider Account** resource, provide an **Instance Name** for the new database instance, and click the **Create** button.
+
+           **NOTE** : If you select MongoDB Atlas as your **Database Provider**, then in addition to the **Provider Account** and **Instance Name** fields, you must also provide a **Project Name**.
+                      Also, you must add the IP address of the application pod to MongoDB Atlas' **IP Access List**.
+                      Visit the MongoDB Atlas [website](https://docs.atlas.mongodb.com/security/ip-access-list/) for more details on adding an IP address to your database project.
              - If successful, you can view the database instance by clicking the **View Database Instance** button.
              - If unsuccessful, you can try again by clicking the **Try Again** button, or **Close** the database creation page.
       summary:
-        success: You can view the trial database instance.
-        failed: The trial database instance is not created.
+        success: You can view the new database instance.
+        failed: The new database instance is not created.
 
   conclusion: Congratulations! You are ready for developers to import, and connect an application to a database instance.
