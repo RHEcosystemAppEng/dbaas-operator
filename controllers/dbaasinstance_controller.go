@@ -69,6 +69,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
+		instance.Status.Phase = "Error"
 	}, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
