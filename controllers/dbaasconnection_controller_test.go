@@ -115,6 +115,78 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSConnection, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotReady))
 	})
+	Context("after creating DBaaSConnection in an invalid namespace", func() {
+		connectionName := "test-connection"
+		instanceID := "test-instanceID"
+		inventoryName := "test-connection-inventory"
+		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
+			CredentialsRef: &v1alpha1.NamespacedName{
+				Name:      testSecret.Name,
+				Namespace: testNamespace,
+			},
+		}
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventorySpec:   *DBaaSInventorySpec,
+				ConnectionNamespaces: []string{"valid-ns", "random"},
+			},
+		}
+		DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+			InventoryRef: v1alpha1.NamespacedName{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			InstanceID: instanceID,
+		}
+		otherNS := v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "other",
+			},
+		}
+		createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      connectionName,
+				Namespace: otherNS.Name,
+			},
+			Spec: *DBaaSConnectionSpec,
+		}
+		lastTransitionTime := getLastTransitionTimeForTest()
+		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+			Instances: []v1alpha1.Instance{
+				{
+					InstanceID: "testInstanceID",
+					Name:       "testInstance",
+					InstanceInfo: map[string]string{
+						"testInstanceInfo": "testInstanceInfo",
+					},
+				},
+			},
+			Conditions: []metav1.Condition{
+				{
+					Type:               "SpecSynced",
+					Status:             metav1.ConditionTrue,
+					Reason:             "SyncOK",
+					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+				},
+			},
+		}
+
+		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
+		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
+		AfterEach(assertResourceDeletion(createdDBaaSConnection))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSConnection, metav1.ConditionFalse, v1alpha1.DBaaSInvalidNamespace))
+	})
 })
 
 var _ = Describe("DBaaSConnection controller - nominal", func() {
@@ -162,8 +234,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 					},
 				},
 			}
-			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
-			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
 			Context("after creating DBaaSConnection", func() {
 				connectionName := "test-connection"
 				instanceID := "test-instanceID"
@@ -216,7 +287,232 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})
+
 			})
+
+			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		})
+	})
+
+})
+
+var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+
+	Describe("reconcile", func() {
+		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {
+			otherNS := v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other2",
+				},
+			}
+			inventoryRefName := "test-inventory-ref"
+			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryRefName,
+					Namespace: testNamespace,
+				},
+				Spec: v1alpha1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1alpha1.NamespacedName{
+						Name: testProviderName,
+					},
+					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+						CredentialsRef: &v1alpha1.NamespacedName{
+							Name:      testSecret.Name,
+							Namespace: testNamespace,
+						},
+					},
+					ConnectionNamespaces: []string{otherNS.Name},
+				},
+			}
+			lastTransitionTime := getLastTransitionTimeForTest()
+			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+				Instances: []v1alpha1.Instance{
+					{
+						InstanceID: "testInstanceID",
+						Name:       "testInstance",
+						InstanceInfo: map[string]string{
+							"testInstanceInfo": "testInstanceInfo",
+						},
+					},
+				},
+				Conditions: []metav1.Condition{
+					{
+						Type:               "SpecSynced",
+						Status:             metav1.ConditionTrue,
+						Reason:             "SyncOK",
+						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+					},
+				},
+			}
+
+			Context("after creating DBaaSConnections in separate, valid dev namespaces", func() {
+				connectionName := "test-connection"
+				instanceID := "test-instanceID"
+				DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID: instanceID,
+				}
+				createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      connectionName,
+						Namespace: otherNS.Name,
+					},
+					Spec: *DBaaSConnectionSpec,
+				}
+				BeforeEach(assertResourceCreation(createdDBaaSConnection))
+				AfterEach(assertResourceDeletion(createdDBaaSConnection))
+
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				Context("when updating provider connection status", func() {
+					lastTransitionTime := getLastTransitionTimeForTest()
+					status := &v1alpha1.DBaaSConnectionStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:               "ReadyForBinding",
+								Status:             metav1.ConditionTrue,
+								Reason:             "SyncOK",
+								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+							},
+						},
+						CredentialsRef: &v1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+						ConnectionInfoRef: &v1.LocalObjectReference{
+							Name: "testConnectionInfoRef",
+						},
+					}
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+				})
+
+				Context("when updating DBaaSConnection spec", func() {
+					DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+						InventoryRef: v1alpha1.NamespacedName{
+							Name:      inventoryRefName,
+							Namespace: testNamespace,
+						},
+						InstanceID: "updated-test-instanceID",
+					}
+					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				})
+
+			})
+
+			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
+			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		})
+
+		Context("after creating DBaaSInventory w/ wildcard dev namespace set", func() {
+			otherNS := v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other3",
+				},
+			}
+			inventoryRefName := "test-inventory-ref"
+			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryRefName,
+					Namespace: testNamespace,
+				},
+				Spec: v1alpha1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1alpha1.NamespacedName{
+						Name: testProviderName,
+					},
+					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+						CredentialsRef: &v1alpha1.NamespacedName{
+							Name:      testSecret.Name,
+							Namespace: testNamespace,
+						},
+					},
+					ConnectionNamespaces: []string{"*"},
+				},
+			}
+			lastTransitionTime := getLastTransitionTimeForTest()
+			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+				Instances: []v1alpha1.Instance{
+					{
+						InstanceID: "testInstanceID",
+						Name:       "testInstance",
+						InstanceInfo: map[string]string{
+							"testInstanceInfo": "testInstanceInfo",
+						},
+					},
+				},
+				Conditions: []metav1.Condition{
+					{
+						Type:               "SpecSynced",
+						Status:             metav1.ConditionTrue,
+						Reason:             "SyncOK",
+						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+					},
+				},
+			}
+
+			Context("after creating DBaaSConnections in separate, valid dev namespaces", func() {
+				connectionName := "test-connection"
+				instanceID := "test-instanceID"
+				DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID: instanceID,
+				}
+				createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      connectionName,
+						Namespace: otherNS.Name,
+					},
+					Spec: *DBaaSConnectionSpec,
+				}
+				BeforeEach(assertResourceCreation(createdDBaaSConnection))
+				AfterEach(assertResourceDeletion(createdDBaaSConnection))
+
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				Context("when updating provider connection status", func() {
+					lastTransitionTime := getLastTransitionTimeForTest()
+					status := &v1alpha1.DBaaSConnectionStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:               "ReadyForBinding",
+								Status:             metav1.ConditionTrue,
+								Reason:             "SyncOK",
+								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+							},
+						},
+						CredentialsRef: &v1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+						ConnectionInfoRef: &v1.LocalObjectReference{
+							Name: "testConnectionInfoRef",
+						},
+					}
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+				})
+
+				Context("when updating DBaaSConnection spec", func() {
+					DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+						InventoryRef: v1alpha1.NamespacedName{
+							Name:      inventoryRefName,
+							Namespace: testNamespace,
+						},
+						InstanceID: "updated-test-instanceID",
+					}
+					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				})
+
+			})
+
+			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
+			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})
 
