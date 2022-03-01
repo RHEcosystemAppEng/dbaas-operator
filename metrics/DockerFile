@@ -1,0 +1,7 @@
+FROM registry.access.redhat.com/ubi8/ubi-minimal
+
+ADD ./metrics /
+
+ENTRYPOINT ["/metrics"]
+
+EXPOSE 8080
