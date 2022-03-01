@@ -40,12 +40,13 @@ spec:
 
         1. Change to the **Administrator** [Perspective switcher]{{highlight qs-perspective-switcher}}.
         2. On the navigation menu, expand **Data Services**, and click **Database Access**.
-        3. On the **Database Access** page, click the **Create** dropdown button, and select **Database Provider Account**.
-        4. On the **Create Provider Account** page, specify a **Name** for the new provider account resource.
-        5. Select your cloud database provider from the dropdown menu, and provide the necessary credentials for that provider.
+        3. Select the **redhat-dbaas-operator** project from the **Project** dropdown menu.
+        4. On the **Database Access** page, click the **Create** dropdown button, and select **Database Provider Account**.
+        5. On the **Create Provider Account** page, specify a **Name** for the new provider account resource.
+        6. Select your cloud database provider from the dropdown menu, and provide the necessary credentials for that provider.
 
            **NOTE** : If you need help in finding the credentials from your cloud database provider, then see the Red Hat Customer Portal for [documentation](https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#finding-your-cloud-database-provider-account-credentials).
-        6. Click the **Create** button to create the provider account resource and fetch the available database instances.
+        7. Click the **Create** button to create the provider account resource and fetch the available database instances.
       summary:
         success: You have created a provider account resource for the database cloud provider.
         failed: Check your database cloud provider credentials, and try these steps again.
@@ -77,6 +78,7 @@ spec:
 
            **NOTE** : If you select MongoDB Atlas as your **Database Provider**, then in addition to the **Provider Account** and **Instance Name** fields, you must also provide a **Project Name**.
                       Also, you must add the IP address of the application pod to MongoDB Atlas' **IP Access List**.
+                      If the IP address is not in the **IP Access List**, then a `504 gateway timeout error` occurs.
                       Visit the MongoDB Atlas [website](https://docs.atlas.mongodb.com/security/ip-access-list/) for more details on adding an IP address to your database project.
              - If successful, you can view the database instance by clicking the **View Database Instance** button.
              - If unsuccessful, you can try again by clicking the **Try Again** button, or **Close** the database creation page.

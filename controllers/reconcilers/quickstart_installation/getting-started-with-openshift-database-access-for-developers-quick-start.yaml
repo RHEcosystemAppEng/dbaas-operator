@@ -47,6 +47,7 @@ spec:
         4. Select one of the database providers that you have an account with, either CockroachDB, Crunchy Bridge, or MongoDB Atlas.
 
            **NOTE** : If using MongoDB Atlas, then you must add the IP address of the application pod to MongoDB Atlas' **IP Access List**.
+                      If the IP address is not in the **IP Access List**, then a `504 gateway timeout error` occurs.
                       Visit the MongoDB Atlas [website](https://docs.atlas.mongodb.com/security/ip-access-list/) for more details on adding an IP address to your database project.
         5. Click the **Connect** button.
         6. Select the **Provider Account** resource for your database provider, and click the **Create Database Instance** button.
