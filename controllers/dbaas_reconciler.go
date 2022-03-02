@@ -300,12 +300,7 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 			return
 		}
 	} else {
-		switch DBaaSObject.(type) {
-		case *v1alpha1.DBaaSConnection:
-			conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgConnInvalidNamespace)
-		case *v1alpha1.DBaaSInstance:
-			conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgConnInvalidNamespace)
-		}
+		conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
 	}
 
 	if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
