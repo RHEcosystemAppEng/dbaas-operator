@@ -238,6 +238,14 @@ spec:
         - apiGroups:
           - ""
           resources:
+          - namespaces
+          verbs:
+          - create
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
           - secrets
           verbs:
           - get
@@ -325,6 +333,54 @@ spec:
           - get
           - patch
           - update
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - alertmanagerconfigs
+          - alertmanagers
+          - prometheuses
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - podmonitors
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - prometheusrules
+          verbs:
+          - create
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - operator.openshift.io
           resources:
@@ -589,3 +645,23 @@ spec:
     targetPort: 9443
     type: ValidatingAdmissionWebhook
     webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: dbaas-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdbaastenant.kb.io
+    rules:
+    - apiGroups:
+      - dbaas.redhat.com
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - dbaastenants
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaastenant

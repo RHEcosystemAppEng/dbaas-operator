@@ -32,12 +32,14 @@ const (
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
 	DBaaSQuickStartInstallation        PlatformsName = "dbaas-quick-starts"
+	PrometheusInstallation             PlatformsName = "prometheus"
 )
 
 const (
 	TypeQuickStart PlatformsType = iota
 	TypeConsolePlugin
 	TypeProvider
+	TypePrometheusInstallation
 )
 
 const (
