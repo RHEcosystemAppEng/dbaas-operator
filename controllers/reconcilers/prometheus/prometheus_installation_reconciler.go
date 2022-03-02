@@ -24,9 +24,8 @@ const (
 	Namespace      = "openshift-dbaas-monitoring"
 	PrometheusName = "dbaas-prometheus-operator"
 	prometheusCSV  = "prometheusoperator.0.47.0"
-
-	managedBy    = "app.kubernetes.io/managed-by"
-	operatorName = "dbaas-operator"
+	managedBy      = "app.kubernetes.io/managed-by"
+	operatorName   = "dbaas-operator"
 )
 
 type Reconciler struct {
