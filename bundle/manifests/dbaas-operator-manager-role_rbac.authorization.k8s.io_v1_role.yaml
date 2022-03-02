@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: dbaas-operator-manager-role
+rules:
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagerconfigs
+  - alertmanagers
+  - podmonitors
+  - prometheuses
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - operatorgroups
+  - subscriptions
+  verbs:
+  - create
+  - list
+  - update
+  - watch

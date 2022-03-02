@@ -99,4 +99,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
 	},
+	dbaasv1alpha1.PrometheusInstallation: {
+		Type: dbaasv1alpha1.TypePrometheusInstallation,
+	},
 }
