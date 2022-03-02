@@ -41,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -80,6 +81,8 @@ var _ = BeforeSuite(func() {
 	err = rbacv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = operatorframework.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = promv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("bootstrapping test environment")

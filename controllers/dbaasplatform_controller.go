@@ -27,6 +27,7 @@ import (
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/prometheus"
 	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
 	"golang.org/x/mod/semver"
@@ -74,6 +75,7 @@ type DBaaSPlatformReconciler struct {
 	installComplete     bool
 	operatorNameVersion string
 	OcpVersion          string
+	cr                  *dbaasv1alpha1.DBaaSPlatform
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -87,6 +89,10 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
+//+kubebuilder:rbac:groups="monitoring.coreos.com",resources={alertmanagers,prometheuses,alertmanagerconfigs},verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="monitoring.coreos.com",resources=prometheusrules,verbs=get;list;watch;create;update;patch
+//+kubebuilder:rbac:groups="monitoring.coreos.com",resources=podmonitors,verbs=get;list;watch;update;patch
+//+kubebuilder:rbac:groups="monitoring.coreos.com",resources=servicemonitors,verbs=get;list;watch;update;patch;create;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -97,6 +103,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := log.FromContext(ctx)
 
 	cr := &dbaasv1alpha1.DBaaSPlatform{}
+	r.cr = cr
 	err := r.Get(ctx, req.NamespacedName, cr)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -247,6 +254,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv
 		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeQuickStart:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+	case dbaasv1alpha1.TypePrometheusInstallation:
+		return prometheus.NewReconciler(r.cr, r.Client, r.Scheme)
 	}
 
 	return nil
