@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rhoda-metrics-exporter
-  namespace: openshift-storage
+  name: dbaas-metrics-exporter
+  namespace: openshift-dbaas-operator
   labels:
-    app.kubernetes.io/component: rhoda-metrics-exporter
-    app.kubernetes.io/name: rhoda-metrics-exporter
+    app.kubernetes.io/component: dbaas-metrics-exporter
+    app.kubernetes.io/name: dbaas-metrics-exporter
 spec:
   type: ClusterIP
   ports:
@@ -18,5 +18,5 @@ spec:
     protocol: TCP
     targetPort: 8081
   selector:
-    app.kubernetes.io/component: rhoda-metrics-exporter
-    app.kubernetes.io/name: rhoda-metrics-exporter
+    app.kubernetes.io/component: dbaas-metrics-exporter
+    app.kubernetes.io/name: dbaas-metrics-exporter
