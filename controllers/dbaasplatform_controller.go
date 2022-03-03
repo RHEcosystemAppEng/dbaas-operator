@@ -155,6 +155,14 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 		}
 	}
+
+	logger.Info("Going to reconcile metrics exporter.")
+	if err := r.enableMetricsExporter(); err != nil {
+		logger.Info("Err while enabling metrics exporter", err)
+		return ctrl.Result{}, err
+	}
+	logger.Info("Metrics exporter enabled.")
+
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
 		logger.Info("DBaaS platform stack installation complete")

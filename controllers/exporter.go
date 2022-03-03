@@ -1,10 +1,9 @@
-package exporter
+package controllers
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	"github.com/imdario/mergo"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,11 +26,9 @@ var exporterLabels = map[string]string{
 	"app.kubernetes.io/name":      exporterName,
 }
 
-type DBaaSPlatformReconciler controllers.DBaaSPlatformReconciler
-
 // enableMetricsExporter is a wrapper around CreateOrUpdateService()
 // and CreateOrUpdateServiceMonitor()
-func (r *DBaaSPlatformReconciler) EnableMetricsExporter() error {
+func (r *DBaaSPlatformReconciler) enableMetricsExporter() error {
 	err := mergo.Merge(&exporterLabels, mergo.WithOverride)
 	if err != nil {
 		return err

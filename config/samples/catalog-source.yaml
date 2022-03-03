@@ -5,5 +5,5 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.1
+  image: quay.io/rchikatw/dbaas-operator-catalog:v0.1
   displayName: DBaaS Operator
