@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/version: 0.0.1
     spec:
       containers:
-      - image: quay.io/rchikatw/dbaas-operator
+      - image: quay.io/rchikatw/dbaas-operator-metrics
         name: dbaas-metrics-exporter
         ports:
         - containerPort: 8080
