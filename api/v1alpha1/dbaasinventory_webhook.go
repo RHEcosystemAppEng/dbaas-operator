@@ -32,11 +32,11 @@ import (
 
 // log is for logging in this package.
 var dbaasinventorylog = logf.Log.WithName("dbaasinventory-resource")
-var apiClient client.Client = nil
+var inventoryWebhookApiClient client.Client = nil
 
 func (r *DBaaSInventory) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	if apiClient == nil {
-		apiClient = mgr.GetClient()
+	if inventoryWebhookApiClient == nil {
+		inventoryWebhookApiClient = mgr.GetClient()
 	}
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
@@ -50,13 +50,13 @@ var _ webhook.Validator = &DBaaSInventory{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *DBaaSInventory) ValidateCreate() error {
 	dbaasinventorylog.Info("validate create", "name", r.Name)
-	return validate(r)
+	return validateInventory(r)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *DBaaSInventory) ValidateUpdate(old runtime.Object) error {
 	dbaasinventorylog.Info("validate update", "name", r.Name)
-	return validate(r)
+	return validateInventory(r)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -65,25 +65,25 @@ func (r *DBaaSInventory) ValidateDelete() error {
 	return nil
 }
 
-func validate(inv *DBaaSInventory) error {
+func validateInventory(inv *DBaaSInventory) error {
 	// Retrieve the secret object
 	secret := &corev1.Secret{}
 	ns := inv.Spec.DBaaSInventorySpec.CredentialsRef.Namespace
 	if len(ns) == 0 {
 		ns = inv.Namespace
 	}
-	if err := apiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: ns}, secret); err != nil {
+	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: ns}, secret); err != nil {
 		return err
 	}
 	// Retrieve the provider object
 	provider := &DBaaSProvider{}
-	if err := apiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.ProviderRef.Name, Namespace: ""}, provider); err != nil {
+	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.ProviderRef.Name, Namespace: ""}, provider); err != nil {
 		return err
 	}
-	return validateMandatoryFields(inv, secret, provider)
+	return validateInventoryMandatoryFields(inv, secret, provider)
 }
 
-func validateMandatoryFields(inv *DBaaSInventory, secret *corev1.Secret, provider *DBaaSProvider) error {
+func validateInventoryMandatoryFields(inv *DBaaSInventory, secret *corev1.Secret, provider *DBaaSProvider) error {
 	for _, credField := range provider.Spec.CredentialFields {
 		if credField.Required {
 			if value, ok := secret.Data[credField.Key]; !ok || len(value) == 0 {
