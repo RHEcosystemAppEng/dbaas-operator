@@ -31,7 +31,7 @@ const (
 
 	// COCKROACHDB
 	COCKROACHDB_CSV         = "ccapi-k8s-operator.v0.0.1"
-	COCKROACHDB_CATALOG_IMG = "quay.io/ecosystem-appeng/ccapi-k8s-operator-catalog:v0.0.1"
+	COCKROACHDB_CATALOG_IMG = "gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.1"
 	COCKROACHDB_NAME        = "ccapi-k8s"
 	COCKROACHDB_DISPLAYNAME = "CockroachDB Cloud Operator"
 	COCKROACHDB_DEPLOYMENT  = "ccapi-k8s-operator-controller-manager"
