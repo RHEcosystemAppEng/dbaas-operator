@@ -157,8 +157,9 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	logger.Info("Going to reconcile metrics exporter.")
+
 	if err := r.enableMetricsExporter(); err != nil {
-		logger.Info("Err while enabling metrics exporter", err)
+		logger.Error(err, "Err while enabling metrics exporter")
 		return ctrl.Result{}, err
 	}
 	logger.Info("Metrics exporter enabled.")
