@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/imdario/mergo"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -14,7 +13,7 @@ import (
 )
 
 const (
-	exporterName   = "ocs-metrics-exporter"
+	exporterName   = "dbaas-metrics-exporter"
 	portMetrics    = "metrics"
 	portExporter   = "exporter"
 	metricsPath    = "/metrics"
@@ -29,11 +28,8 @@ var exporterLabels = map[string]string{
 // enableMetricsExporter is a wrapper around CreateOrUpdateService()
 // and CreateOrUpdateServiceMonitor()
 func (r *DBaaSPlatformReconciler) enableMetricsExporter() error {
-	err := mergo.Merge(&exporterLabels, mergo.WithOverride)
-	if err != nil {
-		return err
-	}
-	_, err = CreateOrUpdateService(r)
+
+	_, err := CreateOrUpdateService(r)
 	if err != nil {
 		return err
 	}
