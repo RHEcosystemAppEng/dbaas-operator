@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	oauthzv1 "github.com/openshift/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,17 +35,13 @@ func TestTenantRbacObjs(t *testing.T) {
 	// nil serviceAdminAuthz & empty inventory list
 	tenant := v1alpha1.DBaaSTenant{
 		ObjectMeta: metav1.ObjectMeta{Name: "test"},
-		Spec: v1alpha1.DBaaSTenantSpec{
-			Authz: v1alpha1.DBaasUsersGroups{
-				Users: []string{"user1", "user2"},
-			},
-		},
+		Spec:       v1alpha1.DBaaSTenantSpec{},
 	}
 	clusterRoleName := "dbaas-" + tenant.Name + "-tenant-viewer"
 	clusterRoleBindingName := clusterRoleName + "s"
-	developerAuthz := getDevAuthzFromInventoryList(v1alpha1.DBaaSInventoryList{}, tenant)
-	serviceAdminAuthz := v1alpha1.DBaasUsersGroups{}
-	tenantListAuthz := v1alpha1.DBaasUsersGroups{}
+	developerAuthz := &oauthzv1.ResourceAccessReviewResponse{}
+	serviceAdminAuthz := &oauthzv1.ResourceAccessReviewResponse{}
+	tenantListAuthz := &oauthzv1.ResourceAccessReviewResponse{}
 	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRole).NotTo(BeNil())
 	Expect(clusterRole.Name).To(Equal(clusterRoleName))
@@ -54,7 +51,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects).To(BeNil())
 
 	// nil serviceAdminAuthz & inventory.spec.authz
-	developerAuthz = getDevAuthzFromInventoryList(v1alpha1.DBaaSInventoryList{Items: []v1alpha1.DBaaSInventory{{ObjectMeta: metav1.ObjectMeta{Name: "test"}}}}, tenant)
+	developerAuthz = &oauthzv1.ResourceAccessReviewResponse{UsersSlice: []string{"user1", "user2"}}
 	clusterRole, clusterRolebinding = tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRole).NotTo(BeNil())
 	Expect(clusterRole.Name).To(Equal(clusterRoleName))
@@ -70,8 +67,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[1].Namespace).To(BeEmpty())
 
 	// nil serviceAdminAuthz
-	inventoryList := createInventoryList()
-	developerAuthz = getDevAuthzFromInventoryList(inventoryList, tenant)
+	developerAuthz = &oauthzv1.ResourceAccessReviewResponse{UsersSlice: []string{"user1"}, GroupsSlice: []string{"group1"}}
 	clusterRole, clusterRolebinding = tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRole).NotTo(BeNil())
 	Expect(clusterRole.Name).To(Equal(clusterRoleName))
@@ -87,11 +83,11 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[1].Namespace).To(BeEmpty())
 
 	// serviceAdminAuthz.users w/ duplicates
-	serviceAdminAuthz = v1alpha1.DBaasUsersGroups{
-		Users: []string{"admin1", "admin2", "admin2", "admin3"},
+	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
+		UsersSlice: []string{"admin1", "admin2", "admin2", "admin3"},
 	}
-	tenantListAuthz = v1alpha1.DBaasUsersGroups{
-		Users: []string{"admin3"},
+	tenantListAuthz = &oauthzv1.ResourceAccessReviewResponse{
+		UsersSlice: []string{"admin3"},
 	}
 	clusterRole, clusterRolebinding = tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRolebinding).NotTo(BeNil())
@@ -112,8 +108,8 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[3].Namespace).To(BeEmpty())
 
 	// serviceAdminAuthz.groups w/ duplicates
-	serviceAdminAuthz = v1alpha1.DBaasUsersGroups{
-		Groups: []string{"group1", "group1"},
+	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
+		GroupsSlice: []string{"group1", "group1"},
 	}
 	clusterRole, clusterRolebinding = tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRolebinding).NotTo(BeNil())
@@ -128,9 +124,9 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[1].Namespace).To(BeEmpty())
 
 	// serviceAdminAuthz.users & groups w/ duplicates
-	serviceAdminAuthz = v1alpha1.DBaasUsersGroups{
-		Users:  []string{"user1", "user2", "user2", "system:serviceaccount:openshift-service-ca-operator:service-ca-operator"},
-		Groups: []string{"group1", "group1", "group2"},
+	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
+		UsersSlice:  []string{"user1", "user2", "user2", "system:serviceaccount:openshift-service-ca-operator:service-ca-operator"},
+		GroupsSlice: []string{"group1", "group1", "group2"},
 	}
 	clusterRole, clusterRolebinding = tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	Expect(clusterRolebinding).NotTo(BeNil())
@@ -181,154 +177,4 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(matchSlices(testSlice1, []string{})).To(BeEmpty())
 
 	Expect(removeFromSlice([]string{"user6"}, resultingSlice)).To(Equal([]string{"user1"}))
-}
-
-func TestInventoryRbacObjs(t *testing.T) {
-	RegisterFailHandler(Fail)
-	defer GinkgoRecover()
-
-	// Expect(err).NotTo(HaveOccurred())
-	namespace := "test-ns"
-	tenantList := createTestTenantList()
-
-	// nil spec.authz w/ default tenant set to wrong namespace
-	inventory := v1alpha1.DBaaSInventory{
-		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: namespace},
-	}
-	roleName := "dbaas-" + inventory.Name + "-inventory-viewer"
-	roleBindingName := roleName + "s"
-	// add checks that rolebindings subjects are empty OR nil
-	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
-	Expect(inventory.Namespace).To(Equal(namespace))
-	Expect(role).NotTo(BeNil())
-	Expect(role.Name).To(Equal(roleName))
-	Expect(role.Namespace).To(Equal(namespace))
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.Namespace).To(Equal(namespace))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.Subjects).To(BeNil())
-
-	// nil spec.authz w/ correct default tenant
-	tenantList.Items[0].Spec.InventoryNamespace = namespace
-	role, rolebinding = inventoryRbacObjs(inventory, tenantList)
-	Expect(inventory.Namespace).To(Equal(namespace))
-	Expect(role).NotTo(BeNil())
-	Expect(role.Name).To(Equal(roleName))
-	Expect(role.Namespace).To(Equal(namespace))
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.Namespace).To(Equal(namespace))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.Subjects).To(HaveLen(1))
-	Expect(rolebinding.Subjects[0].Name).To(Equal("system:authenticated"))
-	Expect(rolebinding.Subjects[0].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[0].Kind).To(Equal("Group"))
-
-	// spec.authz.users w/ duplicates
-	inventory.Spec.Authz = v1alpha1.DBaasUsersGroups{
-		Users: []string{"user1", "user1", "user2"},
-	}
-	role, rolebinding = inventoryRbacObjs(inventory, tenantList)
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.Subjects).To(HaveLen(2))
-	Expect(rolebinding.Subjects[0].Name).To(Equal("user1"))
-	Expect(rolebinding.Subjects[0].Kind).To(Equal("User"))
-	Expect(rolebinding.Subjects[0].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[1].Name).To(Equal("user2"))
-	Expect(rolebinding.Subjects[1].Kind).To(Equal("User"))
-	Expect(rolebinding.Subjects[1].Namespace).To(Equal(inventory.Namespace))
-
-	// spec.authz.groups w/ duplicates
-	inventory.Spec.Authz = v1alpha1.DBaasUsersGroups{
-		Groups: []string{"group1", "group1"},
-	}
-	role, rolebinding = inventoryRbacObjs(inventory, tenantList)
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.Subjects).To(HaveLen(1))
-	Expect(rolebinding.Subjects[0].Name).To(Equal("group1"))
-	Expect(rolebinding.Subjects[0].Kind).To(Equal("Group"))
-	Expect(rolebinding.Subjects[0].Namespace).To(Equal(inventory.Namespace))
-
-	// spec.authz.users & groups w/ duplicates
-	inventory.Spec.Authz = v1alpha1.DBaasUsersGroups{
-		Users:  []string{"user1", "user2", "user2", "system:serviceaccount:openshift-service-ca-operator:service-ca-operator"},
-		Groups: []string{"group1", "group1", "group2"},
-	}
-	role, rolebinding = inventoryRbacObjs(inventory, tenantList)
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.RoleRef.Kind).To(Equal("Role"))
-	Expect(rolebinding.Subjects).To(HaveLen(5))
-	Expect(rolebinding.Subjects[0].Name).To(Equal("user1"))
-	Expect(rolebinding.Subjects[0].Kind).To(Equal("User"))
-	Expect(rolebinding.Subjects[0].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[0].APIGroup).NotTo(BeEmpty())
-	Expect(rolebinding.Subjects[1].Name).To(Equal("user2"))
-	Expect(rolebinding.Subjects[1].Kind).To(Equal("User"))
-	Expect(rolebinding.Subjects[1].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[2].Name).To(Equal("service-ca-operator"))
-	Expect(rolebinding.Subjects[2].Kind).To(Equal("ServiceAccount"))
-	Expect(rolebinding.Subjects[2].Namespace).To(Equal("openshift-service-ca-operator"))
-	Expect(rolebinding.Subjects[2].APIGroup).To(BeEmpty())
-	Expect(rolebinding.Subjects[3].Name).To(Equal("group1"))
-	Expect(rolebinding.Subjects[3].Kind).To(Equal("Group"))
-	Expect(rolebinding.Subjects[3].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[3].APIGroup).NotTo(BeEmpty())
-	Expect(rolebinding.Subjects[4].Name).To(Equal("group2"))
-	Expect(rolebinding.Subjects[4].Kind).To(Equal("Group"))
-	Expect(rolebinding.Subjects[4].Namespace).To(Equal(inventory.Namespace))
-
-	// multiple tenants and different authz configs
-	newTenants := []v1alpha1.DBaaSTenant{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "tenant2",
-			},
-			Spec: v1alpha1.DBaaSTenantSpec{
-				InventoryNamespace: namespace,
-				Authz: v1alpha1.DBaasUsersGroups{
-					Users: []string{"tenantUser"},
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "tenant3",
-			},
-			Spec: v1alpha1.DBaaSTenantSpec{
-				InventoryNamespace: "otherNS",
-				Authz: v1alpha1.DBaasUsersGroups{
-					Groups: []string{"otherGroup"},
-				},
-			},
-		},
-	}
-	tenantList.Items = append(tenantList.Items, newTenants...)
-	inventory.Spec.Authz = v1alpha1.DBaasUsersGroups{}
-	role, rolebinding = inventoryRbacObjs(inventory, tenantList)
-	Expect(rolebinding).NotTo(BeNil())
-	Expect(rolebinding.Name).To(Equal(roleBindingName))
-	Expect(rolebinding.RoleRef.Name).To(Equal(roleName))
-	Expect(rolebinding.RoleRef.Kind).To(Equal("Role"))
-	Expect(rolebinding.Subjects).To(HaveLen(2))
-	Expect(rolebinding.Subjects[0].Name).To(Equal("tenantUser"))
-	Expect(rolebinding.Subjects[0].Kind).To(Equal("User"))
-	Expect(rolebinding.Subjects[0].Namespace).To(Equal(inventory.Namespace))
-	Expect(rolebinding.Subjects[1].Name).To(Equal("system:authenticated"))
-	Expect(rolebinding.Subjects[1].Kind).To(Equal("Group"))
-	Expect(rolebinding.Subjects[1].Namespace).To(Equal(inventory.Namespace))
-}
-
-func createTestTenantList() v1alpha1.DBaaSTenantList {
-	return v1alpha1.DBaaSTenantList{
-		Items: []v1alpha1.DBaaSTenant{
-			getDefaultTenant("wrong"),
-		},
-	}
 }

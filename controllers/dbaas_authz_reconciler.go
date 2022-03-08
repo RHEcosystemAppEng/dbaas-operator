@@ -41,9 +41,9 @@ type DBaaSAuthzReconciler struct {
 
 // ResourceAccessReview for Service Admin Authz
 // return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, namespace string) v1alpha1.DBaasUsersGroups {
+func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, namespace string) *oauthzv1.ResourceAccessReviewResponse {
 	logger := ctrl.LoggerFrom(ctx)
-	// tenant access review
+	// admin access review
 	rar := &oauthzv1.ResourceAccessReview{
 		Action: oauthzv1.Action{
 			Resource:  "dbaasinventories",
@@ -57,7 +57,7 @@ func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, namespa
 	inventoryResponse, err := r.AuthorizationV1Client.ResourceAccessReviews().Create(ctx, rar, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(err, "Error creating ResourceAccessReview", inventoryResponse.Namespace, inventoryResponse.EvaluationError)
-		return v1alpha1.DBaasUsersGroups{}
+		return &oauthzv1.ResourceAccessReviewResponse{}
 	}
 
 	// secret access review
@@ -67,19 +67,19 @@ func (r *DBaaSAuthzReconciler) getServiceAdminAuthz(ctx context.Context, namespa
 	secretResponse, err := r.AuthorizationV1Client.ResourceAccessReviews().Create(ctx, rar, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(err, "Error creating ResourceAccessReview", secretResponse.Namespace, secretResponse.EvaluationError)
-		return v1alpha1.DBaasUsersGroups{}
+		return &oauthzv1.ResourceAccessReviewResponse{}
 	}
 
-	return v1alpha1.DBaasUsersGroups{
+	return &oauthzv1.ResourceAccessReviewResponse{
 		// remove results of tenant access review, as they don't need the addtl the perms
-		Users:  matchSlices(inventoryResponse.UsersSlice, secretResponse.UsersSlice),
-		Groups: matchSlices(inventoryResponse.GroupsSlice, secretResponse.GroupsSlice),
+		UsersSlice:  matchSlices(inventoryResponse.UsersSlice, secretResponse.UsersSlice),
+		GroupsSlice: matchSlices(inventoryResponse.GroupsSlice, secretResponse.GroupsSlice),
 	}
 }
 
 // ResourceAccessReview for Developer Authz
-// return users/groups who can list inventories in the tenant namespace
-func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, namespace string, inventoryList v1alpha1.DBaaSInventoryList) v1alpha1.DBaasUsersGroups {
+// return users/groups who can list or get individual inventories in the tenant namespace
+func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, namespace string, inventoryList v1alpha1.DBaaSInventoryList) *oauthzv1.ResourceAccessReviewResponse {
 	logger := ctrl.LoggerFrom(ctx)
 
 	// inventory access review
@@ -96,18 +96,35 @@ func (r *DBaaSAuthzReconciler) getDeveloperAuthz(ctx context.Context, namespace 
 	inventoryResponse, err := r.AuthorizationV1Client.ResourceAccessReviews().Create(ctx, rar, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(err, "Error creating ResourceAccessReview", inventoryResponse.Namespace, inventoryResponse.EvaluationError)
-		return v1alpha1.DBaasUsersGroups{}
+		return &oauthzv1.ResourceAccessReviewResponse{}
+	}
+	users := inventoryResponse.UsersSlice
+	groups := inventoryResponse.GroupsSlice
+
+	// determine if any individual inventory access exists separate from list
+	//   ... will add additional api load, a new call for every inventory object in valid tenant namespaces
+	//   ... but this keeps inventory-specific access functionality. a dev user could have access to a single inventory
+	for _, inv := range inventoryList.Items {
+		rar.Action.Verb = "get"
+		rar.Action.ResourceName = inv.Name
+		invResponse, err := r.AuthorizationV1Client.ResourceAccessReviews().Create(ctx, rar, metav1.CreateOptions{})
+		if err != nil {
+			logger.Error(err, "Error creating ResourceAccessReview", invResponse.Namespace, invResponse.EvaluationError)
+			return &oauthzv1.ResourceAccessReviewResponse{}
+		}
+		users = uniqueStrSlice(append(users, invResponse.UsersSlice...))
+		groups = uniqueStrSlice(append(groups, invResponse.GroupsSlice...))
 	}
 
-	return v1alpha1.DBaasUsersGroups{
-		Users:  inventoryResponse.UsersSlice,
-		Groups: inventoryResponse.GroupsSlice,
+	return &oauthzv1.ResourceAccessReviewResponse{
+		UsersSlice:  users,
+		GroupsSlice: groups,
 	}
 }
 
 // ResourceAccessReview for Service Admin Authz
-// return users/groups who can create both inventory and secret objects in the tenant namespace
-func (r *DBaaSAuthzReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.DBaasUsersGroups {
+// return users/groups who can list tenant objects at the cluster level
+func (r *DBaaSAuthzReconciler) getTenantListAuthz(ctx context.Context) *oauthzv1.ResourceAccessReviewResponse {
 	logger := ctrl.LoggerFrom(ctx)
 	// tenant access review
 	rar := &oauthzv1.ResourceAccessReview{
@@ -122,19 +139,15 @@ func (r *DBaaSAuthzReconciler) getTenantListAuthz(ctx context.Context) v1alpha1.
 	tenantResponse, err := r.AuthorizationV1Client.ResourceAccessReviews().Create(ctx, rar, metav1.CreateOptions{})
 	if err != nil {
 		logger.Error(err, "Error creating ResourceAccessReview", tenantResponse.Namespace, tenantResponse.EvaluationError)
-		return v1alpha1.DBaasUsersGroups{}
+		return &oauthzv1.ResourceAccessReviewResponse{}
 	}
 
-	return v1alpha1.DBaasUsersGroups{
-		Users:  tenantResponse.UsersSlice,
-		Groups: tenantResponse.GroupsSlice,
-	}
+	return tenantResponse
 }
 
 // Reconcile tenant to ensure proper RBAC is created. inventoryList should only contain inventory objects for the corresponding tenant namespace.
-func (r *DBaaSAuthzReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz v1alpha1.DBaasUsersGroups) error {
-	devAuthz := consolidateDevAuthz(tenant, inventoryList, developerAuthz)
-	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, serviceAdminAuthz, devAuthz, tenantListAuthz)
+func (r *DBaaSAuthzReconciler) reconcileTenantRbacObjs(ctx context.Context, tenant v1alpha1.DBaaSTenant, serviceAdminAuthz, developerAuthz, tenantListAuthz *oauthzv1.ResourceAccessReviewResponse) error {
+	clusterRole, clusterRolebinding := tenantRbacObjs(tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz)
 	var clusterRoleObj rbacv1.ClusterRole
 	if exists, err := r.createRbacObj(&clusterRole, &clusterRoleObj, &tenant, ctx); err != nil {
 		return err
@@ -155,37 +168,6 @@ func (r *DBaaSAuthzReconciler) reconcileTenantRbacObjs(ctx context.Context, tena
 			clusterRoleBindingObj.RoleRef = clusterRolebinding.RoleRef
 			clusterRoleBindingObj.Subjects = clusterRolebinding.Subjects
 			if err := r.updateIfOwned(ctx, &tenant, &clusterRoleBindingObj); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// Reconcile inventory to ensure proper RBAC is created. tenantList should only contain tenant objects for the corresponding inventory namespace.
-func (r *DBaaSAuthzReconciler) reconcileInventoryRbacObjs(ctx context.Context, inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) error {
-	role, rolebinding := inventoryRbacObjs(inventory, tenantList)
-	var roleObj rbacv1.Role
-	if exists, err := r.createRbacObj(&role, &roleObj, &inventory, ctx); err != nil {
-		return err
-	} else if exists {
-		if !reflect.DeepEqual(role.Rules, roleObj.Rules) {
-			roleObj.Rules = role.Rules
-			if err := r.updateIfOwned(ctx, &inventory, &roleObj); err != nil {
-				return err
-			}
-		}
-	}
-	var roleBindingObj rbacv1.RoleBinding
-	if exists, err := r.createRbacObj(&rolebinding, &roleBindingObj, &inventory, ctx); err != nil {
-		return err
-	} else if exists {
-		if !reflect.DeepEqual(rolebinding.RoleRef, roleBindingObj.RoleRef) ||
-			!reflect.DeepEqual(rolebinding.Subjects, roleBindingObj.Subjects) {
-			roleBindingObj.RoleRef = rolebinding.RoleRef
-			roleBindingObj.Subjects = rolebinding.Subjects
-			if err := r.updateIfOwned(ctx, &inventory, &roleBindingObj); err != nil {
 				return err
 			}
 		}
@@ -222,71 +204,8 @@ func (r *DBaaSAuthzReconciler) createRbacObj(newObj, getObj, owner client.Object
 	return false, nil
 }
 
-func consolidateDevAuthz(tenant v1alpha1.DBaaSTenant, inventoryList v1alpha1.DBaaSInventoryList, developerAuthz v1alpha1.DBaasUsersGroups) v1alpha1.DBaasUsersGroups {
-	newDevAuthz := getDevAuthzFromInventoryList(inventoryList, tenant)
-	users := append(developerAuthz.Users, newDevAuthz.Users...)
-	groups := append(developerAuthz.Groups, newDevAuthz.Groups...)
-
-	return v1alpha1.DBaasUsersGroups{
-		Users:  uniqueStrSlice(users),
-		Groups: uniqueStrSlice(groups),
-	}
-}
-
-// gets rbac objects for an inventory's users
-func inventoryRbacObjs(inventory v1alpha1.DBaaSInventory, tenantList v1alpha1.DBaaSTenantList) (rbacv1.Role, rbacv1.RoleBinding) {
-	role := rbacv1.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dbaas-" + inventory.Name + "-inventory-viewer",
-			Namespace: inventory.Namespace,
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups:     []string{v1alpha1.GroupVersion.Group},
-				Resources:     []string{"dbaasinventories", "dbaasinventories/status"},
-				ResourceNames: []string{inventory.Name},
-				Verbs:         []string{"get"},
-			},
-		},
-	}
-	role.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("Role"))
-
-	roleBinding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      role.Name + "s",
-			Namespace: role.Namespace,
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: rbacv1.SchemeGroupVersion.Group,
-			Kind:     "Role",
-			Name:     role.Name,
-		},
-	}
-	roleBinding.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("RoleBinding"))
-
-	// if inventory.Spec.Authz is nil, use tenant defaults for view access to the Inventory object
-	var users, groups []string
-	if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
-		for _, tenant := range tenantList.Items {
-			if tenant.Spec.InventoryNamespace == inventory.Namespace {
-				users = append(users, tenant.Spec.Authz.Users...)
-				groups = append(groups, tenant.Spec.Authz.Groups...)
-			}
-		}
-	} else {
-		users = inventory.Spec.Authz.Users
-		groups = inventory.Spec.Authz.Groups
-	}
-	users = uniqueStrSlice(users)
-	groups = uniqueStrSlice(groups)
-
-	roleBinding.Subjects = getSubjects(users, groups, role.Namespace)
-
-	return role, roleBinding
-}
-
 // gets rbac objects for a tenant's users
-func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, serviceAdminAuthz, developerAuthz, tenantListAuthz v1alpha1.DBaasUsersGroups) (rbacv1.ClusterRole, rbacv1.ClusterRoleBinding) {
+func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, serviceAdminAuthz, developerAuthz, tenantListAuthz *oauthzv1.ResourceAccessReviewResponse) (rbacv1.ClusterRole, rbacv1.ClusterRoleBinding) {
 	clusterRole := rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "dbaas-" + tenant.Name + "-tenant-viewer",
@@ -315,11 +234,11 @@ func tenantRbacObjs(tenant v1alpha1.DBaaSTenant, serviceAdminAuthz, developerAut
 	clusterRoleBinding.SetGroupVersionKind(rbacv1.SchemeGroupVersion.WithKind("ClusterRoleBinding"))
 
 	// give view access to all inventory devs and tenant service admins for the Tenant object
-	users := uniqueStrSlice(append(serviceAdminAuthz.Users, developerAuthz.Users...))
-	groups := uniqueStrSlice(append(serviceAdminAuthz.Groups, developerAuthz.Groups...))
+	users := uniqueStrSlice(append(serviceAdminAuthz.UsersSlice, developerAuthz.UsersSlice...))
+	groups := uniqueStrSlice(append(serviceAdminAuthz.GroupsSlice, developerAuthz.GroupsSlice...))
 	// remove results of tenant access review, as they don't need the addtl the perms
-	users = removeFromSlice(tenantListAuthz.Users, users)
-	groups = removeFromSlice(tenantListAuthz.Groups, groups)
+	users = removeFromSlice(tenantListAuthz.UsersSlice, users)
+	groups = removeFromSlice(tenantListAuthz.GroupsSlice, groups)
 
 	clusterRoleBinding.Subjects = getSubjects(users, groups, "")
 
@@ -348,27 +267,6 @@ func hasNoEditOrListVerbs(roleObj client.Object) bool {
 		}
 	}
 	return true
-}
-
-// get cumulative authz from all inventories in namespace
-func getDevAuthzFromInventoryList(inventoryList v1alpha1.DBaaSInventoryList, tenant v1alpha1.DBaaSTenant) (developerAuthz v1alpha1.DBaasUsersGroups) {
-	var tenantDefaults bool
-	for _, inventory := range inventoryList.Items {
-		if inventory.Namespace == tenant.Spec.InventoryNamespace {
-			// if inventory.spec.authz is nil, apply authz from tenant.spec.authz.developer as a default
-			if inventory.Spec.Authz.Users == nil && inventory.Spec.Authz.Groups == nil {
-				tenantDefaults = true
-			} else {
-				developerAuthz.Users = append(developerAuthz.Users, inventory.Spec.Authz.Users...)
-				developerAuthz.Groups = append(developerAuthz.Groups, inventory.Spec.Authz.Groups...)
-			}
-		}
-	}
-	if tenantDefaults {
-		developerAuthz.Users = append(developerAuthz.Users, tenant.Spec.Authz.Users...)
-		developerAuthz.Groups = append(developerAuthz.Groups, tenant.Spec.Authz.Groups...)
-	}
-	return developerAuthz
 }
 
 // create a slice of rbac subjects for use in role bindings
