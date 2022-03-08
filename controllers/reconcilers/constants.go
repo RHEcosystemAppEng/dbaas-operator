@@ -21,8 +21,8 @@ const (
 	CRUNCHY_BRIDGE_CHANNEL     = "alpha"
 
 	// MONGODB_ATLAS
-	MONGODB_ATLAS_CATALOG_IMG = "quay.io/ecosystem-appeng/mongodb-atlas-operator-catalog:0.7.1-dev"
-	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.7.1-dev"
+	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0"
+	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.2.0"
 	MONGODB_ATLAS_NAME        = "mongodb-atlas"
 	MONGODB_ATLAS_DISPLAYNAME = "MongoDB Atlas Operator"
 	MONGODB_ATLAS_DEPLOYMENT  = "mongodb-atlas-operator"
