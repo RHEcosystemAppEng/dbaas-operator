@@ -236,7 +236,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 			}
 
 			Context("after creating DBaaSConnection", func() {
-				connectionName := "test-connection"
+				connectionName := "test-connection-1"
 				instanceID := "test-instanceID"
 				DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
 					InventoryRef: v1alpha1.NamespacedName{
@@ -309,7 +309,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					Name: "other2",
 				},
 			}
-			inventoryRefName := "test-inventory-ref"
+			inventoryRefName := "test-inventory-ref-2"
 			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
@@ -350,7 +350,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			}
 
 			Context("after creating DBaaSConnections in separate, valid dev namespaces", func() {
-				connectionName := "test-connection"
+				connectionName := "test-connection-2"
 				instanceID := "test-instanceID"
 				DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
 					InventoryRef: v1alpha1.NamespacedName{
@@ -415,7 +415,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					Name: "other3",
 				},
 			}
-			inventoryRefName := "test-inventory-ref"
+			inventoryRefName := "test-inventory-ref-3"
 			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
@@ -456,7 +456,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			}
 
 			Context("after creating DBaaSConnections in separate, valid dev namespaces", func() {
-				connectionName := "test-connection"
+				connectionName := "test-connection-3"
 				instanceID := "test-instanceID"
 				DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
 					InventoryRef: v1alpha1.NamespacedName{

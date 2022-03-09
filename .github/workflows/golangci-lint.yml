@@ -1,11 +1,14 @@
 name: Golangci-lint and Gosec
+
 on:
   push:
     branches:
-      - main
+    - main
+    - release-*
   pull_request:
     branches:
-      - main
+    - main
+    - release-*
 
 jobs:
   golangci:
