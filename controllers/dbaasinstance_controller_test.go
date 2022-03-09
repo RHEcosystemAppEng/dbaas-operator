@@ -124,8 +124,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotReady))
 	})
 	Context("after creating DBaaSInstance in an invalid namespace", func() {
-		instanceName := "test-instance-not-ready"
-		inventoryName := "test-instance-inventory-not-ready"
+		instanceName := "test-instance-not-ready-2"
+		inventoryName := "test-instance-inventory-diff-ns"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
 			CredentialsRef: &v1alpha1.NamespacedName{
 				Name:      testSecret.Name,
@@ -325,7 +325,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					Name: "other2",
 				},
 			}
-			inventoryRefName := "test-inventory-ref"
+			inventoryRefName := "test-inventory-ref-2"
 			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
@@ -366,7 +366,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 
 			Context("after creating DBaaSInstance in separate, valid dev namespace", func() {
-				instanceName := "test-instance"
+				instanceName := "test-instance-2"
 				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
 					InventoryRef: v1alpha1.NamespacedName{
 						Name:      inventoryRefName,
@@ -438,7 +438,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					Name: "other3",
 				},
 			}
-			inventoryRefName := "test-inventory-ref"
+			inventoryRefName := "test-inventory-ref-3"
 			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
@@ -479,7 +479,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 
 			Context("after creating DBaaSInstance in separate, valid dev namespace", func() {
-				instanceName := "test-instance"
+				instanceName := "test-instance-3"
 				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
 					InventoryRef: v1alpha1.NamespacedName{
 						Name:      inventoryRefName,
