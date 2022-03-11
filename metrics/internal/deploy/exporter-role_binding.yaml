@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dbaas-metrics-exporter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dbaas-metrics-exporter
+subjects:
+- kind: ServiceAccount
+  name: dbaas-metrics-exporter
+  namespace: openshift-dbaas-operator

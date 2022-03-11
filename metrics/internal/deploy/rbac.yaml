@@ -11,14 +11,6 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - ceph.rook.io
-  resources:
-  - cephobjectstores
-  verbs:
-    - get
-    - list
-    - watch
-- apiGroups:
   - quota.openshift.io
   resources:
   - clusterresourcequotas
@@ -52,13 +44,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: dbaas-metrics-exporter
-  namespace: openshift-storage
+  namespace: openshift-dbaas-operator
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: dbaas-metrics-svc
-  namespace: openshift-storage
+  namespace: openshift-dbaas-operator
 rules:
  - apiGroups:
    - ""
@@ -75,7 +67,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: dbaas-metrics-svc
-  namespace: openshift-storage
+  namespace: openshift-dbaas-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
