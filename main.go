@@ -18,13 +18,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/mod/semver"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1 "github.com/openshift/api/console/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
@@ -183,9 +186,25 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
 		os.Exit(1)
 	}
+
+	var ocpVersion string
+	info, err := openshift.GetPlatformInfo(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to get platform info")
+	}
+	if info.IsOpenShift() {
+		mappedVersion := openshift.MapKnownVersion(info)
+		if mappedVersion.Version != "" {
+			ocpVersion = semver.MajorMinor("v" + mappedVersion.Version)
+			setupLog.Info(fmt.Sprintf("OpenShift Version: %s", ocpVersion))
+		} else {
+			setupLog.Info("OpenShift version could not be determined.")
+		}
+	}
 	if err = (&controllers.DBaaSPlatformReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 		Log:             ctrl.Log.WithName("controllers").WithName("DBaaSPlatform"),
+		OcpVersion:      ocpVersion,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSPlatform")
 		os.Exit(1)
