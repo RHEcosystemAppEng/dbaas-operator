@@ -29,6 +29,7 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
+	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
 
@@ -72,6 +73,7 @@ type DBaaSPlatformReconciler struct {
 	Log                 logr.Logger
 	installComplete     bool
 	operatorNameVersion string
+	OcpVersion          string
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -239,6 +241,9 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv
 	case dbaasv1alpha1.TypeProvider:
 		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
+		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
+			platformConfig.Image += reconcilers.CONSOLE_PLUGIN_49_TAG
+		}
 		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeQuickStart:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
