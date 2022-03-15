@@ -1,5 +1,6 @@
 resources:
 - manager.yaml
+- prometheus-operator-deployment.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

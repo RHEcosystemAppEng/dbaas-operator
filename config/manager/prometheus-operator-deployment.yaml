@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-operator
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/part-of: dbaas-operator
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: prometheus-operator
+        target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
+      labels:
+        app.kubernetes.io/name: prometheus-operator
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/part-of: dbaas-operator
+        app.kubernetes.io/version: 0.52.1
+    spec:
+      serviceAccountName: prometheus-operator-sa
+      containers:
+        - args:
+            - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.52.1
+            - --prometheus-instance-selector=app.kubernetes.io/managed-by=dbaas-operator
+            - --alertmanager-instance-selector=app.kubernetes.io/managed-by=dbaas-operator
+            - --thanos-ruler-instance-selector=app.kubernetes.io/managed-by=dbaas-operator
+          image: quay.io/prometheus-operator/prometheus-operator:v0.50.0
+          name: prometheus-operator
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 5m
+              memory: 150Mi
+          terminationMessagePolicy: FallbackToLogsOnError
