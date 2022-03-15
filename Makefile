@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.1.4
+VERSION ?= 0.1.5
 
 
 CONTAINER_ENGINE?=docker
@@ -166,7 +166,10 @@ undeploy-olm:
 
 catalog-update:
 	-oc delete catalogsource dbaas-operator -n openshift-marketplace
-	oc apply -f config/samples/catalog-source.yaml
+	-oc delete catalogsource mongodb-atlas-catalogsource -n openshift-marketplace
+	-oc delete catalogsource crunchy-bridge-catalogsource -n openshift-marketplace
+	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
+	 oc apply -f config/samples/catalog-source.yaml
 
 deploy-sample-app:
 	oc apply -f config/samples/quarkus-runner/deployment.yaml

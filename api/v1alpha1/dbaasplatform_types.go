@@ -17,22 +17,27 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type PlatformsName string
-
 type PlatformsInstlnStatus string
+type PlatformsType int
 
 const (
 	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
 	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
 	DBaaSDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
-	Csv                                PlatformsName = "Csv"
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
-	ServiceBindingInstallation         PlatformsName = "service-binding"
 	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
 	DBaaSQuickStartInstallation        PlatformsName = "dbaas-quick-starts"
+)
+
+const (
+	TypeQuickStart PlatformsType = iota
+	TypeConsolePlugin
+	TypeProvider
 )
 
 const (
@@ -40,6 +45,18 @@ const (
 	ResultFailed     PlatformsInstlnStatus = "failed"
 	ResultInProgress PlatformsInstlnStatus = "in progress"
 )
+
+type PlatformConfig struct {
+	Name           string
+	CSV            string
+	DeploymentName string
+	Image          string
+	PackageName    string
+	Channel        string
+	DisplayName    string
+	Envs           []v1.EnvVar
+	Type           PlatformsType
+}
 
 // DBaaSPlatformSpec defines the desired state of DBaaSPlatform
 type DBaaSPlatformSpec struct {

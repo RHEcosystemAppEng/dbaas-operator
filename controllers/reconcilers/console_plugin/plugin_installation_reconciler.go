@@ -24,29 +24,23 @@ import (
 )
 
 const (
-	consoleServingCertSecretName = "console-serving-cert"
-	consolePort                  = 9001
+	serviceCertPrefix = "serve-cert-"
+	consolePort       = 9001
 )
 
 type Reconciler struct {
-	client      client.Client
-	logger      logr.Logger
-	scheme      *runtime.Scheme
-	pluginName  string
-	pluginImage string
-	displayName string
-	envs        []v1.EnvVar
+	client client.Client
+	logger logr.Logger
+	scheme *runtime.Scheme
+	config v1alpha1.PlatformConfig
 }
 
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, pluginName string, pluginImage string, displayName string, envs ...v1.EnvVar) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, config v1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	return &Reconciler{
-		client:      client,
-		scheme:      scheme,
-		logger:      logger,
-		pluginName:  pluginName,
-		pluginImage: pluginImage,
-		displayName: displayName,
-		envs:        envs,
+		client: client,
+		scheme: scheme,
+		logger: logger,
+		config: config,
 	}
 }
 func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, status2 *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
@@ -113,13 +107,13 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 			return err
 		}
 		service.Annotations = map[string]string{
-			"service.beta.openshift.io/serving-cert-secret-name": consoleServingCertSecretName,
+			"service.beta.openshift.io/serving-cert-secret-name": serviceCertPrefix + r.config.Name,
 		}
 		service.Labels = map[string]string{
-			"app":                         r.pluginName,
-			"app.kubernetes.io/component": r.pluginName,
-			"app.kubernetes.io/instance":  r.pluginName,
-			"app.kubernetes.io/part-of":   r.pluginName,
+			"app":                         r.config.Name,
+			"app.kubernetes.io/component": r.config.Name,
+			"app.kubernetes.io/instance":  r.config.Name,
+			"app.kubernetes.io/part-of":   r.config.Name,
 		}
 		service.Spec.Ports = []v1.ServicePort{
 			{
@@ -130,7 +124,7 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 			},
 		}
 		service.Spec.Selector = map[string]string{
-			"app": r.pluginName,
+			"app": r.config.Name,
 		}
 		service.Spec.Type = v1.ServiceTypeClusterIP
 		service.Spec.SessionAffinity = v1.ServiceAffinityNone
@@ -153,10 +147,10 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 			return err
 		}
 		deployment.Labels = map[string]string{
-			"app":                                r.pluginName,
-			"app.kubernetes.io/component":        r.pluginName,
-			"app.kubernetes.io/instance":         r.pluginName,
-			"app.kubernetes.io/part-of":          r.pluginName,
+			"app":                                r.config.Name,
+			"app.kubernetes.io/component":        r.config.Name,
+			"app.kubernetes.io/instance":         r.config.Name,
+			"app.kubernetes.io/part-of":          r.config.Name,
 			"app.openshift.io/runtime-namespace": cr.Namespace,
 		}
 		replicas := int32(3)
@@ -167,12 +161,12 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		deployment.Spec.Replicas = &replicas
 		deployment.Spec.Selector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"app": r.pluginName,
+				"app": r.config.Name,
 			},
 		}
 		deployment.Spec.Template.ObjectMeta = metav1.ObjectMeta{
 			Labels: map[string]string{
-				"app": r.pluginName,
+				"app": r.config.Name,
 			},
 		}
 		socketHandler := v1.Handler{
@@ -180,8 +174,8 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		}
 		deployment.Spec.Template.Spec.Containers = []v1.Container{
 			{
-				Name:  r.pluginName,
-				Image: r.pluginImage,
+				Name:  r.config.Name,
+				Image: r.config.Image,
 				Ports: []v1.ContainerPort{
 					{
 						ContainerPort: consolePort,
@@ -196,12 +190,12 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 				},
 				VolumeMounts: []v1.VolumeMount{
 					{
-						Name:      consoleServingCertSecretName,
+						Name:      serviceCertPrefix + r.config.Name,
 						ReadOnly:  true,
 						MountPath: "/var/serving-cert",
 					},
 				},
-				Env: r.envs,
+				Env: r.config.Envs,
 				SecurityContext: &v1.SecurityContext{
 					AllowPrivilegeEscalation: &ptrFalse,
 					Capabilities: &v1.Capabilities{
@@ -224,10 +218,10 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 		}
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
 			{
-				Name: consoleServingCertSecretName,
+				Name: serviceCertPrefix + r.config.Name,
 				VolumeSource: v1.VolumeSource{
 					Secret: &v1.SecretVolumeSource{
-						SecretName:  consoleServingCertSecretName,
+						SecretName:  serviceCertPrefix + r.config.Name,
 						DefaultMode: &defaultMode,
 					},
 				},
@@ -267,9 +261,9 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	plugin := r.getConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
-		plugin.Spec.DisplayName = r.displayName
+		plugin.Spec.DisplayName = r.config.DisplayName
 		plugin.Spec.Service = consolev1alpha1.ConsolePluginService{
-			Name:      r.pluginName,
+			Name:      r.config.Name,
 			Namespace: cr.Namespace,
 			Port:      int32(consolePort),
 			BasePath:  "/",
@@ -321,7 +315,7 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 func (r *Reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.pluginName,
+			Name:      r.config.Name,
 			Namespace: cr.Namespace,
 		},
 	}
@@ -330,7 +324,7 @@ func (r *Reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
 func (r *Reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.pluginName,
+			Name:      r.config.Name,
 			Namespace: cr.Namespace,
 		},
 	}
@@ -339,7 +333,7 @@ func (r *Reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment
 func (r *Reconciler) getConsolePlugin() *consolev1alpha1.ConsolePlugin {
 	return &consolev1alpha1.ConsolePlugin{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: r.pluginName,
+			Name: r.config.Name,
 		},
 	}
 }
@@ -354,17 +348,17 @@ func (r *Reconciler) getOperatorConsole() *operatorv1.Console {
 
 func (r *Reconciler) addPlugin(plugins []string) ([]string, bool) {
 	for _, p := range plugins {
-		if p == r.pluginName {
+		if p == r.config.Name {
 			return plugins, false
 		}
 	}
 
-	return append(plugins, r.pluginName), true
+	return append(plugins, r.config.Name), true
 }
 
 func (r *Reconciler) removePlugin(plugins []string) []string {
 	for i, p := range plugins {
-		if p == r.pluginName {
+		if p == r.config.Name {
 			return append(plugins[:i], plugins[i+1:]...)
 		}
 	}

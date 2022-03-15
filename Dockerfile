@@ -1,8 +1,8 @@
 # Build the manager binary
-FROM registry.access.redhat.com/ubi8:8.4 AS builder
+FROM registry.access.redhat.com/ubi8:8.5 AS builder
 
 # Set go version
-ARG RUNTIME_VERSION=1.16.8
+ARG RUNTIME_VERSION=1.16.15
 
 RUN curl -fsSLo /tmp/go.tgz https://golang.org/dl/go${RUNTIME_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf /tmp/go.tgz && \
@@ -27,7 +27,7 @@ COPY controllers/ controllers/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 
 # Build the operator image
-FROM registry.access.redhat.com/ubi8-minimal:8.4
+FROM registry.access.redhat.com/ubi8-minimal:8.5
 
 COPY LICENSE /licenses/LICENSE
 WORKDIR /
