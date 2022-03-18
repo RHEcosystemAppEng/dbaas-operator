@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-
+	oauthzv1 "github.com/openshift/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -242,11 +242,9 @@ var _ = Describe("Check hasNoEditOrListVerbs function", func() {
 	defer GinkgoRecover()
 
 	// ClusterRoles created by operator should not grant 'edit' or 'list' rights
-	inventoryList := createInventoryList()
-	inventoryAuthz := getDevAuthzFromInventoryList(inventoryList, defaultTenant)
-	serviceAdminAuthz := v1alpha1.DBaasUsersGroups{}
-	tenantListAuthz := v1alpha1.DBaasUsersGroups{}
-	clusterRole, clusterRolebinding := tenantRbacObjs(defaultTenant, serviceAdminAuthz, inventoryAuthz, tenantListAuthz)
+	serviceAdminAuthz := &oauthzv1.ResourceAccessReviewResponse{}
+	tenantListAuthz := &oauthzv1.ResourceAccessReviewResponse{}
+	clusterRole, clusterRolebinding := tenantRbacObjs(defaultTenant, serviceAdminAuthz, &oauthzv1.ResourceAccessReviewResponse{}, tenantListAuthz)
 	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
 	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
 		Verbs: []string{"watch"},
@@ -261,41 +259,6 @@ var _ = Describe("Check hasNoEditOrListVerbs function", func() {
 
 	// Bindings should be ignored, return 'true'
 	Expect(hasNoEditOrListVerbs(&clusterRolebinding)).To(BeTrue())
-
-	// Roles created by operator should not grant 'edit' or 'list' rights
-	tenantList := createTestTenantList()
-	role, rolebinding := inventoryRbacObjs(inventoryList.Items[0], tenantList)
-	Expect(hasNoEditOrListVerbs(&role)).To(BeTrue())
-
-	// Bindings should be ignored, return 'true'
-	Expect(hasNoEditOrListVerbs(&rolebinding)).To(BeTrue())
-
-	// Roles with edit rights should return 'false'
-	role.Rules = append(role.Rules, rbacv1.PolicyRule{
-		Verbs: []string{"create"},
-	})
-	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
-
-	role.Rules = []rbacv1.PolicyRule{
-		{
-			Verbs: []string{"delete"},
-		},
-	}
-	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
-
-	role.Rules = []rbacv1.PolicyRule{
-		{
-			Verbs: []string{"update"},
-		},
-	}
-	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
-
-	role.Rules = []rbacv1.PolicyRule{
-		{
-			Verbs: []string{"list"},
-		},
-	}
-	Expect(hasNoEditOrListVerbs(&role)).To(BeFalse())
 })
 
 var _ = Describe("Check isOwner function", func() {

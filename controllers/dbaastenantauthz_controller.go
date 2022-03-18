@@ -41,8 +41,8 @@ type DBaaSTenantAuthzReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch
-//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles/finalizers;rolebindings/finalizers;clusterroles/finalizers;clusterrolebindings/finalizers,verbs=update
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles/finalizers;clusterrolebindings/finalizers,verbs=update
 //+kubebuilder:rbac:groups="";authorization.openshift.io,resources=localresourceaccessreviews;localsubjectaccessreviews;resourceaccessreviews;selfsubjectrulesreviews;subjectaccessreviews;subjectrulesreviews,verbs=create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -161,17 +161,7 @@ func (r *DBaaSTenantAuthzReconciler) reconcileAuthz(ctx context.Context, namespa
 		developerAuthz := r.getDeveloperAuthz(ctx, namespace, inventoryList)
 		tenantListAuthz := r.getTenantListAuthz(ctx)
 		for _, tenant := range tenantList.Items {
-			if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
-				return err
-			}
-		}
-
-		//
-		// Inventory RBAC
-		//
-		// Reconcile each inventory in the tenant's namespace to ensure proper RBAC is created
-		for _, inventory := range inventoryList.Items {
-			if err := r.reconcileInventoryRbacObjs(ctx, inventory, tenantList); err != nil {
+			if err := r.reconcileTenantRbacObjs(ctx, tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
 				return err
 			}
 		}

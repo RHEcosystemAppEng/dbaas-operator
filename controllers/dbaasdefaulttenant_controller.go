@@ -116,10 +116,7 @@ func getDefaultTenant(inventoryNamespace string) v1alpha1.DBaaSTenant {
 			Name: "cluster",
 		},
 		Spec: v1alpha1.DBaaSTenantSpec{
-			InventoryNamespace: inventoryNamespace,
-			Authz: v1alpha1.DBaasUsersGroups{
-				Groups: []string{"system:authenticated"},
-			},
+			InventoryNamespace:   inventoryNamespace,
 			ConnectionNamespaces: []string{"*"},
 		},
 	}

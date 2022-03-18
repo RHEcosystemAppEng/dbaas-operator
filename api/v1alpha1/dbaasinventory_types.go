@@ -25,9 +25,6 @@ type DBaaSOperatorInventorySpec struct {
 	// A reference to a DBaaSProvider CR
 	ProviderRef NamespacedName `json:"providerRef"`
 
-	// Optionally define developer user and group access to this inventory
-	Authz DBaasUsersGroups `json:"authz,omitempty"`
-
 	// Namespaces in which DBaaSConnections/DBaaSInstances are allowed to reference this Inventory.
 	// Overrides the corresponding DBaaSTenant setting. Use "*" to allow all namespaces.
 	// If not set in either the tenant or inventory object, connections will only be allowed in the inventory namespace.
@@ -35,12 +32,6 @@ type DBaaSOperatorInventorySpec struct {
 
 	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
-}
-
-// DBaasUsersGroups designates which OpenShift users and groups to authorize
-type DBaasUsersGroups struct {
-	Users  []string `json:"users,omitempty"`
-	Groups []string `json:"groups,omitempty"`
 }
 
 //+kubebuilder:object:root=true

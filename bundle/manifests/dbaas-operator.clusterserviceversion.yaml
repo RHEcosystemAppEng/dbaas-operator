@@ -400,8 +400,6 @@ spec:
           resources:
           - clusterrolebindings/finalizers
           - clusterroles/finalizers
-          - rolebindings/finalizers
-          - roles/finalizers
           verbs:
           - update
         - apiGroups:
@@ -410,11 +408,8 @@ spec:
           - rolebindings
           - roles
           verbs:
-          - create
           - get
           - list
-          - patch
-          - update
           - watch
         - apiGroups:
           - authentication.k8s.io
