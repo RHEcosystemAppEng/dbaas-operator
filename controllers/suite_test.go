@@ -122,15 +122,7 @@ var _ = BeforeSuite(func() {
 		Scheme:           k8sManager.GetScheme(),
 		InstallNamespace: testNamespace,
 	}
-	authzReconciler := &DBaaSAuthzReconciler{
-		DBaaSReconciler:       dRec,
-		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
-	}
 
-	err = (&DBaaSTenantReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
 		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
@@ -146,11 +138,6 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DBaaSDefaultTenantReconciler{
-		DBaaSReconciler: dRec,
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
-
 	iCtrl = newSpyController(inventoryCtrl)
 	cCtrl = newSpyController(connectionCtrl)
 	inCtrl = newSpyController(instanceCtrl)
@@ -160,11 +147,6 @@ var _ = BeforeSuite(func() {
 		InventoryCtrl:   iCtrl,
 		ConnectionCtrl:  cCtrl,
 		InstanceCtrl:    inCtrl,
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&DBaaSTenantAuthzReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

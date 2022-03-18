@@ -32,7 +32,6 @@ const (
 
 	// DBaaS condition reasons
 	Ready                       string = "Ready"
-	DBaaSTenantNotFound         string = "DBaaSTenantNotFound"
 	DBaaSProviderNotFound       string = "DBaaSProviderNotFound"
 	DBaaSInventoryNotFound      string = "DBaaSInventoryNotFound"
 	DBaaSInventoryNotReady      string = "DBaaSInventoryNotReady"

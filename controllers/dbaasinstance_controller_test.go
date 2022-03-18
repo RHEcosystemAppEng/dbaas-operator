@@ -116,7 +116,6 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
@@ -192,7 +191,6 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
@@ -204,7 +202,6 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 var _ = Describe("DBaaSInstance controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
@@ -316,7 +313,6 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {

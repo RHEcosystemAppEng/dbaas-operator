@@ -28,36 +28,6 @@ import (
 )
 
 var _ = Describe("DBaaSInventory controller with errors", func() {
-	Context("after creating DBaaSInventory without tenant in the target namespace", func() {
-		inventoryName := "test-inventory-no-tenant"
-		ns := "testns-no-tenant"
-		nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
-
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      testSecret.Name,
-				Namespace: ns,
-			},
-		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      inventoryName,
-				Namespace: ns,
-			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
-					Name: testProviderName,
-				},
-				DBaaSInventorySpec: *DBaaSInventorySpec,
-			},
-		}
-
-		BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-		BeforeEach(assertResourceCreationIfNotExists(nsSpec))
-		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSTenantNotFound))
-	})
-
 	Context("after creating DBaaSInventory without valid provider", func() {
 		inventoryName := "test-inventory-no-provider"
 		providerName := "provider-no-exist"
@@ -80,7 +50,6 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 			},
 		}
 		BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSProviderNotFound))
 	})
@@ -89,7 +58,6 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 var _ = Describe("DBaaSInventory controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {

@@ -70,8 +70,6 @@ var defaultProvider = &v1alpha1.DBaaSProvider{
 	},
 }
 
-var defaultTenant = getDefaultTenant(testNamespace)
-
 func assertResourceCreationIfNotExists(object client.Object) func() {
 	return func() {
 		By("checking the resource exists")

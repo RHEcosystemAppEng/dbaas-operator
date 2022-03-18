@@ -108,7 +108,6 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -180,7 +179,6 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 		BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -192,7 +190,6 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 var _ = Describe("DBaaSConnection controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
@@ -300,7 +297,6 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {
