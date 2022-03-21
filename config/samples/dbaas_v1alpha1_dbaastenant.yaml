@@ -4,11 +4,3 @@ metadata:
   name: sample
 spec:
   inventoryNamespace: foo
-  authz:
-    serviceAdmin:
-      users:
-        - admin1
-        - admin2
-    developer:
-      groups:
-        - system:authenticated
