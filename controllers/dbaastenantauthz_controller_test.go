@@ -82,7 +82,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[1].Kind).To(Equal("Group"))
 	Expect(clusterRolebinding.Subjects[1].Namespace).To(BeEmpty())
 
-	// serviceAdminAuthz.users w/ duplicates
+	// serviceAdminAuthz users w/ duplicates
 	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
 		UsersSlice: []string{"admin1", "admin2", "admin2", "admin3"},
 	}
@@ -107,7 +107,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[3].Kind).To(Equal("Group"))
 	Expect(clusterRolebinding.Subjects[3].Namespace).To(BeEmpty())
 
-	// serviceAdminAuthz.groups w/ duplicates
+	// serviceAdminAuthz groups w/ duplicates
 	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
 		GroupsSlice: []string{"group1", "group1"},
 	}
@@ -123,7 +123,7 @@ func TestTenantRbacObjs(t *testing.T) {
 	Expect(clusterRolebinding.Subjects[1].Kind).To(Equal("Group"))
 	Expect(clusterRolebinding.Subjects[1].Namespace).To(BeEmpty())
 
-	// serviceAdminAuthz.users & groups w/ duplicates
+	// serviceAdminAuthz users & groups w/ duplicates
 	serviceAdminAuthz = &oauthzv1.ResourceAccessReviewResponse{
 		UsersSlice:  []string{"user1", "user2", "user2", "system:serviceaccount:openshift-service-ca-operator:service-ca-operator"},
 		GroupsSlice: []string{"group1", "group1", "group2"},

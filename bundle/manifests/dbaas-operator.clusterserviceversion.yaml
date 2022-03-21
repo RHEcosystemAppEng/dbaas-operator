@@ -159,19 +159,6 @@ metadata:
             "name": "sample"
           },
           "spec": {
-            "authz": {
-              "developer": {
-                "groups": [
-                  "system:authenticated"
-                ]
-              },
-              "serviceAdmin": {
-                "users": [
-                  "admin1",
-                  "admin2"
-                ]
-              }
-            },
             "inventoryNamespace": "foo"
           }
         }
