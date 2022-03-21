@@ -44,19 +44,6 @@ spec:
             description: DBaaSTenantSpec defines Tenant inventory namespace and user
               authorizations
             properties:
-              authz:
-                description: Specify a Tenant’s default Developers for DBaaSInventory
-                  “viewer” access
-                properties:
-                  groups:
-                    items:
-                      type: string
-                    type: array
-                  users:
-                    items:
-                      type: string
-                    type: array
-                type: object
               connectionNamespaces:
                 description: Default namespaces where DBaaSConnections/DBaaSInstances
                   are allowed to reference a tenant's inventories. Each inventory

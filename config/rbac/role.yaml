@@ -158,8 +158,6 @@ rules:
   resources:
   - clusterrolebindings/finalizers
   - clusterroles/finalizers
-  - rolebindings/finalizers
-  - roles/finalizers
   verbs:
   - update
 - apiGroups:
@@ -168,9 +166,6 @@ rules:
   - rolebindings
   - roles
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch

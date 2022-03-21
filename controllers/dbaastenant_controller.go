@@ -99,7 +99,7 @@ func (r *DBaaSTenantReconciler) reconcileTenantAuthz(ctx context.Context, tenant
 	serviceAdminAuthz := r.getServiceAdminAuthz(ctx, tenant.Spec.InventoryNamespace)
 	developerAuthz := r.getDeveloperAuthz(ctx, tenant.Spec.InventoryNamespace, inventoryList)
 	tenantListAuthz := r.getTenantListAuthz(ctx)
-	if err := r.reconcileTenantRbacObjs(ctx, tenant, inventoryList, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
+	if err := r.reconcileTenantRbacObjs(ctx, tenant, serviceAdminAuthz, developerAuthz, tenantListAuthz); err != nil {
 		return err
 	}
 

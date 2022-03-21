@@ -35,19 +35,6 @@ spec:
           spec:
             description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
-              authz:
-                description: Optionally define developer user and group access to
-                  this inventory
-                properties:
-                  groups:
-                    items:
-                      type: string
-                    type: array
-                  users:
-                    items:
-                      type: string
-                    type: array
-                type: object
               connectionNamespaces:
                 description: Namespaces in which DBaaSConnections/DBaaSInstances are
                   allowed to reference this Inventory. Overrides the corresponding
