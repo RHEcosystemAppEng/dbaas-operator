@@ -159,19 +159,6 @@ metadata:
             "name": "sample"
           },
           "spec": {
-            "authz": {
-              "developer": {
-                "groups": [
-                  "system:authenticated"
-                ]
-              },
-              "serviceAdmin": {
-                "users": [
-                  "admin1",
-                  "admin2"
-                ]
-              }
-            },
             "inventoryNamespace": "foo"
           }
         }
@@ -400,8 +387,6 @@ spec:
           resources:
           - clusterrolebindings/finalizers
           - clusterroles/finalizers
-          - rolebindings/finalizers
-          - roles/finalizers
           verbs:
           - update
         - apiGroups:
@@ -410,11 +395,8 @@ spec:
           - rolebindings
           - roles
           verbs:
-          - create
           - get
           - list
-          - patch
-          - update
           - watch
         - apiGroups:
           - authentication.k8s.io

@@ -179,6 +179,10 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInventory")
 			os.Exit(1)
 		}
+		if err = (&v1alpha1.DBaaSTenant{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSTenant")
+			os.Exit(1)
+		}
 	}
 	if err = (&controllers.DBaaSTenantReconciler{
 		DBaaSAuthzReconciler: authzReconciler,
