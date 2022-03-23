@@ -26,8 +26,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	oauthzv1 "github.com/openshift/api/authorization/v1"
-	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -75,8 +73,6 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	err = clientgoscheme.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
-	err = oauthzv1.AddToScheme(scheme)
-	Expect(err).NotTo(HaveOccurred())
 	err = rbacv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = operatorframework.AddToScheme(scheme)
@@ -99,10 +95,6 @@ var _ = BeforeSuite(func() {
 
 	ctx = context.Background()
 
-	authzClient, err := oauthzclientv1.NewForConfig(cfg)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(authzClient).NotTo(BeNil())
-
 	err = os.Setenv(InstallNamespaceEnvVar, testNamespace)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -122,13 +114,9 @@ var _ = BeforeSuite(func() {
 		Scheme:           k8sManager.GetScheme(),
 		InstallNamespace: testNamespace,
 	}
-	authzReconciler := &DBaaSAuthzReconciler{
-		DBaaSReconciler:       dRec,
-		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
-	}
 
-	err = (&DBaaSTenantReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
+	err = (&DBaaSPolicyReconciler{
+		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 	inventoryCtrl, err := (&DBaaSInventoryReconciler{
@@ -146,7 +134,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&DBaaSDefaultTenantReconciler{
+	err = (&DBaaSDefaultPolicyReconciler{
 		DBaaSReconciler: dRec,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
@@ -160,11 +148,6 @@ var _ = BeforeSuite(func() {
 		InventoryCtrl:   iCtrl,
 		ConnectionCtrl:  cCtrl,
 		InstanceCtrl:    inCtrl,
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
-
-	err = (&DBaaSTenantAuthzReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 

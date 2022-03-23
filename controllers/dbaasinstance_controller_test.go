@@ -115,7 +115,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
@@ -129,6 +130,9 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			CredentialsRef: &v1alpha1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
+			DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+				ConnectionNamespaces: []string{"valid-ns", "random"},
+			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
@@ -139,8 +143,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				ProviderRef: v1alpha1.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec:   *DBaaSInventorySpec,
-				ConnectionNamespaces: []string{"valid-ns", "random"},
+				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
 		}
 		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
@@ -190,7 +193,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
@@ -202,7 +206,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 var _ = Describe("DBaaSInstance controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
@@ -275,7 +280,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					status := &v1alpha1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               "ProvisionReady",
+								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -313,7 +318,8 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {
@@ -336,8 +342,10 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
+						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+							ConnectionNamespaces: []string{otherNS.Name},
+						},
 					},
-					ConnectionNamespaces: []string{otherNS.Name},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
@@ -391,7 +399,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					status := &v1alpha1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               "ProvisionReady",
+								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -448,8 +456,10 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
+						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+							ConnectionNamespaces: []string{"*"},
+						},
 					},
-					ConnectionNamespaces: []string{"*"},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
@@ -503,7 +513,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					status := &v1alpha1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               "ProvisionReady",
+								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -533,6 +543,87 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					}
 					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
 				})
+			})
+
+			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
+			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		})
+
+		Context("after creating DBaaSInventory w/ provisioning disabled", func() {
+			otherNS := v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "other3",
+				},
+			}
+			isTrue := true
+			inventoryRefName := "test-inventory-ref-4"
+			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryRefName,
+					Namespace: testNamespace,
+				},
+				Spec: v1alpha1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1alpha1.NamespacedName{
+						Name: testProviderName,
+					},
+					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+						CredentialsRef: &v1alpha1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+							ConnectionNamespaces: []string{"*"},
+							DisableProvisions:    &isTrue,
+						},
+					},
+				},
+			}
+			lastTransitionTime := getLastTransitionTimeForTest()
+			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+				Instances: []v1alpha1.Instance{
+					{
+						InstanceID: "testInstanceID",
+						Name:       "testInstance",
+						InstanceInfo: map[string]string{
+							"testInstanceInfo": "testInstanceInfo",
+						},
+					},
+				},
+				Conditions: []metav1.Condition{
+					{
+						Type:               "SpecSynced",
+						Status:             metav1.ConditionTrue,
+						Reason:             "SyncOK",
+						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+					},
+				},
+			}
+
+			Context("instance should not provision", func() {
+				instanceName := "test-instance-4"
+				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					Name:          "test-instance",
+					CloudProvider: "aws",
+					CloudRegion:   "test-region",
+					OtherInstanceParams: map[string]string{
+						"testParam": "test-param",
+					},
+				}
+				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      instanceName,
+						Namespace: otherNS.Name,
+					},
+					Spec: *DBaaSInstanceSpec,
+				}
+				BeforeEach(assertResourceCreation(createdDBaaSInstance))
+				AfterEach(assertResourceDeletion(createdDBaaSInstance))
+
+				It("should update DBaaSInstance status appropriately", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotProvisionable))
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))

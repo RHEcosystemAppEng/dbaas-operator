@@ -56,7 +56,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if inventory, validNS, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
+	if inventory, validNS, provision, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionFalse,
@@ -67,6 +67,8 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}, ctx, logger); err != nil {
 		return ctrl.Result{}, err
 	} else if !validNS {
+		return ctrl.Result{}, nil
+	} else if !provision {
 		return ctrl.Result{}, nil
 	} else {
 		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,

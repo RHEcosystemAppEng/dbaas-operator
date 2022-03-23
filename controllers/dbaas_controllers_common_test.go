@@ -89,7 +89,7 @@ var crunchyProvider = &v1alpha1.DBaaSProvider{
 	},
 }
 
-var defaultTenant = getDefaultTenant(testNamespace)
+var defaultPolicy = getDefaultPolicy(testNamespace)
 
 func assertResourceCreationIfNotExists(object client.Object) func() {
 	return func() {
@@ -221,6 +221,9 @@ func assertDBaaSResourceStatusUpdated(object client.Object, status metav1.Condit
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
 			case *v1alpha1.DBaaSInstance:
 				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInstanceReadyType)
+				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
+			case *v1alpha1.DBaaSPolicy:
+				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSPolicyReadyType)
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
 			default:
 				Fail("invalid test object")

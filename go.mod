@@ -8,7 +8,6 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0
 	github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba
-	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/operator-framework/api v0.10.5
 	go.uber.org/zap v1.19.0
 	golang.org/x/mod v0.5.1

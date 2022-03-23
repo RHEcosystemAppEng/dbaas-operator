@@ -18,7 +18,8 @@ spec:
     schema:
       openAPIV3Schema:
         description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-          objects must be created in a valid Tenant namespace.
+          objects must be created in a valid namespace, determined by the existence
+          of a DBaaSPolicy object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,11 +37,11 @@ spec:
             description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
             properties:
               connectionNamespaces:
-                description: Namespaces in which DBaaSConnections/DBaaSInstances are
-                  allowed to reference this Inventory. Overrides the corresponding
-                  DBaaSTenant setting. Use "*" to allow all namespaces. If not set
-                  in either the tenant or inventory object, connections will only
-                  be allowed in the inventory namespace.
+                description: Namespaces where DBaaSConnections/DBaaSInstances are
+                  allowed to reference a policy's inventories. Each inventory can
+                  individually override this. Use "*" to allow all namespaces. If
+                  not set in either the policy or inventory object, connections will
+                  only be allowed in the inventory's namespace.
                 items:
                   type: string
                 type: array
@@ -57,6 +58,9 @@ spec:
                 required:
                 - name
                 type: object
+              disableProvisions:
+                description: Disable provisioning against inventory accounts
+                type: boolean
               providerRef:
                 description: A reference to a DBaaSProvider CR
                 properties:

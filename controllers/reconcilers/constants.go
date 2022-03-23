@@ -1,9 +1,8 @@
 package reconcilers
 
 import (
-	corev1 "k8s.io/api/core/v1"
-
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (

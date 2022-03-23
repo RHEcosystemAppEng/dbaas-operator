@@ -24,15 +24,13 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	oauthzv1 "github.com/openshift/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -102,10 +100,7 @@ var _ = Describe("Get DBaaSProvider", func() {
 	AfterEach(assertResourceDeletion(provider))
 
 	It("should get the expected DBaaSProvider", func() {
-		provider.TypeMeta = metav1.TypeMeta{
-			Kind:       "DBaaSProvider",
-			APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
-		}
+		provider.SetGroupVersionKind(v1alpha1.GroupVersion.WithKind("DBaaSProvider"))
 
 		p, err := dRec.getDBaaSProvider("test-provider", ctx)
 		Expect(err).NotTo(HaveOccurred())
@@ -207,109 +202,110 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 	})
 })
 
-var _ = Describe("list tenants by inventory namespace", func() {
-	Context("after creating DBaaSTenants", func() {
-		ns := "test-namespace"
-		tenant1 := getDefaultTenant(ns)
-		tenant1.Name = "test-tenant-1"
-		tenant2 := getDefaultTenant(ns)
-		tenant2.Name = "test-tenant-2"
-		BeforeEach(assertResourceCreation(&tenant1))
-		AfterEach(assertResourceDeletion(&tenant1))
-		BeforeEach(assertResourceCreation(&tenant2))
-		AfterEach(assertResourceDeletion(&tenant2))
-
-		Context("when listing the tenants with the inventory namespace", func() {
-			It("should return all the tenants matching the inventory namespace", func() {
-				tenant1.TypeMeta = metav1.TypeMeta{
-					Kind:       "DBaaSTenant",
-					APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
-				}
-				tenant2.TypeMeta = metav1.TypeMeta{
-					Kind:       "DBaaSTenant",
-					APIVersion: v1alpha1.GroupVersion.Group + "/" + v1alpha1.GroupVersion.Version,
-				}
-
-				tenantList, err := dRec.tenantListByInventoryNS(ctx, ns)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(tenantList.Items).Should(HaveLen(2))
-				Expect(tenantList.Items).Should(ConsistOf(tenant1, tenant2))
-			})
-		})
-
-		Context("when listing the tenants with an invalid namespace", func() {
-			It("should return no tenants", func() {
-				tenantList, err := dRec.tenantListByInventoryNS(ctx, "not-test-namespace")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(tenantList.Items).Should(HaveLen(0))
-			})
-		})
-	})
-})
-
-var _ = Describe("Check hasNoEditOrListVerbs function", func() {
-	defer GinkgoRecover()
-
-	// ClusterRoles created by operator should not grant 'edit' or 'list' rights
-	serviceAdminAuthz := &oauthzv1.ResourceAccessReviewResponse{}
-	tenantListAuthz := &oauthzv1.ResourceAccessReviewResponse{}
-	clusterRole, clusterRolebinding := tenantRbacObjs(defaultTenant, serviceAdminAuthz, &oauthzv1.ResourceAccessReviewResponse{}, tenantListAuthz)
-	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
-	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-		Verbs: []string{"watch"},
-	})
-	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeTrue())
-
-	// ClusterRoles with edit rights should return 'false'
-	clusterRole.Rules = append(clusterRole.Rules, rbacv1.PolicyRule{
-		Verbs: []string{"patch"},
-	})
-	Expect(hasNoEditOrListVerbs(&clusterRole)).To(BeFalse())
-
-	// Bindings should be ignored, return 'true'
-	Expect(hasNoEditOrListVerbs(&clusterRolebinding)).To(BeTrue())
-})
-
-var _ = Describe("Check isOwner function", func() {
-	defer GinkgoRecover()
-	scheme := runtime.NewScheme()
-
-	// error should be thrown due to missing scheme
-	ownedObj := &unstructured.Unstructured{}
-	owned, err := isOwner(&defaultTenant, ownedObj, scheme)
-	Expect(err).NotTo(BeNil())
-	Expect(owned).To(BeFalse())
-
-	// with scheme added, error is nil, but owner check should be false
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	owned, err = isOwner(&defaultTenant, ownedObj, scheme)
-	Expect(err).To(BeNil())
-	Expect(owned).To(BeFalse())
-
-	// with ownership set, owner check should be true
-	Expect(ctrl.SetControllerReference(&defaultTenant, ownedObj, scheme)).To(BeNil())
-	owned, err = isOwner(&defaultTenant, ownedObj, scheme)
-	Expect(err).To(BeNil())
-	Expect(owned).To(BeTrue())
-
-	// setting namespaced object as owner of a cluster-scoped object should error
-	//   owner check should return false
-	inventory := &v1alpha1.DBaaSInventory{
-		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test-ns"},
+var _ = Describe("list policies by inventory namespace", func() {
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-namespace-new",
+		},
 	}
-	ownedObj = &unstructured.Unstructured{}
-	Expect(ctrl.SetControllerReference(inventory, ownedObj, scheme)).NotTo(BeNil())
-	owned, err = isOwner(inventory, ownedObj, scheme)
-	Expect(err).To(BeNil())
-	Expect(owned).To(BeFalse())
+	BeforeEach(assertResourceCreationIfNotExists(ns))
 
-	// changing to a namespaced object should allow ownership to be set
-	//   owner check should return true
-	ownedObj.SetNamespace(inventory.GetNamespace())
-	Expect(ctrl.SetControllerReference(inventory, ownedObj, scheme)).To(BeNil())
-	owned, err = isOwner(inventory, ownedObj, scheme)
-	Expect(err).To(BeNil())
-	Expect(owned).To(BeTrue())
+	policy1 := getDefaultPolicy(ns.Name)
+	policy1.Name = "test-policy-1"
+	policy2 := getDefaultPolicy(ns.Name)
+	policy2.Name = "test-policy-2"
+	isTrue := true
+	policy2.Spec.DisableProvisions = &isTrue
+	policy3 := getDefaultPolicy(ns.Name)
+	policy3.Name = "test-policy-3"
+	BeforeEach(assertResourceCreationIfNotExists(&policy1))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&policy1, metav1.ConditionTrue, v1alpha1.Ready))
+	BeforeEach(assertResourceCreationIfNotExists(&policy2))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&policy2, metav1.ConditionFalse, v1alpha1.DBaaSPolicyNotReady))
+	BeforeEach(assertResourceCreationIfNotExists(&policy3))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&policy3, metav1.ConditionFalse, v1alpha1.DBaaSPolicyNotReady))
+
+	Context("after creating DBaaSPolicies", func() {
+		It("should return all the created policies", func() {
+			policyList, err := dRec.policyListByNS(ctx, ns.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policyList.Items).Should(HaveLen(3))
+
+			for i := range policyList.Items {
+				if policyList.Items[i].Name == policy1.Name {
+					Expect(apimeta.IsStatusConditionTrue(policyList.Items[i].Status.Conditions, v1alpha1.DBaaSPolicyReadyType)).Should(BeTrue())
+				} else {
+					Expect(apimeta.IsStatusConditionTrue(policyList.Items[i].Status.Conditions, v1alpha1.DBaaSPolicyReadyType)).Should(BeFalse())
+				}
+			}
+
+			activePolicy := getActivePolicy(policyList)
+			Expect(activePolicy).Should(Not(BeNil()))
+			Expect(activePolicy.Name).Should(Equal(policy1.Name))
+
+			rqList := corev1.ResourceQuotaList{}
+			Expect(dRec.List(ctx, &rqList, &client.ListOptions{Namespace: ns.Name})).Should(Succeed())
+			Expect(rqList.Items).Should(HaveLen(1))
+			Expect(rqList.Items[0].Name).Should(Equal("dbaas-" + policy1.Name))
+			Expect(rqList.Items[0].Spec.Hard).Should(Equal(corev1.ResourceList{
+				corev1.ResourceName("count/dbaaspolicies." + v1alpha1.GroupVersion.Group): resource.MustParse("1"),
+			}))
+			Expect(isOwner(&policy1, &rqList.Items[0], dRec.Scheme)).Should(BeTrue())
+
+			inventory := v1alpha1.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
+			Expect(canProvision(inventory, activePolicy)).Should(BeTrue())
+			activePolicy.Spec.DisableProvisions = &isTrue
+			Expect(canProvision(inventory, activePolicy)).Should(BeFalse())
+
+			// override policy setting
+			isFalse := false
+			inventory.Spec.DisableProvisions = &isFalse
+			Expect(canProvision(inventory, activePolicy)).Should(BeTrue())
+
+			// check nil policy
+			Expect(canProvision(inventory, nil)).Should(BeFalse())
+		})
+
+		It("should, upon deletion, make another policy active", func() {
+			Expect(dRec.Delete(ctx, &policy1)).Should(Succeed())
+			Expect(dRec.Delete(ctx, &policy3)).Should(Succeed())
+			By("checking the resources deleted")
+			Eventually(func() bool {
+				err := dRec.Get(ctx, client.ObjectKeyFromObject(&policy1), &policy1)
+				if err != nil && errors.IsNotFound(err) {
+					return true
+				}
+				return false
+			}, timeout).Should(BeTrue())
+			Eventually(func() bool {
+				err := dRec.Get(ctx, client.ObjectKeyFromObject(&policy3), &policy3)
+				if err != nil && errors.IsNotFound(err) {
+					return true
+				}
+				return false
+			}, timeout).Should(BeTrue())
+
+			By("checking the DBaaS resource status")
+			Eventually(func() (bool, error) {
+				err := dRec.Get(ctx, client.ObjectKeyFromObject(&policy2), &policy2)
+				if err != nil {
+					return false, err
+				}
+				return apimeta.IsStatusConditionTrue(policy2.Status.Conditions, v1alpha1.DBaaSPolicyReadyType), nil
+			}, timeout).Should(BeTrue())
+
+			policyList, err := dRec.policyListByNS(ctx, ns.Name)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policyList.Items).Should(HaveLen(1))
+
+			activePolicy := getActivePolicy(policyList)
+			Expect(activePolicy).Should(Not(BeNil()))
+			Expect(activePolicy.Name).Should(Equal(policy2.Name))
+
+			inventory := v1alpha1.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
+			Expect(canProvision(inventory, activePolicy)).Should(BeFalse())
+		})
+	})
 })
 
 var _ = Describe("Check inventory", func() {
@@ -317,7 +313,8 @@ var _ = Describe("Check inventory", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret2))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Context("after creating DBaaSInventory", func() {
 		inventoryName := "test-check-inventory"
@@ -400,7 +397,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check the right inventory", func() {
 				It("should return the inventory without error", func() {
-					i, validNS, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					i, validNS, provision, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      inventoryName,
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {
@@ -415,6 +412,7 @@ var _ = Describe("Check inventory", func() {
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(validNS).To(Equal(true))
+					Expect(provision).To(Equal(true))
 					Expect(i.Name).Should(Equal(createdDBaaSInventory.Name))
 					Expect(i.Spec).Should(Equal(createdDBaaSInventory.Spec))
 
@@ -438,7 +436,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an inventory not exists", func() {
 				It("should return error", func() {
-					_, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					_, _, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      "test-check-not-exist-inventory",
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {
@@ -501,7 +499,7 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an not ready inventory", func() {
 				It("should return error", func() {
-					_, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
+					_, _, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
 						Name:      inventoryName,
 						Namespace: testNamespace,
 					}, createdDBaaSConnection, func(reason string, message string) {
@@ -525,7 +523,8 @@ var _ = Describe("Check inventory", func() {
 var _ = Describe("Reconcile Provider Resource", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Context("after creating DBaaSInventory", func() {
 		inventoryName := "test-reconcile-provider-resource-inventory"

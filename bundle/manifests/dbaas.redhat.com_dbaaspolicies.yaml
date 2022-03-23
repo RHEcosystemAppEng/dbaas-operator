@@ -1,27 +1,32 @@
-
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: dbaasinventories.dbaas.redhat.com
+  name: dbaaspolicies.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSInventory
-    listKind: DBaaSInventoryList
-    plural: dbaasinventories
-    singular: dbaasinventory
+    kind: DBaaSPolicy
+    listKind: DBaaSPolicyList
+    plural: dbaaspolicies
+    singular: dbaaspolicy
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[0].status
+      name: Active
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-          objects must be created in a valid namespace, determined by the existence
-          of a DBaaSPolicy object.
+        description: DBaaSPolicy enables admin capabilities within a namespace and
+          sets default inventory policy. Policy defaults can be overridden on a per-inventory
+          basis.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -36,7 +41,9 @@ spec:
           metadata:
             type: object
           spec:
-            description: DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
+            description: DBaaSPolicySpec enables admin capabilities within a namespace
+              and sets default inventory policy. Policy defaults can be overridden
+              on a per-inventory basis.
             properties:
               connectionNamespaces:
                 description: Namespaces where DBaaSConnections/DBaaSInstances are
@@ -47,41 +54,12 @@ spec:
                 items:
                   type: string
                 type: array
-              credentialsRef:
-                description: The Secret containing the provider-specific connection
-                  credentials to use with its API endpoint. The format of the Secret
-                  is specified in the provider’s operator in its DBaaSProvider CR
-                  (CredentialFields key). The Secret must exist within the same namespace
-                  as the Inventory.
-                properties:
-                  name:
-                    description: Name of the referent.
-                    type: string
-                required:
-                - name
-                type: object
               disableProvisions:
                 description: Disable provisioning against inventory accounts
                 type: boolean
-              providerRef:
-                description: A reference to a DBaaSProvider CR
-                properties:
-                  name:
-                    description: The name for object of known type
-                    type: string
-                  namespace:
-                    description: The namespace where object of known type is stored
-                    type: string
-                required:
-                - name
-                type: object
-            required:
-            - credentialsRef
-            - providerRef
             type: object
           status:
-            description: DBaaSInventoryStatus defines the Inventory status to be used
-              by provider operators
+            description: DBaaSPolicyStatus defines the observed state of DBaaSPolicy
             properties:
               conditions:
                 items:
@@ -150,29 +128,6 @@ spec:
                   - reason
                   - status
                   - type
-                  type: object
-                type: array
-              instances:
-                description: A list of instances returned from querying the DB provider
-                items:
-                  properties:
-                    instanceID:
-                      description: A provider-specific identifier for this instance
-                        in the database service. It may contain one or more pieces
-                        of information used by the provider operator to identify the
-                        instance on the database service.
-                      type: string
-                    instanceInfo:
-                      additionalProperties:
-                        type: string
-                      description: Any other provider-specific information related
-                        to this instance
-                      type: object
-                    name:
-                      description: The name of this instance in the database service
-                      type: string
-                  required:
-                  - instanceID
                   type: object
                 type: array
             type: object

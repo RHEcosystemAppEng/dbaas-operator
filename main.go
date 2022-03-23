@@ -32,7 +32,6 @@ import (
 	consolev1 "github.com/openshift/api/console/v1"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
-	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -120,17 +119,7 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}
 	if DBaaSReconciler.InstallNamespace, err = controllers.GetInstallNamespace(); err != nil {
-		setupLog.Error(err, "unable to retrieve install namespace. default Tenant object cannot be installed")
-	}
-	authzReconciler := &controllers.DBaaSAuthzReconciler{
-		DBaaSReconciler:       DBaaSReconciler,
-		AuthorizationV1Client: oauthzclientv1.NewForConfigOrDie(cfg),
-	}
-	if err = (&controllers.DBaaSTenantAuthzReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenantAuthz")
-		os.Exit(1)
+		setupLog.Error(err, "unable to retrieve install namespace. default Policy object cannot be installed")
 	}
 	connectionCtrl, err := (&controllers.DBaaSConnectionReconciler{
 		DBaaSReconciler: DBaaSReconciler,
@@ -153,10 +142,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInstance")
 		os.Exit(1)
 	}
-	if err = (&controllers.DBaaSDefaultTenantReconciler{
+	if err = (&controllers.DBaaSDefaultPolicyReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultTenant")
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSDefaultPolicy")
 		os.Exit(1)
 	}
 	if err = (&controllers.DBaaSProviderReconciler{
@@ -179,15 +168,11 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInventory")
 			os.Exit(1)
 		}
-		if err = (&v1alpha1.DBaaSTenant{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSTenant")
-			os.Exit(1)
-		}
 	}
-	if err = (&controllers.DBaaSTenantReconciler{
-		DBaaSAuthzReconciler: authzReconciler,
+	if err = (&controllers.DBaaSPolicyReconciler{
+		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DBaaSTenant")
+		setupLog.Error(err, "unable to create controller", "controller", "DBaaSPolicy")
 		os.Exit(1)
 	}
 

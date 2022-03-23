@@ -4,6 +4,6 @@ metadata:
   name: atlas-inventory
 spec:
   providerRef:
-    name: atlas-provider-registration
+    name: mongodb-atlas-registration
   credentialsRef:
     name: atlas-inventory-credentials
