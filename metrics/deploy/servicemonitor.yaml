@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dbaas-metric-exporter
+  namespace: openshift-dbaas-operator
+  labels:
+    app.kubernetes.io/component: dbaas-metric-exporter
+    app.kubernetes.io/name: dbaas-metric-exporter
+    app.kubernetes.io/version: 0.0.1
+spec:
+  namespaceSelector:
+    matchNames:
+      - openshift-dbaas-operator
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dbaas-metric-exporter
+      app.kubernetes.io/name: dbaas-metric-exporter
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 1m
+  - port: exporter
+    path: /metrics
+    interval: 1m

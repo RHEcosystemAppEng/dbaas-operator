@@ -38,17 +38,17 @@ func RegisterCustomResourceMuxHandlers(mux *http.ServeMux, customResourceRegistr
 // to observe requests sent to the exporter
 func InstrumentMetricHandler(registry *prometheus.Registry, handler http.Handler) http.Handler {
 	requestsTotal := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "ocs_exporter_requests_total",
+		Name: "dbaas_exporter_requests_total",
 		Help: "Total number of scrapes.",
 	}, []string{"code"})
 
 	requestsInFlight := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ocs_exporter_requests_in_flight",
+		Name: "dbaas_exporter_requests_in_flight",
 		Help: "Current number of scrapes being served.",
 	})
 
 	requestDuration := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "ocs_exporter_request_duration_seconds",
+		Name: "dbaas_exporter_request_duration_seconds",
 		Help: "Duration of all scrapes.",
 	}, []string{"code"})
 

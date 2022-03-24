@@ -15,7 +15,6 @@ const (
 // This is used to expose metrics about the Custom Resources
 func RegisterCustomResourceCollectors(registry *prometheus.Registry, opts *options.Options) {
 	dbaasPlaatformStoreCollector := NewDbaasPlaatformStoreCollector(opts)
-	dbaasPlaatformStoreCollector.Run(opts.StopCh)
 	registry.MustRegister(
 		dbaasPlaatformStoreCollector,
 	)

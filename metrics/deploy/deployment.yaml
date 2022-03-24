@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: dbaas-metric-exporter
+    app.kubernetes.io/name: dbaas-metric-exporter
+    app.kubernetes.io/version: 0.0.1
+  name: dbaas-metric-exporter
+  namespace: openshift-dbaas-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dbaas-metric-exporter
+      app.kubernetes.io/name: dbaas-metric-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: dbaas-metric-exporter
+        app.kubernetes.io/name: dbaas-metric-exporter
+        app.kubernetes.io/version: 0.0.1
+    spec:
+      containers:
+      - image: quay.io/rchikatw/dbaas-metrics-exporter
+        name: dbaas-metric-exporter
+        ports:
+        - containerPort: 8080
+        - containerPort: 8081
+        command:
+        - /usr/local/bin/metrics-exporter
+        args:
+          - --namespaces=openshift-dbaas-operator
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: dbaas-metric-exporter

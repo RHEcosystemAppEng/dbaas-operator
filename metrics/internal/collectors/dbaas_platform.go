@@ -4,12 +4,8 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/client-go/tools/cache"
-)
 
-const (
-	// component within the project/exporter
-	dbaasSubsystem = "openshift-dbaas-operator"
+	"k8s.io/klog"
 )
 
 var _ prometheus.Collector = &DbaasPlaatformStoreCollector{}
@@ -17,33 +13,21 @@ var _ prometheus.Collector = &DbaasPlaatformStoreCollector{}
 // DbaasPlaatformStoreCollector is a custom collector for DbaasPlaatformStoreCollector Custom Resource
 type DbaasPlaatformStoreCollector struct {
 	PlatformStatus    *prometheus.Desc
-	Informer          cache.SharedIndexInformer
 	AllowedNamespaces []string
 }
 
-// NewCephObjectStoreCollector constructs a collector
+// NewDbaasPlaatformStoreCollector constructs a collector
 func NewDbaasPlaatformStoreCollector(opts *options.Options) *DbaasPlaatformStoreCollector {
-
-	sharedIndexInformer := DbaasPlatformStoreInformer(opts)
-	if sharedIndexInformer == nil {
-		return nil
-	}
 
 	return &DbaasPlaatformStoreCollector{
 		PlatformStatus: prometheus.NewDesc(
-			prometheus.BuildFQName("openshift-dbaas-operator", dbaasSubsystem, "health_status"),
+			prometheus.BuildFQName("dbaas", "platform", "status"), // Metrics object name with undersore
 			`Health Status of Platfor. 0=Success, 1=Failure`,
-			[]string{"name", "namespace", "rgw_endpoint"},
+			[]string{"dbaas_platform_status"}, // Metrics name
 			nil,
 		),
-		Informer:          sharedIndexInformer,
 		AllowedNamespaces: opts.AllowedNamespaces,
 	}
-}
-
-// Run starts CephObjectStore informer
-func (c *DbaasPlaatformStoreCollector) Run(stopCh <-chan struct{}) {
-	go c.Informer.Run(stopCh)
 }
 
 // Describe implements prometheus.Collector interface
@@ -59,13 +43,8 @@ func (c *DbaasPlaatformStoreCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect implements prometheus.Collector interface
 func (c *DbaasPlaatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
+	klog.Infof("Inside collector to set values %s:%v", c.PlatformStatus, "running")
 	ch <- prometheus.MustNewConstMetric(c.PlatformStatus,
 		prometheus.GaugeValue, 0,
-		"mongo-db",
-		"openshift-dbaas-operator")
-}
-
-// check with arun what to write here
-func DbaasPlatformStoreInformer(opts *options.Options) cache.SharedIndexInformer {
-	return nil
+		"running") //Set the required value for the metrics
 }

@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.1.4
+VERSION ?= 0.1.10
 
 
 CONTAINER_ENGINE?=docker
@@ -53,11 +53,13 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # redhat.com/dbaas-operator-bundle:$VERSION and redhat.com/dbaas-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= quay.io/$(QUAY_ORG)/dbaas-operator
+IMAGE_TAG_BASE ?= quay.io/rchikatw/dbaas-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+
+EXPORTER_IMG ?= dbaas-metric-exporter:v$(VERSION)
 
 # OLD_BUNDLE_IMGS defines the comma separated list of old bundles to add to the index.
 COMMA := ,
@@ -124,10 +126,16 @@ test: manifests generate fmt vet ## Run tests.
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##@ Build
-release-build: build generate bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
+release-build: build generate bundle docker-build bundle-build bundle-push catalog-build build-exporter ## Build operator docker, bundle, catalog images
 
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
+
+build-exporter:
+	@echo "Building exporter"
+	go mod tidy && go mod vendor
+	hack/go-build.sh
+	hack/build-operator.sh $(VERSION)
 
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
@@ -137,6 +145,9 @@ docker-build: test ## Build docker image with the manager.
 
 docker-push: ## Push docker image with the manager.
 	$(CONTAINER_ENGINE) push ${IMG}
+
+exporter-push: ## Push docker image with the manager.
+	$(CONTAINER_ENGINE) push ${EXPORTER_IMG}
 
 ##@ Deployment
 
@@ -151,9 +162,10 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build metrics/deploy | kubectl apply -f -
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/default | kubectl delete -f -	
 
 deploy-olm:
 	oc apply -f config/samples/catalog-operator-group.yaml
