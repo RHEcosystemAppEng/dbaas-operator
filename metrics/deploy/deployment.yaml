@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: dbaas-metric-exporter
     app.kubernetes.io/version: 0.0.1
   name: dbaas-metric-exporter
-  namespace: openshift-dbaas-operator
+  namespace: openshift-dbaas-prometheus
 spec:
   replicas: 1
   selector:
@@ -19,6 +19,7 @@ spec:
         app.kubernetes.io/component: dbaas-metric-exporter
         app.kubernetes.io/name: dbaas-metric-exporter
         app.kubernetes.io/version: 0.0.1
+        app: dbaas-prometheus
     spec:
       containers:
       - image: quay.io/rchikatw/dbaas-metrics-exporter

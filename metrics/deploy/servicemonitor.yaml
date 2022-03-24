@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: dbaas-metric-exporter
-  namespace: openshift-dbaas-operator
+  namespace: openshift-dbaas-prometheus
   labels:
     app.kubernetes.io/component: dbaas-metric-exporter
     app.kubernetes.io/name: dbaas-metric-exporter
