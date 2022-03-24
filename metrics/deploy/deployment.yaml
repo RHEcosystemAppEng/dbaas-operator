@@ -5,6 +5,7 @@ metadata:
     app.kubernetes.io/component: dbaas-metric-exporter
     app.kubernetes.io/name: dbaas-metric-exporter
     app.kubernetes.io/version: 0.0.1
+    app: dbaas-prometheus
   name: dbaas-metric-exporter
   namespace: openshift-dbaas-prometheus
 spec:
@@ -13,6 +14,7 @@ spec:
     matchLabels:
       app.kubernetes.io/component: dbaas-metric-exporter
       app.kubernetes.io/name: dbaas-metric-exporter
+      app: dbaas-prometheus
   template:
     metadata:
       labels:
@@ -30,7 +32,7 @@ spec:
         command:
         - /usr/local/bin/metrics-exporter
         args:
-          - --namespaces=openshift-dbaas-operator
+          - --namespaces=openshift-dbaas-prometheus
       securityContext:
         runAsNonRoot: true
       serviceAccountName: dbaas-metric-exporter

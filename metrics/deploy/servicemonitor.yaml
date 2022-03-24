@@ -7,14 +7,16 @@ metadata:
     app.kubernetes.io/component: dbaas-metric-exporter
     app.kubernetes.io/name: dbaas-metric-exporter
     app.kubernetes.io/version: 0.0.1
+    app: dbaas-prometheus
 spec:
   namespaceSelector:
     matchNames:
-      - openshift-dbaas-operator
+      - openshift-dbaas-prometheus
   selector:
     matchLabels:
       app.kubernetes.io/component: dbaas-metric-exporter
       app.kubernetes.io/name: dbaas-metric-exporter
+      app: dbaas-prometheus
   endpoints:
   - port: metrics
     path: /metrics
