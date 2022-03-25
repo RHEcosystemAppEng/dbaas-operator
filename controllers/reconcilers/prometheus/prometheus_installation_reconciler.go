@@ -21,11 +21,12 @@ import (
 )
 
 const (
-	Namespace      = "openshift-dbaas-monitoring"
-	PrometheusName = "dbaas-prometheus-operator"
+	namespace      = "openshift-dbaas-monitoring"
+	prometheusName = "dbaas-prometheus-operator"
 	prometheusCSV  = "prometheusoperator.0.47.0"
 	managedBy      = "app.kubernetes.io/managed-by"
 	operatorName   = "dbaas-operator"
+	serviceMonitor = "dbaas-service-monitor"
 )
 
 type Reconciler struct {
@@ -62,6 +63,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 		return status, err
 	}
 
+	status, err = r.reconcilePrometheus(ctx)
+	if status != v1alpha1.ResultSuccess {
+		return status, err
+	}
+
+	status, err = r.reconcileServiceMonitor(ctx)
+	if status != v1alpha1.ResultSuccess {
+		return status, err
+	}
+
 	return v1alpha1.ResultSuccess, nil
 }
 
@@ -78,7 +89,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 
 func (r *Reconciler) reconcileNamespace(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 
-	key := types.NamespacedName{Name: Namespace}
+	key := types.NamespacedName{Name: namespace}
 	var namespace corev1.Namespace
 	err := r.client.Get(ctx, key, &namespace)
 	if err != nil && !errors.IsNotFound(err) {
@@ -102,12 +113,12 @@ func (r *Reconciler) reconcileNamespace(ctx context.Context) (v1alpha1.Platforms
 }
 
 func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	log := r.log.WithValues("Name", PrometheusName)
+	log := r.log.WithValues("Name", prometheusName)
 	log.V(6).Info("Reconciling OperatorGroup")
 
 	key := types.NamespacedName{
-		Name:      PrometheusName,
-		Namespace: Namespace,
+		Name:      prometheusName,
+		Namespace: namespace,
 	}
 	var operatorGroup operatorsv1.OperatorGroup
 
@@ -138,10 +149,10 @@ func (r *Reconciler) reconcileOperatorGroup(ctx context.Context) (v1alpha1.Platf
 }
 
 func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
-	log := r.log.WithValues("Name", PrometheusName)
+	log := r.log.WithValues("Name", prometheusName)
 	key := types.NamespacedName{
-		Name:      PrometheusName,
-		Namespace: Namespace,
+		Name:      prometheusName,
+		Namespace: namespace,
 	}
 	var subscription corev1alpha1.Subscription
 	err := r.client.Get(ctx, key, &subscription)
@@ -177,7 +188,7 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1alpha1.Platfo
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      subscription.Status.InstalledCSV,
-			Namespace: Namespace,
+			Namespace: namespace,
 			Labels:    commonLabels(),
 		},
 	}
@@ -193,6 +204,76 @@ func (r *Reconciler) reconcileSubscription(ctx context.Context) (v1alpha1.Platfo
 	return v1alpha1.ResultSuccess, nil
 }
 
+func (r *Reconciler) reconcilePrometheus(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+	r.log.Info("Reconciling Prometheus")
+	key := types.NamespacedName{
+		Name:      prometheusName,
+		Namespace: namespace,
+	}
+	var prometheus promv1.Prometheus
+	err := r.client.Get(ctx, key, &prometheus)
+	if err != nil && !errors.IsNotFound(err) {
+		return v1alpha1.ResultFailed, err
+	}
+
+	desired := PrometheusTemplate.DeepCopy()
+	if errors.IsNotFound(err) {
+		r.log.Info("Creating Prometheus")
+		err := r.client.Create(ctx, desired)
+		if err != nil {
+			return v1alpha1.ResultFailed, err
+		}
+		return v1alpha1.ResultInProgress, nil
+	}
+
+	// update
+	if !reflect.DeepEqual(prometheus.Spec, desired.Spec) {
+		r.log.Info("Updating Prometheus")
+		prometheus.Spec = desired.Spec
+		err := r.client.Update(ctx, &prometheus)
+		if err != nil {
+			return v1alpha1.ResultFailed, err
+		}
+	}
+
+	return v1alpha1.ResultSuccess, nil
+}
+
+func (r *Reconciler) reconcileServiceMonitor(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+	r.log.Info("Reconciling Service Monitor")
+	key := types.NamespacedName{
+		Name:      serviceMonitor,
+		Namespace: namespace,
+	}
+	var serviceMonitor promv1.ServiceMonitor
+	err := r.client.Get(ctx, key, &serviceMonitor)
+	if err != nil && !errors.IsNotFound(err) {
+		return v1alpha1.ResultFailed, err
+	}
+
+	desired := ServiceMonitorTemplate.DeepCopy()
+	if errors.IsNotFound(err) {
+		r.log.Info("Creating Service Monitor")
+		err := r.client.Create(ctx, desired)
+		if err != nil {
+			return v1alpha1.ResultFailed, err
+		}
+		return v1alpha1.ResultInProgress, nil
+	}
+
+	// update
+	if !reflect.DeepEqual(serviceMonitor.Spec, desired.Spec) {
+		r.log.Info("Updating Service Monitor")
+		serviceMonitor.Spec = desired.Spec
+		err := r.client.Update(ctx, &serviceMonitor)
+		if err != nil {
+			return v1alpha1.ResultFailed, err
+		}
+	}
+
+	return v1alpha1.ResultSuccess, nil
+}
+
 func newSubscription() *corev1alpha1.Subscription {
 	return &corev1alpha1.Subscription{
 		TypeMeta: metav1.TypeMeta{
@@ -200,8 +281,8 @@ func newSubscription() *corev1alpha1.Subscription {
 			Kind:       "Subscription",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      PrometheusName,
-			Namespace: Namespace,
+			Name:      prometheusName,
+			Namespace: namespace,
 			Labels:    commonLabels(),
 		},
 		Spec: &corev1alpha1.SubscriptionSpec{
@@ -230,7 +311,7 @@ func newNamespace() *corev1.Namespace {
 			Kind:       "Namespace",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   Namespace,
+			Name:   namespace,
 			Labels: commonLabels(),
 		},
 	}
@@ -249,13 +330,13 @@ func newOperatorGroup() *operatorsv1.OperatorGroup {
 			Kind:       "OperatorGroup",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      PrometheusName,
-			Namespace: Namespace,
+			Name:      prometheusName,
+			Namespace: namespace,
 			Labels:    commonLabels(),
 		},
 		Spec: operatorsv1.OperatorGroupSpec{
 			TargetNamespaces: []string{
-				Namespace,
+				namespace,
 			},
 		},
 	}
