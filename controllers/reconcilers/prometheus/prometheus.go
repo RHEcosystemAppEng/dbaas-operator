@@ -30,8 +30,8 @@ var resourceSelector = metav1.LabelSelector{
 
 var PrometheusTemplate = promv1.Prometheus{
 	ObjectMeta: metav1.ObjectMeta{
-		Name:      PrometheusName,
-		Namespace: Namespace,
+		Name:      prometheusName,
+		Namespace: namespace,
 	},
 	Spec: promv1.PrometheusSpec{
 		ServiceAccountName:     "prometheus-k8s",
@@ -39,5 +39,36 @@ var PrometheusTemplate = promv1.Prometheus{
 		PodMonitorSelector:     &resourceSelector,
 		RuleSelector:           &resourceSelector,
 		EnableAdminAPI:         false,
+	},
+}
+
+var ServiceMonitorTemplate = promv1.ServiceMonitor{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "dbaas-service-monitor",
+		Namespace: namespace,
+		Labels: map[string]string{
+			"app.kubernetes.io/component": "dbaas-metric-exporter",
+			"app.kubernetes.io/name":      "dbaas-metric-exporter",
+			"app":                         "dbaas-prometheus",
+		},
+	},
+	Spec: promv1.ServiceMonitorSpec{
+		NamespaceSelector: promv1.NamespaceSelector{
+			MatchNames: []string{namespace},
+		},
+		Selector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"app.kubernetes.io/component": "dbaas-metric-exporter",
+				"app.kubernetes.io/name":      "dbaas-metric-exporter",
+				"app":                         "dbaas-prometheus",
+			},
+		},
+		Endpoints: []promv1.Endpoint{
+			{
+				Path:     "/metrics",
+				Port:     "metrics",
+				Interval: "1m",
+			},
+		},
 	},
 }
