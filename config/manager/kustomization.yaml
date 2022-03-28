@@ -1,6 +1,5 @@
 resources:
 - manager.yaml
-- ../../metrics/deploy/
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -14,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/rchikatw/dbaas-operator
-  newTag: v0.1.10
+  newTag: v0.1.11
