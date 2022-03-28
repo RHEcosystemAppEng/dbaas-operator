@@ -47,6 +47,16 @@ var testSecret = corev1.Secret{
 	},
 }
 
+var testSecret2 = corev1.Secret{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "test-credentials",
+		Namespace: testNamespace,
+		Labels: map[string]string{
+			"test": "label",
+		},
+	},
+}
+
 var _ = Describe("Create provider object", func() {
 	It("should create the expected provider object", func() {
 		object := &v1alpha1.DBaaSConnection{
@@ -342,7 +352,9 @@ var _ = Describe("Check isOwner function", func() {
 
 var _ = Describe("Check inventory", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret2))
+	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Context("after creating DBaaSInventory", func() {
@@ -359,6 +371,23 @@ var _ = Describe("Check inventory", func() {
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 					CredentialsRef: &v1alpha1.NamespacedName{
 						Name:      testSecret.Name,
+						Namespace: testNamespace,
+					},
+				},
+			},
+		}
+		createdDBaaSInventory2 := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName + "-2",
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: "crunchy-bridge-registration",
+				},
+				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha1.NamespacedName{
+						Name:      testSecret2.Name,
 						Namespace: testNamespace,
 					},
 				},
@@ -385,7 +414,9 @@ var _ = Describe("Check inventory", func() {
 			},
 		}
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory2, metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory2))
 
 		Context("after creating DBaaSConnection", func() {
 			connectionName := "test-check-inventory-connection"
@@ -433,7 +464,15 @@ var _ = Describe("Check inventory", func() {
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
 					Expect(labels["test"]).Should(Equal("label"))
-					Expect(labels[typeLabelKeyMongo]).Should(Equal(typeLabelValue))
+					Expect(labels[TypeLabelKeyMongo]).Should(Equal(TypeLabelValue))
+
+					getSecret2 := corev1.Secret{}
+					err = dRec.Get(ctx, client.ObjectKeyFromObject(&testSecret2), &getSecret2)
+					Expect(err).NotTo(HaveOccurred())
+					labels2 := getSecret2.GetLabels()
+					Expect(labels2).Should(Not(BeNil()))
+					Expect(labels2["test"]).Should(Equal("label"))
+					Expect(labels2[TypeLabelKey]).Should(Equal(TypeLabelValue))
 				})
 			})
 
@@ -526,7 +565,7 @@ var _ = Describe("Check inventory", func() {
 
 var _ = Describe("Reconcile Provider Resource", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Context("after creating DBaaSInventory", func() {
