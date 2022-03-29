@@ -165,7 +165,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					Expect(err).NotTo(HaveOccurred())
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
-					Expect(labels[TypeLabelKeyMongo]).Should(Equal(TypeLabelValue))
+					Expect(labels[v1alpha1.TypeLabelKeyMongo]).Should(Equal(v1alpha1.TypeLabelValue))
 				})
 			})
 		})

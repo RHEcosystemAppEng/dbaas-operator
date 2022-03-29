@@ -427,7 +427,7 @@ var _ = Describe("Check inventory", func() {
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
 					Expect(labels["test"]).Should(Equal("label"))
-					Expect(labels[TypeLabelKeyMongo]).Should(Equal(TypeLabelValue))
+					Expect(labels[v1alpha1.TypeLabelKeyMongo]).Should(Equal(v1alpha1.TypeLabelValue))
 
 					getSecret2 := corev1.Secret{}
 					err = dRec.Get(ctx, client.ObjectKeyFromObject(&testSecret2), &getSecret2)
@@ -435,7 +435,7 @@ var _ = Describe("Check inventory", func() {
 					labels2 := getSecret2.GetLabels()
 					Expect(labels2).Should(Not(BeNil()))
 					Expect(labels2["test"]).Should(Equal("label"))
-					Expect(labels2[TypeLabelKey]).Should(Equal(TypeLabelValue))
+					Expect(labels2[v1alpha1.TypeLabelKey]).Should(Equal(v1alpha1.TypeLabelValue))
 				})
 			})
 
