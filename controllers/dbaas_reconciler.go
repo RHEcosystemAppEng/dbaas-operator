@@ -34,9 +34,6 @@ import (
 var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 	inventoryNamespaceKey  = ".spec.inventoryNamespace"
-	TypeLabelValue         = "credentials"
-	TypeLabelKey           = v1alpha1.GroupVersion.Group + "/type"
-	TypeLabelKeyMongo      = "atlas.mongodb.com/type"
 )
 
 var ignoreCreateEvents = predicate.Funcs{
@@ -336,11 +333,11 @@ func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1al
 
 		secretPatch := corev1.Secret{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
 		if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") {
-			if secret.GetLabels()[TypeLabelKeyMongo] != TypeLabelValue {
-				secretPatch.Labels[TypeLabelKeyMongo] = TypeLabelValue
+			if secret.GetLabels()[v1alpha1.TypeLabelKeyMongo] != v1alpha1.TypeLabelValue {
+				secretPatch.Labels[v1alpha1.TypeLabelKeyMongo] = v1alpha1.TypeLabelValue
 			}
-		} else if secret.GetLabels()[TypeLabelKey] != TypeLabelValue {
-			secretPatch.Labels[TypeLabelKey] = TypeLabelValue
+		} else if secret.GetLabels()[v1alpha1.TypeLabelKey] != v1alpha1.TypeLabelValue {
+			secretPatch.Labels[v1alpha1.TypeLabelKey] = v1alpha1.TypeLabelValue
 		}
 
 		if len(secretPatch.Labels) > 0 {

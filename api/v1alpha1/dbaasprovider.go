@@ -47,6 +47,10 @@ const (
 	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
 	MsgConnInvalidNamespace          string = "Connection is not in a valid namespace"
 	MsgInstInvalidNamespace          string = "Instance is not in a valid namespace"
+
+	TypeLabelValue    = "credentials"
+	TypeLabelKey      = "db-operator/type"
+	TypeLabelKeyMongo = "atlas.mongodb.com/type"
 )
 
 // DBaaSProviderSpec defines the desired state of DBaaSProvider
