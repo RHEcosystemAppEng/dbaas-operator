@@ -1,3 +1,8 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: openshift-dbaas-monitoring
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,7 +29,7 @@ spec:
         app: dbaas-prometheus
     spec:
       containers:
-      - image: quay.io/rchikatw/dbaas-metrics-exporter
+      - image: quay.io/rchikatw/dbaas-metrics-exporter:v0.1.23
         name: dbaas-metric-exporter
         ports:
         - containerPort: 8080

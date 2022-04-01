@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 )
@@ -30,6 +31,7 @@ type Options struct {
 	flags      *pflag.FlagSet
 	StopCh     chan struct{}
 	Kubeconfig *rest.Config
+	Client     *kubernetes.Clientset
 }
 
 // NewOptions returns a new instance of `Options`.

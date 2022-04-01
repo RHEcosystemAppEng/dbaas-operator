@@ -17,6 +17,7 @@ import (
 )
 
 func main() {
+
 	opts := options.NewOptions()
 	opts.AddFlags()
 	// parses the flags and ExitOnError so errors can be ignored
@@ -26,12 +27,14 @@ func main() {
 		opts.Usage()
 		os.Exit(0)
 	}
-	klog.Infof("using options: %+v", opts)
+	//klog.Infof("using options: %+v", opts)
 
 	opts.StopCh = make(chan struct{})
 	defer close(opts.StopCh)
 
+	klog.Infof("API Server & kubeconfigpath %s:%v", opts.KubeconfigPath)
 	kubeconfig, err := clientcmd.BuildConfigFromFlags(opts.Apiserver, opts.KubeconfigPath)
+
 	if err != nil {
 		klog.Fatalf("failed to create cluster config: %v", err)
 	}
