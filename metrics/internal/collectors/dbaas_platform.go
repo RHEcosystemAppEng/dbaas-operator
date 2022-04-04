@@ -57,9 +57,14 @@ func (c *DbaasPlatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
 	klog.Infof("c.config Inside collector to set values %s", c.config)
 	// creates the clientset
 	clientset, _ := kubernetes.NewForConfig(c.config)
-	klog.Infof("clientset Inside collector to set values %s", clientset)
+	klog.Infof("clientset Inside collector to set values %v", clientset)
 	// access the API to list pods
-	pods, _ := clientset.CoreV1().Pods("openshift-dbaas-operator").List(context.TODO(), v1.ListOptions{})
+	pods, err := clientset.CoreV1().Pods("openshift-dbaas-operator").List(context.TODO(), v1.ListOptions{})
+
+	if err != nil {
+		klog.Infof("error getting pods %v", err.Error())
+	}
+
 	dbaas_status := ""
 	for _, pod := range pods.Items {
 		klog.Infof("check pod name %s", pod.ObjectMeta.Name)

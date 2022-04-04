@@ -49,7 +49,7 @@ func (o *Options) AddFlags() {
 	}
 
 	o.flags.StringVar(&o.Apiserver, "apiserver", "", "The URL of the apiserver to use as a master.")
-	o.flags.StringVar(&o.KubeconfigPath, "kubeconfig", os.Getenv("KUBECONFIG"), "Absolute path to the kubeconfig file.")
+	o.flags.StringVar(&o.KubeconfigPath, "", os.Getenv("KUBECONFIG"), "Absolute path to the kubeconfig file.")
 	o.flags.StringVar(&o.Host, "host", host, "Host to expose custom resource metrics on.")
 	o.flags.IntVar(&o.Port, "port", customResourceMetricsPort, "Port to expose custom resource metrics on.")
 	o.flags.StringVar(&o.ExporterHost, "exporter-host", host, "Host to expose exporter self metrics on.")

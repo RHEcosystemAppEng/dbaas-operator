@@ -1,0 +1,37 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dbaas-metrics-role
+  namespace: openshift-dbaas-operator
+rules:
+ - apiGroups:
+   - ""
+   resources:
+    - services
+    - endpoints
+    - pods
+   verbs:
+    - get
+    - list
+    - watch
+ - apiGroups:
+   - dbaas.redhat.com
+   resources:
+    - '*'
+   verbs:
+    - '*'
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dbaas-metrics-rolebinding
+  namespace: openshift-dbaas-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: dbaas-metrics-role
+subjects:
+- kind: ServiceAccount
+  name: dbaas-metric-serviceaccount
+  namespace: openshift-dbaas-monitoring
+---

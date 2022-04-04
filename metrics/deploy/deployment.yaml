@@ -29,7 +29,7 @@ spec:
         app: dbaas-prometheus
     spec:
       containers:
-      - image: quay.io/rchikatw/dbaas-metrics-exporter:v0.1.23
+      - image: quay.io/rchikatw/dbaas-metrics-exporter:v0.1.25
         name: dbaas-metric-exporter
         ports:
         - containerPort: 8080
@@ -40,4 +40,4 @@ spec:
           - --namespaces=openshift-dbaas-monitoring
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: dbaas-metric-exporter
+      serviceAccountName: dbaas-metric-serviceaccount

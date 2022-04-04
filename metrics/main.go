@@ -32,7 +32,7 @@ func main() {
 	opts.StopCh = make(chan struct{})
 	defer close(opts.StopCh)
 
-	klog.Infof("API Server & kubeconfigpath %s:%v", opts.KubeconfigPath)
+	klog.Infof("API Server & kubeconfigpath %s", opts.KubeconfigPath)
 	kubeconfig, err := clientcmd.BuildConfigFromFlags(opts.Apiserver, opts.KubeconfigPath)
 
 	if err != nil {
