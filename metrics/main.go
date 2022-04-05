@@ -6,12 +6,17 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/collectors"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/exporter"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/handler"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 )
@@ -32,12 +37,20 @@ func main() {
 	opts.StopCh = make(chan struct{})
 	defer close(opts.StopCh)
 
+	v1alpha1.AddToScheme(scheme.Scheme)
+
 	klog.Infof("API Server & kubeconfigpath %s", opts.KubeconfigPath)
 	kubeconfig, err := clientcmd.BuildConfigFromFlags(opts.Apiserver, opts.KubeconfigPath)
 
 	if err != nil {
 		klog.Fatalf("failed to create cluster config: %v", err)
 	}
+
+	kubeconfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: v1.GroupName, Version: v1.Version}
+	kubeconfig.APIPath = "/apis"
+	kubeconfig.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	kubeconfig.UserAgent = rest.DefaultKubernetesUserAgent()
+
 	opts.Kubeconfig = kubeconfig
 
 	exporterRegistry := prometheus.NewRegistry()

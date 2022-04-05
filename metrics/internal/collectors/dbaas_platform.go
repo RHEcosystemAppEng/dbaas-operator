@@ -2,7 +2,6 @@ package collectors
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
@@ -13,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
 
@@ -56,20 +54,19 @@ func (c *DbaasPlatformStoreCollector) Describe(ch chan<- *prometheus.Desc) {
 func (c *DbaasPlatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
 
 	dbaas_status := ""
-	v1alpha1.AddToScheme(scheme.Scheme)
 
 	clientSet, err := v1alpha1.NewForConfig(c.config)
 	if err != nil {
 		panic(err)
 	}
 
-	projects, err := clientSet.DbaaSPlatform("openshift-dbaas-operator").List(v1.ListOptions{})
+	projects, err := clientSet.DbaaSPlatform(c.AllowedNamespaces[0], "dbaasplatforms").List(v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 
 	for _, project := range projects.Items {
-		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformName)
+		dbaas_status = string(project.Status.PlatformStatus)
 	}
 
 	ch <- prometheus.MustNewConstMetric(c.PlatformStatus,

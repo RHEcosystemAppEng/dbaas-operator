@@ -1,14 +1,12 @@
 package collectors
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -62,19 +60,11 @@ func (c *DbaasInventoryStoreCollector) Collect(ch chan<- prometheus.Metric) {
 		panic(err)
 	}
 
-	projects, err := clientSet.DbaaSInventory("openshift-dbaas-operator").List(v1.ListOptions{})
+	projects, err := clientSet.DbaaSInventory(c.AllowedNamespaces[0], "dbaasinventories").List(v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 
-	for _, project := range projects.Items {
-
-		for i := 0; i < len(project.Status.Instances); i++ {
-			fmt.Println(project.Status.Instances[i].Name)
-		}
-		fmt.Printf("projects inventory found: %+v\n", project.Status.Instances[len(project.Status.Instances)-1])
-	}
-	klog.Infof("Inside collector to set values %s:%v", c.InventoryCount, 0)
 	ch <- prometheus.MustNewConstMetric(c.InventoryCount,
 		prometheus.GaugeValue, 0,
 		strconv.Itoa(len(projects.Items))) //Set the required value for the metrics

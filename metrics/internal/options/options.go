@@ -55,7 +55,7 @@ func (o *Options) AddFlags() {
 	o.flags.StringVar(&o.ExporterHost, "exporter-host", host, "Host to expose exporter self metrics on.")
 	o.flags.IntVar(&o.ExporterPort, "exporter-port", exporterMetricsPort, "Port to expose exporter self metrics on.")
 	o.flags.BoolVar(&o.Help, "help", false, "To display Usage information.")
-	o.flags.StringArrayVar(&o.AllowedNamespaces, "namespaces", []string{"openshift-dbaas-monitoring"}, "List of namespaces to be monitored.")
+	o.flags.StringArrayVar(&o.AllowedNamespaces, "namespaces", []string{"openshift-dbaas-operator", "openshift-dbaas-monitoring"}, "List of namespaces to be monitored.")
 }
 
 // Parse parses the flags
