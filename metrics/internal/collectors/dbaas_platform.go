@@ -68,10 +68,8 @@ func (c *DbaasPlatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
 		panic(err)
 	}
 
-	fmt.Println(len(projects.Items))
 	for _, project := range projects.Items {
 		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformName)
-		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformStatus)
 	}
 
 	ch <- prometheus.MustNewConstMetric(c.PlatformStatus,

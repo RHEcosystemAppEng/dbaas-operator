@@ -9,8 +9,10 @@ import (
 // in the given prometheus.Registry
 // This is used to expose metrics about the Custom Resources
 func RegisterCustomResourceCollectors(registry *prometheus.Registry, opts *options.Options) {
-	dbaasPlaatformStoreCollector := NewDbaasPlatformStoreCollector(opts)
+	dbaasPlatformStoreCollector := NewDbaasPlatformStoreCollector(opts)
+	dbaasInventoryStoreCollector := NewDbaasInventoryStoreCollector(opts)
 	registry.MustRegister(
-		dbaasPlaatformStoreCollector,
+		dbaasPlatformStoreCollector,
+		dbaasInventoryStoreCollector,
 	)
 }
