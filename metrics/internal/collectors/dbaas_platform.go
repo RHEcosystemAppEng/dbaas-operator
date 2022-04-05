@@ -2,16 +2,19 @@ package collectors
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
 
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
 )
 
 var _ prometheus.Collector = &DbaasPlatformStoreCollector{}
@@ -20,7 +23,6 @@ var _ prometheus.Collector = &DbaasPlatformStoreCollector{}
 type DbaasPlatformStoreCollector struct {
 	PlatformStatus    *prometheus.Desc
 	AllowedNamespaces []string
-	KubeconfigPath    string
 	config            *rest.Config
 }
 
@@ -30,12 +32,11 @@ func NewDbaasPlatformStoreCollector(opts *options.Options) *DbaasPlatformStoreCo
 	return &DbaasPlatformStoreCollector{
 		PlatformStatus: prometheus.NewDesc(
 			prometheus.BuildFQName("dbaas", "platform", "status"), // Metrics object name with undersore
-			`Health Status of Platfor. 0=Success, 1=Failure`,
+			`Health Status of Platfor. 1=Success, 0=Failure`,
 			[]string{"dbaas_platform_status"}, // Metrics name
 			nil,
 		),
 		AllowedNamespaces: opts.AllowedNamespaces,
-		KubeconfigPath:    opts.KubeconfigPath,
 		config:            opts.Kubeconfig,
 	}
 }
@@ -54,26 +55,45 @@ func (c *DbaasPlatformStoreCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect implements prometheus.Collector interface
 func (c *DbaasPlatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
 
-	klog.Infof("c.config Inside collector to set values %s", c.config)
-	// creates the clientset
-	clientset, _ := kubernetes.NewForConfig(c.config)
-	klog.Infof("clientset Inside collector to set values %v", clientset)
-	// access the API to list pods
-	pods, err := clientset.CoreV1().Pods("openshift-dbaas-operator").List(context.TODO(), v1.ListOptions{})
+	dbaas_status := ""
+	v1alpha1.AddToScheme(scheme.Scheme)
 
+	clientSet, err := v1alpha1.NewForConfig(c.config)
 	if err != nil {
-		klog.Infof("error getting pods %v", err.Error())
+		panic(err)
 	}
 
-	dbaas_status := ""
-	for _, pod := range pods.Items {
-		klog.Infof("check pod name %s", pod.ObjectMeta.Name)
-		if strings.Contains(pod.ObjectMeta.Name, "operator-controller-manager") {
-			dbaas_status = string(pod.Status.Phase)
-		}
+	projects, err := clientSet.DbaaSPlatform("openshift-dbaas-operator").List(v1.ListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(len(projects.Items))
+	for _, project := range projects.Items {
+		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformName)
+		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformStatus)
 	}
 
 	ch <- prometheus.MustNewConstMetric(c.PlatformStatus,
 		prometheus.GaugeValue, 0,
 		dbaas_status) //Set the required value for the metrics
+}
+
+func GetResourcesDynamically(dynamic dynamic.Interface, ctx context.Context,
+	group string, version string, resource string, namespace string) (
+	[]unstructured.Unstructured, error) {
+
+	resourceId := schema.GroupVersionResource{
+		Group:    group,
+		Version:  version,
+		Resource: resource,
+	}
+	list, err := dynamic.Resource(resourceId).Namespace(namespace).
+		List(ctx, v1.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return list.Items, nil
 }

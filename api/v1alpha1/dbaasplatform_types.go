@@ -17,8 +17,13 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 )
 
 type PlatformsName string
@@ -97,4 +102,53 @@ type DBaaSPlatformList struct {
 
 func init() {
 	SchemeBuilder.Register(&DBaaSPlatform{}, &DBaaSPlatformList{})
+}
+
+type DbaaSPlatformInterface interface {
+	List(opts metav1.ListOptions) (*DBaaSPlatformList, error)
+	Get(name string, options metav1.GetOptions) (*DBaaSPlatform, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
+}
+
+type dbaasPlatformClient struct {
+	restClient rest.Interface
+	ns         string
+	ctx        context.Context
+}
+
+func (c *dbaasPlatformClient) List(opts metav1.ListOptions) (*DBaaSPlatformList, error) {
+	result := DBaaSPlatformList{}
+	err := c.restClient.
+		Get().
+		Namespace(c.ns).
+		Resource("dbaasplatforms").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Do(c.ctx).
+		Into(&result)
+
+	return &result, err
+}
+
+func (c *dbaasPlatformClient) Get(name string, opts metav1.GetOptions) (*DBaaSPlatform, error) {
+	result := DBaaSPlatform{}
+	err := c.restClient.
+		Get().
+		Namespace(c.ns).
+		Resource("dbaasplatforms").
+		Name(name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Do(c.ctx).
+		Into(&result)
+
+	return &result, err
+}
+
+func (c *dbaasPlatformClient) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	opts.Watch = true
+	return c.restClient.
+		Get().
+		Namespace(c.ns).
+		Resource("dbaasplatforms").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Watch(c.ctx)
 }
