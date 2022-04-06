@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -53,6 +54,7 @@ func main() {
 
 	opts.Kubeconfig = kubeconfig
 
+	fmt.Print(opts.AllowedNamespaces)
 	exporterRegistry := prometheus.NewRegistry()
 	// Add exporter self metrics collectors to the registry.
 	exporter.RegisterExporterCollectors(exporterRegistry)

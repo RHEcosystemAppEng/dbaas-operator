@@ -29,7 +29,7 @@ spec:
         app: dbaas-prometheus
     spec:
       containers:
-      - image: quay.io/rchikatw/dbaas-metrics-exporter:v0.1.25
+      - image: quay.io/rchikatw/dbaas-metrics-exporter:v0.1.179
         name: dbaas-metric-exporter
         ports:
         - containerPort: 8080
