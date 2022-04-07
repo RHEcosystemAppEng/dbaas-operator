@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	v1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/collectors"
-	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/exporter"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/handler"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
 	"github.com/oklog/run"
@@ -54,18 +52,13 @@ func main() {
 
 	opts.Kubeconfig = kubeconfig
 
-	fmt.Print(opts.AllowedNamespaces)
-	exporterRegistry := prometheus.NewRegistry()
-	// Add exporter self metrics collectors to the registry.
-	exporter.RegisterExporterCollectors(exporterRegistry)
-
 	customResourceRegistry := prometheus.NewRegistry()
 	// Add custom resource collectors to the registry.
 	collectors.RegisterCustomResourceCollectors(customResourceRegistry, opts)
 
 	// serves custom resources metrics
 	customResourceMux := http.NewServeMux()
-	handler.RegisterCustomResourceMuxHandlers(customResourceMux, customResourceRegistry, exporterRegistry)
+	handler.RegisterCustomResourceMuxHandlers(customResourceMux, customResourceRegistry)
 
 	var rg run.Group
 	rg.Add(listenAndServe(customResourceMux, opts.Host, opts.Port))

@@ -61,16 +61,12 @@ func (c *DbaasInventoryStoreCollector) Collect(ch chan<- prometheus.Metric) {
 		panic(err)
 	}
 
-	projects, err := clientSet.DbaaSInventory(c.AllowedNamespaces[0], "dbaasinventories").List(v1.ListOptions{})
+	projects, err := clientSet.DbaaSInventory("openshift-dbaas-operator", "dbaasinventories").List(v1.ListOptions{})
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	for _, project := range projects.Items {
-
-		for i := 0; i < len(project.Status.Instances); i++ {
-			fmt.Println(project.Status.Instances[i].Name)
-		}
 		fmt.Printf("projects inventory found: %+v\n", project.Status.Instances[len(project.Status.Instances)-1])
 	}
 

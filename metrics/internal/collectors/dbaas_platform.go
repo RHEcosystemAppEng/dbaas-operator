@@ -2,7 +2,6 @@ package collectors
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/metrics/internal/options"
@@ -61,14 +60,12 @@ func (c *DbaasPlatformStoreCollector) Collect(ch chan<- prometheus.Metric) {
 		panic(err)
 	}
 
-	projects, err := clientSet.DbaaSPlatform(c.AllowedNamespaces[0], "dbaasplatforms").List(v1.ListOptions{})
+	projects, err := clientSet.DbaaSPlatform("openshift-dbaas-operator", "dbaasplatforms").List(v1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Print(projects.Items)
 	for _, project := range projects.Items {
-		fmt.Printf("projects spec found: %+v\n", project.Status.PlatformName)
 		dbaas_status = string(project.Status.PlatformStatus)
 	}
 

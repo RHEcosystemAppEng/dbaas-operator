@@ -12,18 +12,11 @@ const (
 	healthzPath = "/healthz"
 )
 
-// RegisterExporterMuxHandlers registers the handlers needed to serve the
-// exporter self metrics
-func RegisterExporterMuxHandlers(mux *http.ServeMux, exporterRegistry *prometheus.Registry) {
-	metricsHandler := promhttp.HandlerFor(exporterRegistry, promhttp.HandlerOpts{})
-	mux.Handle(metricsPath, metricsHandler)
-}
-
 // RegisterCustomResourceMuxHandlers registers the handlers needed to serve metrics
 // about Custom Resources
-func RegisterCustomResourceMuxHandlers(mux *http.ServeMux, customResourceRegistry *prometheus.Registry, exporterRegistry *prometheus.Registry) {
+func RegisterCustomResourceMuxHandlers(mux *http.ServeMux, customResourceRegistry *prometheus.Registry) {
 	// Instrument metricsPath handler and register it inside the exporterRegistry
-	metricsHandler := InstrumentMetricHandler(exporterRegistry,
+	metricsHandler := InstrumentMetricHandler(customResourceRegistry,
 		promhttp.HandlerFor(customResourceRegistry, promhttp.HandlerOpts{}),
 	)
 	mux.Handle(metricsPath, metricsHandler)
