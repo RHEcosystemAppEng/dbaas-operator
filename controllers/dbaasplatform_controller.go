@@ -24,12 +24,17 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/mod/semver"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
-	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
 
@@ -63,8 +68,9 @@ Platform resources NOT to be removed or updated by the DBaaS operator:
 */
 
 const (
-	RequeueDelaySuccess = 10 * time.Second
-	RequeueDelayError   = 5 * time.Second
+	RequeueDelaySuccess   = 10 * time.Second
+	RequeueDelayError     = 5 * time.Second
+	PlatformConfigMapName = "dbaas-platform-config"
 )
 
 // DBaaSPlatformReconciler reconciles a DBaaSPlatform object
@@ -108,13 +114,25 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		logger.Error(err, "Error in Get of DBaaSPlatform CR")
 		return ctrl.Result{}, err
 	}
+	configMapData, err := r.loadFromConfigMap(ctx, cr)
+	if err != nil {
+		if apierrors.IsConflict(err) {
+			logger.V(1).Info("DBaaS platform ConfigMap modified, retry reconciling")
+			return ctrl.Result{Requeue: true}, nil
+		}
+		logger.Error(err, "Error in reconciling the DBaaS platform ConfigMap")
+		return ctrl.Result{}, err
+	} else {
+		logger.Info("DBaaS Platform ConfigMap reconciled")
+	}
 
 	var finished = true
 
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	if cr.DeletionTimestamp == nil {
-		platforms = reconcilers.InstallationPlatforms
+
+		platforms = reconcilers.InstallationPlatforms(configMapData)
 	}
 
 	nextStatus := cr.Status.DeepCopy()
@@ -268,4 +286,49 @@ func (r *DBaaSPlatformReconciler) updateStatus(cr *dbaasv1alpha1.DBaaSPlatform, 
 		Requeue:      true,
 		RequeueAfter: RequeueDelaySuccess,
 	}, nil
+}
+
+func (r *DBaaSPlatformReconciler) applyPlatformConfig(ctx context.Context, cr *dbaasv1alpha1.DBaaSPlatform, platformCM *corev1.ConfigMap) error {
+	err := yaml.Unmarshal(reconcilers.PlatformCMBytes, platformCM)
+	if err != nil {
+		return err
+	}
+	platformCM.ObjectMeta = metav1.ObjectMeta{
+		Name:      PlatformConfigMapName,
+		Namespace: cr.Namespace,
+	}
+	err = controllerutil.SetControllerReference(cr, platformCM, r.Scheme)
+	if err != nil {
+		return err
+	}
+	if _, err := controllerutil.CreateOrUpdate(ctx, r.Client, platformCM, func() error {
+		platformCM.Labels = map[string]string{
+			"managed-by": "dbaas-operator",
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *DBaaSPlatformReconciler) loadFromConfigMap(ctx context.Context, cr *dbaasv1alpha1.DBaaSPlatform) (map[string]string, error) {
+
+	configMap := &corev1.ConfigMap{}
+	namespacedName := types.NamespacedName{Namespace: cr.Namespace, Name: PlatformConfigMapName}
+	err := r.Get(context.TODO(), namespacedName, configMap)
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return configMap.Data, err
+		}
+		r.Log.Info("platform ConfigMap is not found creating it")
+		err = r.applyPlatformConfig(ctx, cr, configMap)
+		if err != nil {
+			return configMap.Data, err
+		}
+	}
+
+	return configMap.Data, nil
 }

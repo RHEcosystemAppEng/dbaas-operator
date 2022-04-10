@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dbaas-platform-config
+data:
+  CRUNCHY_BRIDGE_CATALOG_IMG: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.3
+  CRUNCHY_BRIDGE_CSV: crunchy-bridge-operator.v0.0.3
+  CRUNCHY_BRIDGE_CHANNEL: alpha
+
+  MONGODB_ATLAS_CATALOG_IMG: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+  MONGODB_ATLAS_CSV: mongodb-atlas-kubernetes.v0.2.0
+  MONGODB_ATLAS_CHANNEL: beta
+
+  COCKROACHDB_CATALOG_IMG: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.1
+  COCKROACHDB_CSV: ccapi-k8s-operator.v0.0.1
+  COCKROACHDB_CHANNEL: alpha
+
+  DBAAS_DYNAMIC_PLUGIN_IMG: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.5
+
+  CONSOLE_TELEMETRY_PLUGIN_IMG: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
+  CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY: qejcCDG37ICCLIDsM1FcJDkd68hglCoK
