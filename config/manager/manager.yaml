@@ -66,6 +66,16 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN
-          value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.4
+          value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0
+        - name: RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN
+          value: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
+        - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
+          value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
+        - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
+          value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+        - name: RELATED_IMAGE_COCKROACHDB_CATALOG
+          value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3
+        - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
+          value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
