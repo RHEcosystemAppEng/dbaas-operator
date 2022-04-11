@@ -22,7 +22,7 @@ Build the Red Hat OpenShift Database Access Operator image and push it to a publ
 
 Reqs:
  - go v1.17
- - operator-sdk v1.10.1
+ - operator-sdk v1.20.1
 
 **if you are using podman instead of docker set CONTAINER_ENGINE as podman** `export CONTAINER_ENGINE=podman`
 - `make build`
