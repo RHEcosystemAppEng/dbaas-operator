@@ -88,7 +88,7 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 
 var _ = Describe("DBaaSInventory controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(defaultProvider))
+	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
 
 	Describe("reconcile", func() {
@@ -165,7 +165,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					Expect(err).NotTo(HaveOccurred())
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
-					Expect(labels[typeLabelKeyMongo]).Should(Equal(typeLabelValue))
+					Expect(labels[v1alpha1.TypeLabelKeyMongo]).Should(Equal(v1alpha1.TypeLabelValue))
 				})
 			})
 		})

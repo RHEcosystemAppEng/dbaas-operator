@@ -46,6 +46,10 @@ const (
 	MsgInventoryNotReady             string = "Inventory discovery not done"
 	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
+
+	TypeLabelValue    = "credentials"
+	TypeLabelKey      = "db-operator/type"
+	TypeLabelKeyMongo = "atlas.mongodb.com/type"
 )
 
 // DBaaSProviderSpec defines the desired state of DBaaSProvider

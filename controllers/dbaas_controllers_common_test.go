@@ -51,7 +51,7 @@ const (
 	testInstanceKind   = "MongoDBAtlasInstance"
 )
 
-var defaultProvider = &v1alpha1.DBaaSProvider{
+var mongoProvider = &v1alpha1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: testProviderName,
 	},
@@ -60,6 +60,25 @@ var defaultProvider = &v1alpha1.DBaaSProvider{
 			Name: testProviderName,
 		},
 		InventoryKind:                testInventoryKind,
+		ConnectionKind:               testConnectionKind,
+		InstanceKind:                 testInstanceKind,
+		CredentialFields:             []v1alpha1.CredentialField{},
+		AllowsFreeTrial:              false,
+		ExternalProvisionURL:         "",
+		ExternalProvisionDescription: "",
+		InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+	},
+}
+
+var crunchyProvider = &v1alpha1.DBaaSProvider{
+	ObjectMeta: metav1.ObjectMeta{
+		Name: "crunchy-bridge-registration",
+	},
+	Spec: v1alpha1.DBaaSProviderSpec{
+		Provider: v1alpha1.DatabaseProvider{
+			Name: "crunchy-bridge-registration",
+		},
+		InventoryKind:                "CrunchyBridgeInventory",
 		ConnectionKind:               testConnectionKind,
 		InstanceKind:                 testInstanceKind,
 		CredentialFields:             []v1alpha1.CredentialField{},

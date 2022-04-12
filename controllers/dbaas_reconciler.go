@@ -34,8 +34,6 @@ import (
 var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 	inventoryNamespaceKey  = ".spec.inventoryNamespace"
-	typeLabelValue         = "credentials"
-	typeLabelKeyMongo      = "atlas.mongodb.com/type"
 )
 
 var ignoreCreateEvents = predicate.Funcs{
@@ -315,8 +313,7 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 }
 
 func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1alpha1.DBaaSInventory) error {
-	if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") &&
-		inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
+	if inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
 		namespace := inventory.Spec.CredentialsRef.Namespace
 		if len(namespace) == 0 {
 			namespace = inventory.Namespace
@@ -328,14 +325,18 @@ func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1al
 		}, &secret); err != nil {
 			return err
 		}
-		if secret.GetLabels()[typeLabelKeyMongo] != typeLabelValue {
-			patchBytes, err := json.Marshal(corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						typeLabelKeyMongo: typeLabelValue,
-					},
-				},
-			})
+
+		secretPatch := corev1.Secret{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
+		if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") {
+			if secret.GetLabels()[v1alpha1.TypeLabelKeyMongo] != v1alpha1.TypeLabelValue {
+				secretPatch.Labels[v1alpha1.TypeLabelKeyMongo] = v1alpha1.TypeLabelValue
+			}
+		} else if secret.GetLabels()[v1alpha1.TypeLabelKey] != v1alpha1.TypeLabelValue {
+			secretPatch.Labels[v1alpha1.TypeLabelKey] = v1alpha1.TypeLabelValue
+		}
+
+		if len(secretPatch.Labels) > 0 {
+			patchBytes, err := json.Marshal(secretPatch)
 			if err != nil {
 				return err
 			}
