@@ -237,7 +237,6 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 		return
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", providerName)
-	//execution = NewExecution(provider.Spec.Provider.Name,providerObjectKindFn(provider), DBaaSObject.GetName())
 
 	providerObject := r.createProviderObject(DBaaSObject, providerObjectKindFn(provider))
 	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn())); err != nil {

@@ -61,6 +61,7 @@ func init() {
 	// Register custom metrics with the global prometheus registry
 	customMetrics.Registry.MustRegister(controllers.PlatformStatus)
 	customMetrics.Registry.MustRegister(controllers.DBaasRequestHistogram)
+	customMetrics.Registry.MustRegister(controllers.DBaasInstallationtHistogram)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))
