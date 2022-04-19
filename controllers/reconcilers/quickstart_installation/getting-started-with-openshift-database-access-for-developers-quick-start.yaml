@@ -25,7 +25,7 @@ spec:
         3. Select your **Project** from dropdown menu that you want to add a database to.
            This is the namespace for your project.
         4. Click the **Database** category from the **Developer Catalog** section.
-        5. On the **Developer Catalog** page, click the **Connected Database** tile for the database provider you are using.
+        5. On the **Developer Catalog** page, click the **Cloud-Hosted Database** tile for the database provider you are using.
         6. Click the **Connect** button.
         7. Select the previously configured **Provider Account** resource for this database instance from the dropdown menu.
            Next, click the database instance ID you want to use, and then click the **Connect** button.
@@ -43,7 +43,7 @@ spec:
 
         1. Change to the **Developer** [Perspective switcher]{{highlight qs-perspective-switcher}}.
         2. Click [Add]{{highlight qs-nav-add}} on the navigation menu, and then select your project from the dropdown menu.
-        3. Click the **Connected Database** tile.
+        3. Click the **Cloud-Hosted Database** tile.
         4. Select one of the database providers that you have an account with, either CockroachDB, Crunchy Bridge, or MongoDB Atlas.
 
            **NOTE** : If using MongoDB Atlas, then you must add the IP address of the application pod to MongoDB Atlas' **IP Access List**.
