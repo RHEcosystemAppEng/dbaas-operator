@@ -13,8 +13,8 @@ const (
 	CONSOLE_PLUGIN_49_TAG          = "-4.9"
 
 	// CRUNCHY_BRIDGE
-	CRUNCHY_BRIDGE_CATALOG_IMG = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.3"
-	CRUNCHY_BRIDGE_CSV         = "crunchy-bridge-operator.v0.0.3"
+	CRUNCHY_BRIDGE_CATALOG_IMG = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.4"
+	CRUNCHY_BRIDGE_CSV         = "crunchy-bridge-operator.v0.0.4"
 	CRUNCHY_BRIDGE_NAME        = "crunchy-bridge"
 	CRUNCHY_BRIDGE_DISPLAYNAME = "Crunchy Bridge Operator"
 	CRUNCHY_BRIDGE_DEPLOYMENT  = "crunchy-bridge-operator-controller-manager"
@@ -22,8 +22,8 @@ const (
 	CRUNCHY_BRIDGE_CHANNEL     = "alpha"
 
 	// MONGODB_ATLAS
-	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0"
-	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.2.0"
+	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0"
+	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.3.0"
 	MONGODB_ATLAS_NAME        = "mongodb-atlas"
 	MONGODB_ATLAS_DISPLAYNAME = "MongoDB Atlas Operator"
 	MONGODB_ATLAS_DEPLOYMENT  = "mongodb-atlas-operator"
@@ -31,8 +31,8 @@ const (
 	MONGODB_ATLAS_CHANNEL     = "beta"
 
 	// COCKROACHDB
-	COCKROACHDB_CSV         = "ccapi-k8s-operator.v0.0.1"
-	COCKROACHDB_CATALOG_IMG = "gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.1"
+	COCKROACHDB_CSV         = "ccapi-k8s-operator.v0.0.2"
+	COCKROACHDB_CATALOG_IMG = "gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.2"
 	COCKROACHDB_NAME        = "ccapi-k8s"
 	COCKROACHDB_DISPLAYNAME = "CockroachDB Cloud Operator"
 	COCKROACHDB_DEPLOYMENT  = "ccapi-k8s-operator-controller-manager"
