@@ -24,6 +24,13 @@ Build the Red Hat OpenShift Database Access Operator image and push it to a publ
 - `make build`
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
+## Enabling scraping of metrics to your Prometheus
+Grant permissions to your Prometheus server so that it can scrape the protected metrics.
+To achieve that, you need to create ClusterRole and clusterRoleBinding to bind the clusterRole to the service account that your Prometheus server
+
+if you want to use the existing openshift-monitoring and openshift-user-workload-monitoring run the below command
+- `make metrics-scrape`
+
 ## Running the Operator
 
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
@@ -32,7 +39,7 @@ options), you can create a DBaaSInventory & will receive a DBaaSConnection, but 
 
 
 **Run as a local instance**:
-- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
+- `make run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
 - Continue below by following the [Using the Operator](#using-the-operator) section
 - When finished, remove created resources via:
   - `make clean-namespace`
