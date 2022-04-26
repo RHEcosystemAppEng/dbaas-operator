@@ -15,6 +15,13 @@ rules:
   - patch
 - apiGroups:
   - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
   - authorization.openshift.io
   resources:
   - localresourceaccessreviews

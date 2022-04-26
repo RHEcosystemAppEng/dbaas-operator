@@ -5,6 +5,8 @@ go 1.16
 require (
 	github.com/RHsyseng/operator-utils v1.4.9
 	github.com/go-logr/logr v0.4.0
+	github.com/hashicorp/vault/api v1.5.0
+	github.com/hashicorp/vault/api/auth/kubernetes v0.1.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.15.0
 	github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba
