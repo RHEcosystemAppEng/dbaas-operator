@@ -19,18 +19,20 @@ package controllers
 import (
 	"context"
 	"fmt"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"os"
 	"reflect"
 	"strings"
 	"time"
+
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+
+	"golang.org/x/mod/semver"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
-	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
 
@@ -88,6 +90,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
+//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -111,7 +115,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	var finished = true
-
+	execution := PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	if cr.DeletionTimestamp == nil {
@@ -129,8 +133,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			if cr.DeletionTimestamp == nil {
 				status, err = reconciler.Reconcile(ctx, cr, nextStatus)
+				SetPlatformStatusMetric(platform, status, platformConfig.CSV)
+
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
+				CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
 			}
 
 			if err != nil {
@@ -146,6 +153,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
+					execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
 					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
@@ -160,6 +168,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
 		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
+		execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 
@@ -242,7 +251,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch platformConfig.Type {
-	case dbaasv1alpha1.TypeProvider:
+	case dbaasv1alpha1.TypeOperator:
 		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
 		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
