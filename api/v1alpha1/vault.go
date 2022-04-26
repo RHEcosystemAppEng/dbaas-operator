@@ -32,7 +32,7 @@ import (
 //+kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list
 
 // Fetches a key-value secret (kv-v2) after authenticating to Vault with a Kubernetes service account.
-func GetSecretWithKubernetesAuth(k8sClient k8s.Client, role, path, sa, namespace string) (map[string]interface{}, error) {
+func GetSecretFromVault(k8sClient k8s.Client, role, path, sa, namespace string) (map[string]interface{}, error) {
 	// If set, the VAULT_ADDR environment variable will be the address that
 	// your pod uses to communicate with Vault.
 	config := vault.DefaultConfig() // modify for more granular configuration
