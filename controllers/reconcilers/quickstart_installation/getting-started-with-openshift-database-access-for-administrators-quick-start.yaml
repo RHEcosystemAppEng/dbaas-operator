@@ -33,7 +33,7 @@ spec:
         success: The Red Hat OpenShift Database Access add-on is installed and ready for use.
         failed: Make note of any error messages, and try these steps again.
 
-    - title: Create a provider account instance
+    - title: Import a provider account instance
       description: |-
         You can create a provider account resource that represents an account with a cloud database provider.
         By providing the correct authentication credentials for the cloud database provider, you can fetch the available database instances.
@@ -41,12 +41,12 @@ spec:
         1. Change to the **Administrator** [Perspective switcher]{{highlight qs-perspective-switcher}}.
         2. On the navigation menu, expand **Data Services**, and click **Database Access**.
         3. Select the **redhat-dbaas-operator** project from the **Project** dropdown menu.
-        4. On the **Database Access** page, click the **Create** dropdown button, and select **Database Provider Account**.
-        5. On the **Create Provider Account** page, specify a **Name** for the new provider account resource.
+        4. On the **Database Access** page, click the **Configuration** dropdown button, and select **Import database provider account**.
+        5. On the **Import Provider Account** page, specify a **Name** for the new provider account resource.
         6. Select your cloud database provider from the dropdown menu, and provide the necessary credentials for that provider.
 
            **NOTE** : If you need help in finding the credentials from your cloud database provider, then see the Red Hat Customer Portal for [documentation](https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html-single/quick_start_guide/index#finding-your-cloud-database-provider-account-credentials).
-        7. Click the **Create** button to create the provider account resource and fetch the available database instances.
+        7. Click the **Import** button to create the provider account resource and fetch the available database instances.
       summary:
         success: You have created a provider account resource for the database cloud provider.
         failed: Check your database cloud provider credentials, and try these steps again.
@@ -72,7 +72,7 @@ spec:
         3. Give a **Name** to your new project, and click the **Create** button.
            This is the namespace for your project.
         4. On the navigation menu, expand **Data Services**, and click **Database Access**.
-        5. From the database inventory page, click the **Create** dropdown button, and select **Database Instance**.
+        5. From the database inventory page, click the **Configuration** dropdown button, and select **Create database instance**.
         6. Select a **Database Provider** from the dropdown menu.
         7. Select your **Provider Account** resource, provide an **Instance Name** for the new database instance, and click the **Create** button.
 

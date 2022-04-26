@@ -5,7 +5,6 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.2.0
 
-
 CONTAINER_ENGINE?=docker
 
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
@@ -17,15 +16,13 @@ CONTAINER_ENGINE?=docker
 # If you are developing and pushing against your OWN quay for testing, you likely need to uncomment
 #OLD_BUNDLE_VERSIONS ?= 0.1.0,0.1.1,0.1.2,0.1.3
 
-# CATALOG_VERSION defines the version of the index image.
-CATALOG_VERSION ?= 0.1
-
-# QUAY_ORG indicates the organization that docker images will be build for & pushed to
+# ORG indicates the organization that docker images will be build for & pushed to
 # CHANGE THIS TO YOUR OWN QUAY USERNAME FOR DEV/TESTING/PUSHING
-QUAY_ORG ?= ecosystem-appeng
+ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-CATALOG_BASE_IMG ?= quay.io/$(QUAY_ORG)/dbaas-operator-catalog:v$(CATALOG_VERSION)
+# 0.1.4 catalog image - quay.io/osd-addons/dbaas-operator-index@sha256:6325f547b394b1d6f7a528ab3c01bb8f9052762acc245fd453378f5a47830923
+CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
@@ -53,7 +50,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # redhat.com/dbaas-operator-bundle:$VERSION and redhat.com/dbaas-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= quay.io/$(QUAY_ORG)/dbaas-operator
+IMAGE_TAG_BASE ?= quay.io/$(ORG)/dbaas-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
@@ -253,7 +250,7 @@ BUNDLE_IMGS ?= $(BUNDLE_IMG),$(OLD_BUNDLE_IMGS)
 endif
 
 # The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
-CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(CATALOG_VERSION)
+CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
 
 # Set CATALOG_BASE_IMG to an existing catalog image tag to add $BUNDLE_IMGS to that image.
 ifneq ($(origin CATALOG_BASE_IMG), undefined)
