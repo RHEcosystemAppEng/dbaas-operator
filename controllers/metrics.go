@@ -22,6 +22,7 @@ const (
 	installationTimeStart = 0
 	// installationTimeWidth is the width of a bucket in the histogram, here it is 1m
 	installationTimeWidth = 60
+
 	// installationTimeBuckets is the number of buckets, here it 10 minutes worth of 1m buckets
 	installationTimeBuckets = 10
 )
