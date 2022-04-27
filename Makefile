@@ -168,13 +168,6 @@ catalog-update:
 	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
 	 oc apply -f config/samples/catalog-source.yaml
 
-# enabled the monitoring of the operator using  OpenShift Container Platform monitoring stack the namespace
-# Set the labels for the namespace that you want to scrape
-metrics-scrape:
-	-oc apply -f config/prometheus/role.yaml
-	-oc apply -f config/prometheus/rolebinding.yaml
-	-oc label namespace openshift-dbaas-operator openshift.io/cluster-monitoring="true"
-
 deploy-sample-app:
 	oc apply -f config/samples/quarkus-runner/deployment.yaml
 
