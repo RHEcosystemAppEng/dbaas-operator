@@ -10,6 +10,7 @@ require (
 	github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba
 	github.com/openshift/client-go v0.0.0-20210521082421-73d9475a9142
 	github.com/operator-framework/api v0.10.5
+	github.com/prometheus/client_golang v1.11.0
 	go.uber.org/zap v1.19.0
 	golang.org/x/mod v0.5.1
 	k8s.io/api v0.22.1

@@ -24,12 +24,13 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/mod/semver"
+
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
 	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
-	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
 
@@ -110,7 +111,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	var finished = true
-
+	execution := PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	if cr.DeletionTimestamp == nil {
@@ -128,8 +129,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			if cr.DeletionTimestamp == nil {
 				status, err = reconciler.Reconcile(ctx, cr, nextStatus)
+				SetPlatformStatusMetric(platform, status, platformConfig.CSV)
+
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
+				CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
 			}
 
 			if err != nil {
@@ -145,6 +149,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
+					execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
 				} else {
 					logger.Info("DBaaS platform stack cleanup in progress", "working platform", platform)
@@ -156,6 +161,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
+		execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 
