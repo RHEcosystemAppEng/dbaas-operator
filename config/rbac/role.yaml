@@ -10,8 +10,10 @@ rules:
   - ""
   resources:
   - namespaces
+  - serviceaccounts
   verbs:
   - create
+  - get
   - list
   - watch
 - apiGroups:
@@ -66,6 +68,15 @@ rules:
   - get
   - list
   - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
   - watch
 - apiGroups:
   - ""
@@ -222,40 +233,7 @@ rules:
   - rolebindings
   - roles
   verbs:
+  - create
   - get
   - list
-  - watch
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  creationTimestamp: null
-  name: manager-role
-  namespace: openshift-dbaas-prometheus
-rules:
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - alertmanagerconfigs
-  - alertmanagers
-  - podmonitors
-  - prometheuses
-  - servicemonitors
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - operators.coreos.com
-  resources:
-  - operatorgroups
-  - subscriptions
-  verbs:
-  - create
-  - list
-  - update
   - watch

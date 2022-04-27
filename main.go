@@ -19,7 +19,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -56,7 +58,25 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+var (
+	goobers = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "goobers_total",
+			Help: "Number of goobers proccessed_________________________",
+		},
+	)
+	gooberFailures = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "goober_failures_total",
+			Help: "Number of failed goobers______________________________",
+		},
+	)
+)
+
 func init() {
+
+	metrics.Registry.MustRegister(goobers, gooberFailures)
+
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))

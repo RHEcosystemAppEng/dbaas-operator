@@ -239,8 +239,10 @@ spec:
           - ""
           resources:
           - namespaces
+          - serviceaccounts
           verbs:
           - create
+          - get
           - list
           - watch
         - apiGroups:
@@ -295,6 +297,15 @@ spec:
           - get
           - list
           - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - endpoints
+          - pods
+          verbs:
+          - get
+          - list
           - watch
         - apiGroups:
           - ""
@@ -451,6 +462,7 @@ spec:
           - rolebindings
           - roles
           verbs:
+          - create
           - get
           - list
           - watch
@@ -524,6 +536,8 @@ spec:
                 - containerPort: 9443
                   name: webhook-server
                   protocol: TCP
+                - containerPort: 8080
+                  name: metrics
                 readinessProbe:
                   httpGet:
                     path: /readyz

@@ -93,9 +93,9 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups="monitoring.coreos.com",resources=prometheusrules,verbs=get;list;watch;create;update;patch
 //+kubebuilder:rbac:groups="monitoring.coreos.com",resources=podmonitors,verbs=get;list;watch;update;patch;create
 //+kubebuilder:rbac:groups="monitoring.coreos.com",resources=servicemonitors,verbs=get;list;watch;update;patch;create;delete
-//+kubebuilder:rbac:groups="",resources=namespaces,verbs=list;watch;create
-//+kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions;operatorgroups,verbs=list;watch;create;update,namespace=openshift-dbaas-prometheus
-//+kubebuilder:rbac:groups=monitoring.coreos.com,resources={alertmanagers,prometheuses,alertmanagerconfigs,podmonitors,servicemonitors},verbs=list;watch;create;update;get;delete,namespace=openshift-dbaas-prometheus
+//+kubebuilder:rbac:groups="",resources={namespaces,serviceaccounts},verbs=list;watch;create;get
+//+kubebuilder:rbac:groups=core,resources=pods;endpoints,verbs=get;list;watch
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources={roles,rolebindings},verbs=list;watch;create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -258,9 +258,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv
 	case dbaasv1alpha1.TypeQuickStart:
 		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
 	case dbaasv1alpha1.TypePrometheusInstallation:
-		return prometheus.NewReconciler(r.cr, r.Client, r.Scheme, r.Log)
+		return prometheus.NewReconciler(r.cr, r.Client, r.Scheme, r.Log, r.InstallNamespace)
 	}
-
 	return nil
 }
 
