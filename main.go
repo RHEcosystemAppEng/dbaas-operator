@@ -23,10 +23,13 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/mod/semver"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1 "github.com/openshift/api/console/v1"
@@ -34,6 +37,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -43,19 +47,96 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
-	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
+	Version  = "0.1.89"
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+var (
+	// dbaas_operator_version string
+	dbaas_operator_version = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "dbaas_operator_version",
+		Help: "Version information about this binary",
+		ConstLabels: map[string]string{
+			"dbaas_operator_version": Version,
+		},
+	})
+
+	dbaas_platform_installation_duration_seconds = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "dbaas_platform_installation_duration_seconds",
+		Help: "Duration in seconds for DBaas Platform Installation",
+		ConstLabels: map[string]string{
+			"dbaas_platform_installation_duration_seconds": "23",
+		},
+	})
+
+	dbaas_platform_status = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "dbaas_platform_status",
+		Help: "Status of an installation of components and provider operators",
+		ConstLabels: map[string]string{
+			"dbaas_platform_status": "Active",
+		},
+	})
+
+	dbaas_inventory_count = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "dbaas_inventory_count",
+		Help:        "Number of inventories successfully created",
+		ConstLabels: prometheus.Labels{"version": "1234"},
+	})
+
+	dbaas_connection_count = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "dbaas_connection_count",
+		Help:        "Number of connection successfully created",
+		ConstLabels: prometheus.Labels{"count": "23"},
+	})
+
+	dbaas_registered_tenant_count = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "dbaas_registered_tenant_count",
+		Help:        "Number of tenant successfully created",
+		ConstLabels: prometheus.Labels{"count": "2"},
+	})
+
+	dbaas_instance_count = prometheus.NewCounter(prometheus.CounterOpts{
+		Name:        "dbaas_instance_count",
+		Help:        "Number of instance successfully created",
+		ConstLabels: prometheus.Labels{"count": "1"},
+	})
+
+	goobers = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "goobers_total",
+			Help: "Number of goobers proccessed",
+		},
+	)
+	gooberFailures = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "goober_failures_total",
+			Help: "Number of failed goobers",
+		},
+	)
+)
+
+func getRequiredData() {
+
+}
+
 func init() {
+	metrics.Registry.MustRegister(goobers,
+		gooberFailures,
+		dbaas_operator_version,
+		dbaas_platform_installation_duration_seconds,
+		dbaas_platform_status,
+		dbaas_inventory_count,
+		dbaas_connection_count,
+		dbaas_registered_tenant_count,
+		dbaas_instance_count,
+	)
+
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
