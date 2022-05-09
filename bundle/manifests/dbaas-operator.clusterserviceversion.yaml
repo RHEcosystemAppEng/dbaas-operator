@@ -446,7 +446,7 @@ spec:
                   readOnlyRootFilesystem: true
               - args:
                 - --health-probe-bind-address=:8081
-                - --metrics-bind-address=127.0.0.1:8080
+                - --metrics-bind-address=0.0.0.0:8080
                 - --leader-elect
                 command:
                 - /manager
@@ -468,6 +468,8 @@ spec:
                 - containerPort: 9443
                   name: webhook-server
                   protocol: TCP
+                - containerPort: 8080
+                  name: metrics
                 readinessProbe:
                   httpGet:
                     path: /readyz
