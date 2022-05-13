@@ -17,15 +17,23 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 )
 
-//go:embed getting-started-with-openshift-database-access-for-administrators-quick-start.yaml
-var gettingstartedadminQuickStart []byte
+//go:embed accessing-the-database-access-menu-for-configuring-and-monitoring-quick-start.yaml
+var adminQuickStart []byte
 
-//go:embed getting-started-with-openshift-database-access-for-developers-quick-start.yaml
-var gettingstarteddevQuickStart []byte
+//go:embed accessing-the-developer-workspace-and-adding-a-database-instance-quick-start.yaml
+var devInstanceQuickStart []byte
+
+//go:embed connecting-an-application-to-a-database-instance-using-the-topology-view-quick-start.yaml
+var devConnectQuickStart []byte
+
+//go:embed installing-the-red-hat-openshift-database-access-add-on-quick-start.yaml
+var installAddonQuickStart []byte
 
 var QuickStarts = map[string][]byte{
-	"getting-started-with-openshift-database-access-for-administrators": gettingstartedadminQuickStart,
-	"getting-started-with-openshift-database-access-for-developers":     gettingstarteddevQuickStart,
+	"accessing-the-database-access-menu-for-configuring-and-monitoring":        adminQuickStart,
+	"accessing-the-developer-workspace-and-adding-a-database-instance":         devInstanceQuickStart,
+	"connecting-an-application-to-a-database-instance-using-the-topology-view": devConnectQuickStart,
+	"installing-the-red-hat-openshift-database-access-add-on":                  installAddonQuickStart,
 }
 
 type Reconciler struct {
