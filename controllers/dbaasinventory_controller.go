@@ -89,6 +89,11 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	defer func() {
+		SetInventoryStatusMetrics(inventory)
+
+	}()
+
 	//
 	// Provider Inventory
 	//
