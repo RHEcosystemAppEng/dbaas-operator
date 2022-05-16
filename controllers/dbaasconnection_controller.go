@@ -55,7 +55,9 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger := ctrl.LoggerFrom(ctx)
 
 	var connection v1alpha1.DBaaSConnection
+	var inventory v1alpha1.DBaaSInventory
 	execution := PlatformInstallStart()
+
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -65,6 +67,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Error fetching DBaaS Connection for reconcile")
 		return ctrl.Result{}, err
 	}
+
+	defer func() {
+		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
+	}()
 
 	if res, err := r.reconcileDevTopologyResource(&connection, ctx); err != nil {
 		if errors.IsConflict(err) {
