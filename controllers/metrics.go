@@ -12,11 +12,18 @@ const (
 	// Metrics names.
 	metricNameDBaaSStackInstallationTotalDuration = "dbaas_stack_installation_total_duration_seconds"
 	metricNameDBaaSPlatformInstallationStatus     = "dbaas_platform_installation_status"
+	metricNameDBaasInventoryCount                 = "dbaas_inventory_created"
+	metricNameDBaasConnectionCount                = "dbaas_connection_count"
+	metricNameDBaasTenantCount                    = "dbaas_registerd_tenant_count"
+	metricNameDBaasInstanceCount                  = "dbaas_instance_count"
 
 	// Metrics labels.
-	metricLabelName    = "name"
-	metricLabelStatus  = "status"
-	metricLabelVersion = "version"
+	metricLabelName     = "name"
+	metricLabelStatus   = "status"
+	metricLabelVersion  = "version"
+	metricLabelProvider = "provider"
+	metricLabelMessage  = "message"
+	metricAccountName   = "account_name"
 
 	// installationTimeStart base time == 0
 	installationTimeStart = 0
@@ -40,6 +47,31 @@ var DBaasStackInstallationtHistogram = prometheus.NewHistogramVec(prometheus.His
 		installationTimeWidth,
 		installationTimeBuckets),
 }, []string{metricLabelVersion})
+
+// var DBaaSInventoryCount = prometheus.NewGauge(prometheus.GaugeOpts{
+// 	Name: metricNameDBaasInventoryCount,
+// 	Help: "the total count of dbaas inventory",
+// })
+
+var DBaaSInventoryCountGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: metricNameDBaasInventoryCount,
+	Help: "The number of provider created processed with status",
+}, []string{"provider", "account_name", "status"})
+
+var DBaasConnectionCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: metricNameDBaasConnectionCount,
+	Help: "the total count of dbaas connections",
+}, []string{"provider_name", "message"})
+
+var DBaasTenantCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: metricNameDBaasTenantCount,
+	Help: "Number of tenant successfully created",
+}, []string{"Namespace", "message"})
+
+var DBaasInstanceCount = prometheus.NewCounter(prometheus.CounterOpts{
+	Name: metricNameDBaasInstanceCount,
+	Help: "The count of dbaas instances",
+})
 
 // Execution tracks state for an API execution for emitting metrics
 type Execution struct {
@@ -83,3 +115,54 @@ func CleanPlatformStatusMetric(platformName dbaasv1alpha1.PlatformsName, status 
 		DBaasPlatformInstallationtGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultSuccess), metricLabelVersion: version})
 	}
 }
+
+// func IncrementInventoryCount() {
+// 	DBaaSInventoryCount.Inc()
+// }
+
+// func DecrementInventoryCount() {
+// 	DBaaSInventoryCount.Dec()
+// }
+
+func SetInventoryCreation(provider string, inventory dbaasv1alpha1.DBaaSInventory) {
+	for _, cond := range inventory.Status.Conditions {
+		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
+			DBaaSInventoryCountGauge.WithLabelValues(provider, inventory.GetName(), cond.Reason).Inc()
+		}
+	}
+}
+
+func SetDbaasConnectionMetric(provider string, message string) {
+	DBaasConnectionCount.WithLabelValues(provider, message).Inc()
+}
+
+func SetDbaasTenantMetric(namespace string, message string) {
+	DBaasTenantCount.WithLabelValues(namespace, message).Inc()
+}
+
+func SetDbaasInstanceMetric(provider string, message string) {
+	DBaasInstanceCount.Inc()
+}
+
+// make run ENABLE_WEBHOOKS=false
+// http://localhost:8080/metrics
+
+// 	defer func() {
+// 		SetInventoryCreation(inventory.Spec.ProviderRef.Name, inventory)
+// 	}()
+// func SetInventoryCreation(provider string, inventory dbaasv1alpha1.DBaaSInventory) {
+
+// 	for _, cond := range inventory.Status.Conditions {
+// 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
+// 			DBaaSInventoryCountGauge.WithLabelValues(provider, inventory.GetName(), cond.Reason).Inc()
+// 		}
+// 	}
+// }
+// var DBaaSInventoryCountGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+// 	Name: "dbaas_inventory_created",
+// 	Help: "The number of provider created processed with status",
+// }, []string{"provider", "account_name", "status"})
+// RHODA Metrics Sync
+
+// make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false
+// Continue below by following

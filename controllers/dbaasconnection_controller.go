@@ -51,6 +51,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger := ctrl.LoggerFrom(ctx)
 
 	var connection v1alpha1.DBaaSConnection
+
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue

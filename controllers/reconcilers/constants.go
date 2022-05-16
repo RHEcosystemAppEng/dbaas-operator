@@ -22,8 +22,8 @@ const (
 	CRUNCHY_BRIDGE_CHANNEL     = "alpha"
 
 	// MONGODB_ATLAS
-	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0"
-	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.3.0"
+	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0"
+	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.2.0"
 	MONGODB_ATLAS_NAME        = "mongodb-atlas"
 	MONGODB_ATLAS_DISPLAYNAME = "MongoDB Atlas Operator"
 	MONGODB_ATLAS_DEPLOYMENT  = "mongodb-atlas-operator"
@@ -40,7 +40,7 @@ const (
 	COCKROACHDB_CHANNEL     = "alpha"
 
 	// DBAAS_DYNAMIC_PLUGIN
-	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
+	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.5"
 	DBAAS_DYNAMIC_PLUGIN_NAME         = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME = "OpenShift Database as a Service Dynamic Plugin"
 

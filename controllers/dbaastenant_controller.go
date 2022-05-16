@@ -87,6 +87,7 @@ func (r *DBaaSTenantReconciler) reconcileTenantAuthz(ctx context.Context, tenant
 	logger := ctrl.LoggerFrom(ctx)
 
 	// Get list of DBaaSInventories from tenant namespace
+	SetDbaasTenantMetric(tenant.Spec.InventoryNamespace, tenant.Name)
 	var inventoryList v1alpha1.DBaaSInventoryList
 	if err := r.List(ctx, &inventoryList, &client.ListOptions{Namespace: tenant.Spec.InventoryNamespace}); err != nil {
 		logger.Error(err, "Error fetching DBaaS Inventory List for reconcile")

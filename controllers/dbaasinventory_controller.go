@@ -91,10 +91,17 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	//
 	// Provider Inventory
+	defer func() {
+		SetInventoryCreation(inventory.Spec.ProviderRef.Name, inventory)
+	}()
 	//
+	// IncrementInventoryCount()
+	// SetInventoryCreation("crunchy-bridge", inventory)
+	logger.Info("myinfo")
 	return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
 		&inventory,
 		func(provider *v1alpha1.DBaaSProvider) string {
+
 			return provider.Spec.InventoryKind
 		},
 		func() interface{} {
@@ -110,6 +117,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		func() *[]metav1.Condition {
 			return &inventory.Status.Conditions
 		},
+
 		v1alpha1.DBaaSInventoryReadyType,
 		ctx,
 		logger,
@@ -118,20 +126,24 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInventory{}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
 		Build(r)
+
 }
 
 // mergeInventoryStatus: merge the status from DBaaSProviderInventory into the current DBaaSInventory status
 func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DBaaSProviderInventory) metav1.Condition {
 	providerInv.Status.DeepCopyInto(&inv.Status)
+
 	// Update inventory status condition (type: DBaaSInventoryReadyType) based on the provider status
 	specSync := apimeta.FindStatusCondition(providerInv.Status.Conditions, v1alpha1.DBaaSInventoryProviderSyncType)
 	if specSync != nil && specSync.Status == metav1.ConditionTrue {
+
 		return metav1.Condition{
 			Type:    v1alpha1.DBaaSInventoryReadyType,
 			Status:  metav1.ConditionTrue,

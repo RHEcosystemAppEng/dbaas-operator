@@ -209,6 +209,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 	// This update will make sure the status is always updated in case of any errors or successful result
 	defer func(cond *metav1.Condition) {
 		apimeta.SetStatusCondition(DBaaSObjectConditionsFn(), *cond)
+
 		if err := r.Client.Status().Update(ctx, DBaaSObject); err != nil {
 			if errors.IsConflict(err) {
 				logger.V(1).Info("DBaaS object modified, retry syncing status", "DBaaS Object", DBaaSObject)
@@ -222,9 +223,11 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 				recErr = err
 			}
 		}
+
 	}(condition)
 
 	provider, err := r.getDBaaSProvider(providerName, ctx)
+	SetDbaasInstanceMetric(providerName, "message")
 	if err != nil {
 		recErr = err
 		if errors.IsNotFound(err) {

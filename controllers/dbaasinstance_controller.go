@@ -72,6 +72,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
 			&instance,
 			func(provider *v1alpha1.DBaaSProvider) string {
+
 				return provider.Spec.InstanceKind
 			},
 			func() interface{} {
@@ -107,6 +108,7 @@ func (r *DBaaSInstanceReconciler) SetupWithManager(mgr ctrl.Manager) (controller
 // mergeInstanceStatus: merge the status from DBaaSProviderInstance into the current DBaaSInstance status
 func mergeInstanceStatus(instance *v1alpha1.DBaaSInstance, providerInst *v1alpha1.DBaaSProviderInstance) metav1.Condition {
 	providerInst.Status.DeepCopyInto(&instance.Status)
+
 	// Update instance status condition (type: DBaaSInstanceReadyType) based on the provider status
 	specSync := apimeta.FindStatusCondition(providerInst.Status.Conditions, v1alpha1.DBaaSInstanceProviderSyncType)
 	if specSync != nil && specSync.Status == metav1.ConditionTrue {
