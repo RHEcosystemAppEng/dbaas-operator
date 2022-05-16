@@ -46,6 +46,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := ctrl.LoggerFrom(ctx)
 
 	var instance v1alpha1.DBaaSInstance
+	var inventory v1alpha1.DBaaSInventory
 	if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -55,6 +56,11 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		logger.Error(err, "Error fetching DBaaS Instance for reconcile")
 		return ctrl.Result{}, err
 	}
+
+	defer func() {
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+
+	}()
 
 	if inventory, validNS, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
