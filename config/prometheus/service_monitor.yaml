@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: dbaas-prometheus
+  name: service-monitor
+  namespace: system
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: metrics
+  selector:
+    matchLabels:
+      app: dbaas-prometheus
