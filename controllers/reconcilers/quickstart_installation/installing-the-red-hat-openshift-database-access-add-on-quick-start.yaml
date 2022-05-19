@@ -14,7 +14,7 @@ spec:
   description: 'A quick step-by-step guide for system administratorson on how to install the Red Hat OpenShift Database Access add-on'
   prerequisites: ["A Red Hat user account to access the [Red Hat Hybrid Cloud Console](https://console.redhat.com/).", "An instance of OpenShift Container Platform (OCP) 4.9 or higher running on Red Hat OpenShift Dedicated (OSD), or Red Hat OpenShift Service on AWS (ROSA). When using OSD or ROSA, an Amazon Web Services (AWS) account and credentials are required."]
   introduction: |-
-    The Red Hat OpenShift Database Access add-on allows you to configure a connection to cloud-database providers, create new database instances, and connect database instances to applications for developers to use.
+    The Red Hat OpenShift Database Access add-on allows you to configure a connection to cloud-hosted database providers, create new database instances, and connect database instances to applications for developers to use.
 
     **IMPORTANT** : Red Hat OpenShift Database Access is a pre-beta service preview release, and is not ready for production environments.
   tasks:
