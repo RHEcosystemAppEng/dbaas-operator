@@ -27,6 +27,7 @@ spec:
         5. Select **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace.
 
            On the database inventory page you can monitor the database environment, import cloud-hosted database provider accounts, or create new database instances.
+
            The database inventory page might be empty, until you import at least one cloud-database provider account.
       summary:
         success: Landing on the database inventory page.
