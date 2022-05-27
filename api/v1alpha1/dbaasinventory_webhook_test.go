@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,7 +65,7 @@ var (
 			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
-	testSecret = corev1.Secret{
+	testSecret = v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -79,7 +79,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2 = corev1.Secret{
+	testSecret2 = v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -92,7 +92,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2update = corev1.Secret{
+	testSecret2update = v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -105,7 +105,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret3 = corev1.Secret{
+	testSecret3 = v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -117,7 +117,7 @@ var (
 			"field1": []byte("test1"),
 		},
 	}
-	testSecret3update = corev1.Secret{
+	testSecret3update = v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -139,9 +139,8 @@ var (
 				Name: testProviderName,
 			},
 			DBaaSInventorySpec: DBaaSInventorySpec{
-				CredentialsRef: &NamespacedName{
-					Name:      testSecretName,
-					Namespace: testNamespace,
+				CredentialsRef: &LocalObjectReference{
+					Name: testSecretName,
 				},
 			},
 		},
@@ -193,7 +192,6 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					inv.Name = "testinventory" + suffix
 					inv.Spec.CredentialsRef.Name = secret.Name
-					inv.Spec.CredentialsRef.Namespace = ""
 					secret.SetResourceVersion("")
 					Expect(k8sClient.Create(ctx, secret)).Should(Succeed())
 					err := k8sClient.Get(ctx, client.ObjectKeyFromObject(secret), secret)
@@ -214,7 +212,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			AfterEach(assertResourceDeletion(&testSecret2))
 			It("missing required credential fields", func() {
 				err := k8sClient.Create(ctx, &testDBaaSInventory)
-				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
 			})
 		})
 	Context("update",
@@ -244,7 +242,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
-					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
+					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
 				})
 			})
 		})

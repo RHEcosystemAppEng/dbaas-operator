@@ -55,9 +55,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		instanceID := "test-instanceID"
 		inventoryName := "test-connection-inventory-not-ready"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      testSecret.Name,
-				Namespace: testNamespace,
+			CredentialsRef: &v1alpha1.LocalObjectReference{
+				Name: testSecret.Name,
 			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
@@ -120,9 +119,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		instanceID := "test-instanceID"
 		inventoryName := "test-connection-inventory"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      testSecret.Name,
-				Namespace: testNamespace,
+			CredentialsRef: &v1alpha1.LocalObjectReference{
+				Name: testSecret.Name,
 			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
@@ -207,9 +205,8 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.NamespacedName{
-							Name:      testSecret.Name,
-							Namespace: testNamespace,
+						CredentialsRef: &v1alpha1.LocalObjectReference{
+							Name: testSecret.Name,
 						},
 					},
 				},
@@ -320,9 +317,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.NamespacedName{
-							Name:      testSecret.Name,
-							Namespace: testNamespace,
+						CredentialsRef: &v1alpha1.LocalObjectReference{
+							Name: testSecret.Name,
 						},
 					},
 					ConnectionNamespaces: []string{otherNS.Name},
@@ -426,9 +422,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.NamespacedName{
-							Name:      testSecret.Name,
-							Namespace: testNamespace,
+						CredentialsRef: &v1alpha1.LocalObjectReference{
+							Name: testSecret.Name,
 						},
 					},
 					ConnectionNamespaces: []string{"*"},

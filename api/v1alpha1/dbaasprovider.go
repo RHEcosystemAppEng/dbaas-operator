@@ -120,9 +120,16 @@ type CredentialField struct {
 type DBaaSInventorySpec struct {
 	// The Secret containing the provider-specific connection credentials to use with its API
 	// endpoint. The format of the Secret is specified in the provider’s operator in its
-	// DBaaSProvider CR (CredentialFields key). It is recommended to place the Secret in a
-	// namespace with limited accessibility.
-	CredentialsRef *NamespacedName `json:"credentialsRef"`
+	// DBaaSProvider CR (CredentialFields key). The Secret must exist within the same namespace
+	// as the Inventory.
+	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
+}
+
+// LocalObjectReference contains enough information to let you locate the
+// referenced object inside the same namespace.
+type LocalObjectReference struct {
+	// Name of the referent.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 }
 
 // DBaaSInventoryStatus defines the Inventory status to be used by provider operators

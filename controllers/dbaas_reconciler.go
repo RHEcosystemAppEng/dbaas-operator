@@ -314,14 +314,10 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 
 func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1alpha1.DBaaSInventory) error {
 	if inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
-		namespace := inventory.Spec.CredentialsRef.Namespace
-		if len(namespace) == 0 {
-			namespace = inventory.Namespace
-		}
 		secret := corev1.Secret{}
 		if err := r.Get(ctx, types.NamespacedName{
 			Name:      inventory.Spec.CredentialsRef.Name,
-			Namespace: namespace,
+			Namespace: inventory.Namespace,
 		}, &secret); err != nil {
 			return err
 		}

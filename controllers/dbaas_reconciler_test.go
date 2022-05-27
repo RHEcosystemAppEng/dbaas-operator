@@ -137,9 +137,8 @@ var _ = Describe("Parse provider object", func() {
 	}
 
 	inventorySpec := v1alpha1.DBaaSInventorySpec{
-		CredentialsRef: &v1alpha1.NamespacedName{
-			Name:      "test-credential-ref",
-			Namespace: "test-namespace",
+		CredentialsRef: &v1alpha1.LocalObjectReference{
+			Name: "test-credential-ref",
 		},
 	}
 	uInventory := &unstructured.Unstructured{}
@@ -332,9 +331,8 @@ var _ = Describe("Check inventory", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      testSecret.Name,
-						Namespace: testNamespace,
+					CredentialsRef: &v1alpha1.LocalObjectReference{
+						Name: testSecret.Name,
 					},
 				},
 			},
@@ -349,9 +347,8 @@ var _ = Describe("Check inventory", func() {
 					Name: "crunchy-bridge-registration",
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      testSecret2.Name,
-						Namespace: testNamespace,
+					CredentialsRef: &v1alpha1.LocalObjectReference{
+						Name: testSecret2.Name,
 					},
 				},
 			},
@@ -473,9 +470,8 @@ var _ = Describe("Check inventory", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      testSecret.Name,
-						Namespace: testNamespace,
+					CredentialsRef: &v1alpha1.LocalObjectReference{
+						Name: testSecret.Name,
 					},
 				},
 			},
@@ -543,9 +539,8 @@ var _ = Describe("Reconcile Provider Resource", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      testSecret.Name,
-						Namespace: testNamespace,
+					CredentialsRef: &v1alpha1.LocalObjectReference{
+						Name: testSecret.Name,
 					},
 				},
 			},

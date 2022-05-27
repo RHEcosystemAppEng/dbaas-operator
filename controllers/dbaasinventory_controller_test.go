@@ -34,9 +34,8 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 		nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
 
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      testSecret.Name,
-				Namespace: ns,
+			CredentialsRef: &v1alpha1.LocalObjectReference{
+				Name: testSecret.Name,
 			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
@@ -62,9 +61,8 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 		inventoryName := "test-inventory-no-provider"
 		providerName := "provider-no-exist"
 		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.NamespacedName{
-				Name:      testSecret.Name,
-				Namespace: testNamespace,
+			CredentialsRef: &v1alpha1.LocalObjectReference{
+				Name: testSecret.Name,
 			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
@@ -95,9 +93,8 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 		Context("after creating DBaaSInventory", func() {
 			inventoryName := "test-inventory"
 			DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-				CredentialsRef: &v1alpha1.NamespacedName{
-					Name:      testSecret.Name,
-					Namespace: testNamespace,
+				CredentialsRef: &v1alpha1.LocalObjectReference{
+					Name: testSecret.Name,
 				},
 			}
 			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
@@ -152,9 +149,8 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					},
 				}
 				DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.NamespacedName{
-						Name:      updatedTestSecret.Name,
-						Namespace: updatedTestSecret.Namespace,
+					CredentialsRef: &v1alpha1.LocalObjectReference{
+						Name: updatedTestSecret.Name,
 					},
 				}
 				BeforeEach(assertResourceCreationIfNotExists(&updatedTestSecret))

@@ -46,8 +46,7 @@ metadata:
           },
           "spec": {
             "credentialsRef": {
-              "name": "atlas-inventory-credentials",
-              "namespace": "openshift-dbaas-operator"
+              "name": "atlas-inventory-credentials"
             },
             "providerRef": {
               "name": "atlas-provider-registration"
