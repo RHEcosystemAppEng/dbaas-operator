@@ -18,14 +18,14 @@ package controllers
 
 import (
 	"context"
-
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
@@ -125,6 +125,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInventory{}).
+		Watches(&source.Kind{Type: &v1alpha1.DBaaSInventory{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
@@ -150,4 +151,20 @@ func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DB
 		Reason:  v1alpha1.ProviderReconcileInprogress,
 		Message: v1alpha1.MsgProviderCRReconcileInProgress,
 	}
+}
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
+	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
+
+	inventoryObj, ok := e.Object.(*v1alpha1.DBaaSInventory)
+	if !ok {
+		return nil
+	}
+	log.Info("inventoryObj", "inventoryObj", ObjectKeyFromObject(inventoryObj))
+
+	CleanInventoryStatusMetrics(inventoryObj)
+
+	return nil
+
 }

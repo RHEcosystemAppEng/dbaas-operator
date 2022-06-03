@@ -18,6 +18,9 @@ package controllers
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -51,8 +54,6 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger := ctrl.LoggerFrom(ctx)
 
 	var connection v1alpha1.DBaaSConnection
-	var inventory v1alpha1.DBaaSInventory
-
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -62,10 +63,6 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Error fetching DBaaS Connection for reconcile")
 		return ctrl.Result{}, err
 	}
-
-	defer func() {
-		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
-	}()
 
 	if res, err := r.reconcileDevTopologyResource(&connection, ctx); err != nil {
 		if errors.IsConflict(err) {
@@ -87,11 +84,13 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		apimeta.SetStatusCondition(&connection.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
+		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
 		return ctrl.Result{}, err
 	} else if !validNS {
+		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
 		return ctrl.Result{}, nil
 	} else {
-		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
 			&connection,
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.ConnectionKind
@@ -113,6 +112,8 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			ctx,
 			logger,
 		)
+		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
+		return result, err
 	}
 }
 
@@ -120,6 +121,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSConnection{}).
+		Watches(&source.Kind{Type: &v1alpha1.DBaaSConnection{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
@@ -197,4 +199,22 @@ func mergeConnectionStatus(conn *v1alpha1.DBaaSConnection, providerConn *v1alpha
 		Reason:  v1alpha1.ProviderReconcileInprogress,
 		Message: v1alpha1.MsgProviderCRReconcileInProgress,
 	}
+}
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
+	log := ctrl.Log.WithName("DBaaSConnectionReconciler DeleteEvent")
+
+	connectionObj, ok := e.Object.(*v1alpha1.DBaaSConnection)
+	if !ok {
+		return nil
+	}
+	log.Info("connectionObj", "connectionObj", ObjectKeyFromObject(connectionObj))
+
+	inventory := &v1alpha1.DBaaSInventory{}
+	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
+
+	CleanConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connectionObj)
+	return nil
+
 }
