@@ -5,8 +5,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
