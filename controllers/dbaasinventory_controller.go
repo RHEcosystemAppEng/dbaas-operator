@@ -46,6 +46,7 @@ type DBaaSInventoryReconciler struct {
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
+	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -89,6 +90,9 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	defer func() {
+		SetInventoryStatusMetrics(execution, inventory)
+	}()
 	//
 	// Provider Inventory
 	//

@@ -28,6 +28,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	oauthzclientv1 "github.com/openshift/client-go/authorization/clientset/versioned/typed/authorization/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	"go.uber.org/zap/zapcore"
@@ -61,6 +62,11 @@ func init() {
 	// Register custom metrics with the global prometheus registry
 	customMetrics.Registry.MustRegister(controllers.DBaasStackInstallationHistogram)
 	customMetrics.Registry.MustRegister(controllers.DBaasPlatformInstallationGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSConnectionStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstanceStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstancePhaseGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInventoryStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaasInventoryRequestDurationSeconds)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))

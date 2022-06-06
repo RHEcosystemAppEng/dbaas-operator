@@ -40,7 +40,7 @@ const (
 	COCKROACHDB_CHANNEL     = "alpha"
 
 	// DBAAS_DYNAMIC_PLUGIN
-	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
+	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.1.5"
 	DBAAS_DYNAMIC_PLUGIN_NAME         = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME = "OpenShift Database as a Service Dynamic Plugin"
 

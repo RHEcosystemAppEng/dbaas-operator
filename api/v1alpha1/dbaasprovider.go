@@ -40,6 +40,18 @@ const (
 	ProviderReconcileInprogress string = "ProviderReconcileInprogress"
 	ProviderParsingError        string = "ProviderParsingError"
 
+	// DBaaS instance provisioning phases
+
+	PhaseUnknown  string = "Unknown"
+	PhasePending  string = "Pending"
+	PhaseCreating string = "Creating"
+	PhaseUpdating string = "Updating"
+	PhaseDeleting string = "Deleting"
+	PhaseDeleted  string = "Deleted"
+	PhaseReady    string = "Ready"
+	PhaseError    string = "Error"
+	PhaseFailed   string = "Failed"
+
 	// DBaaS condition messages
 	MsgProviderCRStatusSyncDone      string = "Provider Custom Resource status sync completed"
 	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
