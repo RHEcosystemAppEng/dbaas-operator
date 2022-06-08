@@ -1,24 +1,22 @@
-# Install and Deploy MSO instance
+# Install and Deploy Observability Operator instance
 ___
 
-We have to deploy the MSO after installing the dbaas-operator on the cluster so that we can see and query the metrics from Prometheus UI.
+We are installing Observability operator like other Provider operators. After the Dbaas operator is deployed, we apply the CR for Monitoring Stack.
 
-## Steps to Deploy MSO
+### Steps to Deploy MSO CR
 
 ```commandline
-make install-mso 
-// Deploys the catalog source and subscription for MSO.
+oc project openshift-dbaas-operator
+//select the namespace you deployed the dbaas-operator in
 
 make deploy-mso
-// Applys the MSO CR which created the Prometheus instance.
+// Deploys the CR.
 ```
 
-## Steps to Remove MSO
+### Steps to Remove MSO CR
 
 ```commandline
 make undeploy-mso 
 // Deletes the MSO CR.
 
-make uninstall-mso
-// Deletes the catalog source and subscription for MSO.
 ```
