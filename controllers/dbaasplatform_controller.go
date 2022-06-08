@@ -244,7 +244,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch platformConfig.Type {
-	case dbaasv1alpha1.TypeProvider:
+	case dbaasv1alpha1.TypeOperator:
 		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
 		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
