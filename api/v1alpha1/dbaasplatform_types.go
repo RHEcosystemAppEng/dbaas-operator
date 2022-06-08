@@ -31,13 +31,14 @@ const (
 	DBaaSDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
+	ObservabilityInstallation          PlatformsName = "observability"
 	DBaaSQuickStartInstallation        PlatformsName = "dbaas-quick-starts"
 )
 
 const (
 	TypeQuickStart PlatformsType = iota
 	TypeConsolePlugin
-	TypeProvider
+	TypeOperator
 )
 
 const (

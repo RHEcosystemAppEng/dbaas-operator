@@ -50,6 +50,15 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME    = "Telemetry Plugin"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
+
+	// OBSERVABILITY
+	OBSERVABILITY_CATALOG_IMG = "quay.io/rhobs/observability-operator-catalog:0.0.11"
+	OBSERVABILITY_CSV         = "observability-operator.v0.0.11"
+	OBSERVABILITY_NAME        = "observability"
+	OBSERVABILITY_DISPLAYNAME = "observability Operator"
+	OBSERVABILITY_DEPLOYMENT  = "observability-operator"
+	OBSERVABILITY_PKG         = "observability-operator"
+	OBSERVABILITY_CHANNEL     = "stable"
 )
 
 var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
@@ -74,7 +83,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    CRUNCHY_BRIDGE_PKG,
 		Channel:        CRUNCHY_BRIDGE_CHANNEL,
 		DisplayName:    CRUNCHY_BRIDGE_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.MongoDBAtlasInstallation: {
 		Name:           MONGODB_ATLAS_NAME,
@@ -84,7 +93,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    MONGODB_ATLAS_PKG,
 		Channel:        MONGODB_ATLAS_CHANNEL,
 		DisplayName:    MONGODB_ATLAS_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.CockroachDBInstallation: {
 		Name:           COCKROACHDB_NAME,
@@ -94,9 +103,19 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    COCKROACHDB_PKG,
 		Channel:        COCKROACHDB_CHANNEL,
 		DisplayName:    COCKROACHDB_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
+	},
+	dbaasv1alpha1.ObservabilityInstallation: {
+		Name:           OBSERVABILITY_NAME,
+		CSV:            OBSERVABILITY_CSV,
+		DeploymentName: OBSERVABILITY_DEPLOYMENT,
+		Image:          OBSERVABILITY_CATALOG_IMG,
+		PackageName:    OBSERVABILITY_PKG,
+		Channel:        OBSERVABILITY_CHANNEL,
+		DisplayName:    OBSERVABILITY_DISPLAYNAME,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 }
