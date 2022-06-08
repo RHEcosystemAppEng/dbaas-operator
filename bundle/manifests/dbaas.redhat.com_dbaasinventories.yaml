@@ -48,14 +48,11 @@ spec:
                 description: The Secret containing the provider-specific connection
                   credentials to use with its API endpoint. The format of the Secret
                   is specified in the provider’s operator in its DBaaSProvider CR
-                  (CredentialFields key). It is recommended to place the Secret in
-                  a namespace with limited accessibility.
+                  (CredentialFields key). The Secret must exist within the same namespace
+                  as the Inventory.
                 properties:
                   name:
-                    description: The name for object of known type
-                    type: string
-                  namespace:
-                    description: The namespace where object of known type is stored
+                    description: Name of the referent.
                     type: string
                 required:
                 - name

@@ -68,11 +68,7 @@ func (r *DBaaSInventory) ValidateDelete() error {
 func validateInventory(inv *DBaaSInventory) error {
 	// Retrieve the secret object
 	secret := &corev1.Secret{}
-	ns := inv.Spec.DBaaSInventorySpec.CredentialsRef.Namespace
-	if len(ns) == 0 {
-		ns = inv.Namespace
-	}
-	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: ns}, secret); err != nil {
+	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: inv.Namespace}, secret); err != nil {
 		return err
 	}
 	// Retrieve the provider object
