@@ -47,6 +47,18 @@ const (
 	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
 
+	// DBaaS instance provisioning phases
+
+	PhaseUnknown  string = "Unknown"
+	PhasePending  string = "Pending"
+	PhaseCreating string = "Creating"
+	PhaseUpdating string = "Updating"
+	PhaseDeleting string = "Deleting"
+	PhaseDeleted  string = "Deleted"
+	PhaseReady    string = "Ready"
+	PhaseError    string = "Error"
+	PhaseFailed   string = "Failed"
+
 	TypeLabelValue    = "credentials"
 	TypeLabelKey      = "db-operator/type"
 	TypeLabelKeyMongo = "atlas.mongodb.com/type"

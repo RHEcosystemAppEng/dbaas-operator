@@ -61,6 +61,10 @@ func init() {
 	// Register custom metrics with the global prometheus registry
 	customMetrics.Registry.MustRegister(controllers.DBaasStackInstallationHistogram)
 	customMetrics.Registry.MustRegister(controllers.DBaasPlatformInstallationGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSConnectionStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstanceStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstancePhaseGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInventoryStatusGauge)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))
@@ -157,6 +161,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DBaaSInstance")
 		os.Exit(1)
 	}
+
 	if err = (&controllers.DBaaSDefaultTenantReconciler{
 		DBaaSReconciler: DBaaSReconciler,
 	}).SetupWithManager(mgr); err != nil {
