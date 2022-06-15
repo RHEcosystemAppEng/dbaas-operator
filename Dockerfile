@@ -1,3 +1,8 @@
+# Labels
+LABEL com.redhat.component="dbaas-operator-container"
+LABEL name="dbaas-operator"
+LABEL version="1.0"
+
 # Build the manager binary
 FROM registry.access.redhat.com/ubi8:8.5 AS builder
 
