@@ -1,6 +1,0 @@
-apiVersion: dbaas.redhat.com/v1alpha1
-kind: DBaaSTenant
-metadata:
-  name: sample
-spec:
-  inventoryNamespace: foo

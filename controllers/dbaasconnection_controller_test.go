@@ -107,7 +107,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -122,6 +123,9 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			CredentialsRef: &v1alpha1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
+			DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+				ConnectionNamespaces: []string{"valid-ns", "random"},
+			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
@@ -132,8 +136,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				ProviderRef: v1alpha1.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec:   *DBaaSInventorySpec,
-				ConnectionNamespaces: []string{"valid-ns", "random"},
+				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
 		}
 		DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
@@ -178,7 +181,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-		BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -190,7 +194,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 var _ = Describe("DBaaSConnection controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
@@ -297,7 +302,8 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
-	BeforeEach(assertResourceCreationIfNotExists(&defaultTenant))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {
@@ -320,8 +326,10 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
+						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+							ConnectionNamespaces: []string{otherNS.Name},
+						},
 					},
-					ConnectionNamespaces: []string{otherNS.Name},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
@@ -425,8 +433,10 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
+						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+							ConnectionNamespaces: []string{"*"},
+						},
 					},
-					ConnectionNamespaces: []string{"*"},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()

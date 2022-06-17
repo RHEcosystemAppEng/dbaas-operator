@@ -25,11 +25,6 @@ type DBaaSOperatorInventorySpec struct {
 	// A reference to a DBaaSProvider CR
 	ProviderRef NamespacedName `json:"providerRef"`
 
-	// Namespaces in which DBaaSConnections/DBaaSInstances are allowed to reference this Inventory.
-	// Overrides the corresponding DBaaSTenant setting. Use "*" to allow all namespaces.
-	// If not set in either the tenant or inventory object, connections will only be allowed in the inventory namespace.
-	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
-
 	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
 }
@@ -38,7 +33,8 @@ type DBaaSOperatorInventorySpec struct {
 //+kubebuilder:subresource:status
 
 //+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
-// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid Tenant namespace.
+// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid namespace,
+// determined by the existence of a DBaaSPolicy object.
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

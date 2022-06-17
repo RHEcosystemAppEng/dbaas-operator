@@ -14,18 +14,6 @@ rules:
   - get
   - patch
 - apiGroups:
-  - ""
-  - authorization.openshift.io
-  resources:
-  - localresourceaccessreviews
-  - localsubjectaccessreviews
-  - resourceaccessreviews
-  - selfsubjectrulesreviews
-  - subjectaccessreviews
-  - subjectrulesreviews
-  verbs:
-  - create
-- apiGroups:
   - apps
   resources:
   - daemonsets
@@ -59,6 +47,22 @@ rules:
   - list
   - update
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas/finalizers
+  verbs:
+  - update
 - apiGroups:
   - ""
   resources:
@@ -140,32 +144,4 @@ rules:
   - get
   - list
   - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterrolebindings
-  - clusterroles
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterrolebindings/finalizers
-  - clusterroles/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  - roles
-  verbs:
-  - get
-  - list
   - watch

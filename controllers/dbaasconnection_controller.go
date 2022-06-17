@@ -72,7 +72,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Info("Deployment for Developer Topology view reconciled", "result", res)
 	}
 
-	if inventory, validNS, err := r.checkInventory(connection.Spec.InventoryRef, &connection, func(reason string, message string) {
+	if inventory, validNS, _, err := r.checkInventory(connection.Spec.InventoryRef, &connection, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSConnectionReadyType,
 			Status:  metav1.ConditionFalse,

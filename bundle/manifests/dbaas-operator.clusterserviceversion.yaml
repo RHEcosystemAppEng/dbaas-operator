@@ -49,7 +49,7 @@ metadata:
               "name": "atlas-inventory-credentials"
             },
             "providerRef": {
-              "name": "atlas-provider-registration"
+              "name": "mongodb-atlas-registration"
             }
           }
         },
@@ -150,16 +150,6 @@ metadata:
               "name": "Red Hat DBaaS / MongoDB Atlas"
             }
           }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSTenant",
-          "metadata": {
-            "name": "sample"
-          },
-          "spec": {
-            "inventoryNamespace": "foo"
-          }
         }
       ]
     capabilities: Basic Install
@@ -169,7 +159,7 @@ metadata:
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
     operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
     support: dbaas-alpha-support@redhat.com
@@ -190,7 +180,8 @@ spec:
       name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-        objects must be created in a valid Tenant namespace.
+        objects must be created in a valid namespace, determined by the existence
+        of a DBaaSPolicy object.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
@@ -200,15 +191,17 @@ spec:
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSPolicy enables admin capabilities within a namespace and sets
+        default inventory policy. Policy defaults can be overridden on a per-inventory
+        basis.
+      displayName: Provider Account Policy
+      kind: DBaaSPolicy
+      name: dbaaspolicies.dbaas.redhat.com
+      version: v1alpha1
     - description: DBaaSProvider is the Schema for the dbaasproviders API
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
-      version: v1alpha1
-    - description: DBaaSTenant is the Schema for the dbaastenants API
-      displayName: DBaaSTenant
-      kind: DBaaSTenant
-      name: dbaastenants.dbaas.redhat.com
       version: v1alpha1
   description: |
     The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
@@ -241,18 +234,6 @@ spec:
           verbs:
           - get
           - patch
-        - apiGroups:
-          - ""
-          - authorization.openshift.io
-          resources:
-          - localresourceaccessreviews
-          - localsubjectaccessreviews
-          - resourceaccessreviews
-          - selfsubjectrulesreviews
-          - subjectaccessreviews
-          - subjectrulesreviews
-          verbs:
-          - create
         - apiGroups:
           - apps
           resources:
@@ -287,6 +268,22 @@ spec:
           - list
           - update
           - watch
+        - apiGroups:
+          - ""
+          resources:
+          - resourcequotas
+          verbs:
+          - create
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - resourcequotas/finalizers
+          verbs:
+          - update
         - apiGroups:
           - ""
           resources:
@@ -368,34 +365,6 @@ spec:
           - get
           - list
           - update
-          - watch
-        - apiGroups:
-          - rbac.authorization.k8s.io
-          resources:
-          - clusterrolebindings
-          - clusterroles
-          verbs:
-          - create
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - rbac.authorization.k8s.io
-          resources:
-          - clusterrolebindings/finalizers
-          - clusterroles/finalizers
-          verbs:
-          - update
-        - apiGroups:
-          - rbac.authorization.k8s.io
-          resources:
-          - rolebindings
-          - roles
-          verbs:
-          - get
-          - list
           - watch
         - apiGroups:
           - authentication.k8s.io
@@ -588,23 +557,3 @@ spec:
     targetPort: 9443
     type: ValidatingAdmissionWebhook
     webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
-  - admissionReviewVersions:
-    - v1
-    containerPort: 443
-    deploymentName: dbaas-operator-controller-manager
-    failurePolicy: Fail
-    generateName: vdbaastenant.kb.io
-    rules:
-    - apiGroups:
-      - dbaas.redhat.com
-      apiVersions:
-      - v1alpha1
-      operations:
-      - CREATE
-      - UPDATE
-      resources:
-      - dbaastenants
-    sideEffects: None
-    targetPort: 9443
-    type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaastenant

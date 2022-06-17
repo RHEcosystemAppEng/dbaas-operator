@@ -29,23 +29,29 @@ const (
 	DBaaSConnectionProviderSyncType string = "ReadyForBinding"
 	DBaaSInstanceReadyType          string = "InstanceReady"
 	DBaaSInstanceProviderSyncType   string = "ProvisionReady"
+	DBaaSPolicyReadyType            string = "PolicyReady"
 
 	// DBaaS condition reasons
-	Ready                       string = "Ready"
-	DBaaSTenantNotFound         string = "DBaaSTenantNotFound"
-	DBaaSProviderNotFound       string = "DBaaSProviderNotFound"
-	DBaaSInventoryNotFound      string = "DBaaSInventoryNotFound"
-	DBaaSInventoryNotReady      string = "DBaaSInventoryNotReady"
-	DBaaSInvalidNamespace       string = "InvalidNamespace"
-	ProviderReconcileInprogress string = "ProviderReconcileInprogress"
-	ProviderParsingError        string = "ProviderParsingError"
+	Ready                          string = "Ready"
+	DBaaSPolicyNotFound            string = "DBaaSPolicyNotFound"
+	DBaaSPolicyNotReady            string = "DBaaSPolicyNotReady"
+	DBaaSProviderNotFound          string = "DBaaSProviderNotFound"
+	DBaaSInventoryNotFound         string = "DBaaSInventoryNotFound"
+	DBaaSInventoryNotReady         string = "DBaaSInventoryNotReady"
+	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
+	DBaaSInvalidNamespace          string = "InvalidNamespace"
+	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
+	ProviderParsingError           string = "ProviderParsingError"
 
 	// DBaaS condition messages
 	MsgProviderCRStatusSyncDone      string = "Provider Custom Resource status sync completed"
 	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
 	MsgInventoryNotReady             string = "Inventory discovery not done"
-	MsgTenantNotFound                string = "Failed to find DBaaS tenants"
+	MsgInventoryNotProvisionable     string = "Inventory provisioning not allowed"
+	MsgPolicyNotFound                string = "Failed to find an active Policy"
+	MsgPolicyReady                   string = "Policy is active"
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
+	MsgPolicyNotReady                string = "Another active Policy already exists"
 
 	TypeLabelValue    = "credentials"
 	TypeLabelKey      = "db-operator/type"
@@ -123,6 +129,9 @@ type DBaaSInventorySpec struct {
 	// DBaaSProvider CR (CredentialFields key). The Secret must exist within the same namespace
 	// as the Inventory.
 	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
+
+	// The policy for this inventory
+	DBaaSInventoryPolicy `json:",inline"`
 }
 
 // LocalObjectReference contains enough information to let you locate the
@@ -130,6 +139,17 @@ type DBaaSInventorySpec struct {
 type LocalObjectReference struct {
 	// Name of the referent.
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+}
+
+// DBaaSInventoryPolicy sets inventory policy
+type DBaaSInventoryPolicy struct {
+	// Disable provisioning against inventory accounts
+	DisableProvisions *bool `json:"disableProvisions,omitempty"`
+
+	// Namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a policy's inventories.
+	// Each inventory can individually override this. Use "*" to allow all namespaces.
+	// If not set in either the policy or inventory object, connections will only be allowed in the inventory's namespace.
+	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
 }
 
 // DBaaSInventoryStatus defines the Inventory status to be used by provider operators

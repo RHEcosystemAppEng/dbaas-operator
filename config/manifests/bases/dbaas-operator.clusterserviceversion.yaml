@@ -9,7 +9,7 @@ metadata:
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
-    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaastenants.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
+    operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
     support: dbaas-alpha-support@redhat.com
   name: dbaas-operator.v0.0.0
@@ -29,7 +29,8 @@ spec:
       name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-        objects must be created in a valid Tenant namespace.
+        objects must be created in a valid namespace, determined by the existence
+        of a DBaaSPolicy object.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
@@ -39,15 +40,17 @@ spec:
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSPolicy enables admin capabilities within a namespace and sets
+        default inventory policy. Policy defaults can be overridden on a per-inventory
+        basis.
+      displayName: Provider Account Policy
+      kind: DBaaSPolicy
+      name: dbaaspolicies.dbaas.redhat.com
+      version: v1alpha1
     - description: DBaaSProvider is the Schema for the dbaasproviders API
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
-      version: v1alpha1
-    - description: DBaaSTenant is the Schema for the dbaastenants API
-      displayName: DBaaSTenant
-      kind: DBaaSTenant
-      name: dbaastenants.dbaas.redhat.com
       version: v1alpha1
   description: |
     The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances

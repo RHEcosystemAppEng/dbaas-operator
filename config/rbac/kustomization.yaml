@@ -13,6 +13,8 @@ resources:
 - dbaasprovider_viewer_role_binding.yaml
 - dbaasinventory_viewer_role.yaml
 - dbaasinventory_viewer_role_binding.yaml
+- dbaaspolicy_viewer_role.yaml
+- dbaaspolicy_viewer_role_binding.yaml
 - dbaasconnection_viewer_role.yaml
 - dedicated_admin_namespace_edit_role_binding.yaml
 # Comment the following 4 lines if you want to disable

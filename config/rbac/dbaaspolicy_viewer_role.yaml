@@ -1,13 +1,13 @@
-# permissions for end users to view dbaastenants.
+# permissions for end users to view dbaaspolicies.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: dbaastenant-viewer-role
+  name: dbaaspolicy-viewer-role
 rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaastenants
+  - dbaaspolicies
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - dbaas.redhat.com
   resources:
-  - dbaastenants/status
+  - dbaaspolicies/status
   verbs:
   - get
