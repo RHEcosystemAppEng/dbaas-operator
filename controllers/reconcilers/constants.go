@@ -50,6 +50,15 @@ const (
 	CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME    = "Telemetry Plugin"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
+
+	// RDS_PROVIDER
+	RDS_PROVIDER_CSV         = "rds-dbaas-operator.v0.1.0"
+	RDS_PROVIDER_CATALOG_IMG = "quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0"
+	RDS_PROVIDER_NAME        = "rds-provider"
+	RDS_PROVIDER_DISPLAYNAME = "RHODA Provider Operator for Amazon RDS"
+	RDS_PROVIDER_DEPLOYMENT  = "rds-dbaas-operator-controller-manager"
+	RDS_PROVIDER_PKG         = "rds-dbaas-operator"
+	RDS_PROVIDER_CHANNEL     = "alpha"
 )
 
 var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
@@ -98,5 +107,15 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
+	},
+	dbaasv1alpha1.RDSProviderInstallation: {
+		Name:           RDS_PROVIDER_NAME,
+		CSV:            RDS_PROVIDER_CSV,
+		DeploymentName: RDS_PROVIDER_DEPLOYMENT,
+		Image:          RDS_PROVIDER_CATALOG_IMG,
+		PackageName:    RDS_PROVIDER_PKG,
+		Channel:        RDS_PROVIDER_CHANNEL,
+		DisplayName:    RDS_PROVIDER_DISPLAYNAME,
+		Type:           dbaasv1alpha1.TypeProvider,
 	},
 }

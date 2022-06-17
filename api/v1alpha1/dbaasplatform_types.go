@@ -32,6 +32,7 @@ const (
 	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
 	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
 	DBaaSQuickStartInstallation        PlatformsName = "dbaas-quick-starts"
+	RDSProviderInstallation            PlatformsName = "rds-provider"
 )
 
 const (
