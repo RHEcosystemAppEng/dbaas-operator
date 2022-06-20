@@ -123,9 +123,6 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			CredentialsRef: &v1alpha1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
-			DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-				ConnectionNamespaces: []string{"valid-ns", "random"},
-			},
 		}
 		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
@@ -135,6 +132,9 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			Spec: v1alpha1.DBaaSOperatorInventorySpec{
 				ProviderRef: v1alpha1.NamespacedName{
 					Name: testProviderName,
+				},
+				DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+					ConnectionNamespaces: []string{"valid-ns", "random"},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
@@ -322,12 +322,12 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1alpha1.NamespacedName{
 						Name: testProviderName,
 					},
+					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+						ConnectionNamespaces: []string{otherNS.Name},
+					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-							ConnectionNamespaces: []string{otherNS.Name},
 						},
 					},
 				},
@@ -429,12 +429,12 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1alpha1.NamespacedName{
 						Name: testProviderName,
 					},
+					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+						ConnectionNamespaces: []string{"*"},
+					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-							ConnectionNamespaces: []string{"*"},
 						},
 					},
 				},

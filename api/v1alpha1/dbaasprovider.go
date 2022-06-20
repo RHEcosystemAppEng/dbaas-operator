@@ -129,9 +129,6 @@ type DBaaSInventorySpec struct {
 	// DBaaSProvider CR (CredentialFields key). The Secret must exist within the same namespace
 	// as the Inventory.
 	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
-
-	// The policy for this inventory
-	DBaaSInventoryPolicy `json:",inline"`
 }
 
 // LocalObjectReference contains enough information to let you locate the
@@ -139,17 +136,6 @@ type DBaaSInventorySpec struct {
 type LocalObjectReference struct {
 	// Name of the referent.
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
-}
-
-// DBaaSInventoryPolicy sets inventory policy
-type DBaaSInventoryPolicy struct {
-	// Disable provisioning against inventory accounts
-	DisableProvisions *bool `json:"disableProvisions,omitempty"`
-
-	// Namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a policy's inventories.
-	// Each inventory can individually override this. Use "*" to allow all namespaces.
-	// If not set in either the policy or inventory object, connections will only be allowed in the inventory's namespace.
-	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
 }
 
 // DBaaSInventoryStatus defines the Inventory status to be used by provider operators
