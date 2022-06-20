@@ -1,11 +1,13 @@
 package controllers
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
@@ -17,6 +19,10 @@ const (
 	metricNameConnectionStatusReady               = "dbaas_connection_status_ready"
 	metricNameInstanceStatusReady                 = "dbaas_instance_status_ready"
 	metricNameInstancePhase                       = "dbaas_instance_phase"
+	metricNameDBaasInventoryDuration              = "dbaas_inventory_request_duration_seconds"
+	metricNameOperatorVersion                     = "dbaas_operator_version"
+	metricNameDBaasConnectionDuration             = "dbaas_connection_request_duration_seconds"
+	metricNameDBaasInstanceDuration               = "dbaas_instance_request_duration_seconds"
 
 	// Metrics labels.
 	metricLabelName           = "name"
@@ -72,6 +78,29 @@ var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.Hist
 		installationTimeBuckets),
 }, []string{metricLabelVersion})
 
+var DBaasInventoryRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name: metricNameDBaasInventoryDuration,
+	Help: "Duration of upstream calls to provider operator/service endpoints",
+	Buckets: prometheus.LinearBuckets(installationTimeStart,
+		installationTimeWidth,
+		installationTimeBuckets),
+}, []string{metricLabelProvider, metricLabelInstanceName, metricLabelNameSpace})
+
+var DBaasOperatorVersionInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: metricNameOperatorVersion,
+	Help: "The current versoin of DBaas Operator installed in the cluster",
+}, []string{metricLabelVersion})
+
+var DBaasConnectionRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name: metricNameDBaasConnectionDuration,
+	Help: "Request/Response duration of connection account request of upstream calls to provider operator/service endpoints",
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceId, metricLabelConnectionName, metricLabelNameSpace, metricLabelStatus})
+
+var DBaasInstanceRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name: metricNameDBaasInstanceDuration,
+	Help: "Request/Response duration of instance of upstream calls to provider operator/service endpoints",
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelStatus})
+
 // Execution tracks state for an API execution for emitting metrics
 type Execution struct {
 	begin time.Time
@@ -87,6 +116,7 @@ func PlatformInstallStart() Execution {
 // PlatformStackInstallationMetric is used to log duration and success/failure
 func (e *Execution) PlatformStackInstallationMetric(version string) {
 	duration := time.Since(e.begin)
+	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: version}).Set(0)
 	DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version}).Observe(duration.Seconds())
 }
 
@@ -131,6 +161,28 @@ func SetInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 			}
 		}
 	}
+}
+
+func SetInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory) {
+	httpDuration := time.Since(execution.begin)
+	for _, cond := range inventory.Status.Conditions {
+		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
+			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
+				DBaasInventoryRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name,
+					metricLabelInstanceName: inventory.Name, metricLabelNameSpace: inventory.Namespace}).Observe(httpDuration.Seconds())
+			}
+		}
+	}
+}
+
+func SetConnectionRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory, connection v1alpha1.DBaaSConnection) {
+	httpDuration := time.Since(execution.begin)
+	DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelAccountName: inventory.Name, metricLabelInstanceId: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: inventory.Namespace, metricLabelStatus: ""}).Observe(httpDuration.Seconds())
+}
+
+func SetInstanceRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory, instance v1alpha1.DBaaSInstance) {
+	httpDuration := time.Since(execution.begin)
+	DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelAccountName: inventory.Name, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), metricLabelStatus: ""}).Observe(httpDuration.Seconds())
 }
 
 // CleanInventoryStatusMetrics
