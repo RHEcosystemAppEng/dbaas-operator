@@ -65,6 +65,10 @@ func init() {
 	customMetrics.Registry.MustRegister(controllers.DBaaSInstanceStatusGauge)
 	customMetrics.Registry.MustRegister(controllers.DBaaSInstancePhaseGauge)
 	customMetrics.Registry.MustRegister(controllers.DBaaSInventoryStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaasInventoryRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasConnectionRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasInstanceRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasOperatorVersionInfo)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))
