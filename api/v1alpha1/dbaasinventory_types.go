@@ -27,6 +27,9 @@ type DBaaSOperatorInventorySpec struct {
 
 	// The properties that will be copied into the provider’s inventory Spec
 	DBaaSInventorySpec `json:",inline"`
+
+	// The policy for this inventory
+	DBaaSInventoryPolicy `json:",inline"`
 }
 
 //+kubebuilder:object:root=true
