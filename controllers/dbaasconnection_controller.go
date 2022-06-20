@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -54,6 +55,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger := ctrl.LoggerFrom(ctx)
 
 	var connection v1alpha1.DBaaSConnection
+	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -85,9 +87,11 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		apimeta.SetStatusCondition(&connection.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
 		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
+		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
 		return ctrl.Result{}, err
 	} else if !validNS {
 		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
+		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
 		return ctrl.Result{}, nil
 	} else {
 		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
@@ -113,6 +117,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			logger,
 		)
 		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
+		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
 		return result, err
 	}
 }

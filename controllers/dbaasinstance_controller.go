@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -49,6 +50,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := ctrl.LoggerFrom(ctx)
 
 	var instance v1alpha1.DBaaSInstance
+	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -69,9 +71,11 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return ctrl.Result{}, err
 	} else if !validNS {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return ctrl.Result{}, nil
 	} else {
 		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
@@ -97,6 +101,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			logger,
 		)
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return result, err
 	}
 }
