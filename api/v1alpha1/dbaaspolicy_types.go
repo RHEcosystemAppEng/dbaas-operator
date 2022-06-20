@@ -26,6 +26,17 @@ type DBaaSPolicySpec struct {
 	DBaaSInventoryPolicy `json:",inline"`
 }
 
+// DBaaSInventoryPolicy sets inventory policy
+type DBaaSInventoryPolicy struct {
+	// Disable provisioning against inventory accounts
+	DisableProvisions *bool `json:"disableProvisions,omitempty"`
+
+	// Namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a policy's inventories.
+	// Each inventory can individually override this. Use "*" to allow all namespaces.
+	// If not set in either the policy or inventory object, connections will only be allowed in the inventory's namespace.
+	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
+}
+
 // DBaaSPolicyStatus defines the observed state of DBaaSPolicy
 type DBaaSPolicyStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
