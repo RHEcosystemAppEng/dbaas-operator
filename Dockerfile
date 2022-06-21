@@ -1,7 +1,7 @@
 # Labels
-LABEL com.redhat.component="dbaas-operator-container"
-LABEL name="dbaas-operator"
-LABEL version="1.0"
+LABEL com.redhat.component="rhoda-operator-container"
+LABEL name="rhoda-operator"
+LABEL version="0.2"
 
 # Build the manager binary
 FROM registry.access.redhat.com/ubi8:8.5 AS builder
