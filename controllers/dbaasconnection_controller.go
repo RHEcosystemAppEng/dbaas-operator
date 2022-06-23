@@ -133,12 +133,14 @@ func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(connection *v1a
 
 func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1alpha1.DBaaSConnection, deployment *appv1.Deployment) controllerutil.MutateFn {
 	return func() error {
-		deployment.ObjectMeta.Labels = map[string]string{
-			"managed-by":      "dbaas-operator",
-			"owner":           connection.Name,
-			"owner.kind":      connection.Kind,
-			"owner.namespace": connection.Namespace,
+		if deployment.ObjectMeta.Annotations == nil {
+			deployment.ObjectMeta.Annotations = make(map[string]string, 4)
 		}
+		deployment.ObjectMeta.Annotations["managed-by"] = "dbaas-operator"
+		deployment.ObjectMeta.Annotations["owner"] = connection.Name
+		deployment.ObjectMeta.Annotations["owner.kind"] = connection.Kind
+		deployment.ObjectMeta.Annotations["owner.namespace"] = connection.Namespace
+
 		deployment.Spec = appv1.DeploymentSpec{
 			Replicas: pointer.Int32Ptr(0),
 			Selector: &metav1.LabelSelector{
