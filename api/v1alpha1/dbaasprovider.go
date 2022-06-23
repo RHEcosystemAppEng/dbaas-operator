@@ -41,6 +41,7 @@ const (
 	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
 	DBaaSInvalidNamespace          string = "InvalidNamespace"
 	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
+	ProviderReconcileError         string = "ProviderReconcileError"
 	ProviderParsingError           string = "ProviderParsingError"
 
 	// DBaaS condition messages
