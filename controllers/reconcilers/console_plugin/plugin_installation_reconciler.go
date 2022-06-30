@@ -166,7 +166,7 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 				"app": r.config.Name,
 			},
 		}
-		socketHandler := v1.Handler{
+		socketHandler := v1.ProbeHandler{
 			TCPSocket: &v1.TCPSocketAction{Port: intstr.FromInt(consolePort)},
 		}
 		deployment.Spec.Template.Spec.Containers = []v1.Container{
@@ -200,11 +200,11 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 					},
 				},
 				LivenessProbe: &v1.Probe{
-					Handler:             socketHandler,
+					ProbeHandler:        socketHandler,
 					InitialDelaySeconds: 5,
 				},
 				ReadinessProbe: &v1.Probe{
-					Handler:             socketHandler,
+					ProbeHandler:        socketHandler,
 					InitialDelaySeconds: 30,
 					PeriodSeconds:       20,
 				},
