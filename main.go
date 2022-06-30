@@ -45,6 +45,7 @@ import (
 	customMetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
@@ -78,6 +79,7 @@ func init() {
 	utilruntime.Must(oauthzv1.Install(scheme))
 	utilruntime.Must(rbacv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1.AddToScheme(scheme))
+	utilruntime.Must(msoapi.AddToScheme(scheme))
 
 	//+kubebuilder:scaffold:scheme
 }
