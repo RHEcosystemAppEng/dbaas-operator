@@ -1,0 +1,29 @@
+apiVersion: monitoring.rhobs/v1alpha1
+kind: MonitoringStack
+metadata:
+  name: dbaas-operator-mso
+spec:
+  logLevel: debug
+  resourceSelector:
+    matchLabels:
+      app: dbaas-prometheus
+  prometheusConfig:
+    remoteWrite:
+      - bearerToken: >-
+          <bearer_token>
+        tlsConfig:
+          ca: { }
+          cert: { }
+          insecureSkipVerify: true
+        url: >-
+          https://<observatorium_host>/api/metrics/v1/<tenant_id>/api/v1/receive
+        writeRelabelConfigs:
+          - action: keep
+            regex: >-
+              (csv_succeeded$|csv_abnormal$|cluster_version$|ALERTS$|subscription_sync_total|trino_.*$|jvm_heap_memory_used$|node_.*$|namespace_.*$|kube_.*$|cluster.*$|container_.*$)
+            sourceLabels:
+              - __name__
+    replicas: 1
+
+
+
