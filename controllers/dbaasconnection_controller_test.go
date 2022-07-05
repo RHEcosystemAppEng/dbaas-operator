@@ -18,9 +18,12 @@ package controllers
 
 import (
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
+	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
@@ -257,7 +260,50 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", func() {
+					assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec)()
+
+					By("checking if the Deployment is created")
+					deployment := &appv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      connectionName,
+							Namespace: testNamespace,
+						},
+					}
+					Eventually(func() bool {
+						err := dRec.Get(ctx, client.ObjectKeyFromObject(deployment), deployment)
+						if err != nil {
+							return false
+						}
+						Expect(deployment.Spec.Replicas).ShouldNot(BeNil())
+						Expect(*deployment.Spec.Replicas).ShouldNot(Equal(0))
+
+						Expect(deployment.Labels).Should(BeNil())
+						Expect(deployment.Annotations).ShouldNot(BeNil())
+						mb, mbOk := deployment.Annotations["managed-by"]
+						Expect(mbOk).Should(BeTrue())
+						Expect(mb).Should(Equal("dbaas-operator"))
+						owner, ownerOk := deployment.Annotations["owner"]
+						Expect(ownerOk).Should(BeTrue())
+						Expect(owner).Should(Equal(connectionName))
+						ownerKind, ownerKindOk := deployment.Annotations["owner.kind"]
+						Expect(ownerKindOk).Should(BeTrue())
+						Expect(ownerKind).Should(Equal("DBaaSConnection"))
+						ownerNS, ownerNSOk := deployment.Annotations["owner.namespace"]
+						Expect(ownerNSOk).Should(BeTrue())
+						Expect(ownerNS).Should(Equal(testNamespace))
+
+						deploymentOwner := metav1.GetControllerOf(deployment)
+						Expect(deploymentOwner).ShouldNot(BeNil())
+						Expect(deploymentOwner.Kind).Should(Equal("DBaaSConnection"))
+						Expect(deploymentOwner.Name).Should(Equal(connectionName))
+						Expect(deploymentOwner.Controller).ShouldNot(BeNil())
+						Expect(*deploymentOwner.Controller).Should(BeTrue())
+						Expect(deploymentOwner.BlockOwnerDeletion).ShouldNot(BeNil())
+						Expect(*deploymentOwner.BlockOwnerDeletion).Should(BeTrue())
+						return true
+					}, timeout).Should(BeTrue())
+				})
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1alpha1.DBaaSConnectionStatus{

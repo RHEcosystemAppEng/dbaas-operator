@@ -208,6 +208,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 			return
 		}
 		logger.Error(err, "Error reconciling the Provider resource", "Provider Object", providerObject)
+		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.ProviderReconcileError, Message: err.Error()}
 		recErr = err
 		return
 	} else if res != controllerutil.OperationResultNone {
