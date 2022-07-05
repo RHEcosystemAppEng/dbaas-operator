@@ -1,0 +1,10 @@
+apiVersion: dbaas.redhat.com/v1alpha1
+kind: DBaaSInventory
+metadata:
+  name: mongo-pa
+  namespace: openshift-dbaas-operator
+spec:
+  credentialsRef:
+    name: dbaas-mongo-credentials
+  providerRef:
+    name: mongodb-atlas-registration

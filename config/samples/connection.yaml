@@ -1,0 +1,9 @@
+apiVersion: dbaas.redhat.com/v1alpha1
+kind: DBaaSConnection
+metadata:
+  name: mongo-test
+spec:
+  instanceID: 62b1a0f1ca0a1171e0462c63
+  inventoryRef:
+    name: mongo-pa
+    namespace: openshift-dbaas-operator

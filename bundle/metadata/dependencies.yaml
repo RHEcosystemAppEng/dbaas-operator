@@ -1,5 +1,5 @@
 dependencies:
   - type: olm.package
     value:
-      packageName: rh-service-binding-operator
+      packageName: service-binding-operator
       version: ">=1.0.0"

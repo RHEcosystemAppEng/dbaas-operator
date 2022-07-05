@@ -2,6 +2,4 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: dbaas-operator-group
-spec:
-  targetNamespaces:
-    - <your_target_namespace>
+  namespace: openshift-dbaas-operator

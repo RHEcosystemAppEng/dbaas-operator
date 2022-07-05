@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	INSTALL_NAMESPACE              = "openshift-operators"
-	CATALOG_NAMESPACE              = "openshift-marketplace"
+	INSTALL_NAMESPACE              = "operators"
+	CATALOG_NAMESPACE              = "olm"
 	DBAAS_OPERATOR_VERSION_KEY_ENV = "DBAAS_OPERATOR_VERSION"
 	CONSOLE_PLUGIN_49_TAG          = "-4.9"
 
 	// CRUNCHY_BRIDGE
-	CRUNCHY_BRIDGE_CATALOG_IMG = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5"
+	CRUNCHY_BRIDGE_CATALOG_IMG = "quay.io/tchughesiv/crunchy-bridge-operator-catalog:v0.0.5"
 	CRUNCHY_BRIDGE_CSV         = "crunchy-bridge-operator.v0.0.5"
 	CRUNCHY_BRIDGE_NAME        = "crunchy-bridge"
 	CRUNCHY_BRIDGE_DISPLAYNAME = "Crunchy Bridge Operator"
