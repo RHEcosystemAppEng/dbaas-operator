@@ -1,4 +1,4 @@
-package quickstart_installation
+package quickstartinstallation
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -12,8 +12,8 @@ var _ = Describe("ConsoleQuickStart installation reconciler", func() {
 	Context("ConsoleQuickStart autogeneration", func() {
 		It("should unmarshal quickstart CR's correctly", func() {
 
-			Expect(QuickStarts).ShouldNot(BeEmpty())
-			for qsName, qsBytes := range QuickStarts {
+			Expect(quickStarts).ShouldNot(BeEmpty())
+			for qsName, qsBytes := range quickStarts {
 				qsExpected := &consolev1.ConsoleQuickStart{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: qsName,

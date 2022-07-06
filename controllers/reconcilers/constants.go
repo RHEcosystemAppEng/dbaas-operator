@@ -6,115 +6,118 @@ import (
 )
 
 const (
-	INSTALL_NAMESPACE              = "openshift-operators"
-	CATALOG_NAMESPACE              = "openshift-marketplace"
-	DBAAS_OPERATOR_VERSION_KEY_ENV = "DBAAS_OPERATOR_VERSION"
-	CONSOLE_PLUGIN_49_TAG          = "-4.9"
+	// InstallNamespace namespace for installation
+	InstallNamespace = "openshift-operators"
+	// CatalogNamespace namespace for catalog sources
+	CatalogNamespace = "openshift-marketplace"
+	// ConsolePlugin49Tag tag for the console plugin in OpenShift 4.9
+	ConsolePlugin49Tag = "-4.9"
 
 	// CRUNCHY_BRIDGE
-	CRUNCHY_BRIDGE_CATALOG_IMG = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5"
-	CRUNCHY_BRIDGE_CSV         = "crunchy-bridge-operator.v0.0.5"
-	CRUNCHY_BRIDGE_NAME        = "crunchy-bridge"
-	CRUNCHY_BRIDGE_DISPLAYNAME = "Crunchy Bridge Operator"
-	CRUNCHY_BRIDGE_DEPLOYMENT  = "crunchy-bridge-operator-controller-manager"
-	CRUNCHY_BRIDGE_PKG         = "crunchy-bridge-operator"
-	CRUNCHY_BRIDGE_CHANNEL     = "alpha"
+	crunchyBridgeCatlaogImg  = "registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5"
+	crunchyBridgeCSV         = "crunchy-bridge-operator.v0.0.5"
+	crunchyBridgeName        = "crunchy-bridge"
+	crunchyBridgeDisplayName = "Crunchy Bridge Operator"
+	crunchyBridgeDeployment  = "crunchy-bridge-operator-controller-manager"
+	crunchyBridgePkg         = "crunchy-bridge-operator"
+	crunchyBridgeChannel     = "alpha"
 
 	// MONGODB_ATLAS
-	MONGODB_ATLAS_CATALOG_IMG = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0"
-	MONGODB_ATLAS_CSV         = "mongodb-atlas-kubernetes.v0.2.0"
-	MONGODB_ATLAS_NAME        = "mongodb-atlas"
-	MONGODB_ATLAS_DISPLAYNAME = "MongoDB Atlas Operator"
-	MONGODB_ATLAS_DEPLOYMENT  = "mongodb-atlas-operator"
-	MONGODB_ATLAS_PKG         = "mongodb-atlas-kubernetes"
-	MONGODB_ATLAS_CHANNEL     = "beta"
+	mongoDBAtlasCatalogImg  = "quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0"
+	mongoDBAtlasCSV         = "mongodb-atlas-kubernetes.v0.2.0"
+	mongoDBAtlasName        = "mongodb-atlas"
+	mongoDBAtlasDisplayName = "MongoDB Atlas Operator"
+	mongoDBAtlasDeployment  = "mongodb-atlas-operator"
+	mongoDBAtlasPkg         = "mongodb-atlas-kubernetes"
+	mongoDBAtlasChannel     = "beta"
 
 	// COCKROACHDB
-	COCKROACHDB_CSV         = "ccapi-k8s-operator.v0.0.3"
-	COCKROACHDB_CATALOG_IMG = "gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3"
-	COCKROACHDB_NAME        = "ccapi-k8s"
-	COCKROACHDB_DISPLAYNAME = "CockroachDB Cloud Operator"
-	COCKROACHDB_DEPLOYMENT  = "ccapi-k8s-operator-controller-manager"
-	COCKROACHDB_PKG         = "ccapi-k8s-operator"
-	COCKROACHDB_CHANNEL     = "alpha"
+	cockroachDBCSV         = "ccapi-k8s-operator.v0.0.3"
+	cockroachDBCatalogImg  = "gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3"
+	cockroachDBName        = "ccapi-k8s"
+	cockroachDBDisplayName = "CockroachDB Cloud Operator"
+	cockroachDBDeployment  = "ccapi-k8s-operator-controller-manager"
+	cockroachDBPkg         = "ccapi-k8s-operator"
+	cockroachDBChannel     = "alpha"
 
 	// DBAAS_DYNAMIC_PLUGIN
-	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
-	DBAAS_DYNAMIC_PLUGIN_NAME         = "dbaas-dynamic-plugin"
-	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME = "OpenShift Database as a Service Dynamic Plugin"
+	dbaassDynamicPluginImg         = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
+	dbaassDynamicPluginName        = "dbaas-dynamic-plugin"
+	dbaassDynamicPluginDisplayName = "OpenShift Database as a Service Dynamic Plugin"
 
 	// CONSOLE_TELEMETRY_PLUGIN
-	CONSOLE_TELEMETRY_PLUGIN_IMG             = "quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4"
-	CONSOLE_TELEMETRY_PLUGIN_NAME            = "console-telemetry-plugin"
-	CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME    = "Telemetry Plugin"
-	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
-	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY     = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
+	consoleTelemetryPluginImg           = "quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4"
+	consoleTelemetryPluginName          = "console-telemetry-plugin"
+	consoleTelemetryPluginDisplayName   = "Telemetry Plugin"
+	consoleTelemetryPluginSegmentKeyEnv = "SEGMENT_KEY"
+	consoleTelemetryPluginSegmentKey    = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
 
 	// RDS_PROVIDER
-	RDS_PROVIDER_CSV         = "rds-dbaas-operator.v0.1.0"
-	RDS_PROVIDER_CATALOG_IMG = "quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0"
-	RDS_PROVIDER_NAME        = "rds-provider"
-	RDS_PROVIDER_DISPLAYNAME = "RHODA Provider Operator for Amazon RDS"
-	RDS_PROVIDER_DEPLOYMENT  = "rds-dbaas-operator-controller-manager"
-	RDS_PROVIDER_PKG         = "rds-dbaas-operator"
-	RDS_PROVIDER_CHANNEL     = "alpha"
+	rdsProviderCSV         = "rds-dbaas-operator.v0.1.0"
+	rdsProviderCatalogImg  = "quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0"
+	rdsProviderName        = "rds-provider"
+	rdsProviderDisplayName = "RHODA Provider Operator for Amazon RDS"
+	rdsProviderDeployment  = "rds-dbaas-operator-controller-manager"
+	rdsProviderPkg         = "rds-dbaas-operator"
+	rdsProviderChannel     = "alpha"
 )
 
+// InstallationPlatforms return the list of platforms
 var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
 	dbaasv1alpha1.DBaaSDynamicPluginInstallation: {
-		Name:        DBAAS_DYNAMIC_PLUGIN_NAME,
-		Image:       DBAAS_DYNAMIC_PLUGIN_IMG,
-		DisplayName: DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
+		Name:        dbaassDynamicPluginName,
+		Image:       dbaassDynamicPluginImg,
+		DisplayName: dbaassDynamicPluginDisplayName,
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
-		Name:        CONSOLE_TELEMETRY_PLUGIN_NAME,
-		Image:       CONSOLE_TELEMETRY_PLUGIN_IMG,
-		DisplayName: CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
-		Envs:        []corev1.EnvVar{{Name: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY}},
+		Name:        consoleTelemetryPluginName,
+		Image:       consoleTelemetryPluginImg,
+		DisplayName: consoleTelemetryPluginDisplayName,
+		Envs:        []corev1.EnvVar{{Name: consoleTelemetryPluginSegmentKeyEnv, Value: consoleTelemetryPluginSegmentKey}},
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.CrunchyBridgeInstallation: {
-		Name:           CRUNCHY_BRIDGE_NAME,
-		CSV:            CRUNCHY_BRIDGE_CSV,
-		DeploymentName: CRUNCHY_BRIDGE_DEPLOYMENT,
-		Image:          CRUNCHY_BRIDGE_CATALOG_IMG,
-		PackageName:    CRUNCHY_BRIDGE_PKG,
-		Channel:        CRUNCHY_BRIDGE_CHANNEL,
-		DisplayName:    CRUNCHY_BRIDGE_DISPLAYNAME,
+		Name:           crunchyBridgeName,
+		CSV:            crunchyBridgeCSV,
+		DeploymentName: crunchyBridgeDeployment,
+		Image:          crunchyBridgeCatlaogImg,
+		PackageName:    crunchyBridgePkg,
+		Channel:        crunchyBridgeChannel,
+		DisplayName:    crunchyBridgeDisplayName,
 		Type:           dbaasv1alpha1.TypeProvider,
 	},
 	dbaasv1alpha1.MongoDBAtlasInstallation: {
-		Name:           MONGODB_ATLAS_NAME,
-		CSV:            MONGODB_ATLAS_CSV,
-		DeploymentName: MONGODB_ATLAS_DEPLOYMENT,
-		Image:          MONGODB_ATLAS_CATALOG_IMG,
-		PackageName:    MONGODB_ATLAS_PKG,
-		Channel:        MONGODB_ATLAS_CHANNEL,
-		DisplayName:    MONGODB_ATLAS_DISPLAYNAME,
+		Name:           mongoDBAtlasName,
+		CSV:            mongoDBAtlasCSV,
+		DeploymentName: mongoDBAtlasDeployment,
+		Image:          mongoDBAtlasCatalogImg,
+		PackageName:    mongoDBAtlasPkg,
+		Channel:        mongoDBAtlasChannel,
+		DisplayName:    mongoDBAtlasDisplayName,
 		Type:           dbaasv1alpha1.TypeProvider,
 	},
 	dbaasv1alpha1.CockroachDBInstallation: {
-		Name:           COCKROACHDB_NAME,
-		CSV:            COCKROACHDB_CSV,
-		DeploymentName: COCKROACHDB_DEPLOYMENT,
-		Image:          COCKROACHDB_CATALOG_IMG,
-		PackageName:    COCKROACHDB_PKG,
-		Channel:        COCKROACHDB_CHANNEL,
-		DisplayName:    COCKROACHDB_DISPLAYNAME,
+		Name:           cockroachDBName,
+		CSV:            cockroachDBCSV,
+		DeploymentName: cockroachDBDeployment,
+		Image:          cockroachDBCatalogImg,
+		PackageName:    cockroachDBPkg,
+		Channel:        cockroachDBChannel,
+		DisplayName:    cockroachDBDisplayName,
 		Type:           dbaasv1alpha1.TypeProvider,
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
 	},
 	dbaasv1alpha1.RDSProviderInstallation: {
-		Name:           RDS_PROVIDER_NAME,
-		CSV:            RDS_PROVIDER_CSV,
-		DeploymentName: RDS_PROVIDER_DEPLOYMENT,
-		Image:          RDS_PROVIDER_CATALOG_IMG,
-		PackageName:    RDS_PROVIDER_PKG,
-		Channel:        RDS_PROVIDER_CHANNEL,
-		DisplayName:    RDS_PROVIDER_DISPLAYNAME,
+		Name:           rdsProviderName,
+		CSV:            rdsProviderCSV,
+		DeploymentName: rdsProviderDeployment,
+		Image:          rdsProviderCatalogImg,
+		PackageName:    rdsProviderPkg,
+		Channel:        rdsProviderChannel,
+		DisplayName:    rdsProviderDisplayName,
 		Type:           dbaasv1alpha1.TypeProvider,
 	},
 }

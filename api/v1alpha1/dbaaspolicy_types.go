@@ -47,9 +47,9 @@ type DBaaSPolicyStatus struct {
 //+kubebuilder:printcolumn:name="Active",type=string,JSONPath=`.status.conditions[0].status`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-//+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account Policy"
 // DBaaSPolicy enables admin capabilities within a namespace and sets default inventory policy.
 // Policy defaults can be overridden on a per-inventory basis.
+//+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account Policy"
 type DBaaSPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -19,7 +19,7 @@ package v1alpha1
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -123,7 +123,7 @@ var (
 			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
-	testSecret = v1.Secret{
+	testSecret = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -137,7 +137,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2 = v1.Secret{
+	testSecret2 = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -150,7 +150,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2update = v1.Secret{
+	testSecret2update = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -163,7 +163,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret3 = v1.Secret{
+	testSecret3 = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -175,7 +175,7 @@ var (
 			"field1": []byte("test1"),
 		},
 	}
-	testSecret3update = v1.Secret{
+	testSecret3update = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -187,7 +187,7 @@ var (
 			"field1": []byte("test1"),
 		},
 	}
-	testSecretRDS = v1.Secret{
+	testSecretRDS = corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -326,7 +326,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			})
 		})
 	Context("After creating DBaaSInventory for RDS", func() {
-		testSecretRDS2 := v1.Secret{
+		testSecretRDS2 := corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Opaque",
 			},

@@ -56,7 +56,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if inventory, validNS, provision, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
+	if inventory, validNS, provision, err := r.checkInventory(ctx, instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionFalse,
@@ -64,14 +64,15 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-	}, ctx, logger); err != nil {
+	}, logger); err != nil {
 		return ctrl.Result{}, err
 	} else if !validNS {
 		return ctrl.Result{}, nil
 	} else if !provision {
 		return ctrl.Result{}, nil
 	} else {
-		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+		return r.reconcileProviderResource(ctx,
+			inventory.Spec.ProviderRef.Name,
 			&instance,
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
@@ -90,7 +91,6 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return &instance.Status.Conditions
 			},
 			v1alpha1.DBaaSInstanceReadyType,
-			ctx,
 			logger,
 		)
 	}

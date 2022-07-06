@@ -29,6 +29,7 @@ import (
 // log is for logging in this package.
 var dbaasconnectionlog = logf.Log.WithName("dbaasconnection-resource")
 
+// SetupWebhookWithManager sets up the webhook with the Manager.
 func (r *DBaaSConnection) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).

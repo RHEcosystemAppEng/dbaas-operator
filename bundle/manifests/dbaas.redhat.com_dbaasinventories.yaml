@@ -153,6 +153,7 @@ spec:
               instances:
                 description: A list of instances returned from querying the DB provider
                 items:
+                  description: Instance defines the information of a database instance
                   properties:
                     instanceID:
                       description: A provider-specific identifier for this instance
