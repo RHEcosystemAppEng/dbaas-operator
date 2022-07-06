@@ -66,18 +66,18 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	if res, err := r.reconcileDevTopologyResource(&connection, ctx); err != nil {
+	res, err := r.reconcileDevTopologyResource(ctx, &connection)
+	if err != nil {
 		if errors.IsConflict(err) {
 			logger.V(1).Info("Deployment for Developer Topology view modified, retry reconciling")
 			return ctrl.Result{Requeue: true}, nil
 		}
 		logger.Error(err, "Error reconciling Deployment for Developer Topology view")
 		return ctrl.Result{}, err
-	} else {
-		logger.Info("Deployment for Developer Topology view reconciled", "result", res)
 	}
+	logger.Info("Deployment for Developer Topology view reconciled", "result", res)
 
-	if inventory, validNS, _, err := r.checkInventory(connection.Spec.InventoryRef, &connection, func(reason string, message string) {
+	if inventory, validNS, _, err := r.checkInventory(ctx, connection.Spec.InventoryRef, &connection, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSConnectionReadyType,
 			Status:  metav1.ConditionFalse,
@@ -85,14 +85,15 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&connection.Status.Conditions, cond)
-	}, ctx, logger); err != nil {
+	}, logger); err != nil {
 		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
 		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return ctrl.Result{}, nil
 	} else {
-		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+		result, err := r.reconcileProviderResource(ctx,
+			inventory.Spec.ProviderRef.Name,
 			&connection,
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.ConnectionKind
@@ -111,7 +112,6 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return &connection.Status.Conditions
 			},
 			v1alpha1.DBaaSConnectionReadyType,
-			ctx,
 			logger,
 		)
 		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
@@ -130,7 +130,7 @@ func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controll
 		Build(r)
 }
 
-func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(connection *v1alpha1.DBaaSConnection, ctx context.Context) (controllerutil.OperationResult, error) {
+func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(ctx context.Context, connection *v1alpha1.DBaaSConnection) (controllerutil.OperationResult, error) {
 	deployment := &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      connection.Name,
@@ -177,10 +177,7 @@ func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1alpha1.DBaa
 			},
 		}
 		deployment.OwnerReferences = nil
-		if err := ctrl.SetControllerReference(connection, deployment, r.Scheme); err != nil {
-			return err
-		}
-		return nil
+		return ctrl.SetControllerReference(connection, deployment, r.Scheme)
 	}
 }
 
@@ -213,7 +210,7 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	if !ok {
 		return nil
 	}
-	log.Info("connectionObj", "connectionObj", ObjectKeyFromObject(connectionObj))
+	log.Info("connectionObj", "connectionObj", objectKeyFromObject(connectionObj))
 
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)

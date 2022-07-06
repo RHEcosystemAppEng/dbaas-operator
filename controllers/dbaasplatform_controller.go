@@ -26,13 +26,12 @@ import (
 
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
-	"golang.org/x/mod/semver"
-
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
-	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
+	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
 
@@ -65,6 +64,7 @@ Platform resources NOT to be removed or updated by the DBaaS operator:
 	Console Telemetry Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
 */
 
+// Constants for requeue
 const (
 	RequeueDelaySuccess = 10 * time.Second
 	RequeueDelayError   = 5 * time.Second
@@ -132,7 +132,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			var err error
 
 			if cr.DeletionTimestamp == nil {
-				status, err = reconciler.Reconcile(ctx, cr, nextStatus)
+				status, err = reconciler.Reconcile(ctx, cr)
 				SetPlatformStatusMetric(platform, status, platformConfig.CSV)
 
 			} else {
@@ -143,10 +143,9 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			if err != nil {
 				nextPlatformStatus.LastMessage = err.Error()
 				return ctrl.Result{}, err
-			} else {
-				// Reset error message when everything went well
-				nextPlatformStatus.LastMessage = ""
 			}
+			// Reset error message when everything went well
+			nextPlatformStatus.LastMessage = ""
 			nextPlatformStatus.PlatformStatus = status
 			setStatusPlatform(&nextStatus.PlatformsStatus, nextPlatformStatus)
 
@@ -178,12 +177,12 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// envVar set for all operators
-	if operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME"); !found {
+	operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME")
+	if !found {
 		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
 		return err
-	} else {
-		r.operatorNameVersion = operatorNameEnvVar
 	}
+	r.operatorNameVersion = operatorNameEnvVar
 	// Creates a new managed install CR if it is not available
 	kubeConfig := mgr.GetConfig()
 	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
@@ -227,7 +226,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 			},
 		}
 
-		owner, err := reconcilers.GetDBaaSOperatorCSV(namespace, r.operatorNameVersion, ctx, serverClient)
+		owner, err := reconcilers.GetDBaaSOperatorCSV(ctx, namespace, r.operatorNameVersion, serverClient)
 		if err != nil {
 			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
 		}
@@ -252,14 +251,14 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch platformConfig.Type {
 	case dbaasv1alpha1.TypeOperator:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
+		return providersinstallation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
 		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
-			platformConfig.Image += reconcilers.CONSOLE_PLUGIN_49_TAG
+			platformConfig.Image += reconcilers.ConsolePlugin49Tag
 		}
-		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
+		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeQuickStart:
-		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil

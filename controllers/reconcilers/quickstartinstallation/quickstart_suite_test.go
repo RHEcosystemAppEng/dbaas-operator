@@ -1,9 +1,10 @@
-package quickstart_installation
+package quickstartinstallation
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestAdder(t *testing.T) {

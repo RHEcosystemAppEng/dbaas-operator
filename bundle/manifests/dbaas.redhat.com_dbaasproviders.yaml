@@ -46,6 +46,7 @@ spec:
                 description: CredentialFields indicates what information to collect
                   from UX & how to display fields in a form
                 items:
+                  description: CredentialField defines the attibutes
                   properties:
                     displayName:
                       description: A user-friendly name for this field
@@ -84,6 +85,9 @@ spec:
                   collect from UX & how to display fields in a form in order to provision
                   an instance
                 items:
+                  description: InstanceParameterSpec defines the information for how
+                    a parameter can be collected from UX and how to display fields
+                    in a form in order to provision an instance
                   properties:
                     defaultValue:
                       description: Default value for this field

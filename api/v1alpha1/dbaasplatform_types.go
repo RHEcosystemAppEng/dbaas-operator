@@ -17,14 +17,20 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// PlatformsName name of platform
 type PlatformsName string
+
+// PlatformsInstlnStatus status of platform installation
 type PlatformsInstlnStatus string
+
+// PlatformsType platform type
 type PlatformsType int
 
+// Supported platforms
 const (
 	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
 	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
@@ -36,18 +42,21 @@ const (
 	RDSProviderInstallation            PlatformsName = "rds-provider"
 )
 
+// Platform types
 const (
 	TypeQuickStart PlatformsType = iota
 	TypeConsolePlugin
 	TypeOperator
 )
 
+// Platform status values
 const (
 	ResultSuccess    PlatformsInstlnStatus = "success"
 	ResultFailed     PlatformsInstlnStatus = "failed"
 	ResultInProgress PlatformsInstlnStatus = "in progress"
 )
 
+// PlatformConfig defines parameters for a platform
 type PlatformConfig struct {
 	Name           string
 	CSV            string
@@ -56,7 +65,7 @@ type PlatformConfig struct {
 	PackageName    string
 	Channel        string
 	DisplayName    string
-	Envs           []v1.EnvVar
+	Envs           []corev1.EnvVar
 	Type           PlatformsType
 }
 
@@ -74,7 +83,7 @@ type DBaaSPlatformStatus struct {
 	PlatformsStatus []PlatformStatus   `json:"platformsStatus"`
 }
 
-// PlatformStatus
+// PlatformStatus defines status of DBaaSPlatform
 type PlatformStatus struct {
 	PlatformName   PlatformsName         `json:"platformName"`
 	PlatformStatus PlatformsInstlnStatus `json:"platformStatus"`
@@ -84,8 +93,8 @@ type PlatformStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 // DBaaSPlatform is the Schema for the dbaasplatforms API
+//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 type DBaaSPlatform struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

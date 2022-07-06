@@ -102,7 +102,7 @@ var _ = Describe("Get DBaaSProvider", func() {
 	It("should get the expected DBaaSProvider", func() {
 		provider.SetGroupVersionKind(v1alpha1.GroupVersion.WithKind("DBaaSProvider"))
 
-		p, err := dRec.getDBaaSProvider("test-provider", ctx)
+		p, err := dRec.getDBaaSProvider(ctx, "test-provider")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(p).Should(Equal(provider))
 	})
@@ -397,18 +397,19 @@ var _ = Describe("Check inventory", func() {
 
 			When("check the right inventory", func() {
 				It("should return the inventory without error", func() {
-					i, validNS, provision, err := dRec.checkInventory(v1alpha1.NamespacedName{
-						Name:      inventoryName,
-						Namespace: testNamespace,
-					}, createdDBaaSConnection, func(reason string, message string) {
-						cond := metav1.Condition{
-							Type:    v1alpha1.DBaaSConnectionReadyType,
-							Status:  metav1.ConditionFalse,
-							Reason:  reason,
-							Message: message,
-						}
-						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
-					}, ctx, ctrl.LoggerFrom(ctx))
+					i, validNS, provision, err := dRec.checkInventory(ctx,
+						v1alpha1.NamespacedName{
+							Name:      inventoryName,
+							Namespace: testNamespace,
+						}, createdDBaaSConnection, func(reason string, message string) {
+							cond := metav1.Condition{
+								Type:    v1alpha1.DBaaSConnectionReadyType,
+								Status:  metav1.ConditionFalse,
+								Reason:  reason,
+								Message: message,
+							}
+							apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+						}, ctrl.LoggerFrom(ctx))
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(validNS).To(Equal(true))
@@ -436,18 +437,19 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an inventory not exists", func() {
 				It("should return error", func() {
-					_, _, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
-						Name:      "test-check-not-exist-inventory",
-						Namespace: testNamespace,
-					}, createdDBaaSConnection, func(reason string, message string) {
-						cond := metav1.Condition{
-							Type:    v1alpha1.DBaaSConnectionReadyType,
-							Status:  metav1.ConditionFalse,
-							Reason:  reason,
-							Message: message,
-						}
-						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
-					}, ctx, ctrl.LoggerFrom(ctx))
+					_, _, _, err := dRec.checkInventory(ctx,
+						v1alpha1.NamespacedName{
+							Name:      "test-check-not-exist-inventory",
+							Namespace: testNamespace,
+						}, createdDBaaSConnection, func(reason string, message string) {
+							cond := metav1.Condition{
+								Type:    v1alpha1.DBaaSConnectionReadyType,
+								Status:  metav1.ConditionFalse,
+								Reason:  reason,
+								Message: message,
+							}
+							apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+						}, ctrl.LoggerFrom(ctx))
 
 					Expect(err).To(HaveOccurred())
 					assertConnectionDBaaSStatus(createdDBaaSConnection.Name, createdDBaaSConnection.Namespace, metav1.ConditionFalse)
@@ -499,18 +501,19 @@ var _ = Describe("Check inventory", func() {
 
 			When("check an not ready inventory", func() {
 				It("should return error", func() {
-					_, _, _, err := dRec.checkInventory(v1alpha1.NamespacedName{
-						Name:      inventoryName,
-						Namespace: testNamespace,
-					}, createdDBaaSConnection, func(reason string, message string) {
-						cond := metav1.Condition{
-							Type:    v1alpha1.DBaaSConnectionReadyType,
-							Status:  metav1.ConditionFalse,
-							Reason:  reason,
-							Message: message,
-						}
-						apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
-					}, ctx, ctrl.LoggerFrom(ctx))
+					_, _, _, err := dRec.checkInventory(ctx,
+						v1alpha1.NamespacedName{
+							Name:      inventoryName,
+							Namespace: testNamespace,
+						}, createdDBaaSConnection, func(reason string, message string) {
+							cond := metav1.Condition{
+								Type:    v1alpha1.DBaaSConnectionReadyType,
+								Status:  metav1.ConditionFalse,
+								Reason:  reason,
+								Message: message,
+							}
+							apimeta.SetStatusCondition(&createdDBaaSConnection.Status.Conditions, cond)
+						}, ctrl.LoggerFrom(ctx))
 
 					Expect(err).To(HaveOccurred())
 					assertConnectionDBaaSStatus(createdDBaaSConnection.Name, createdDBaaSConnection.Namespace, metav1.ConditionFalse)
@@ -550,7 +553,8 @@ var _ = Describe("Reconcile Provider Resource", func() {
 		When("reconcile provider resource with invalid provider", func() {
 			It("should return error", func() {
 				createdDBaaSInventory.Spec.ProviderRef.Name = "test-reconcile-provider-resource-invalid-provider"
-				_, err := dRec.reconcileProviderResource(createdDBaaSInventory.Spec.ProviderRef.Name,
+				_, err := dRec.reconcileProviderResource(ctx,
+					createdDBaaSInventory.Spec.ProviderRef.Name,
 					createdDBaaSInventory,
 					func(provider *v1alpha1.DBaaSProvider) string {
 						return provider.Spec.InventoryKind
@@ -569,7 +573,6 @@ var _ = Describe("Reconcile Provider Resource", func() {
 						return &createdDBaaSInventory.Status.Conditions
 					},
 					v1alpha1.DBaaSInventoryReadyType,
-					ctx,
 					ctrl.LoggerFrom(ctx),
 				)
 

@@ -100,9 +100,8 @@ func assertResourceCreationIfNotExists(object client.Object) func() {
 				if errors.IsNotFound(err) {
 					create = true
 					return true
-				} else {
-					return false
 				}
+				return false
 			}
 			return true
 		}, timeout).Should(BeTrue())
@@ -533,33 +532,29 @@ func (c *spyctrl) Watch(src source.Source, evthdler handler.EventHandler, prct .
 
 	if c.Controller != nil {
 		return c.Controller.Watch(src, evthdler, prct...)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func (c *spyctrl) Start(ctx context.Context) error {
 	if c.Controller != nil {
 		return c.Controller.Start(ctx)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func (c *spyctrl) GetLogger() logr.Logger {
 	if c.Controller != nil {
 		return c.Controller.GetLogger()
-	} else {
-		return logr.Logger{}
 	}
+	return logr.Logger{}
 }
 
 func (c *spyctrl) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	if c.Controller != nil {
 		return c.Controller.Reconcile(ctx, req)
-	} else {
-		return reconcile.Result{}, nil
 	}
+	return reconcile.Result{}, nil
 }
 
 func newSpyController(ctrl controller.Controller) *spyctrl {

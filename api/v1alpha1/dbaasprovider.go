@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Constants for DBaaS condition types, reasons, messages and type labels
 const (
 	// DBaaS condition types
 	DBaaSInventoryReadyType         string = "InventoryReady"
@@ -104,6 +105,7 @@ type DBaaSProviderSpec struct {
 	InstanceParameterSpecs []InstanceParameterSpec `json:"instanceParameterSpecs"`
 }
 
+// DatabaseProvider defines the information for a DBaaSProvider
 type DatabaseProvider struct {
 	// Indicates the name used to specify Service Binding origin parameter (e.g. 'Red Hat DBaas / MongoDB Atlas')
 	Name string `json:"name"`
@@ -124,6 +126,7 @@ type ProviderIcon struct {
 	MediaType string `json:"mediatype"`
 }
 
+// CredentialField defines the attibutes
 type CredentialField struct {
 	// The name for this field
 	Key string `json:"key"`
@@ -162,6 +165,7 @@ type DBaaSInventoryStatus struct {
 	Instances []Instance `json:"instances,omitempty"`
 }
 
+// Instance defines the information of a database instance
 type Instance struct {
 	// A provider-specific identifier for this instance in the database service. It may contain one or
 	// more pieces of information used by the provider operator to identify the instance on the
@@ -175,6 +179,7 @@ type Instance struct {
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 }
 
+// NamespacedName defines the namespace and name of a k8s resource
 type NamespacedName struct {
 	// The namespace where object of known type is stored
 	Namespace string `json:"namespace,omitempty"`
@@ -266,6 +271,8 @@ type DBaaSProviderInstance struct {
 	Status DBaaSInstanceStatus `json:"status,omitempty"`
 }
 
+// InstanceParameterSpec defines the information for how a parameter can be collected from UX
+// and how to display fields in a form in order to provision an instance
 type InstanceParameterSpec struct {
 	// The name for this field
 	Name string `json:"name"`
@@ -282,5 +289,3 @@ type InstanceParameterSpec struct {
 	// Default value for this field
 	DefaultValue string `json:"defaultValue,omitempty"`
 }
-
-var InstanceParameterSpecs = InstanceParameterSpec{}

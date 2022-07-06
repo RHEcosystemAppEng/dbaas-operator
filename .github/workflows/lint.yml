@@ -1,0 +1,35 @@
+name: Goimports, Revive and Gosec
+
+on:
+  push:
+    branches:
+    - main
+    - release-*
+  pull_request:
+    branches:
+    - main
+    - release-*
+
+jobs:
+  format:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16.x
+      - name: Install goimports
+        run: go install golang.org/x/tools/cmd/goimports@v0.1.11
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - run: goimports -d .
+      - name: Run Linter with Revive Action
+        uses: morphy2k/revive-action@v2.3.1
+        with:
+          config: ./config.toml
+          path: ./...
+      - name: Install Gosec Security Scanner
+        run: curl -sfL https://raw.githubusercontent.com/securego/gosec/v2.8.1/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
+      - name: Run Gosec Security Scanner
+        run: gosec ./...
