@@ -30,6 +30,7 @@ const (
 	DBaaSInstanceReadyType          string = "InstanceReady"
 	DBaaSInstanceProviderSyncType   string = "ProvisionReady"
 	DBaaSPolicyReadyType            string = "PolicyReady"
+	DBaaSPlatformReadyType          string = "PlatformReady"
 
 	// DBaaS condition reasons
 	Ready                          string = "Ready"
@@ -43,6 +44,8 @@ const (
 	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
 	ProviderReconcileError         string = "ProviderReconcileError"
 	ProviderParsingError           string = "ProviderParsingError"
+	InstallationInprogress         string = "InstallationInprogress"
+	InstallationCleanup            string = "InstallationCleanup"
 
 	// DBaaS condition messages
 	MsgProviderCRStatusSyncDone      string = "Provider Custom Resource status sync completed"
