@@ -30,6 +30,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+const (
+	rdsRegistration = "rds-registration"
+	providerNameKey = "spec.providerRef.name"
+)
+
 // log is for logging in this package.
 var dbaasinventorylog = logf.Log.WithName("dbaasinventory-resource")
 var inventoryWebhookApiClient client.Client = nil
@@ -37,6 +42,13 @@ var inventoryWebhookApiClient client.Client = nil
 func (r *DBaaSInventory) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	if inventoryWebhookApiClient == nil {
 		inventoryWebhookApiClient = mgr.GetClient()
+	}
+	// index inventory by `spec.providerRef.name`
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &DBaaSInventory{}, providerNameKey, func(rawObj client.Object) []string {
+		inventory := rawObj.(*DBaaSInventory)
+		return []string{inventory.Spec.ProviderRef.Name}
+	}); err != nil {
+		return err
 	}
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
@@ -50,13 +62,13 @@ var _ webhook.Validator = &DBaaSInventory{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *DBaaSInventory) ValidateCreate() error {
 	dbaasinventorylog.Info("validate create", "name", r.Name)
-	return validateInventory(r)
+	return validateInventory(r, nil)
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *DBaaSInventory) ValidateUpdate(old runtime.Object) error {
 	dbaasinventorylog.Info("validate update", "name", r.Name)
-	return validateInventory(r)
+	return validateInventory(r, old.(*DBaaSInventory))
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -65,7 +77,12 @@ func (r *DBaaSInventory) ValidateDelete() error {
 	return nil
 }
 
-func validateInventory(inv *DBaaSInventory) error {
+func validateInventory(inv *DBaaSInventory, oldInv *DBaaSInventory) error {
+	// Provider name is immutable
+	if oldInv != nil && oldInv.Spec.ProviderRef.Name != inv.Spec.ProviderRef.Name {
+		msg := "provider name is immutable for provider accounts"
+		return field.Invalid(field.NewPath("spec").Child("providerRef").Child("name"), inv.Spec.ProviderRef.Name, msg)
+	}
 	// Retrieve the secret object
 	secret := &corev1.Secret{}
 	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: inv.Namespace}, secret); err != nil {
@@ -75,6 +92,12 @@ func validateInventory(inv *DBaaSInventory) error {
 	provider := &DBaaSProvider{}
 	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.ProviderRef.Name, Namespace: ""}, provider); err != nil {
 		return err
+	}
+	// Check RDS
+	if oldInv == nil && inv.Spec.ProviderRef.Name == rdsRegistration {
+		if err := validateRDS(); err != nil {
+			return err
+		}
 	}
 	return validateInventoryMandatoryFields(inv, secret, provider)
 }
@@ -88,6 +111,17 @@ func validateInventoryMandatoryFields(inv *DBaaSInventory, secret *corev1.Secret
 				return field.Invalid(field.NewPath("spec").Child("credentialsRef"), *(inv.Spec.CredentialsRef), msg)
 			}
 		}
+	}
+	return nil
+}
+
+func validateRDS() error {
+	rdsInventoryList := &DBaaSInventoryList{}
+	if err := inventoryWebhookApiClient.List(context.TODO(), rdsInventoryList, client.MatchingFields{providerNameKey: rdsRegistration}); err != nil {
+		return err
+	}
+	if len(rdsInventoryList.Items) > 0 {
+		return fmt.Errorf("only one provider account for RDS can exist in a cluster, but there is already a provider account %s created", rdsInventoryList.Items[0].Name)
 	}
 	return nil
 }

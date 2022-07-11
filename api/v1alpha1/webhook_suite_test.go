@@ -30,6 +30,8 @@ import (
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,10 +52,10 @@ var ctx context.Context
 var cancel context.CancelFunc
 
 const (
-	testNamespace = "default"
-
-	timeout  = time.Second * 10
-	interval = time.Millisecond * 250
+	testNamespace  = "default"
+	testNamespace2 = "testnamespace2"
+	timeout        = time.Second * 10
+	interval       = time.Millisecond * 250
 )
 
 func TestAPIs(t *testing.T) {
@@ -116,6 +118,14 @@ var _ = BeforeSuite(func() {
 	err = (&DBaaSInventory{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	ns2 := corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: testNamespace2,
+		},
+	}
+
+	assertResourceCreation(&ns2)()
+
 	//+kubebuilder:scaffold:webhook
 
 	go func() {
@@ -146,3 +156,35 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func assertResourceCreation(object client.Object) func() {
+	return func() {
+		By("creating resource")
+		object.SetResourceVersion("")
+		Expect(k8sClient.Create(ctx, object)).Should(Succeed())
+
+		By("checking the resource created")
+		Eventually(func() bool {
+			if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+				return false
+			}
+			return true
+		}, timeout, interval).Should(BeTrue())
+	}
+}
+
+func assertResourceDeletion(object client.Object) func() {
+	return func() {
+		By("deleting resource")
+		Expect(k8sClient.Delete(ctx, object)).Should(Succeed())
+
+		By("checking the resource deleted")
+		Eventually(func() bool {
+			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object)
+			if err != nil && errors.IsNotFound(err) {
+				return true
+			}
+			return false
+		}, timeout, interval).Should(BeTrue())
+	}
+}
