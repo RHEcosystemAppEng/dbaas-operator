@@ -50,6 +50,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := ctrl.LoggerFrom(ctx)
 
 	var instance v1alpha1.DBaaSInstance
+	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -70,9 +71,11 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return ctrl.Result{}, err
 	} else if !validNS {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return ctrl.Result{}, nil
 	} else if !provision {
 		return ctrl.Result{}, nil
@@ -100,6 +103,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			logger,
 		)
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
 		return result, err
 	}
 }
