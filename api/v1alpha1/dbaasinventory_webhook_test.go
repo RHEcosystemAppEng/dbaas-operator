@@ -20,18 +20,26 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	testSecretName       = "testsecret"
-	testSecretNameUpdate = "testsecretupdate"
-	testProviderName     = "mongodb-atlas"
-	testInventoryKind    = "MongoDBAtlasInventory"
-	testConnectionKind   = "MongoDBAtlasConnection"
-	testInstaneKind      = "MongoDBAtlasInstance"
+	testSecretName        = "testsecret"
+	testSecretNameUpdate  = "testsecretupdate"
+	testProviderName      = "mongodb-atlas"
+	testInventoryKind     = "MongoDBAtlasInventory"
+	testConnectionKind    = "MongoDBAtlasConnection"
+	testInstanceKind      = "MongoDBAtlasInstance"
+	testSecretNameRDS     = "testsecretrds"
+	testInventoryKindRDS  = "RDSInventory"
+	testConnectionKindRDS = "RDSConnection"
+	testInstanceKindRDS   = "RDSInstance"
+	awsAccessKeyID        = "AWS_ACCESS_KEY_ID"
+	awsSecretAccessKey    = "AWS_SECRET_ACCESS_KEY" //#nosec G101
+	awsRegion             = "AWS_REGION"
+	ackResourceTags       = "ACK_RESOURCE_TAGS"
+	ackLogLevel           = "ACK_LOG_LEVEL"
 )
 
 var (
@@ -46,7 +54,7 @@ var (
 			},
 			InventoryKind:  testInventoryKind,
 			ConnectionKind: testConnectionKind,
-			InstanceKind:   testInstaneKind,
+			InstanceKind:   testInstanceKind,
 			CredentialFields: []CredentialField{
 				{
 					Key:      "field1",
@@ -60,6 +68,56 @@ var (
 				},
 			},
 			AllowsFreeTrial:              false,
+			ExternalProvisionURL:         "",
+			ExternalProvisionDescription: "",
+			InstanceParameterSpecs:       []InstanceParameterSpec{},
+		},
+	}
+	testProviderRDS = DBaaSProvider{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      rdsRegistration,
+			Namespace: testNamespace,
+		},
+		Spec: DBaaSProviderSpec{
+			Provider: DatabaseProvider{
+				Name: rdsRegistration,
+			},
+			InventoryKind:  testInventoryKindRDS,
+			ConnectionKind: testConnectionKindRDS,
+			InstanceKind:   testInstanceKindRDS,
+			CredentialFields: []CredentialField{
+				{
+					Key:         awsAccessKeyID,
+					DisplayName: "AWS Access Key ID",
+					Type:        "maskedstring",
+					Required:    true,
+				},
+				{
+					Key:         awsSecretAccessKey,
+					DisplayName: "AWS Secret Access Key",
+					Type:        "maskedstring",
+					Required:    true,
+				},
+				{
+					Key:         awsRegion,
+					DisplayName: "AWS Region",
+					Type:        "string",
+					Required:    true,
+				},
+				{
+					Key:         ackResourceTags,
+					DisplayName: "ACK Resource Tags",
+					Type:        "string",
+					Required:    false,
+				},
+				{
+					Key:         ackLogLevel,
+					DisplayName: "ACK Log Level",
+					Type:        "string",
+					Required:    false,
+				},
+			},
+			AllowsFreeTrial:              true,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
 			InstanceParameterSpecs:       []InstanceParameterSpec{},
@@ -127,6 +185,20 @@ var (
 		},
 		Data: map[string][]byte{
 			"field1": []byte("test1"),
+		},
+	}
+	testSecretRDS = v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Opaque",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      testSecretNameRDS,
+			Namespace: testNamespace,
+		},
+		Data: map[string][]byte{
+			"AWS_ACCESS_KEY_ID":     []byte("myaccesskeyid"),
+			"AWS_SECRET_ACCESS_KEY": []byte("myaccesskey"),
+			"AWS_REGION":            []byte("myregion"),
 		},
 	}
 	testDBaaSInventory = DBaaSInventory{
@@ -245,37 +317,96 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
 				})
 			})
+			It("update fails with provider name change", func() {
+				inv := testDBaaSInventory.DeepCopy()
+				Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
+				inv.Spec.ProviderRef.Name = "crunchy-registration"
+				err := k8sClient.Update(ctx, inv)
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.providerRef.name: Invalid value: \"crunchy-registration\": provider name is immutable for provider accounts"))
+			})
 		})
+	Context("After creating DBaaSInventory for RDS", func() {
+		testSecretRDS2 := v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Opaque",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      testSecretNameRDS,
+				Namespace: testNamespace2,
+			},
+			Data: map[string][]byte{
+				"AWS_ACCESS_KEY_ID":     []byte("myaccesskeyid"),
+				"AWS_SECRET_ACCESS_KEY": []byte("myaccesskey"),
+				"AWS_REGION":            []byte("myregion"),
+			},
+		}
+		testDBaaSInventoryRDS := DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-inventory-rds",
+				Namespace: testNamespace,
+			},
+			Spec: DBaaSOperatorInventorySpec{
+				ProviderRef: NamespacedName{
+					Name: rdsRegistration,
+				},
+				DBaaSInventorySpec: DBaaSInventorySpec{
+					CredentialsRef: &LocalObjectReference{
+						Name: testSecretNameRDS,
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(&testSecretRDS2))
+		BeforeEach(assertResourceCreation(&testSecretRDS))
+		BeforeEach(assertResourceCreation(&testProviderRDS))
+		BeforeEach(assertResourceCreation(&testDBaaSInventoryRDS))
+		AfterEach(assertResourceDeletion(&testDBaaSInventoryRDS))
+		AfterEach(assertResourceDeletion(&testProviderRDS))
+		AfterEach(assertResourceDeletion(&testSecretRDS))
+		AfterEach(assertResourceDeletion(&testSecretRDS2))
+		Context("creating another DBaaSInventory for RDS", func() {
+			It("should not allow creating DBaaSInventory for RDS in the same namespace", func() {
+				testDBaaSInventoryRDSNotAllowed := DBaaSInventory{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-inventory-rds-not-allowed",
+						Namespace: testNamespace,
+					},
+					Spec: DBaaSOperatorInventorySpec{
+						ProviderRef: NamespacedName{
+							Name: rdsRegistration,
+						},
+						DBaaSInventorySpec: DBaaSInventorySpec{
+							CredentialsRef: &LocalObjectReference{
+								Name: testSecretNameRDS,
+							},
+						},
+					},
+				}
+				By("creating DBaaSInventory for RDS")
+				Expect(k8sClient.Create(ctx, &testDBaaSInventoryRDSNotAllowed)).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request:" +
+					" only one provider account for RDS can exist in a cluster, but there is already a provider account test-inventory-rds created"))
+			})
+			It("should not allow creating DBaaSInventory for RDS in another namespace", func() {
+				testDBaaSInventoryRDSNotAllowed := DBaaSInventory{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test-inventory-rds-not-allowed",
+						Namespace: testNamespace2,
+					},
+					Spec: DBaaSOperatorInventorySpec{
+						ProviderRef: NamespacedName{
+							Name: rdsRegistration,
+						},
+						DBaaSInventorySpec: DBaaSInventorySpec{
+							CredentialsRef: &LocalObjectReference{
+								Name: testSecretNameRDS,
+							},
+						},
+					},
+				}
+				err := k8sClient.Create(ctx, &testDBaaSInventoryRDSNotAllowed)
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request:" +
+					" only one provider account for RDS can exist in a cluster, but there is already a provider account test-inventory-rds created"))
+			})
+		})
+	})
 })
-
-func assertResourceCreation(object client.Object) func() {
-	return func() {
-		By("creating resource")
-		object.SetResourceVersion("")
-		Expect(k8sClient.Create(ctx, object)).Should(Succeed())
-
-		By("checking the resource created")
-		Eventually(func() bool {
-			if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
-				return false
-			}
-			return true
-		}, timeout, interval).Should(BeTrue())
-	}
-}
-
-func assertResourceDeletion(object client.Object) func() {
-	return func() {
-		By("deleting resource")
-		Expect(k8sClient.Delete(ctx, object)).Should(Succeed())
-
-		By("checking the resource deleted")
-		Eventually(func() bool {
-			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object)
-			if err != nil && errors.IsNotFound(err) {
-				return true
-			}
-			return false
-		}, timeout, interval).Should(BeTrue())
-	}
-}
