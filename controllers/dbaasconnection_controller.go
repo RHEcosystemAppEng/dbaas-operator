@@ -86,12 +86,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		apimeta.SetStatusCondition(&connection.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
-		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
-		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
+		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
-		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
-		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
+		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return ctrl.Result{}, nil
 	} else {
 		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
@@ -116,8 +114,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			ctx,
 			logger,
 		)
-		SetConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection)
-		SetConnectionRequestDurationSeconds(execution, *inventory, connection)
+		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return result, err
 	}
 }
@@ -221,7 +218,7 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanConnectionStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connectionObj)
+	CleanConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connectionObj)
 	return nil
 
 }
