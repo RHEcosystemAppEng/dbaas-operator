@@ -76,14 +76,13 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
 	}, ctx, logger); err != nil {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
-		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
-		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else if !provision {
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else {
 		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
@@ -108,8 +107,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			ctx,
 			logger,
 		)
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
-		SetInstanceRequestDurationSeconds(execution, *inventory, instance)
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return result, err
 	}
 }
@@ -161,6 +159,6 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanInstanceStatusMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instanceObj)
+	CleanInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instanceObj)
 	return nil
 }
