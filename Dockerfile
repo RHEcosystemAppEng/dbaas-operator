@@ -2,7 +2,7 @@
 FROM registry.access.redhat.com/ubi8:8.5 AS builder
 
 # Set go version
-ARG RUNTIME_VERSION=1.16.15
+ARG RUNTIME_VERSION=1.17.11
 
 RUN curl -fsSLo /tmp/go.tgz https://golang.org/dl/go${RUNTIME_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf /tmp/go.tgz && \
