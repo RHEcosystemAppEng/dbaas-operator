@@ -60,8 +60,8 @@ const (
 	RDS_PROVIDER_CHANNEL     = "alpha"
 
 	// OBSERVABILITY
-	OBSERVABILITY_CATALOG_IMG = "quay.io/rhobs/observability-operator-catalog:0.0.11"
-	OBSERVABILITY_CSV         = "observability-operator.v0.0.11"
+	OBSERVABILITY_CATALOG_IMG = "quay.io/rhobs/observability-operator-catalog:0.0.12"
+	OBSERVABILITY_CSV         = "observability-operator.v0.0.12"
 	OBSERVABILITY_NAME        = "observability"
 	OBSERVABILITY_DISPLAYNAME = "observability Operator"
 	OBSERVABILITY_DEPLOYMENT  = "observability-operator"
