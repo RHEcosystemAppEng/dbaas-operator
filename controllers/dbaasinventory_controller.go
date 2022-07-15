@@ -92,8 +92,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	defer func() {
-		SetInventoryStatusMetrics(inventory)
-		SetInventoryRequestDurationSeconds(execution, inventory)
+		SetInventoryMetrics(inventory, execution)
+
 	}()
 
 	//
@@ -165,7 +165,7 @@ func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 	}
 	log.Info("inventoryObj", "inventoryObj", ObjectKeyFromObject(inventoryObj))
 
-	CleanInventoryStatusMetrics(inventoryObj)
+	CleanInventoryMetrics(inventoryObj)
 
 	return nil
 
