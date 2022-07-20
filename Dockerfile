@@ -1,3 +1,8 @@
+# Labels
+LABEL com.redhat.component="rhoda-operator-container"
+LABEL name="rhoda-operator"
+LABEL version="0.2"
+
 # Build the manager binary
 FROM registry.access.redhat.com/ubi8/go-toolset:1.17.10 AS builder
 
