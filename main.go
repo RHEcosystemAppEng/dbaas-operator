@@ -21,6 +21,12 @@ import (
 	"fmt"
 	"os"
 
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	"go.uber.org/zap/zapcore"
+	"golang.org/x/mod/semver"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
 	"github.com/RHsyseng/operator-utils/pkg/utils/openshift"
 	oauthzv1 "github.com/openshift/api/authorization/v1"
 	consolev1 "github.com/openshift/api/console/v1"
@@ -28,16 +34,11 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-	"go.uber.org/zap/zapcore"
-	"golang.org/x/mod/semver"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"

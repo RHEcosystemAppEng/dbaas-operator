@@ -63,7 +63,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	defer func() {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance)
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 
 	}()
 
