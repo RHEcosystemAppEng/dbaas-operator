@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"os"
 	"reflect"
 	"strings"
@@ -118,9 +119,9 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	nextStatus := cr.Status.DeepCopy()
-
+	nextPlatformStatus := dbaasv1alpha1.PlatformStatus{}
 	for platform, platformConfig := range platforms {
-		nextStatus.PlatformName = platform
+		nextPlatformStatus.PlatformName = platform
 		reconciler := r.getReconcilerForPlatform(platformConfig)
 		if reconciler != nil {
 			var status dbaasv1alpha1.PlatformsInstlnStatus
@@ -133,21 +134,23 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 
 			if err != nil {
-				nextStatus.LastMessage = err.Error()
+				nextPlatformStatus.LastMessage = err.Error()
 				return ctrl.Result{}, err
 			} else {
 				// Reset error message when everything went well
-				nextStatus.LastMessage = ""
+				nextPlatformStatus.LastMessage = ""
 			}
-
-			nextStatus.PlatformStatus = status
+			nextPlatformStatus.PlatformStatus = status
+			setStatusPlatform(&nextStatus.PlatformsStatus, nextPlatformStatus)
 
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
+					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
 					logger.Info("DBaaS platform stack cleanup in progress", "working platform", platform)
+					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionUnknown, dbaasv1alpha1.InstallationCleanup, "DBaaS platform stack cleanup in progress")
 				}
 				finished = false
 				break
@@ -156,6 +159,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
+		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
 		logger.Info("DBaaS platform stack installation complete")
 	}
 
@@ -268,4 +272,48 @@ func (r *DBaaSPlatformReconciler) updateStatus(cr *dbaasv1alpha1.DBaaSPlatform, 
 		Requeue:      true,
 		RequeueAfter: RequeueDelaySuccess,
 	}, nil
+}
+
+// setStatusPlatform set the new status for installation of platforms
+func setStatusPlatform(PlatformsStatus *[]dbaasv1alpha1.PlatformStatus, newPlatformStatus dbaasv1alpha1.PlatformStatus) {
+	if PlatformsStatus == nil {
+		return
+	}
+	existingPlatformStatus := FindStatusPlatform(*PlatformsStatus, newPlatformStatus.PlatformName)
+	if existingPlatformStatus == nil {
+		*PlatformsStatus = append(*PlatformsStatus, newPlatformStatus)
+		return
+	}
+
+	if existingPlatformStatus.PlatformStatus != newPlatformStatus.PlatformStatus {
+		existingPlatformStatus.PlatformStatus = newPlatformStatus.PlatformStatus
+	}
+
+	existingPlatformStatus.PlatformStatus = newPlatformStatus.PlatformStatus
+	existingPlatformStatus.LastMessage = newPlatformStatus.LastMessage
+}
+
+// FindStatusPlatform finds the platformName in platforms status.
+func FindStatusPlatform(platformsStatus []dbaasv1alpha1.PlatformStatus, platformName dbaasv1alpha1.PlatformsName) *dbaasv1alpha1.PlatformStatus {
+	for i := range platformsStatus {
+		if platformsStatus[i].PlatformName == platformName {
+			return &platformsStatus[i]
+		}
+	}
+
+	return nil
+}
+
+// setStatusCondition sets the given condition with the given status,
+// reason and message on a resource.
+func setStatusCondition(Conditions *[]metav1.Condition, conditionType string, status metav1.ConditionStatus, reason, message string) {
+	newCondition := metav1.Condition{
+		Type:    conditionType,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	}
+
+	apimeta.SetStatusCondition(Conditions, newCondition)
+
 }
