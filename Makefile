@@ -21,7 +21,7 @@ CONTAINER_ENGINE?=docker
 ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-# 0.2.0 catalog image - quay.io/osd-addons/dbaas-operator-index@sha256:b699851c2a839ee85a98a8daf3b619c0b34716c081046b229c37e8ea2d2efa96
+# 0.2.0 catalog image - quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
 CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
@@ -233,7 +233,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.17.3/$${OS}-$${ARCH}-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.2/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
@@ -268,3 +268,11 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+.PHONY: wrapper-build
+wrapper-build: ## Build the catalog wrapper image.
+	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper .
+
+.PHONY: wrapper-push
+wrapper-push: ## Push the catalog wrapper image.
+	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper 
