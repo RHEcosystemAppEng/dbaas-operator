@@ -116,7 +116,7 @@ func PlatformInstallStart() Execution {
 // PlatformStackInstallationMetric is used to log duration and success/failure
 func (e *Execution) PlatformStackInstallationMetric(version string) {
 	duration := time.Since(e.begin)
-	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: version}).Set(0)
+	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: version}).Set(1)
 	DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version}).Observe(duration.Seconds())
 }
 

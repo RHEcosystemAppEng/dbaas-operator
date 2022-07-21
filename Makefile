@@ -269,14 +269,3 @@ catalog-build: opm ## Build a catalog image.
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
-mso-install:
-	oc apply -f config/samples/mso-catalog-source-subscription.yaml
-
-mso-uninstall:
-	oc delete -f config/samples/mso-catalog-source-subscription.yaml
-
-deploy-mso:
-	oc apply -f config/samples/mso.yaml
-
-undeploy-mso:
-	oc delete monitoringstack dbaas-operator-mso

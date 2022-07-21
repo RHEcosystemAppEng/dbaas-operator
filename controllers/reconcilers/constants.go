@@ -40,11 +40,13 @@ const (
 
 	// DBAAS_DYNAMIC_PLUGIN
 	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
+	DBAAS_DYNAMIC_PLUGIN_VERSION      = "dbaas-dynamic-plugin:0.2.0"
 	DBAAS_DYNAMIC_PLUGIN_NAME         = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME = "OpenShift Database as a Service Dynamic Plugin"
 
 	// CONSOLE_TELEMETRY_PLUGIN
 	CONSOLE_TELEMETRY_PLUGIN_IMG             = "quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4"
+	CONSOLE_TELEMETRY_PLUGIN_VERSION         = "console-telemetry-plugin:0.1.4"
 	CONSOLE_TELEMETRY_PLUGIN_NAME            = "console-telemetry-plugin"
 	CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME    = "Telemetry Plugin"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
@@ -74,12 +76,14 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		Name:        DBAAS_DYNAMIC_PLUGIN_NAME,
 		Image:       DBAAS_DYNAMIC_PLUGIN_IMG,
 		DisplayName: DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
+		CSV:         DBAAS_DYNAMIC_PLUGIN_VERSION,
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
 		Name:        CONSOLE_TELEMETRY_PLUGIN_NAME,
 		Image:       CONSOLE_TELEMETRY_PLUGIN_IMG,
 		DisplayName: CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
+		CSV:         CONSOLE_TELEMETRY_PLUGIN_VERSION,
 		Envs:        []corev1.EnvVar{{Name: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY}},
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
