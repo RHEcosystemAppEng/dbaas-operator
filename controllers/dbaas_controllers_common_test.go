@@ -550,7 +550,7 @@ func (c *spyctrl) GetLogger() logr.Logger {
 	if c.Controller != nil {
 		return c.Controller.GetLogger()
 	} else {
-		return nil
+		return logr.Logger{}
 	}
 }
 

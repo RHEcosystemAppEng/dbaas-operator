@@ -60,6 +60,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1.DBaaSPlatform, status
 	if status != v1.ResultSuccess {
 		return status, err
 	}
+
+	if r.config.Name == reconcilers.OBSERVABILITY_NAME {
+		status, err = r.createObservabilityCR(cr, ctx)
+		if status != v1.ResultSuccess {
+			return status, err
+		}
+	}
 	return v1.ResultSuccess, nil
 
 }
