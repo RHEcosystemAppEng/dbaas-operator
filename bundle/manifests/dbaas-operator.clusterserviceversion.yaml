@@ -258,6 +258,14 @@ spec:
           - update
           - watch
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - console.openshift.io
           resources:
           - consoleplugins

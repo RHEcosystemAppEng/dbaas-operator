@@ -8,6 +8,8 @@ spec:
     matchLabels:
       app: dbaas-prometheus
   prometheusConfig:
+    externalLabels:
+      cluster_id: <cluster_id>
     remoteWrite:
       - bearerToken: >-
           <bearer_token>
@@ -20,10 +22,9 @@ spec:
         writeRelabelConfigs:
           - action: keep
             regex: >-
-              (csv_succeeded$|csv_abnormal$|cluster_version$|ALERTS$|subscription_sync_total|trino_.*$|jvm_heap_memory_used$|node_.*$|namespace_.*$|kube_.*$|cluster.*$|container_.*$)
+              (dbaas_.*$|csv_succeeded$|csv_abnormal$|cluster_version$|ALERTS$|subscription_sync_total|trino_.*$|jvm_heap_memory_used$|node_.*$|namespace_.*$|kube_.*$|cluster.*$|container_.*$)
             sourceLabels:
               - __name__
     replicas: 1
-
 
 
