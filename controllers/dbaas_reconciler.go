@@ -228,12 +228,12 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 }
 
 func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
-	conditionFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
+	statusErrorFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
 	inventory = &v1alpha1.DBaaSInventory{}
 	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "DBaaS Inventory resource not found for DBaaS Object", "DBaaS Object", DBaaSObject, "DBaaS Inventory", inventoryRef)
-			conditionFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
+			statusErrorFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
 			if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
 				if errors.IsConflict(errCond) {
 					logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
@@ -263,17 +263,17 @@ func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, D
 		if invCond == nil || invCond.Status == metav1.ConditionFalse {
 			err = fmt.Errorf("inventory %v is not ready", inventoryRef)
 			logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			conditionFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
+			statusErrorFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
 		} else if !provision &&
 			reflect.TypeOf(DBaaSObject) == reflect.TypeOf(&v1alpha1.DBaaSInstance{}) {
 			err = fmt.Errorf("inventory %v provisioning is disabled", inventoryRef)
 			logger.Error(err, "Inventory provisioning is disabled", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			conditionFn(v1alpha1.DBaaSInventoryNotProvisionable, v1alpha1.MsgInventoryNotProvisionable)
+			statusErrorFn(v1alpha1.DBaaSInventoryNotProvisionable, v1alpha1.MsgInventoryNotProvisionable)
 		} else {
 			return
 		}
 	} else {
-		conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
+		statusErrorFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
 	}
 
 	if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
