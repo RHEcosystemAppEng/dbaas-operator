@@ -103,10 +103,7 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				},
 			}
 			resQuota.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("ResourceQuota"))
-			if err := ctrl.SetControllerReference(&policy, &resQuota, r.Scheme); err != nil {
-				return err
-			}
-			return nil
+			return ctrl.SetControllerReference(&policy, &resQuota, r.Scheme)
 		}); err != nil {
 			if errors.IsConflict(err) {
 				logger.V(1).Info("ResourceQuota resource modified, retry syncing status", "ResourceQuota", resQuota)

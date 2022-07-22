@@ -40,7 +40,7 @@ type DBaaSDefaultPolicyReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (r *DBaaSDefaultPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *DBaaSDefaultPolicyReconciler) Reconcile(ctx context.Context, _ ctrl.Request) (ctrl.Result, error) {
 
 	// on operator startup, create default policy if none exists
 	return r.createDefaultPolicy(ctx)

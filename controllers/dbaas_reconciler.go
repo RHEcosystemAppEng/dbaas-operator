@@ -33,13 +33,14 @@ var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 )
 
+// DBaaSReconciler defines common methods used by other reconcilers
 type DBaaSReconciler struct {
 	client.Client
 	*runtime.Scheme
 	InstallNamespace string
 }
 
-func (r *DBaaSReconciler) getDBaaSProvider(providerName string, ctx context.Context) (*v1alpha1.DBaaSProvider, error) {
+func (r *DBaaSReconciler) getDBaaSProvider(ctx context.Context, providerName string) (*v1alpha1.DBaaSProvider, error) {
 	provider := &v1alpha1.DBaaSProvider{}
 	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, provider); err != nil {
 		return nil, err
@@ -85,10 +86,7 @@ func (r *DBaaSReconciler) providerObjectMutateFn(object client.Object, providerO
 	return func() error {
 		providerObject.UnstructuredContent()["spec"] = spec
 		providerObject.SetOwnerReferences(nil)
-		if err := ctrl.SetControllerReference(object, providerObject, r.Scheme); err != nil {
-			return err
-		}
-		return nil
+		return ctrl.SetControllerReference(object, providerObject, r.Scheme)
 	}
 }
 
@@ -140,22 +138,21 @@ func canProvision(inventory v1alpha1.DBaaSInventory, activePolicy *v1alpha1.DBaa
 	if activePolicy == nil {
 		// not an active namespace
 		return false
-	} else {
-		if inventory.Spec.DisableProvisions != nil {
-			return !*inventory.Spec.DisableProvisions
-		}
-		if activePolicy.Spec.DisableProvisions != nil {
-			return !*activePolicy.Spec.DisableProvisions
-		}
+	}
+	if inventory.Spec.DisableProvisions != nil {
+		return !*inventory.Spec.DisableProvisions
+	}
+	if activePolicy.Spec.DisableProvisions != nil {
+		return !*activePolicy.Spec.DisableProvisions
 	}
 	return true
 }
 
-func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSObject client.Object,
+func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, providerName string, DBaaSObject client.Object,
 	providerObjectKindFn func(*v1alpha1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
 	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,
 	DBaaSObjectConditionsFn func() *[]metav1.Condition, DBaaSObjectReadyType string,
-	ctx context.Context, logger logr.Logger) (result ctrl.Result, recErr error) {
+	logger logr.Logger) (result ctrl.Result, recErr error) {
 
 	var condition *metav1.Condition
 	if cond := apimeta.FindStatusCondition(*DBaaSObjectConditionsFn(), DBaaSObjectReadyType); cond != nil {
@@ -187,7 +184,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 		}
 	}(condition)
 
-	provider, err := r.getDBaaSProvider(providerName, ctx)
+	provider, err := r.getDBaaSProvider(ctx, providerName)
 	if err != nil {
 		recErr = err
 		if errors.IsNotFound(err) {
@@ -227,8 +224,8 @@ func (r *DBaaSReconciler) reconcileProviderResource(providerName string, DBaaSOb
 	return
 }
 
-func (r *DBaaSReconciler) checkInventory(inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
-	conditionFn func(string, string), ctx context.Context, logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
+func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
+	conditionFn func(string, string), logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
 	inventory = &v1alpha1.DBaaSInventory{}
 	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
 		if errors.IsNotFound(err) {

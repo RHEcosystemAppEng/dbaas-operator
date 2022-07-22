@@ -108,8 +108,16 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-fmt: ## Run go fmt against code.
-	go fmt ./...
+install-tools:
+	go install golang.org/x/tools/cmd/goimports@v0.1.11
+	go install github.com/mgechev/revive@v1.2.1
+
+fmt: install-tools
+	goimports -w .
+
+lint: install-tools
+	goimports -d .
+	revive -config ./config.toml ./...
 
 vet: ## Run go vet against code.
 	go vet ./...

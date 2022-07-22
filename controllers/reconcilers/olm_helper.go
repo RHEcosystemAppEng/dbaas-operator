@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
+// CheckOwnerReferenceSet check if the owner reference has been set for DBaaSPlatform CR
 func CheckOwnerReferenceSet(cr *alpha1.DBaaSPlatform, csv *v1alpha1.ClusterServiceVersion, scheme *runtime.Scheme) (bool, error) {
 	gvk, err := apiutil.GVKForObject(cr, scheme)
 	if err != nil {
@@ -44,7 +45,8 @@ func CheckOwnerReferenceSet(cr *alpha1.DBaaSPlatform, csv *v1alpha1.ClusterServi
 	return equal, nil
 }
 
-func GetDBaaSOperatorCSV(namespace string, name string, ctx context.Context, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
+// GetDBaaSOperatorCSV returns the CSV for the DBaaS Operator
+func GetDBaaSOperatorCSV(ctx context.Context, namespace string, name string, serverClient k8sclient.Client) (*v1alpha1.ClusterServiceVersion, error) {
 	csv := GetClusterServiceVersion(namespace, name)
 
 	if err := serverClient.Get(ctx, k8sclient.ObjectKeyFromObject(csv), csv); err != nil {
@@ -53,6 +55,7 @@ func GetDBaaSOperatorCSV(namespace string, name string, ctx context.Context, ser
 	return csv, nil
 }
 
+// GetClusterServiceVersion returns a CSV object
 func GetClusterServiceVersion(namespace string, name string) *v1alpha1.ClusterServiceVersion {
 	return &v1alpha1.ClusterServiceVersion{
 		ObjectMeta: metav1.ObjectMeta{
@@ -63,6 +66,7 @@ func GetClusterServiceVersion(namespace string, name string) *v1alpha1.ClusterSe
 
 }
 
+// GetSubscription returns a Subscription object
 func GetSubscription(namespace string, name string) *v1alpha1.Subscription {
 
 	return &v1alpha1.Subscription{
@@ -74,6 +78,7 @@ func GetSubscription(namespace string, name string) *v1alpha1.Subscription {
 
 }
 
+// GetOperatorGroup returns an OperatorGroup object
 func GetOperatorGroup(namespace string, name string) *coreosv1.OperatorGroup {
 
 	return &coreosv1.OperatorGroup{
@@ -85,6 +90,7 @@ func GetOperatorGroup(namespace string, name string) *coreosv1.OperatorGroup {
 
 }
 
+// GetCatalogSource returns a CatalogSource object
 func GetCatalogSource(namespace string, name string) *v1alpha1.CatalogSource {
 
 	return &v1alpha1.CatalogSource{

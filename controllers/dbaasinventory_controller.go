@@ -92,7 +92,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	//
 	// Provider Inventory
 	//
-	return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+	return r.reconcileProviderResource(ctx,
+		inventory.Spec.ProviderRef.Name,
 		&inventory,
 		func(provider *v1alpha1.DBaaSProvider) string {
 			return provider.Spec.InventoryKind
@@ -111,7 +112,6 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return &inventory.Status.Conditions
 		},
 		v1alpha1.DBaaSInventoryReadyType,
-		ctx,
 		logger,
 	)
 }
