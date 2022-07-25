@@ -472,6 +472,24 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
+                - name: OBSERVATORIUM_GATEWAY
+                  valueFrom:
+                    secretKeyRef:
+                      key: OBSERVATORIUM_GATEWAY
+                      name: secret-dbaas-observatorium
+                      optional: true
+                - name: OBSERVATORIUM_TENANT
+                  valueFrom:
+                    secretKeyRef:
+                      key: OBSERVATORIUM_TENANT
+                      name: secret-dbaas-observatorium
+                      optional: true
+                - name: OBSERVATORIUM_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      key: OBSERVATORIUM_TOKEN
+                      name: secret-dbaas-observatorium
+                      optional: true
                 image: quay.io/ecosystem-appeng/dbaas-operator:v0.3.0
                 imagePullPolicy: Always
                 livenessProbe:

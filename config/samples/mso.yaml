@@ -1,9 +1,0 @@
-apiVersion: monitoring.rhobs/v1alpha1
-kind: MonitoringStack
-metadata:
-  name: dbaas-operator-mso
-spec:
-  logLevel: debug
-  resourceSelector:
-    matchLabels:
-      app: dbaas-prometheus
