@@ -22,7 +22,7 @@ const (
 	metricNameInstanceStatusReady                 = "dbaas_instance_status_ready"
 	metricNameDBaasInstanceDuration               = "dbaas_instance_request_duration_seconds"
 	metricNameInstancePhase                       = "dbaas_instance_phase"
-	metricNameOperatorVersion                     = "dbaas_operator_version"
+	metricNameOperatorVersion                     = "dbaas_version_info"
 
 	// Metrics labels.
 	metricLabelName           = "name"
@@ -45,58 +45,68 @@ const (
 	installationTimeBuckets = 10
 )
 
+// DBaasPlatformInstallationGauge defines a gauge for DBaaSPlatformInstallationStatus
 var DBaasPlatformInstallationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameDBaaSPlatformInstallationStatus,
-	Help: "status of an installation of components and provider operators. values ( success=1, failed=0, in progress=2 ) ",
+	Help: "The status of an installation of components and provider operators. values ( success=1, failed=0, in progress=2 ) ",
 }, []string{metricLabelName, metricLabelStatus, metricLabelVersion})
 
+// DBaaSInventoryStatusGauge defines a gauge for DBaaSInventoryStatus
 var DBaaSInventoryStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInventoryStatusReady,
 	Help: "The status of DBaaS Provider Account, values ( ready=1, error / not ready=0 )",
 }, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
 
+// DBaaSConnectionStatusGauge defines a gauge for DBaaSConnectionStatus
 var DBaaSConnectionStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameConnectionStatusReady,
 	Help: "The status of DBaaS connections, values ( ready=1, error / not ready=0 )",
 }, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceId, metricLabelConnectionName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
 
+// DBaaSInstanceStatusGauge defines a gauge for DBaaSInstanceStatus
 var DBaaSInstanceStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstanceStatusReady,
 	Help: "The status of DBaaS instance, values ( ready=1, error / not ready=0 )",
 }, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
 
+// DBaaSInstancePhaseGauge defines a gauge for DBaaSInstancePhase
 var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstancePhase,
 	Help: "Current status phase of the Instance currently managed by RHODA values ( Pending=-1, Creating=0, Ready=1, Unknown=2, Failed=3, Error=4, Deleting=5 ).",
 }, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, creationTimestamp})
 
+// DBaasStackInstallationHistogram defines a histogram for DBaasStackInstallation
 var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaaSStackInstallationTotalDuration,
-	Help: "How long in seconds installation of a DBaaS stack takes.",
+	Help: "Time in seconds installation of a DBaaS stack takes.",
 	Buckets: prometheus.LinearBuckets(
 		installationTimeStart,
 		installationTimeWidth,
 		installationTimeBuckets),
-}, []string{metricLabelVersion})
+}, []string{metricLabelVersion, creationTimestamp})
 
+// DBaasInventoryRequestDurationSeconds defines a histogram for DBaasInventoryRequestDuration in seconds
 var DBaasInventoryRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaasInventoryDuration,
-	Help: "Duration of upstream calls to provider operator/service endpoints",
+	Help: "Request/Response duration of provider account of upstream calls to provider operator/service endpoints",
 	Buckets: prometheus.LinearBuckets(installationTimeStart,
 		installationTimeWidth,
 		installationTimeBuckets),
 }, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, creationTimestamp})
 
+// DBaasOperatorVersionInfo defines a gauge for DBaaS Operator version
 var DBaasOperatorVersionInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameOperatorVersion,
-	Help: "The current version of DBaas Operator installed in the cluster",
+	Help: "The current version of DBaaS Operator installed in the cluster",
 }, []string{metricLabelVersion})
 
+// DBaasConnectionRequestDurationSeconds defines a histogram for DBaasConnectionRequestDuration
 var DBaasConnectionRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaasConnectionDuration,
-	Help: "Request/Response duration of connection account request of upstream calls to provider operator/service endpoints",
+	Help: "Request/Response duration of connection of upstream calls to provider operator/service endpoints",
 }, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceId, metricLabelConnectionName, metricLabelNameSpace, creationTimestamp})
 
+// DBaasInstanceRequestDurationSeconds defines a histogram for DBaasInstanceRequestDuration
 var DBaasInstanceRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaasInstanceDuration,
 	Help: "Request/Response duration of instance of upstream calls to provider operator/service endpoints",
@@ -107,7 +117,7 @@ type Execution struct {
 	begin time.Time
 }
 
-// NewExecution creates an Execution instance and starts the timer
+// PlatformInstallStart creates an Execution instance and starts the timer
 func PlatformInstallStart() Execution {
 	return Execution{
 		begin: time.Now(),
@@ -115,10 +125,18 @@ func PlatformInstallStart() Execution {
 }
 
 // PlatformStackInstallationMetric is used to log duration and success/failure
-func (e *Execution) PlatformStackInstallationMetric(version string) {
+func (e *Execution) PlatformStackInstallationMetric(platform *dbaasv1alpha1.DBaaSPlatform, version string) {
 	duration := time.Since(e.begin)
 	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: version}).Set(1)
-	DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version}).Observe(duration.Seconds())
+	for _, cond := range platform.Status.Conditions {
+		if cond.Type == dbaasv1alpha1.DBaaSPlatformReadyType {
+			lastTransitionTime := cond.LastTransitionTime
+			duration = lastTransitionTime.Sub(platform.CreationTimestamp.Time)
+			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, creationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
+		} else {
+			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, creationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
+		}
+	}
 }
 
 // SetPlatformStatusMetric exposes dbaas_platform_status metric for each platform
@@ -128,12 +146,17 @@ func SetPlatformStatusMetric(platformName dbaasv1alpha1.PlatformsName, status db
 
 		case dbaasv1alpha1.ResultFailed:
 			DBaasPlatformInstallationGauge.With(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(status), metricLabelVersion: version}).Set(float64(0))
+			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultSuccess), metricLabelVersion: version})
+			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultInProgress), metricLabelVersion: version})
 		case dbaasv1alpha1.ResultSuccess:
 			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultInProgress), metricLabelVersion: version})
 			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultFailed), metricLabelVersion: version})
 			DBaasPlatformInstallationGauge.With(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(status), metricLabelVersion: version}).Set(float64(1))
 		case dbaasv1alpha1.ResultInProgress:
 			DBaasPlatformInstallationGauge.With(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(status), metricLabelVersion: version}).Set(float64(2))
+			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultSuccess), metricLabelVersion: version})
+			DBaasPlatformInstallationGauge.Delete(prometheus.Labels{metricLabelName: string(platformName), metricLabelStatus: string(dbaasv1alpha1.ResultFailed), metricLabelVersion: version})
+
 		}
 	}
 }
@@ -145,13 +168,13 @@ func CleanPlatformStatusMetric(platformName dbaasv1alpha1.PlatformsName, status 
 	}
 }
 
-// SetInventoryMetrics
+// SetInventoryMetrics set the metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution) {
 	setInventoryStatusMetrics(inventory)
 	setInventoryRequestDurationSeconds(execution, inventory)
 }
 
-// setInventoryStatusMetrics
+// setInventoryStatusMetrics set the metrics for inventory status
 func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
@@ -170,14 +193,13 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 	}
 }
 
-// setInventoryRequestDurationSeconds
+// setInventoryRequestDurationSeconds set the metrics for inventory request duration in seconds
 func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory) {
 	httpDuration := time.Since(execution.begin)
-	lastTransitionTime := metav1.Time{}
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
 			if cond.Status == metav1.ConditionTrue {
-				lastTransitionTime = cond.LastTransitionTime
+				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(inventory.CreationTimestamp.Time)
 				DBaasInventoryRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name,
 					metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, creationTimestamp: inventory.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
@@ -190,7 +212,7 @@ func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1al
 	}
 }
 
-// CleanInventoryMetrics
+// CleanInventoryMetrics delete inventory metrics based on the condition type
 func CleanInventoryMetrics(inventory *dbaasv1alpha1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		switch cond.Type {
@@ -202,13 +224,13 @@ func CleanInventoryMetrics(inventory *dbaasv1alpha1.DBaaSInventory) {
 	}
 }
 
-// SetConnectionMetrics
+// SetConnectionMetrics set the metrics for a connection
 func SetConnectionMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection, execution Execution) {
 	setConnectionStatusMetrics(provider, account, connection)
 	setConnectionRequestDurationSeconds(provider, account, connection, execution)
 }
 
-// setConnectionStatusMetrics
+// setConnectionStatusMetrics set the metrics based on connection status
 func setConnectionStatusMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection) {
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionReadyType {
@@ -230,14 +252,13 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 	}
 }
 
-// setConnectionRequestDurationSeconds
+// setConnectionRequestDurationSeconds set the metrics for connection request duration in seconds
 func setConnectionRequestDurationSeconds(provider string, account string, connection v1alpha1.DBaaSConnection, execution Execution) {
 	httpDuration := time.Since(execution.begin)
-	lastTransitionTime := metav1.Time{}
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionProviderSyncType {
 			if cond.Status == metav1.ConditionTrue {
-				lastTransitionTime = cond.LastTransitionTime
+				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(connection.CreationTimestamp.Time)
 				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceId: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
 					metricLabelNameSpace: connection.Namespace, creationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
@@ -251,7 +272,7 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 	}
 }
 
-// CleanConnectionMetrics
+// CleanConnectionMetrics delete connection metrics based on the condition type
 func CleanConnectionMetrics(provider string, account string, connection *dbaasv1alpha1.DBaaSConnection) {
 	for _, cond := range connection.Status.Conditions {
 		switch cond.Type {
@@ -264,7 +285,7 @@ func CleanConnectionMetrics(provider string, account string, connection *dbaasv1
 	}
 }
 
-// SetInstanceMetrics
+// SetInstanceMetrics set the metrics for an instance
 func SetInstanceMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance, execution Execution) {
 	setInstanceStatusMetrics(provider, account, instance)
 	setInstancePhaseMetrics(provider, account, instance)
@@ -272,7 +293,7 @@ func SetInstanceMetrics(provider string, account string, instance dbaasv1alpha1.
 
 }
 
-// setInstanceStatusMetrics
+// setInstanceStatusMetrics set the metrics based on instance status
 func setInstanceStatusMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
 	for _, cond := range instance.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInstanceReadyType {
@@ -296,14 +317,13 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1a
 	}
 }
 
-// setInstanceRequestDurationSeconds
+// setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
 func setInstanceRequestDurationSeconds(provider string, account string, instance v1alpha1.DBaaSInstance, execution Execution) {
 	httpDuration := time.Since(execution.begin)
-	lastTransitionTime := metav1.Time{}
 	for _, cond := range instance.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInstanceProviderSyncType {
 			if cond.Status == metav1.ConditionTrue {
-				lastTransitionTime = cond.LastTransitionTime
+				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(instance.CreationTimestamp.Time)
 				DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), creationTimestamp: instance.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			} else {
@@ -314,7 +334,7 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 	}
 }
 
-//setInstancePhaseMetrics
+// setInstancePhaseMetrics set the metrics for instance phase
 func setInstancePhaseMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
 	var phase float64
 
@@ -346,7 +366,7 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1al
 	}).Set(phase)
 }
 
-// CleanInstanceMetrics
+// CleanInstanceMetrics delete instance metrics based on the condition type
 func CleanInstanceMetrics(provider string, account string, instance *dbaasv1alpha1.DBaaSInstance) {
 	for _, cond := range instance.Status.Conditions {
 		switch cond.Type {

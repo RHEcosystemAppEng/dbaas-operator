@@ -65,23 +65,35 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: OBSERVATORIUM_GATEWAY
+        - name: AUTH_TYPE
           valueFrom:
             secretKeyRef:
-              key: OBSERVATORIUM_GATEWAY
-              name: secret-dbaas-observatorium
+              key: AUTH_TYPE
+              name: dbaas-operator-dev-prom-remote-write
               optional: true
-        - name: OBSERVATORIUM_TENANT
+        - name: RHOBS_API_URL
           valueFrom:
             secretKeyRef:
-              key: OBSERVATORIUM_TENANT
-              name: secret-dbaas-observatorium
+              key: RHOBS_API_URL
+              name: dbaas-operator-dev-prom-remote-write
               optional: true
-        - name: OBSERVATORIUM_TOKEN
+        - name: RH_SSO_TOKEN_ENDPOINT
           valueFrom:
             secretKeyRef:
-              key: OBSERVATORIUM_TOKEN
-              name: secret-dbaas-observatorium
+              key: RH_SSO_TOKEN_ENDPOINT
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: RHOBS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: RHOBS_TOKEN
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: ADDON_NAME
+          valueFrom:
+            secretKeyRef:
+              key: ADDON_NAME
+              name: dbaas-operator-dev-prom-remote-write
               optional: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

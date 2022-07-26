@@ -19,9 +19,9 @@ spec:
         - name: CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN
           value: console-telemetry-plugin:0.1.4
         - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
-          value: quay.io/rhobs/observability-operator-catalog:0.0.12
+          value: quay.io/rhobs/observability-operator-catalog:0.0.13
         - name: CSV_VERSION_OBSERVABILITY
-          value: observability-operator.v0.0.12
+          value: observability-operator.v0.0.13
         - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
           value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
         - name: CSV_VERSION_CRUNCHY_BRIDGE

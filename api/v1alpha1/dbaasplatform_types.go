@@ -69,6 +69,16 @@ type PlatformConfig struct {
 	Type           PlatformsType
 }
 
+// ObservabilityConfig defines parameters for a observatorium
+type ObservabilityConfig struct {
+	AuthType           string
+	RemoteWritesURL    string
+	RHSSOTokenURL      string
+	ObservatoriumToken string
+	AddonName          string
+	RHOBSSecretName    string
+}
+
 // DBaaSPlatformSpec defines the desired state of DBaaSPlatform
 type DBaaSPlatformSpec struct {
 	// +kubebuilder:validation:Minimum=1
