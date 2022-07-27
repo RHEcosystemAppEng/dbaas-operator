@@ -40,11 +40,13 @@ const (
 
 	// DBAAS_DYNAMIC_PLUGIN
 	DBAAS_DYNAMIC_PLUGIN_IMG          = "quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.2.0"
+	DBAAS_DYNAMIC_PLUGIN_VERSION      = "dbaas-dynamic-plugin:0.2.0"
 	DBAAS_DYNAMIC_PLUGIN_NAME         = "dbaas-dynamic-plugin"
 	DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME = "OpenShift Database as a Service Dynamic Plugin"
 
 	// CONSOLE_TELEMETRY_PLUGIN
 	CONSOLE_TELEMETRY_PLUGIN_IMG             = "quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4"
+	CONSOLE_TELEMETRY_PLUGIN_VERSION         = "console-telemetry-plugin:0.1.4"
 	CONSOLE_TELEMETRY_PLUGIN_NAME            = "console-telemetry-plugin"
 	CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME    = "Telemetry Plugin"
 	CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV = "SEGMENT_KEY"
@@ -58,6 +60,15 @@ const (
 	RDS_PROVIDER_DEPLOYMENT  = "rds-dbaas-operator-controller-manager"
 	RDS_PROVIDER_PKG         = "rds-dbaas-operator"
 	RDS_PROVIDER_CHANNEL     = "alpha"
+
+	// OBSERVABILITY
+	OBSERVABILITY_CATALOG_IMG = "quay.io/rhobs/observability-operator-catalog:0.0.12"
+	OBSERVABILITY_CSV         = "observability-operator.v0.0.12"
+	OBSERVABILITY_NAME        = "observability"
+	OBSERVABILITY_DISPLAYNAME = "observability Operator"
+	OBSERVABILITY_DEPLOYMENT  = "observability-operator"
+	OBSERVABILITY_PKG         = "observability-operator"
+	OBSERVABILITY_CHANNEL     = "stable"
 )
 
 var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
@@ -65,12 +76,14 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		Name:        DBAAS_DYNAMIC_PLUGIN_NAME,
 		Image:       DBAAS_DYNAMIC_PLUGIN_IMG,
 		DisplayName: DBAAS_DYNAMIC_PLUGIN_DISPLAY_NAME,
+		CSV:         DBAAS_DYNAMIC_PLUGIN_VERSION,
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
 		Name:        CONSOLE_TELEMETRY_PLUGIN_NAME,
 		Image:       CONSOLE_TELEMETRY_PLUGIN_IMG,
 		DisplayName: CONSOLE_TELEMETRY_PLUGIN_DISPLAY_NAME,
+		CSV:         CONSOLE_TELEMETRY_PLUGIN_VERSION,
 		Envs:        []corev1.EnvVar{{Name: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY_ENV, Value: CONSOLE_TELEMETRY_PLUGIN_SEGMENT_KEY}},
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
@@ -82,7 +95,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    CRUNCHY_BRIDGE_PKG,
 		Channel:        CRUNCHY_BRIDGE_CHANNEL,
 		DisplayName:    CRUNCHY_BRIDGE_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.MongoDBAtlasInstallation: {
 		Name:           MONGODB_ATLAS_NAME,
@@ -92,7 +105,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    MONGODB_ATLAS_PKG,
 		Channel:        MONGODB_ATLAS_CHANNEL,
 		DisplayName:    MONGODB_ATLAS_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.CockroachDBInstallation: {
 		Name:           COCKROACHDB_NAME,
@@ -102,7 +115,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    COCKROACHDB_PKG,
 		Channel:        COCKROACHDB_CHANNEL,
 		DisplayName:    COCKROACHDB_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
@@ -115,6 +128,16 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    RDS_PROVIDER_PKG,
 		Channel:        RDS_PROVIDER_CHANNEL,
 		DisplayName:    RDS_PROVIDER_DISPLAYNAME,
-		Type:           dbaasv1alpha1.TypeProvider,
+		Type:           dbaasv1alpha1.TypeOperator,
+	},
+	dbaasv1alpha1.ObservabilityInstallation: {
+		Name:           OBSERVABILITY_NAME,
+		CSV:            OBSERVABILITY_CSV,
+		DeploymentName: OBSERVABILITY_DEPLOYMENT,
+		Image:          OBSERVABILITY_CATALOG_IMG,
+		PackageName:    OBSERVABILITY_PKG,
+		Channel:        OBSERVABILITY_CHANNEL,
+		DisplayName:    OBSERVABILITY_DISPLAYNAME,
+		Type:           dbaasv1alpha1.TypeOperator,
 	},
 }

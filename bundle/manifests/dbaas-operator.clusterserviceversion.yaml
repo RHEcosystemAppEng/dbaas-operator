@@ -258,6 +258,14 @@ spec:
           - update
           - watch
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - console.openshift.io
           resources:
           - consoleplugins
@@ -321,6 +329,17 @@ spec:
           - get
           - patch
           - update
+        - apiGroups:
+          - monitoring.rhobs
+          resources:
+          - monitoringstacks
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
         - apiGroups:
           - operator.openshift.io
           resources:
@@ -414,7 +433,7 @@ spec:
                   readOnlyRootFilesystem: true
               - args:
                 - --health-probe-bind-address=:8081
-                - --metrics-bind-address=127.0.0.1:8080
+                - --metrics-bind-address=0.0.0.0:8080
                 - --leader-elect
                 command:
                 - /manager
@@ -436,6 +455,8 @@ spec:
                 - containerPort: 9443
                   name: webhook-server
                   protocol: TCP
+                - containerPort: 8080
+                  name: metrics
                 readinessProbe:
                   httpGet:
                     path: /readyz
