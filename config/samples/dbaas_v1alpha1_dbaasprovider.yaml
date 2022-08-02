@@ -25,10 +25,12 @@ spec:
       displayName: Organization Public Key
       type: string
       required: true
+      helpText: string
     - key: privateApiKey
       displayName: Organization Private Key
       type: maskedstring
       required: true
+      helpText: string
   allowsFreeTrial: true
   instanceParameterSpecs:
     - name: clusterName

@@ -139,6 +139,9 @@ type CredentialField struct {
 
 	// If this field is required or not
 	Required bool `json:"required"`
+
+	//Additional info about the field
+	HelpText string `json:"helpText,omitempty"`
 }
 
 // DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
