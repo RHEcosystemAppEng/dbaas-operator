@@ -166,6 +166,8 @@ catalog-update:
 	-oc delete catalogsource mongodb-atlas-catalogsource -n openshift-marketplace
 	-oc delete catalogsource crunchy-bridge-catalogsource -n openshift-marketplace
 	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
+	-oc delete catalogsource observability-catalogsource -n openshift-marketplace
+	-oc delete catalogsource rds-provider-catalogsource -n openshift-marketplace
 	 oc apply -f config/samples/catalog-source.yaml
 
 deploy-sample-app:
@@ -209,11 +211,19 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-.PHONY: bundle
-bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
+.PHONY: sdk-manifests
+sdk-manifests: manifests kustomize ## Generate bundle manifests and metadata.
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+
+.PHONY: bundle
+bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	operator-sdk bundle validate ./bundle
+
+.PHONY: bundle-w-digests
+bundle-w-digests: sdk-manifests ## Generate bundle manifests w/ image digests, then validate generated files.
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
 .PHONY: bundle-build
