@@ -35,9 +35,8 @@ type DBaaSOperatorInventorySpec struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
+// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
 //+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
-// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid namespace,
-// determined by the existence of a DBaaSPolicy object.
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

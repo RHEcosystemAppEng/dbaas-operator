@@ -20,8 +20,9 @@ type EventHandlerWithDelete struct {
 	}
 }
 
+// Delete implements a handler for the Delete event.
 func (d *EventHandlerWithDelete) Delete(e event.DeleteEvent, _ workqueue.RateLimitingInterface) {
-	objectKey := ObjectKeyFromObject(e.Object)
+	objectKey := objectKeyFromObject(e.Object)
 	log := zap.S().With("resource", objectKey)
 
 	if err := d.Controller.Delete(e); err != nil && k8serrors.IsNotFound(err) {
@@ -29,10 +30,10 @@ func (d *EventHandlerWithDelete) Delete(e event.DeleteEvent, _ workqueue.RateLim
 	}
 }
 
-func ObjectKeyFromObject(obj metav1.Object) client.ObjectKey {
-	return ObjectKey(obj.GetNamespace(), obj.GetName())
+func objectKeyFromObject(obj metav1.Object) client.ObjectKey {
+	return objectKey(obj.GetNamespace(), obj.GetName())
 }
 
-func ObjectKey(namespace, name string) client.ObjectKey {
+func objectKey(namespace, name string) client.ObjectKey {
 	return types.NamespacedName{Name: name, Namespace: namespace}
 }

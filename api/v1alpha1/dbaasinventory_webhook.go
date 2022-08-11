@@ -37,11 +37,12 @@ const (
 
 // log is for logging in this package.
 var dbaasinventorylog = logf.Log.WithName("dbaasinventory-resource")
-var inventoryWebhookApiClient client.Client = nil
+var inventoryWebhookAPIClient client.Client
 
+// SetupWebhookWithManager sets up the webhook with the Manager.
 func (r *DBaaSInventory) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	if inventoryWebhookApiClient == nil {
-		inventoryWebhookApiClient = mgr.GetClient()
+	if inventoryWebhookAPIClient == nil {
+		inventoryWebhookAPIClient = mgr.GetClient()
 	}
 	// index inventory by `spec.providerRef.name`
 	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &DBaaSInventory{}, providerNameKey, func(rawObj client.Object) []string {
@@ -85,12 +86,12 @@ func validateInventory(inv *DBaaSInventory, oldInv *DBaaSInventory) error {
 	}
 	// Retrieve the secret object
 	secret := &corev1.Secret{}
-	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: inv.Namespace}, secret); err != nil {
+	if err := inventoryWebhookAPIClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.DBaaSInventorySpec.CredentialsRef.Name, Namespace: inv.Namespace}, secret); err != nil {
 		return err
 	}
 	// Retrieve the provider object
 	provider := &DBaaSProvider{}
-	if err := inventoryWebhookApiClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.ProviderRef.Name, Namespace: ""}, provider); err != nil {
+	if err := inventoryWebhookAPIClient.Get(context.TODO(), types.NamespacedName{Name: inv.Spec.ProviderRef.Name, Namespace: ""}, provider); err != nil {
 		return err
 	}
 	// Check RDS
@@ -117,7 +118,7 @@ func validateInventoryMandatoryFields(inv *DBaaSInventory, secret *corev1.Secret
 
 func validateRDS() error {
 	rdsInventoryList := &DBaaSInventoryList{}
-	if err := inventoryWebhookApiClient.List(context.TODO(), rdsInventoryList, client.MatchingFields{providerNameKey: rdsRegistration}); err != nil {
+	if err := inventoryWebhookAPIClient.List(context.TODO(), rdsInventoryList, client.MatchingFields{providerNameKey: rdsRegistration}); err != nil {
 		return err
 	}
 	if len(rdsInventoryList.Items) > 0 {

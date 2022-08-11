@@ -1,8 +1,9 @@
-package quickstart_installation
+package quickstartinstallation
 
 import (
 	"context"
 	_ "embed"
+
 	consolev1 "github.com/openshift/api/console/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -29,30 +30,32 @@ var devConnectQuickStart []byte
 //go:embed installing-the-red-hat-openshift-database-access-add-on-quick-start.yaml
 var installAddonQuickStart []byte
 
-var QuickStarts = map[string][]byte{
+var quickStarts = map[string][]byte{
 	"accessing-the-database-access-menu-for-configuring-and-monitoring":        adminQuickStart,
 	"accessing-the-developer-workspace-and-adding-a-database-instance":         devInstanceQuickStart,
 	"connecting-an-application-to-a-database-instance-using-the-topology-view": devConnectQuickStart,
 	"installing-the-red-hat-openshift-database-access-add-on":                  installAddonQuickStart,
 }
 
-type Reconciler struct {
+type reconciler struct {
 	client client.Client
 	logger logr.Logger
 	scheme *runtime.Scheme
 }
 
+// NewReconciler returns a quickstartinstallation reconciler
 func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger) reconcilers.PlatformReconciler {
-	return &Reconciler{
+	return &reconciler{
 		client: client,
 		scheme: scheme,
 		logger: logger,
 	}
 }
 
-func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, platformStatus *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
-	for qsName, qsBytes := range QuickStarts {
-		status, err := r.createQuickStartCR(qsName, qsBytes, ctx)
+// Reconcile reconciles a quickstart platform
+func (r *reconciler) Reconcile(ctx context.Context, _ *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+	for qsName, qsBytes := range quickStarts {
+		status, err := r.createQuickStartCR(ctx, qsName, qsBytes)
 		if status != v1alpha1.ResultSuccess {
 			return status, err
 		}
@@ -60,7 +63,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) createQuickStartCR(qsName string, qsBytes []byte, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createQuickStartCR(ctx context.Context, qsName string, qsBytes []byte) (v1alpha1.PlatformsInstlnStatus, error) {
 	quickStart := r.getQuickStartModel(qsName)
 	quickStartFromFile := &consolev1.ConsoleQuickStart{}
 	err := yaml.Unmarshal(qsBytes, quickStartFromFile)
@@ -84,7 +87,7 @@ func (r *Reconciler) createQuickStartCR(qsName string, qsBytes []byte, ctx conte
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) getQuickStartModel(name string) *consolev1.ConsoleQuickStart {
+func (r *reconciler) getQuickStartModel(name string) *consolev1.ConsoleQuickStart {
 	return &consolev1.ConsoleQuickStart{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -92,8 +95,8 @@ func (r *Reconciler) getQuickStartModel(name string) *consolev1.ConsoleQuickStar
 	}
 }
 
-func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
-	for qsName := range QuickStarts {
+func (r *reconciler) Cleanup(ctx context.Context, _ *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+	for qsName := range quickStarts {
 		quickstart := r.getQuickStartModel(qsName)
 		err := r.client.Delete(ctx, quickstart)
 		if err != nil && !errors.IsNotFound(err) {

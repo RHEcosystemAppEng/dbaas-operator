@@ -1,9 +1,10 @@
-package providers_installation
+package providersinstallation
 
 import (
 	"context"
 	_ "embed"
 	"fmt"
+
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	opapi "github.com/openshift/api/config/v1"
 	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
@@ -14,15 +15,15 @@ import (
 )
 
 //go:embed observability-operator-cr.yaml
-var ObservabilityOperatorCRBytes []byte
+var observabilityOperatorCRBytes []byte
 
 const (
-	VersionKeyName = "version"
-	ClusterIDLabel = "cluster_id"
-	CRName         = "dbaas-operator-mso"
+	versionKeyName = "version"
+	clusterIDLabel = "cluster_id"
+	crName         = "dbaas-operator-mso"
 )
 
-func (r *Reconciler) createObservabilityCR(cr *dbaasv1alpha1.DBaaSPlatform, ctx context.Context) (dbaasv1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha1.DBaaSPlatform) (dbaasv1alpha1.PlatformsInstlnStatus, error) {
 
 	monitoringStackCR := &msoapi.MonitoringStack{}
 	namespace := cr.Namespace
@@ -37,23 +38,23 @@ func (r *Reconciler) createObservabilityCR(cr *dbaasv1alpha1.DBaaSPlatform, ctx 
 	}
 	if len(monitoringStackList.Items) == 0 {
 
-		err = yaml.Unmarshal(ObservabilityOperatorCRBytes, monitoringStackCR)
+		err = yaml.Unmarshal(observabilityOperatorCRBytes, monitoringStackCR)
 		if err != nil {
 			return dbaasv1alpha1.ResultFailed, err
 		}
 
 		monitoringStackCR.ObjectMeta = metav1.ObjectMeta{
-			Name:      CRName,
+			Name:      crName,
 			Namespace: cr.Namespace,
 		}
 
-		clusterID, err := GetClusterId(ctx, r.client)
+		clusterID, err := getClusterID(ctx, r.client)
 		if err != nil {
 			return dbaasv1alpha1.ResultFailed, err
 		}
 		if clusterID != "" {
 
-			monitoringStackCR.Spec.PrometheusConfig.ExternalLabels = map[string]string{ClusterIDLabel: clusterID}
+			monitoringStackCR.Spec.PrometheusConfig.ExternalLabels = map[string]string{clusterIDLabel: clusterID}
 		}
 
 		err = controllerutil.SetControllerReference(cr, monitoringStackCR, r.scheme)
@@ -78,11 +79,11 @@ func (r *Reconciler) createObservabilityCR(cr *dbaasv1alpha1.DBaaSPlatform, ctx 
 
 }
 
-// Returns the cluster id by querying the ClusterVersion resource
-func GetClusterId(ctx context.Context, client k8sclient.Client) (string, error) {
+// getClusterID Returns the cluster id by querying the ClusterVersion resource
+func getClusterID(ctx context.Context, client k8sclient.Client) (string, error) {
 	v := &opapi.ClusterVersion{}
 	selector := k8sclient.ObjectKey{
-		Name: VersionKeyName,
+		Name: versionKeyName,
 	}
 
 	err := client.Get(ctx, selector, v)

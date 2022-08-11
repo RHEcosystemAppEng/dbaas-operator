@@ -61,7 +61,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if inventory, validNS, provision, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
+	if inventory, validNS, provision, err := r.checkInventory(ctx, instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionFalse,
@@ -69,7 +69,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-	}, ctx, logger); err != nil {
+	}, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
@@ -79,7 +79,8 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else {
-		result, err := r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+		result, err := r.reconcileProviderResource(ctx,
+			inventory.Spec.ProviderRef.Name,
 			&instance,
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
@@ -98,7 +99,6 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return &instance.Status.Conditions
 			},
 			v1alpha1.DBaaSInstanceReadyType,
-			ctx,
 			logger,
 		)
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
@@ -148,7 +148,7 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 		log.Error(nil, "Ignoring malformed Delete()", "Object", e.Object)
 		return nil
 	}
-	log.Info("instanceObj", "instanceObj", ObjectKeyFromObject(instanceObj))
+	log.Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
 
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
