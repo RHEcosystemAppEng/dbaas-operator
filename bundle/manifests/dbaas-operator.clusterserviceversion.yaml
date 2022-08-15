@@ -158,7 +158,7 @@ metadata:
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
-    operators.operatorframework.io/builder: operator-sdk-v1.10.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.19.0+git
     operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
@@ -258,6 +258,14 @@ spec:
           - update
           - watch
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - clusterversions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - console.openshift.io
           resources:
           - consoleplugins
@@ -322,6 +330,17 @@ spec:
           - patch
           - update
         - apiGroups:
+          - monitoring.rhobs
+          resources:
+          - monitoringstacks
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+          - watch
+        - apiGroups:
           - operator.openshift.io
           resources:
           - consoles
@@ -380,7 +399,9 @@ spec:
           - create
         serviceAccountName: dbaas-operator-controller-manager
       deployments:
-      - name: dbaas-operator-controller-manager
+      - label:
+          control-plane: controller-manager
+        name: dbaas-operator-controller-manager
         spec:
           replicas: 1
           selector:
@@ -400,7 +421,7 @@ spec:
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=10
-                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.8
+                image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.9
                 name: kube-rbac-proxy
                 ports:
                 - containerPort: 8443
@@ -414,11 +435,39 @@ spec:
                   readOnlyRootFilesystem: true
               - args:
                 - --health-probe-bind-address=:8081
-                - --metrics-bind-address=127.0.0.1:8080
+                - --metrics-bind-address=0.0.0.0:8080
                 - --leader-elect
                 command:
                 - /manager
                 env:
+                - name: RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN
+                  value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
+                - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
+                  value: dbaas-dynamic-plugin:0.3.0
+                - name: RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN
+                  value: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
+                - name: CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN
+                  value: console-telemetry-plugin:0.1.4
+                - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
+                  value: quay.io/rhobs/observability-operator-catalog:0.0.12
+                - name: CSV_VERSION_OBSERVABILITY
+                  value: observability-operator.v0.0.12
+                - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
+                  value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
+                - name: CSV_VERSION_CRUNCHY_BRIDGE
+                  value: crunchy-bridge-operator.v0.0.5
+                - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
+                  value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+                - name: CSV_VERSION_MONGODB_ATLAS
+                  value: mongodb-atlas-kubernetes.v0.2.0
+                - name: RELATED_IMAGE_COCKROACHDB_CATALOG
+                  value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3
+                - name: CSV_VERSION_COCKROACHDB
+                  value: ccapi-k8s-operator.v0.0.3
+                - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
+                  value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0
+                - name: CSV_VERSION_RDS_PROVIDER
+                  value: rds-dbaas-operator.v0.1.0
                 - name: INSTALL_NAMESPACE
                   valueFrom:
                     fieldRef:
@@ -436,6 +485,8 @@ spec:
                 - containerPort: 9443
                   name: webhook-server
                   protocol: TCP
+                - containerPort: 8080
+                  name: metrics
                 readinessProbe:
                   httpGet:
                     path: /readyz
@@ -515,6 +566,21 @@ spec:
   provider:
     name: Red Hat
     url: https://www.redhat.com
+  relatedImages:
+  - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
+    name: dbaas-dynamic-plugin
+  - image: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
+    name: console-telemetry-plugin
+  - image: quay.io/rhobs/observability-operator-catalog:0.0.12
+    name: observability-catalog
+  - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
+    name: crunchy-bridge-catalog
+  - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+    name: mongodb-atlas-catalog
+  - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3
+    name: cockroachdb-catalog
+  - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0
+    name: rds-provider-catalog
   replaces: dbaas-operator.v0.2.0
   version: 0.3.0
   webhookdefinitions:

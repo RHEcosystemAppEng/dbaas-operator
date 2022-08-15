@@ -37,6 +37,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - config.openshift.io
+  resources:
+  - clusterversions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - console.openshift.io
   resources:
   - consoleplugins
@@ -100,6 +108,17 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - monitoring.rhobs
+  resources:
+  - monitoringstacks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - operator.openshift.io
   resources:

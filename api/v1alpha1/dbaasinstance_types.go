@@ -23,8 +23,8 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSInstance"
 // DBaaSInstance is the Schema for the dbaasinstances API
+//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSInstance"
 type DBaaSInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

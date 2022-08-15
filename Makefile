@@ -21,7 +21,7 @@ CONTAINER_ENGINE?=docker
 ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-# 0.2.0 catalog image - quay.io/osd-addons/dbaas-operator-index@sha256:b699851c2a839ee85a98a8daf3b619c0b34716c081046b229c37e8ea2d2efa96
+# 0.2.0 catalog image - quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
 CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
@@ -108,8 +108,16 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-fmt: ## Run go fmt against code.
-	go fmt ./...
+install-tools:
+	go install golang.org/x/tools/cmd/goimports@v0.1.11
+	go install github.com/mgechev/revive@v1.2.1
+
+fmt: install-tools
+	goimports -w .
+
+lint: install-tools
+	goimports -d .
+	revive -config ./config.toml ./...
 
 vet: ## Run go vet against code.
 	go vet ./...
@@ -130,7 +138,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 docker-build: test ## Build docker image with the manager.
-	$(CONTAINER_ENGINE) build -t ${IMG} .
+	$(CONTAINER_ENGINE) build --pull --platform linux/amd64 -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.
 	$(CONTAINER_ENGINE) push ${IMG}
@@ -166,6 +174,8 @@ catalog-update:
 	-oc delete catalogsource mongodb-atlas-catalogsource -n openshift-marketplace
 	-oc delete catalogsource crunchy-bridge-catalogsource -n openshift-marketplace
 	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
+	-oc delete catalogsource observability-catalogsource -n openshift-marketplace
+	-oc delete catalogsource rds-provider-catalogsource -n openshift-marketplace
 	 oc apply -f config/samples/catalog-source.yaml
 
 deploy-sample-app:
@@ -209,16 +219,24 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-.PHONY: bundle
-bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
+.PHONY: sdk-manifests
+sdk-manifests: manifests kustomize ## Generate bundle manifests and metadata.
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+
+.PHONY: bundle
+bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	operator-sdk bundle validate ./bundle
+
+.PHONY: bundle-w-digests
+bundle-w-digests: sdk-manifests ## Generate bundle manifests w/ image digests, then validate generated files.
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	operator-sdk bundle validate ./bundle
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
-	$(CONTAINER_ENGINE) build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	$(CONTAINER_ENGINE) build -f bundle.Dockerfile --platform linux/amd64 -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
@@ -233,7 +251,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.17.3/$${OS}-$${ARCH}-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.2/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
@@ -268,3 +286,11 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+
+.PHONY: wrapper-build
+wrapper-build: ## Build the catalog wrapper image.
+	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper .
+
+.PHONY: wrapper-push
+wrapper-push: ## Push the catalog wrapper image.
+	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper 

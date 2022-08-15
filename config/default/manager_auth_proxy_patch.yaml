@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
       - name: kube-rbac-proxy
-        image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.8
+        image: registry.redhat.io/openshift4/ose-kube-rbac-proxy:v4.9
         args:
         - "--secure-listen-address=0.0.0.0:8443"
         - "--upstream=http://127.0.0.1:8080/"
@@ -26,7 +26,10 @@ spec:
             drop:
             - ALL
       - name: manager
+        ports:
+          - containerPort: 8080
+            name: metrics
         args:
         - "--health-probe-bind-address=:8081"
-        - "--metrics-bind-address=127.0.0.1:8080"
+        - "--metrics-bind-address=0.0.0.0:8080"
         - "--leader-elect"

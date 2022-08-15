@@ -33,6 +33,7 @@ import (
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,10 +43,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	customMetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
-	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -56,6 +60,17 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	// Register custom metrics with the global prometheus registry
+	customMetrics.Registry.MustRegister(controllers.DBaasStackInstallationHistogram)
+	customMetrics.Registry.MustRegister(controllers.DBaasPlatformInstallationGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSConnectionStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstanceStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInstancePhaseGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaaSInventoryStatusGauge)
+	customMetrics.Registry.MustRegister(controllers.DBaasInventoryRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasConnectionRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasInstanceRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(controllers.DBaasOperatorVersionInfo)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))
@@ -65,6 +80,7 @@ func init() {
 	utilruntime.Must(oauthzv1.Install(scheme))
 	utilruntime.Must(rbacv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1.AddToScheme(scheme))
+	utilruntime.Must(msoapi.AddToScheme(scheme))
 
 	//+kubebuilder:scaffold:scheme
 }

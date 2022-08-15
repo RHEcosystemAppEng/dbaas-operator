@@ -1,4 +1,4 @@
-package console_plugin
+package consoleplugin
 
 import (
 	"context"
@@ -25,33 +25,36 @@ const (
 	consolePort       = 9001
 )
 
-type Reconciler struct {
+type reconciler struct {
 	client client.Client
 	logger logr.Logger
 	scheme *runtime.Scheme
 	config v1alpha1.PlatformConfig
 }
 
+// NewReconciler returns a plugin installation reconciler
 func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, config v1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
-	return &Reconciler{
+	return &reconciler{
 		client: client,
 		scheme: scheme,
 		logger: logger,
 		config: config,
 	}
 }
-func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, status2 *v1alpha1.DBaaSPlatformStatus) (v1alpha1.PlatformsInstlnStatus, error) {
-	status, err := r.reconcileService(cr, ctx)
+
+// Reconcile deploys the dynamic console plugin
+func (r *reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+	status, err := r.reconcileService(ctx, cr)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
-	status, err = r.reconcileDeployment(cr, ctx)
+	status, err = r.reconcileDeployment(ctx, cr)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
 
 	// create Console Plugin CR resource that includes Console Plugin service name.
-	status, err = r.createConsolePluginCR(cr, ctx)
+	status, err = r.createConsolePluginCR(ctx, cr)
 	if status != v1alpha1.ResultSuccess {
 		return status, err
 	}
@@ -64,7 +67,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform, 
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+// Cleanup cleanup resources related to the console plugin
+func (r *reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
 	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
@@ -97,7 +101,7 @@ func (r *Reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) reconcileService(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
 	service := r.getService(cr)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 		if err := ctrl.SetControllerReference(cr, service, r.scheme); err != nil {
@@ -137,7 +141,7 @@ func (r *Reconciler) reconcileService(cr *v1alpha1.DBaaSPlatform, ctx context.Co
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
 	deployment := r.getDeployment(cr)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		if err := ctrl.SetControllerReference(cr, deployment, r.scheme); err != nil {
@@ -166,7 +170,7 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 				"app": r.config.Name,
 			},
 		}
-		socketHandler := v1.Handler{
+		socketHandler := v1.ProbeHandler{
 			TCPSocket: &v1.TCPSocketAction{Port: intstr.FromInt(consolePort)},
 		}
 		deployment.Spec.Template.Spec.Containers = []v1.Container{
@@ -200,11 +204,11 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 					},
 				},
 				LivenessProbe: &v1.Probe{
-					Handler:             socketHandler,
+					ProbeHandler:        socketHandler,
 					InitialDelaySeconds: 5,
 				},
 				ReadinessProbe: &v1.Probe{
-					Handler:             socketHandler,
+					ProbeHandler:        socketHandler,
 					InitialDelaySeconds: 30,
 					PeriodSeconds:       20,
 				},
@@ -255,7 +259,7 @@ func (r *Reconciler) reconcileDeployment(cr *v1alpha1.DBaaSPlatform, ctx context
 	return v1alpha1.ResultInProgress, nil
 }
 
-func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createConsolePluginCR(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
 	plugin := r.getConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
 		plugin.Spec.DisplayName = r.config.DisplayName
@@ -277,7 +281,7 @@ func (r *Reconciler) createConsolePluginCR(cr *v1alpha1.DBaaSPlatform, ctx conte
 	return v1alpha1.ResultSuccess, nil
 }
 
-func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
 	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
@@ -309,7 +313,7 @@ func (r *Reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 	return v1alpha1.ResultInProgress, nil
 }
 
-func (r *Reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
+func (r *reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.config.Name,
@@ -318,7 +322,7 @@ func (r *Reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
 	}
 }
 
-func (r *Reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment {
+func (r *reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.config.Name,
@@ -327,7 +331,7 @@ func (r *Reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment
 	}
 }
 
-func (r *Reconciler) getConsolePlugin() *consolev1alpha1.ConsolePlugin {
+func (r *reconciler) getConsolePlugin() *consolev1alpha1.ConsolePlugin {
 	return &consolev1alpha1.ConsolePlugin{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: r.config.Name,
@@ -335,7 +339,7 @@ func (r *Reconciler) getConsolePlugin() *consolev1alpha1.ConsolePlugin {
 	}
 }
 
-func (r *Reconciler) getOperatorConsole() *operatorv1.Console {
+func (r *reconciler) getOperatorConsole() *operatorv1.Console {
 	return &operatorv1.Console{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cluster",
@@ -343,7 +347,7 @@ func (r *Reconciler) getOperatorConsole() *operatorv1.Console {
 	}
 }
 
-func (r *Reconciler) addPlugin(plugins []string) ([]string, bool) {
+func (r *reconciler) addPlugin(plugins []string) ([]string, bool) {
 	for _, p := range plugins {
 		if p == r.config.Name {
 			return plugins, false
@@ -353,7 +357,7 @@ func (r *Reconciler) addPlugin(plugins []string) ([]string, bool) {
 	return append(plugins, r.config.Name), true
 }
 
-func (r *Reconciler) removePlugin(plugins []string) []string {
+func (r *reconciler) removePlugin(plugins []string) []string {
 	for i, p := range plugins {
 		if p == r.config.Name {
 			return append(plugins[:i], plugins[i+1:]...)

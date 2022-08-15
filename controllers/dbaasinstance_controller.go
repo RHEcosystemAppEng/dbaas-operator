@@ -19,6 +19,10 @@ package controllers
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,6 +50,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := ctrl.LoggerFrom(ctx)
 
 	var instance v1alpha1.DBaaSInstance
+	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -56,7 +61,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if inventory, validNS, provision, err := r.checkInventory(instance.Spec.InventoryRef, &instance, func(reason string, message string) {
+	if inventory, validNS, provision, err := r.checkInventory(ctx, instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
 			Type:    v1alpha1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionFalse,
@@ -64,14 +69,18 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-	}, ctx, logger); err != nil {
+	}, logger); err != nil {
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else if !provision {
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else {
-		return r.reconcileProviderResource(inventory.Spec.ProviderRef.Name,
+		result, err := r.reconcileProviderResource(ctx,
+			inventory.Spec.ProviderRef.Name,
 			&instance,
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
@@ -90,9 +99,10 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return &instance.Status.Conditions
 			},
 			v1alpha1.DBaaSInstanceReadyType,
-			ctx,
 			logger,
 		)
+		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
+		return result, err
 	}
 }
 
@@ -100,6 +110,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *DBaaSInstanceReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.DBaaSInstance{}).
+		Watches(&source.Kind{Type: &v1alpha1.DBaaSInstance{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
@@ -125,4 +136,23 @@ func mergeInstanceStatus(instance *v1alpha1.DBaaSInstance, providerInst *v1alpha
 		Reason:  v1alpha1.ProviderReconcileInprogress,
 		Message: v1alpha1.MsgProviderCRReconcileInProgress,
 	}
+}
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
+
+	log := ctrl.Log.WithName("DBaaSInstanceReconciler DeleteEvent")
+
+	instanceObj, ok := e.Object.(*v1alpha1.DBaaSInstance)
+	if !ok {
+		log.Error(nil, "Ignoring malformed Delete()", "Object", e.Object)
+		return nil
+	}
+	log.Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
+
+	inventory := &v1alpha1.DBaaSInventory{}
+	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
+
+	CleanInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instanceObj)
+	return nil
 }

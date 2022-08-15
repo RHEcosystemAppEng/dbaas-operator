@@ -24,11 +24,13 @@ import (
 	"strings"
 	"time"
 
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/console_plugin"
-	providers_installation "github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providers_installation"
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstart_installation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
 	"golang.org/x/mod/semver"
 
 	"github.com/go-logr/logr"
@@ -62,6 +64,7 @@ Platform resources NOT to be removed or updated by the DBaaS operator:
 	Console Telemetry Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
 */
 
+// Constants for requeue
 const (
 	RequeueDelaySuccess = 10 * time.Second
 	RequeueDelayError   = 5 * time.Second
@@ -87,6 +90,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
+//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -110,7 +115,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	var finished = true
-
+	execution := PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	if cr.DeletionTimestamp == nil {
@@ -118,36 +123,41 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	nextStatus := cr.Status.DeepCopy()
-
+	nextPlatformStatus := dbaasv1alpha1.PlatformStatus{}
 	for platform, platformConfig := range platforms {
-		nextStatus.PlatformName = platform
+		nextPlatformStatus.PlatformName = platform
 		reconciler := r.getReconcilerForPlatform(platformConfig)
 		if reconciler != nil {
 			var status dbaasv1alpha1.PlatformsInstlnStatus
 			var err error
 
 			if cr.DeletionTimestamp == nil {
-				status, err = reconciler.Reconcile(ctx, cr, nextStatus)
+				status, err = reconciler.Reconcile(ctx, cr)
+				SetPlatformStatusMetric(platform, status, platformConfig.CSV)
+
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
+				CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
 			}
 
 			if err != nil {
-				nextStatus.LastMessage = err.Error()
+				nextPlatformStatus.LastMessage = err.Error()
 				return ctrl.Result{}, err
-			} else {
-				// Reset error message when everything went well
-				nextStatus.LastMessage = ""
 			}
-
-			nextStatus.PlatformStatus = status
+			// Reset error message when everything went well
+			nextPlatformStatus.LastMessage = ""
+			nextPlatformStatus.PlatformStatus = status
+			setStatusPlatform(&nextStatus.PlatformsStatus, nextPlatformStatus)
 
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
+					execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
+					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
 					logger.Info("DBaaS platform stack cleanup in progress", "working platform", platform)
+					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionUnknown, dbaasv1alpha1.InstallationCleanup, "DBaaS platform stack cleanup in progress")
 				}
 				finished = false
 				break
@@ -156,6 +166,8 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
+		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
+		execution.PlatformStackInstallationMetric(r.operatorNameVersion)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 
@@ -165,12 +177,12 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// envVar set for all operators
-	if operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME"); !found {
+	operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME")
+	if !found {
 		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
 		return err
-	} else {
-		r.operatorNameVersion = operatorNameEnvVar
 	}
+	r.operatorNameVersion = operatorNameEnvVar
 	// Creates a new managed install CR if it is not available
 	kubeConfig := mgr.GetConfig()
 	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
@@ -214,7 +226,7 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 			},
 		}
 
-		owner, err := reconcilers.GetDBaaSOperatorCSV(namespace, r.operatorNameVersion, ctx, serverClient)
+		owner, err := reconcilers.GetDBaaSOperatorCSV(ctx, namespace, r.operatorNameVersion, serverClient)
 		if err != nil {
 			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
 		}
@@ -238,15 +250,15 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch platformConfig.Type {
-	case dbaasv1alpha1.TypeProvider:
-		return providers_installation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
+	case dbaasv1alpha1.TypeOperator:
+		return providersinstallation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
 		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
-			platformConfig.Image += reconcilers.CONSOLE_PLUGIN_49_TAG
+			platformConfig.Image += reconcilers.ConsolePlugin49Tag
 		}
-		return console_plugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
+		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeQuickStart:
-		return quickstart_installation.NewReconciler(r.Client, r.Scheme, r.Log)
+		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
@@ -268,4 +280,48 @@ func (r *DBaaSPlatformReconciler) updateStatus(cr *dbaasv1alpha1.DBaaSPlatform, 
 		Requeue:      true,
 		RequeueAfter: RequeueDelaySuccess,
 	}, nil
+}
+
+// setStatusPlatform set the new status for installation of platforms
+func setStatusPlatform(PlatformsStatus *[]dbaasv1alpha1.PlatformStatus, newPlatformStatus dbaasv1alpha1.PlatformStatus) {
+	if PlatformsStatus == nil {
+		return
+	}
+	existingPlatformStatus := FindStatusPlatform(*PlatformsStatus, newPlatformStatus.PlatformName)
+	if existingPlatformStatus == nil {
+		*PlatformsStatus = append(*PlatformsStatus, newPlatformStatus)
+		return
+	}
+
+	if existingPlatformStatus.PlatformStatus != newPlatformStatus.PlatformStatus {
+		existingPlatformStatus.PlatformStatus = newPlatformStatus.PlatformStatus
+	}
+
+	existingPlatformStatus.PlatformStatus = newPlatformStatus.PlatformStatus
+	existingPlatformStatus.LastMessage = newPlatformStatus.LastMessage
+}
+
+// FindStatusPlatform finds the platformName in platforms status.
+func FindStatusPlatform(platformsStatus []dbaasv1alpha1.PlatformStatus, platformName dbaasv1alpha1.PlatformsName) *dbaasv1alpha1.PlatformStatus {
+	for i := range platformsStatus {
+		if platformsStatus[i].PlatformName == platformName {
+			return &platformsStatus[i]
+		}
+	}
+
+	return nil
+}
+
+// setStatusCondition sets the given condition with the given status,
+// reason and message on a resource.
+func setStatusCondition(Conditions *[]metav1.Condition, conditionType string, status metav1.ConditionStatus, reason, message string) {
+	newCondition := metav1.Condition{
+		Type:    conditionType,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	}
+
+	apimeta.SetStatusCondition(Conditions, newCondition)
+
 }

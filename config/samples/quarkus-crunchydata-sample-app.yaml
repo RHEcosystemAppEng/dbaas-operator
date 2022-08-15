@@ -18,7 +18,7 @@ items:
           containers:
             - name: postgresql-orm-quarkus
               # Replace this with the built image name
-              image: quay.io/ecosystem-appeng/postgresql-orm-quarkus:v0.1
+              image: quay.io/ecosystem-appeng/postgresql-orm-quarkus:v0.2
               imagePullPolicy: Always
               ports:
                 - containerPort: 8080
