@@ -1,6 +1,7 @@
 package reconcilers
 
 import (
+	"fmt"
 	"os"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
@@ -69,7 +70,6 @@ const (
 	rdsProviderChannel     = "alpha"
 
 	// OBSERVABILITY
-	// ObservabilityName platform name for observability, epxorted for the controllers to use
 	ObservabilityName        = "observability"
 	observabilityCatalogImg  = "RELATED_IMAGE_OBSERVABILITY_CATALOG"
 	observabilityCSV         = "CSV_VERSION_OBSERVABILITY"
@@ -149,6 +149,18 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		DisplayName:    observabilityDisplayName,
 		Type:           dbaasv1alpha1.TypeOperator,
 	},
+}
+
+// GetObservabilityConfig return observatorium configuration
+func GetObservabilityConfig() dbaasv1alpha1.ObservabilityConfig {
+	return dbaasv1alpha1.ObservabilityConfig{
+		AuthType:           os.Getenv("AUTH_TYPE"),
+		RemoteWritesURL:    os.Getenv("RHOBS_API_URL"),
+		RHSSOTokenURL:      os.Getenv("RH_SSO_TOKEN_ENDPOINT"),
+		ObservatoriumToken: os.Getenv("RHOBS_TOKEN"),
+		AddonName:          os.Getenv("ADDON_NAME"),
+		RHOBSSecretName:    fmt.Sprintf("%v-prom-remote-write", os.Getenv("ADDON_NAME")),
+	}
 }
 
 // fetchEnvValue returns the value of a set variable. if env var not set, returns the

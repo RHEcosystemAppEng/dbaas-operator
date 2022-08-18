@@ -152,7 +152,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
-					execution.PlatformStackInstallationMetric(r.operatorNameVersion)
+					execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
 					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
@@ -167,7 +167,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
 		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
-		execution.PlatformStackInstallationMetric(r.operatorNameVersion)
+		execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 

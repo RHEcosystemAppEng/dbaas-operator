@@ -65,5 +65,35 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: AUTH_TYPE
+          valueFrom:
+            secretKeyRef:
+              key: AUTH_TYPE
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: RHOBS_API_URL
+          valueFrom:
+            secretKeyRef:
+              key: RHOBS_API_URL
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: RH_SSO_TOKEN_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: RH_SSO_TOKEN_ENDPOINT
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: RHOBS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: RHOBS_TOKEN
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
+        - name: ADDON_NAME
+          valueFrom:
+            secretKeyRef:
+              key: ADDON_NAME
+              name: dbaas-operator-dev-prom-remote-write
+              optional: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
