@@ -433,6 +433,7 @@ spec:
                     drop:
                     - ALL
                   readOnlyRootFilesystem: true
+                  runAsNonRoot: true
               - args:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=0.0.0.0:8080
@@ -536,8 +537,7 @@ spec:
                     drop:
                     - ALL
                   readOnlyRootFilesystem: true
-              securityContext:
-                runAsNonRoot: true
+                  runAsNonRoot: true
               serviceAccountName: dbaas-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:

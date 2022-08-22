@@ -202,6 +202,8 @@ func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1alpha1.DBaaS
 					Capabilities: &v1.Capabilities{
 						Drop: []v1.Capability{"ALL"},
 					},
+					ReadOnlyRootFilesystem: &ptrTrue,
+					RunAsNonRoot:           &ptrTrue,
 				},
 				LivenessProbe: &v1.Probe{
 					ProbeHandler:        socketHandler,
@@ -213,9 +215,6 @@ func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1alpha1.DBaaS
 					PeriodSeconds:       20,
 				},
 			},
-		}
-		deployment.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
-			RunAsNonRoot: &ptrTrue,
 		}
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
 			{
