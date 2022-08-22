@@ -52,14 +52,6 @@ const (
 	dbaasDynamicPluginName        = "dbaas-dynamic-plugin"
 	dbaasDynamicPluginDisplayName = "OpenShift Database as a Service Dynamic Plugin"
 
-	// CONSOLE_TELEMETRY_PLUGIN
-	consoleTelemetryPluginImg           = "RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN"
-	consoleTelemetryPluginVersion       = "CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN"
-	consoleTelemetryPluginName          = "console-telemetry-plugin"
-	consoleTelemetryPluginDisplayName   = "Telemetry Plugin"
-	consoleTelemetryPluginSegmentKeyEnv = "SEGMENT_KEY"
-	consoleTelemetryPluginSegmentKey    = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
-
 	// RDS_PROVIDER
 	rdsProviderCSV         = "CSV_VERSION_RDS_PROVIDER"
 	rdsProviderCatalogImg  = "RELATED_IMAGE_RDS_PROVIDER_CATALOG"
@@ -86,14 +78,6 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		CSV:         fetchEnvValue(dbaasDynamicPluginVersion),
 		Image:       fetchEnvValue(dbaasDynamicPluginImg),
 		DisplayName: dbaasDynamicPluginDisplayName,
-		Type:        dbaasv1alpha1.TypeConsolePlugin,
-	},
-	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
-		Name:        consoleTelemetryPluginName,
-		CSV:         fetchEnvValue(consoleTelemetryPluginVersion),
-		Image:       fetchEnvValue(consoleTelemetryPluginImg),
-		DisplayName: consoleTelemetryPluginDisplayName,
-		Envs:        []corev1.EnvVar{{Name: consoleTelemetryPluginSegmentKeyEnv, Value: consoleTelemetryPluginSegmentKey}},
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.CrunchyBridgeInstallation: {

@@ -48,20 +48,17 @@ Platform resources to be created or updated explicitly by the DBaaS operator:
 	MongoDB Atlas operator: CatalogSource, Subscription, OperatorGroup
 	Service Binding operator: Subscription
 	DBaaS Dynamic Plugin: Service, Deployment, ConsolePlugin, Console (updated)
-	Console Telemetry Plugin: Service, Deployment, ConsolePlugin, Console (updated)
 
 Platform resources to be removed by the DBaaS operator by setting owner reference:
 	Crunchy Bridge operator: Subscription, CSV
 	MongoDB Atlas operator: Subscription, CSV
 	Service Binding operator: Subscription, CSV
 	DBaaS Dynamic Plugin: Service, Deployment
-	Console Telemetry Plugin: Service, Deployment
 
 Platform resources NOT to be removed or updated by the DBaaS operator:
 	Crunchy Bridge operator: CatalogSource (in different namespace), OperatorGroup (in different namespace)
 	MongoDB Atlas operator: CatalogSource (in different namespace), OperatorGroup (in different namespace)
 	DBaaS Dynamic Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
-	Console Telemetry Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
 */
 
 // Constants for requeue
