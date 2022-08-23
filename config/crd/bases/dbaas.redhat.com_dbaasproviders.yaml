@@ -53,6 +53,9 @@ spec:
                     displayName:
                       description: A user-friendly name for this field
                       type: string
+                    helpText:
+                      description: Additional info about the field
+                      type: string
                     key:
                       description: The name for this field
                       type: string
