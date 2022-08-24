@@ -85,12 +85,14 @@ metadata:
               },
               {
                 "displayName": "Organization Public Key",
+                "helpText": "string",
                 "key": "publicApiKey",
                 "required": true,
                 "type": "string"
               },
               {
                 "displayName": "Organization Private Key",
+                "helpText": "string",
                 "key": "privateApiKey",
                 "required": true,
                 "type": "maskedstring"

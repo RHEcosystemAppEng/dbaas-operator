@@ -140,7 +140,7 @@ type CredentialField struct {
 	// If this field is required or not
 	Required bool `json:"required"`
 
-	//Additional info about the field
+	// Additional info about the field
 	HelpText string `json:"helpText,omitempty"`
 }
 
