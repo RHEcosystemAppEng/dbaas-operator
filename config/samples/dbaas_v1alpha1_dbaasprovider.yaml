@@ -26,7 +26,7 @@ spec:
       displayName: Organization Public Key
       type: string
       required: true
-      helpText: You can find the Public API Keys tab on the Organization Access Manager page from your MongoDB account home page.
+      helpText: You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.
     - key: privateApiKey
       displayName: Organization Private Key
       type: maskedstring
