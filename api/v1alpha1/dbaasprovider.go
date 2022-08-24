@@ -58,21 +58,24 @@ const (
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
 	MsgPolicyNotReady                string = "Another active Policy already exists"
 
-	// DBaaS instance provisioning phases
-
-	PhaseUnknown  string = "Unknown"
-	PhasePending  string = "Pending"
-	PhaseCreating string = "Creating"
-	PhaseUpdating string = "Updating"
-	PhaseDeleting string = "Deleting"
-	PhaseDeleted  string = "Deleted"
-	PhaseReady    string = "Ready"
-	PhaseError    string = "Error"
-	PhaseFailed   string = "Failed"
-
 	TypeLabelValue    = "credentials"
 	TypeLabelKey      = "db-operator/type"
 	TypeLabelKeyMongo = "atlas.mongodb.com/type"
+)
+
+// DBaasInstancePhase instance provisioning phases
+type DBaasInstancePhase string
+
+const (
+	InstancePhaseUnknown  DBaasInstancePhase = "Unknown"
+	InstancePhasePending  DBaasInstancePhase = "Pending"
+	InstancePhaseCreating DBaasInstancePhase = "Creating"
+	InstancePhaseUpdating DBaasInstancePhase = "Updating"
+	InstancePhaseDeleting DBaasInstancePhase = "Deleting"
+	InstancePhaseDeleted  DBaasInstancePhase = "Deleted"
+	InstancePhaseReady    DBaasInstancePhase = "Ready"
+	InstancePhaseError    DBaasInstancePhase = "Error"
+	InstancePhaseFailed   DBaasInstancePhase = "Failed"
 )
 
 // DBaaSProviderSpec defines the desired state of DBaaSProvider
@@ -265,7 +268,7 @@ type DBaaSInstanceStatus struct {
 	// Ready - cluster provisioning complete
 	// Error - cluster provisioning with error
 	// Failed - cluster provisioning failed
-	Phase string `json:"phase"`
+	Phase DBaasInstancePhase `json:"phase"`
 }
 
 // DBaaSProviderInstance is the schema for unmarshalling provider instance object

@@ -290,7 +290,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "Ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
@@ -409,7 +409,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "Ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
@@ -523,7 +523,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "Ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})

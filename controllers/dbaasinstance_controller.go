@@ -69,7 +69,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-		instance.Status.Phase = "Error"
+		instance.Status.Phase = v1alpha1.InstancePhaseError
 	}, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
@@ -121,6 +121,9 @@ func (r *DBaaSInstanceReconciler) SetupWithManager(mgr ctrl.Manager) (controller
 // mergeInstanceStatus: merge the status from DBaaSProviderInstance into the current DBaaSInstance status
 func mergeInstanceStatus(instance *v1alpha1.DBaaSInstance, providerInst *v1alpha1.DBaaSProviderInstance) metav1.Condition {
 	providerInst.Status.DeepCopyInto(&instance.Status)
+	if len(instance.Status.Phase) == 0 {
+		instance.Status.Phase = v1alpha1.InstancePhaseUnknown
+	}
 	// Update instance status condition (type: DBaaSInstanceReadyType) based on the provider status
 	specSync := apimeta.FindStatusCondition(providerInst.Status.Conditions, v1alpha1.DBaaSInstanceProviderSyncType)
 	if specSync != nil && specSync.Status == metav1.ConditionTrue {
