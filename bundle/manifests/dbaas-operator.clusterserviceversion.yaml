@@ -79,18 +79,21 @@ metadata:
             "credentialFields": [
               {
                 "displayName": "Organization ID",
+                "helpText": "You can find the Organization ID from the Organization Settings page on your MongoDB account home page.",
                 "key": "organizationId",
                 "required": true,
                 "type": "string"
               },
               {
                 "displayName": "Organization Public Key",
+                "helpText": "You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
                 "key": "publicApiKey",
                 "required": true,
                 "type": "string"
               },
               {
                 "displayName": "Organization Private Key",
+                "helpText": "You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
                 "key": "privateApiKey",
                 "required": true,
                 "type": "maskedstring"
