@@ -447,10 +447,6 @@ spec:
                   value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
                 - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
                   value: dbaas-dynamic-plugin:0.3.0
-                - name: RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN
-                  value: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
-                - name: CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN
-                  value: console-telemetry-plugin:0.1.4
                 - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
                   value: quay.io/rhobs/observability-operator-catalog:0.0.13
                 - name: CSV_VERSION_OBSERVABILITY
@@ -602,8 +598,6 @@ spec:
   relatedImages:
   - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
     name: dbaas-dynamic-plugin
-  - image: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
-    name: console-telemetry-plugin
   - image: quay.io/rhobs/observability-operator-catalog:0.0.13
     name: observability-catalog
   - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5

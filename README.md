@@ -11,7 +11,6 @@ available to developers for binding to their applications.
 Component |Git Repo	| Description
 ---  | ------ | ----
 DBaaS Console Plugin    |[DBaaS Dynamic Plugin](https://github.com/RHEcosystemAppEng/dbaas-dynamic-plugin) | DBaaS UI console plugin, creation for “Provider Account” and a bindable “Connection” resource.
-OpenShift Console Telemetry Plugin|[Console Telemetry Plugin](https://github.com/RHEcosystemAppEng/console-telemetry-plugin)|An OpenShift Console plugin for tracking user activity such as page changes, property changes, & specific UI events in segment.
 MongoDB Atlas Operator  |[MongoDB Atlas](https://github.com/mongodb/mongodb-atlas-kubernetes) | Operator responsible for establishing API communications with MongoDB Atlas Database.
 Crunchy Bridge Operator |[Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)|Operator responsible for establishing API communications with Crunchy Bridge Managed Postgres Database.
 CockroachCloud Operator |[CockroachCloud Operator](https://github.com/cockroachdb/ccapi-k8s-operator/)|Operator responsible for establishing API communications with CockroachCloud Provider Platform.
