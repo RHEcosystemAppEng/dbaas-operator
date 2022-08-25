@@ -1,4 +1,4 @@
-name: Go
+name: Go generate
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
     - release-*
 
 jobs:
-  test:
+  generate:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -20,7 +20,7 @@ jobs:
           go-version: 1.17.x
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Unit tests
-        run: make test
+      - name: Generate manifests and bundle
+        run: make bundle
       - name: After code and manifest generation, check for uncommitted differences
         run: git diff --exit-code
