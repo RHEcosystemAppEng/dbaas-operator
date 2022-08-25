@@ -24,8 +24,6 @@ spec:
         control-plane: controller-manager
         type: dbaas-operator
     spec:
-      securityContext:
-        runAsNonRoot: true
       containers:
       - command:
         - /manager
@@ -38,6 +36,7 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+          runAsNonRoot: true
           capabilities:
             drop:
             - ALL
