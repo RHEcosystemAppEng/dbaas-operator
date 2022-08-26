@@ -202,7 +202,11 @@ type DBaaSConnectionSpec struct {
 
 	// The ID of the instance to connect to, as seen in the Status of
 	// the referenced DBaaSInventory
-	InstanceID string `json:"instanceID"`
+	InstanceID string `json:"instanceID,omitempty"`
+
+	// A reference to the DBaaSInstance CR that is used if the ID of the
+	// instance is not specified
+	InstanceRef *NamespacedName `json:"instanceRef,omitempty"`
 }
 
 // DBaaSConnectionStatus defines the observed state of DBaaSConnection

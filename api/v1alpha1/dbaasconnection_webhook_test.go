@@ -30,6 +30,7 @@ import (
 var inventoryName = "test-inventory"
 var connectionName = "test-connection"
 var instanceID = "test-instanceID"
+var instanceName = "test-instance"
 var testDBaaSConnection = &DBaaSConnection{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      connectionName,
@@ -97,6 +98,175 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 				"admission webhook \"vdbaasconnection.kb.io\" denied the request: "+
 					"spec.inventoryRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"updated-inventory\"}: "+
 					"inventoryRef is immutable"),
+			Entry("not allow updating instanceRef",
+				func(spec *DBaaSConnectionSpec) {
+					spec.InstanceRef = &NamespacedName{
+						Name:      "updated-instance",
+						Namespace: testNamespace,
+					}
+				},
+				"admission webhook \"vdbaasconnection.kb.io\" denied the request: "+
+					"spec.instanceRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"updated-instance\"}: "+
+					"instanceRef is immutable"),
 		)
+	})
+
+	Context("after trying to create DBaaSConnection without instance info", func() {
+		It("should not allow creating the DBaaSConnection", func() {
+			testDBaaSConnectionNoInstance := &DBaaSConnection{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      connectionName,
+					Namespace: testNamespace,
+				},
+				Spec: DBaaSConnectionSpec{
+					InventoryRef: NamespacedName{
+						Name:      inventoryName,
+						Namespace: testNamespace,
+					},
+				},
+			}
+			err := k8sClient.Create(ctx, testDBaaSConnectionNoInstance)
+			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
+				"spec.instanceID: Invalid value: \"\": both instanceID and instanceRef are not specified"))
+		})
+	})
+
+	Context("after trying to create DBaaSConnection with both instance ID and instance reference", func() {
+		It("should not allow creating the DBaaSConnection", func() {
+			testDBaaSConnectionNoInstance := &DBaaSConnection{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      connectionName,
+					Namespace: testNamespace,
+				},
+				Spec: DBaaSConnectionSpec{
+					InventoryRef: NamespacedName{
+						Name:      inventoryName,
+						Namespace: testNamespace,
+					},
+					InstanceID: instanceID,
+					InstanceRef: &NamespacedName{
+						Name:      instanceName,
+						Namespace: testNamespace,
+					},
+				},
+			}
+			err := k8sClient.Create(ctx, testDBaaSConnectionNoInstance)
+			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
+				"spec.instanceID: Invalid value: \"test-instanceID\": both instanceID and instanceRef are specified"))
+		})
+	})
+
+	Context("after creating DBaaSConnection without instance ID", func() {
+		var testDBaaSConnectionNoInstanceID = &DBaaSConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      connectionName,
+				Namespace: testNamespace,
+			},
+			Spec: DBaaSConnectionSpec{
+				InventoryRef: NamespacedName{
+					Name:      inventoryName,
+					Namespace: testNamespace,
+				},
+				InstanceRef: &NamespacedName{
+					Name:      instanceName,
+					Namespace: testNamespace,
+				},
+			},
+		}
+
+		BeforeEach(func() {
+			By("creating DBaaSConnection")
+			Expect(k8sClient.Create(ctx, testDBaaSConnectionNoInstanceID)).Should(Succeed())
+
+			By("checking DBaaSConnection created")
+			Eventually(func() bool {
+				if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnectionNoInstanceID), testDBaaSConnectionNoInstanceID); err != nil {
+					return false
+				}
+				if len(testDBaaSConnectionNoInstanceID.Spec.InstanceID) > 0 {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		AfterEach(func() {
+			By("deleting DBaaSConnection")
+			Expect(k8sClient.Delete(ctx, testDBaaSConnectionNoInstanceID)).Should(Succeed())
+
+			By("checking DBaaSConnection deleted")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnectionNoInstanceID), &DBaaSConnection{})
+				if err != nil && errors.IsNotFound(err) {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("should not allow setting instance ID", func() {
+			By("updating instanceID twice")
+			testDBaaSConnectionNoInstanceID.Spec.InstanceID = "updated-instanceID"
+			err := k8sClient.Update(ctx, testDBaaSConnectionNoInstanceID)
+			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
+				"spec.instanceID: Invalid value: \"updated-instanceID\": instanceID is immutable"))
+		})
+	})
+
+	Context("after creating DBaaSConnection without instance reference", func() {
+		var testDBaaSConnectionNoInstanceRef = &DBaaSConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      connectionName,
+				Namespace: testNamespace,
+			},
+			Spec: DBaaSConnectionSpec{
+				InventoryRef: NamespacedName{
+					Name:      inventoryName,
+					Namespace: testNamespace,
+				},
+				InstanceID: instanceID,
+			},
+		}
+
+		BeforeEach(func() {
+			By("creating DBaaSConnection")
+			Expect(k8sClient.Create(ctx, testDBaaSConnectionNoInstanceRef)).Should(Succeed())
+
+			By("checking DBaaSConnection created")
+			Eventually(func() bool {
+				if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnectionNoInstanceRef), testDBaaSConnectionNoInstanceRef); err != nil {
+					return false
+				}
+				if testDBaaSConnectionNoInstanceRef.Spec.InstanceRef != nil {
+					return false
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		AfterEach(func() {
+			By("deleting DBaaSConnection")
+			Expect(k8sClient.Delete(ctx, testDBaaSConnectionNoInstanceRef)).Should(Succeed())
+
+			By("checking DBaaSConnection deleted")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(testDBaaSConnectionNoInstanceRef), &DBaaSConnection{})
+				if err != nil && errors.IsNotFound(err) {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("should not allow setting instance ID", func() {
+			testDBaaSConnectionNoInstanceRef.Spec.InstanceRef = &NamespacedName{
+				Name:      instanceName,
+				Namespace: testNamespace,
+			}
+			err := k8sClient.Update(ctx, testDBaaSConnectionNoInstanceRef)
+			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
+				"spec.instanceRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"test-instance\"}: " +
+				"instanceRef is immutable"))
+		})
 	})
 })
