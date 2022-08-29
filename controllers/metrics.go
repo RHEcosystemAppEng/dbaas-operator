@@ -339,21 +339,21 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1al
 	var phase float64
 
 	switch instance.Status.Phase {
-	case dbaasv1alpha1.PhasePending:
+	case dbaasv1alpha1.InstancePhasePending:
 		phase = -1
-	case dbaasv1alpha1.PhaseCreating:
+	case dbaasv1alpha1.InstancePhaseCreating:
 		phase = 0
-	case dbaasv1alpha1.PhaseReady:
+	case dbaasv1alpha1.InstancePhaseReady:
 		phase = 1
-	case dbaasv1alpha1.PhaseUnknown:
+	case dbaasv1alpha1.InstancePhaseUnknown:
 		phase = 2
-	case dbaasv1alpha1.PhaseFailed:
+	case dbaasv1alpha1.InstancePhaseFailed:
 		phase = 3
-	case dbaasv1alpha1.PhaseError:
+	case dbaasv1alpha1.InstancePhaseError:
 		phase = 4
-	case dbaasv1alpha1.PhaseDeleting:
+	case dbaasv1alpha1.InstancePhaseDeleting:
 		phase = 5
-	case dbaasv1alpha1.PhaseDeleted:
+	case dbaasv1alpha1.InstancePhaseDeleted:
 		phase = 6
 	}
 
