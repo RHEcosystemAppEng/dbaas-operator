@@ -58,7 +58,7 @@ func (r *DBaaSConnection) ValidateDelete() error {
 	return nil
 }
 
-func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection) *field.Error {
+func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection) error {
 	if r.Spec.InstanceID != old.Spec.InstanceID {
 		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "instanceID is immutable")
 	}
