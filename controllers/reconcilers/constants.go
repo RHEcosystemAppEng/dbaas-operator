@@ -138,12 +138,11 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 // GetObservabilityConfig return observatorium configuration
 func GetObservabilityConfig() dbaasv1alpha1.ObservabilityConfig {
 	return dbaasv1alpha1.ObservabilityConfig{
-		AuthType:           os.Getenv("AUTH_TYPE"),
-		RemoteWritesURL:    os.Getenv("RHOBS_API_URL"),
-		RHSSOTokenURL:      os.Getenv("RH_SSO_TOKEN_ENDPOINT"),
-		ObservatoriumToken: os.Getenv("RHOBS_TOKEN"),
-		AddonName:          os.Getenv("ADDON_NAME"),
-		RHOBSSecretName:    fmt.Sprintf("%v-prom-remote-write", os.Getenv("ADDON_NAME")),
+		AuthType:        os.Getenv("RHOBS_AUTH_TYPE"),
+		RemoteWritesURL: os.Getenv("RHOBS_API_URL"),
+		RHSSOTokenURL:   os.Getenv("RH_SSO_TOKEN_ENDPOINT"),
+		AddonName:       os.Getenv("ADDON_NAME"),
+		RHOBSSecretName: fmt.Sprintf("%v-prom-remote-write", os.Getenv("ADDON_NAME")),
 	}
 }
 

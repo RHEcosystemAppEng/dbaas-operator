@@ -70,12 +70,11 @@ type PlatformConfig struct {
 
 // ObservabilityConfig defines parameters for a observatorium
 type ObservabilityConfig struct {
-	AuthType           string
-	RemoteWritesURL    string
-	RHSSOTokenURL      string
-	ObservatoriumToken string
-	AddonName          string
-	RHOBSSecretName    string
+	AuthType        string
+	RemoteWritesURL string
+	RHSSOTokenURL   string
+	AddonName       string
+	RHOBSSecretName string
 }
 
 // DBaaSPlatformSpec defines the desired state of DBaaSPlatform

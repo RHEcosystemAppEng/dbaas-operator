@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	opapi "github.com/openshift/api/config/v1"
 	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -23,7 +24,8 @@ const (
 	clusterVersionLabel                = "cluster_version"
 	crName                             = "dbaas-operator-mso"
 	rhobsRemoteWriteConfigIDKey        = "prom-remote-write-config-id"
-	rhobsRemoteWriteConfigName         = "prom-remote-write-config-name"
+	rhobsRemoteWriteConfigName         = "prom-remote-write-config-secret" //#nosec
+	rhobsTokenKey                      = "rhobs-token"                     //#nosec
 	authTypeDex                 string = "dex"
 	authTypeRedhat              string = "redhat-sso"
 )
@@ -126,7 +128,7 @@ func (r *reconciler) configureRemoteWrite(ctx context.Context, config dbaasv1alp
 
 	switch config.AuthType {
 	case authTypeDex:
-		return getDexRemoteWriteSpec(config)
+		return r.getDexRemoteWriteSpec(ctx, config, namespace)
 	case authTypeRedhat:
 		return r.getRHOBSRemoteWriteSpec(ctx, config, namespace)
 	default:
@@ -135,12 +137,21 @@ func (r *reconciler) configureRemoteWrite(ctx context.Context, config dbaasv1alp
 }
 
 // getDexRemoteWriteSpec setting up internal dev environment params for remote write
-func getDexRemoteWriteSpec(config dbaasv1alpha1.ObservabilityConfig) (monv1.RemoteWriteSpec, error) {
+func (r *reconciler) getDexRemoteWriteSpec(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
 
 	remoteWriteSpec := monv1.RemoteWriteSpec{}
-	if config.RemoteWritesURL != "" && config.ObservatoriumToken != "" {
+	if config.RemoteWritesURL != "" {
+		rhobsRemoteWriteConfigSecret, err := r.validateSecret(ctx, config, namespace)
+		if err != nil {
+			return remoteWriteSpec, err
+		}
+		rhobsSecretData := rhobsRemoteWriteConfigSecret.Data
+		rhobsToken, found := rhobsSecretData[rhobsTokenKey]
+		if !found {
+			return remoteWriteSpec, fmt.Errorf("rhobs secret does not contain a value for key %v", rhobsTokenKey)
+		}
 		remoteWriteSpec.URL = config.RemoteWritesURL
-		remoteWriteSpec.BearerToken = strings.TrimSpace(config.ObservatoriumToken)
+		remoteWriteSpec.BearerToken = string(rhobsToken)
 		remoteWriteSpec.TLSConfig = tlsConfig()
 		remoteWriteSpec.WriteRelabelConfigs = writeRelabelConfigs()
 	}
@@ -153,14 +164,9 @@ func (r *reconciler) getRHOBSRemoteWriteSpec(ctx context.Context, config dbaasv1
 	remoteWriteSpec := monv1.RemoteWriteSpec{}
 
 	if config.RemoteWritesURL != "" && config.RHSSOTokenURL != "" && config.RHOBSSecretName != "" {
-		rhobsRemoteWriteConfigSecret := &corev1.Secret{}
-		rhobsRemoteWriteConfigSecret.Name = config.RHOBSSecretName
-		rhobsRemoteWriteConfigSecret.Namespace = namespace
-		if err := r.client.Get(ctx, k8sclient.ObjectKeyFromObject(rhobsRemoteWriteConfigSecret), rhobsRemoteWriteConfigSecret); err != nil && !errors.IsNotFound(err) {
+		rhobsRemoteWriteConfigSecret, err := r.validateSecret(ctx, config, namespace)
+		if err != nil {
 			return remoteWriteSpec, err
-		}
-		if rhobsRemoteWriteConfigSecret.UID == "" {
-			return remoteWriteSpec, nil
 		}
 		rhobsSecretData := rhobsRemoteWriteConfigSecret.Data
 		if _, found := rhobsSecretData[rhobsRemoteWriteConfigIDKey]; !found {
@@ -198,6 +204,21 @@ func (r *reconciler) getRHOBSRemoteWriteSpec(ctx context.Context, config dbaasv1
 	}
 	return remoteWriteSpec, nil
 }
+
+func (r *reconciler) validateSecret(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (*corev1.Secret, error) {
+
+	rhobsRemoteWriteConfigSecret := &corev1.Secret{}
+	rhobsRemoteWriteConfigSecret.Name = config.RHOBSSecretName
+	rhobsRemoteWriteConfigSecret.Namespace = namespace
+	if err := r.client.Get(ctx, k8sclient.ObjectKeyFromObject(rhobsRemoteWriteConfigSecret), rhobsRemoteWriteConfigSecret); err != nil {
+		if errors.IsNotFound(err) {
+			return nil, fmt.Errorf("rhobs remote write secret not found in namespace %v", namespace)
+		}
+		return nil, err
+	}
+	return rhobsRemoteWriteConfigSecret, nil
+}
+
 func tlsConfig() *monv1.TLSConfig {
 	return &monv1.TLSConfig{
 		SafeTLSConfig: monv1.SafeTLSConfig{
