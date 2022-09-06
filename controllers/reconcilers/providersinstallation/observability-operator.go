@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
-	opapi "github.com/openshift/api/config/v1"
 	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -19,7 +20,6 @@ import (
 )
 
 const (
-	versionKeyName                     = "version"
 	clusterIDLabel                     = "cluster_id"
 	clusterVersionLabel                = "cluster_version"
 	crName                             = "dbaas-operator-mso"
@@ -109,7 +109,7 @@ func (r *reconciler) setPrometheusConfig(ctx context.Context, config dbaasv1alph
 	prometheusConfig := &msoapi.PrometheusConfig{}
 	prometheusConfig.Replicas = &replicas
 
-	clusterID, clusterVersion, err := GetClusterInfo(ctx, r.client)
+	clusterID, clusterVersion, err := util.GetClusterIDVersion(ctx, r.client)
 	if err != nil {
 		return prometheusConfig, err
 	}
@@ -232,19 +232,4 @@ func writeRelabelConfigs() []monv1.RelabelConfig {
 		Regex:        "(" + strings.Join(metricsToInclude, "|") + ")",
 		Action:       "keep",
 	}}
-}
-
-// GetClusterInfo Returns the cluster id and cluster version by querying the ClusterVersion resource
-func GetClusterInfo(ctx context.Context, client k8sclient.Client) (string, string, error) {
-	v := &opapi.ClusterVersion{}
-	selector := k8sclient.ObjectKey{
-		Name: versionKeyName,
-	}
-
-	err := client.Get(ctx, selector, v)
-	if err != nil {
-		return "", "", err
-	}
-
-	return string(v.Spec.ClusterID), v.Status.Desired.Version, nil
 }
