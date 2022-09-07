@@ -406,11 +406,8 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 							},
 						},
-						CredentialsRef: &v1.LocalObjectReference{
+						Binding: &v1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						ConnectionInfoRef: &v1.LocalObjectReference{
-							Name: "testConnectionInfoRef",
 						},
 					}
 					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
@@ -601,11 +598,8 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 									LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 								},
 							},
-							CredentialsRef: &v1.LocalObjectReference{
+							Binding: &v1.LocalObjectReference{
 								Name: testSecret.Name,
-							},
-							ConnectionInfoRef: &v1.LocalObjectReference{
-								Name: "testConnectionInfoRef",
 							},
 						}
 						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
@@ -702,11 +696,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 							},
 						},
-						CredentialsRef: &v1.LocalObjectReference{
+						Binding: &v1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						ConnectionInfoRef: &v1.LocalObjectReference{
-							Name: "testConnectionInfoRef",
 						},
 					}
 					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
@@ -809,11 +800,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 							},
 						},
-						CredentialsRef: &v1.LocalObjectReference{
+						Binding: &v1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						ConnectionInfoRef: &v1.LocalObjectReference{
-							Name: "testConnectionInfoRef",
 						},
 					}
 					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
@@ -934,11 +922,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 							},
 						},
-						CredentialsRef: &v1.LocalObjectReference{
+						Binding: &v1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						ConnectionInfoRef: &v1.LocalObjectReference{
-							Name: "testConnectionInfoRef",
 						},
 					}
 					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
@@ -1045,11 +1030,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 							},
 						},
-						CredentialsRef: &v1.LocalObjectReference{
+						Binding: &v1.LocalObjectReference{
 							Name: testSecret.Name,
-						},
-						ConnectionInfoRef: &v1.LocalObjectReference{
-							Name: "testConnectionInfoRef",
 						},
 					}
 					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))

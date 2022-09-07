@@ -11,7 +11,7 @@ resources:
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
-- patches/service_binding_annotations.yaml
+- patches/service_binding_labels.yaml
 
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
