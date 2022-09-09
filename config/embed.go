@@ -5,4 +5,5 @@ import (
 )
 
 //go:embed default/manager-env-images.yaml
+// EnvImages image data from the embedded yaml file
 var EnvImages []byte

@@ -66,6 +66,7 @@ const (
 // DBaasInstancePhase instance provisioning phases
 type DBaasInstancePhase string
 
+// Constants for instance phases
 const (
 	InstancePhaseUnknown  DBaasInstancePhase = "Unknown"
 	InstancePhasePending  DBaasInstancePhase = "Pending"
