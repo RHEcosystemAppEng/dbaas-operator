@@ -10,7 +10,7 @@ require (
 	github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba
 	github.com/operator-framework/api v0.10.5
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.57.0
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.11.1
 	github.com/rhobs/observability-operator v0.0.13
 	go.uber.org/zap v1.19.1
 	golang.org/x/mod v0.5.1
