@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
@@ -32,6 +32,7 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
 	"golang.org/x/mod/semver"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
 	"github.com/go-logr/logr"
 
@@ -89,6 +90,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
 //+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -115,6 +118,16 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	execution := PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
+	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift consoleURl")
+	}
+
+	platformType, err := util.GetOpenshiftPlatform(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift platform Type")
+	}
+	SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType))
 	if cr.DeletionTimestamp == nil {
 		platforms = reconcilers.InstallationPlatforms
 	}

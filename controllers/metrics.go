@@ -25,17 +25,19 @@ const (
 	metricNameOperatorVersion                     = "dbaas_version_info"
 
 	// Metrics labels.
-	metricLabelName           = "name"
-	metricLabelStatus         = "status"
-	metricLabelVersion        = "version"
-	metricLabelProvider       = "provider"
-	metricLabelAccountName    = "account"
-	metricLabelConnectionName = "name"
-	metricLabelNameSpace      = "namespace"
-	metricLabelInstanceID     = "instance_id"
-	metricLabelReason         = "reason"
-	metricLabelInstanceName   = "name"
-	creationTimestamp         = "creation_timestamp"
+	metricLabelName              = "name"
+	metricLabelStatus            = "status"
+	metricLabelVersion           = "version"
+	metricLabelProvider          = "provider"
+	metricLabelAccountName       = "account"
+	metricLabelConnectionName    = "name"
+	metricLabelNameSpace         = "namespace"
+	metricLabelInstanceID        = "instance_id"
+	metricLabelReason            = "reason"
+	metricLabelInstanceName      = "name"
+	metricLabelCreationTimestamp = "creation_timestamp"
+	metricLabelConsoleULR        = "openshift_url"
+	metricLabelPlatformName      = "cloud_platform_name"
 
 	// installationTimeStart base time == 0
 	installationTimeStart = 0
@@ -55,25 +57,25 @@ var DBaasPlatformInstallationGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts
 var DBaaSInventoryStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInventoryStatusReady,
 	Help: "The status of DBaaS Provider Account, values ( ready=1, error / not ready=0 )",
-}, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, metricLabelCreationTimestamp})
 
 // DBaaSConnectionStatusGauge defines a gauge for DBaaSConnectionStatus
 var DBaaSConnectionStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameConnectionStatusReady,
 	Help: "The status of DBaaS connections, values ( ready=1, error / not ready=0 )",
-}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceID, metricLabelConnectionName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceID, metricLabelConnectionName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, metricLabelCreationTimestamp})
 
 // DBaaSInstanceStatusGauge defines a gauge for DBaaSInstanceStatus
 var DBaaSInstanceStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstanceStatusReady,
 	Help: "The status of DBaaS instance, values ( ready=1, error / not ready=0 )",
-}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelStatus, metricLabelReason, metricLabelCreationTimestamp})
 
 // DBaaSInstancePhaseGauge defines a gauge for DBaaSInstancePhase
 var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstancePhase,
 	Help: "Current status phase of the Instance currently managed by RHODA values ( Pending=-1, Creating=0, Ready=1, Unknown=2, Failed=3, Error=4, Deleting=5 ).",
-}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelCreationTimestamp})
 
 // DBaasStackInstallationHistogram defines a histogram for DBaasStackInstallation
 var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -83,7 +85,7 @@ var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.Hist
 		installationTimeStart,
 		installationTimeWidth,
 		installationTimeBuckets),
-}, []string{metricLabelVersion, creationTimestamp})
+}, []string{metricLabelVersion, metricLabelCreationTimestamp})
 
 // DBaasInventoryRequestDurationSeconds defines a histogram for DBaasInventoryRequestDuration in seconds
 var DBaasInventoryRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -92,25 +94,25 @@ var DBaasInventoryRequestDurationSeconds = prometheus.NewHistogramVec(prometheus
 	Buckets: prometheus.LinearBuckets(installationTimeStart,
 		installationTimeWidth,
 		installationTimeBuckets),
-}, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelName, metricLabelNameSpace, metricLabelCreationTimestamp})
 
 // DBaasOperatorVersionInfo defines a gauge for DBaaS Operator version
 var DBaasOperatorVersionInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameOperatorVersion,
 	Help: "The current version of DBaaS Operator installed in the cluster",
-}, []string{metricLabelVersion})
+}, []string{metricLabelVersion, metricLabelConsoleULR, metricLabelPlatformName})
 
 // DBaasConnectionRequestDurationSeconds defines a histogram for DBaasConnectionRequestDuration
 var DBaasConnectionRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaasConnectionDuration,
 	Help: "Request/Response duration of connection of upstream calls to provider operator/service endpoints",
-}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceID, metricLabelConnectionName, metricLabelNameSpace, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceID, metricLabelConnectionName, metricLabelNameSpace, metricLabelCreationTimestamp})
 
 // DBaasInstanceRequestDurationSeconds defines a histogram for DBaasInstanceRequestDuration
 var DBaasInstanceRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: metricNameDBaasInstanceDuration,
 	Help: "Request/Response duration of instance of upstream calls to provider operator/service endpoints",
-}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, creationTimestamp})
+}, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelCreationTimestamp})
 
 // Execution tracks state for an API execution for emitting metrics
 type Execution struct {
@@ -127,14 +129,13 @@ func PlatformInstallStart() Execution {
 // PlatformStackInstallationMetric is used to log duration and success/failure
 func (e *Execution) PlatformStackInstallationMetric(platform *dbaasv1alpha1.DBaaSPlatform, version string) {
 	duration := time.Since(e.begin)
-	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: version}).Set(1)
 	for _, cond := range platform.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSPlatformReadyType {
 			lastTransitionTime := cond.LastTransitionTime
 			duration = lastTransitionTime.Sub(platform.CreationTimestamp.Time)
-			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, creationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
+			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, metricLabelCreationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
 		} else {
-			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, creationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
+			DBaasStackInstallationHistogram.With(prometheus.Labels{metricLabelVersion: version, metricLabelCreationTimestamp: platform.CreationTimestamp.String()}).Observe(duration.Seconds())
 		}
 	}
 }
@@ -168,6 +169,11 @@ func CleanPlatformStatusMetric(platformName dbaasv1alpha1.PlatformsName, status 
 	}
 }
 
+// SetOpenShiftInstallationInfoMetric set the metrics for openshift info
+func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL string, platformType string) {
+	DBaasOperatorVersionInfo.With(prometheus.Labels{metricLabelVersion: operatorVersion, metricLabelConsoleULR: consoleURL, metricLabelPlatformName: platformType}).Set(1)
+}
+
 // SetInventoryMetrics set the metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution) {
 	setInventoryStatusMetrics(inventory)
@@ -179,15 +185,15 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: inventory.CreationTimestamp.String()}).Set(1)
-				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, creationTimestamp: inventory.CreationTimestamp.String()})
-				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, creationTimestamp: inventory.CreationTimestamp.String()})
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Set(1)
+				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
+				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
 			} else if cond.Reason == dbaasv1alpha1.ProviderReconcileInprogress && cond.Status == metav1.ConditionFalse {
-				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: inventory.CreationTimestamp.String()}).Set(0)
-				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, creationTimestamp: inventory.CreationTimestamp.String()})
-				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, creationTimestamp: inventory.CreationTimestamp.String()})
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Set(0)
+				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
+				DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
 			} else {
-				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: inventory.CreationTimestamp.String()}).Set(0)
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Set(0)
 			}
 		}
 	}
@@ -202,10 +208,10 @@ func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1al
 				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(inventory.CreationTimestamp.Time)
 				DBaasInventoryRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name,
-					metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, creationTimestamp: inventory.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+					metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			} else {
 				DBaasInventoryRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name,
-					metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, creationTimestamp: inventory.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+					metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			}
 			break
 		}
@@ -217,9 +223,9 @@ func CleanInventoryMetrics(inventory *dbaasv1alpha1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		switch cond.Type {
 		case dbaasv1alpha1.DBaaSInventoryReadyType:
-			DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: inventory.CreationTimestamp.String()})
+			DBaaSInventoryStatusGauge.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
 		case dbaasv1alpha1.DBaaSInventoryProviderSyncType:
-			DBaasInventoryRequestDurationSeconds.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, creationTimestamp: inventory.CreationTimestamp.String()})
+			DBaasInventoryRequestDurationSeconds.Delete(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelCreationTimestamp: inventory.CreationTimestamp.String()})
 		}
 	}
 }
@@ -235,18 +241,18 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionReadyType {
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: connection.CreationTimestamp.String()}).Set(1)
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, creationTimestamp: connection.CreationTimestamp.String()})
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, creationTimestamp: connection.CreationTimestamp.String()})
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, creationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(1)
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
 			} else if cond.Reason == dbaasv1alpha1.ProviderReconcileInprogress && cond.Status == metav1.ConditionFalse {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: connection.CreationTimestamp.String()}).Set(0)
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, creationTimestamp: connection.CreationTimestamp.String()})
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, creationTimestamp: connection.CreationTimestamp.String()})
-				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, creationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(0)
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
+				DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
 
 			} else {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: connection.CreationTimestamp.String()}).Set(0)
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(0)
 			}
 		}
 	}
@@ -261,11 +267,11 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(connection.CreationTimestamp.Time)
 				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
-					metricLabelNameSpace: connection.Namespace, creationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+					metricLabelNameSpace: connection.Namespace, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 
 			} else {
 				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
-					metricLabelNameSpace: connection.Namespace, creationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+					metricLabelNameSpace: connection.Namespace, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			}
 			break
 		}
@@ -277,10 +283,10 @@ func CleanConnectionMetrics(provider string, account string, connection *dbaasv1
 	for _, cond := range connection.Status.Conditions {
 		switch cond.Type {
 		case dbaasv1alpha1.DBaaSConnectionReadyType:
-			DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: connection.CreationTimestamp.String()})
+			DBaaSConnectionStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
 		case dbaasv1alpha1.DBaaSConnectionProviderSyncType:
 			DBaasConnectionRequestDurationSeconds.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
-				metricLabelNameSpace: connection.Namespace, creationTimestamp: connection.CreationTimestamp.String()})
+				metricLabelNameSpace: connection.Namespace, metricLabelCreationTimestamp: connection.CreationTimestamp.String()})
 		}
 	}
 }
@@ -298,20 +304,20 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1a
 	for _, cond := range instance.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInstanceReadyType {
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: instance.CreationTimestamp.String()}).Set(1)
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, creationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Set(1)
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.ProviderReconcileInprogress, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
 
 			} else if cond.Reason == dbaasv1alpha1.ProviderReconcileInprogress && cond.Status == metav1.ConditionFalse {
-				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: instance.CreationTimestamp.String()}).Set(0)
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, creationTimestamp: instance.CreationTimestamp.String()})
-				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, creationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Set(0)
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionTrue), metricLabelReason: dbaasv1alpha1.Ready, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotFound, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSProviderNotFound, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+				DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(metav1.ConditionFalse), metricLabelReason: dbaasv1alpha1.DBaaSInventoryNotReady, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
 			} else {
-				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: instance.CreationTimestamp.String()}).Set(0)
+				DBaaSInstanceStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Set(0)
 			}
 		}
 	}
@@ -325,9 +331,9 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 			if cond.Status == metav1.ConditionTrue {
 				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(instance.CreationTimestamp.Time)
-				DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), creationTimestamp: instance.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+				DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), metricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			} else {
-				DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), creationTimestamp: instance.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
+				DBaasInstanceRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), metricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			}
 			break
 		}
@@ -358,11 +364,11 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1al
 	}
 
 	DBaaSInstancePhaseGauge.With(prometheus.Labels{
-		metricLabelProvider:     provider,
-		metricLabelAccountName:  account,
-		metricLabelInstanceName: instance.Name,
-		metricLabelNameSpace:    instance.Namespace,
-		creationTimestamp:       instance.CreationTimestamp.String(),
+		metricLabelProvider:          provider,
+		metricLabelAccountName:       account,
+		metricLabelInstanceName:      instance.Name,
+		metricLabelNameSpace:         instance.Namespace,
+		metricLabelCreationTimestamp: instance.CreationTimestamp.String(),
 	}).Set(phase)
 }
 
@@ -371,10 +377,10 @@ func CleanInstanceMetrics(provider string, account string, instance *dbaasv1alph
 	for _, cond := range instance.Status.Conditions {
 		switch cond.Type {
 		case dbaasv1alpha1.DBaaSInstanceReadyType:
-			DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, creationTimestamp: instance.CreationTimestamp.String()})
-			DBaaSInstancePhaseGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.Name, metricLabelNameSpace: instance.Namespace, creationTimestamp: instance.CreationTimestamp.String()})
+			DBaaSInstanceStatusGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
+			DBaaSInstancePhaseGauge.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.Name, metricLabelNameSpace: instance.Namespace, metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
 		case dbaasv1alpha1.DBaaSInstanceProviderSyncType:
-			DBaasInstanceRequestDurationSeconds.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), creationTimestamp: instance.CreationTimestamp.String()})
+			DBaasInstanceRequestDurationSeconds.Delete(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), metricLabelNameSpace: instance.GetNamespace(), metricLabelCreationTimestamp: instance.CreationTimestamp.String()})
 		}
 	}
 }

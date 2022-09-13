@@ -1,6 +1,6 @@
 # Red Hat OpenShift Database Access Operator
 Red Hat OpenShift Database Access Operator is currently iterating early releases. The intent of these releases is to show how we could
-scan & import off-cluster cloud database instances hosted by various 3rd party ISV providers & make those instances
+create trail database cluster, scan & import off-cluster cloud database instances hosted by various 3rd party ISV providers & make those instances
 available to developers for binding to their applications.
 
 ## Architecture Diagram
@@ -15,6 +15,8 @@ MongoDB Atlas Operator  |[MongoDB Atlas](https://github.com/mongodb/mongodb-atla
 Crunchy Bridge Operator |[Crunchy Bridge PostgreSQL](https://github.com/CrunchyData/crunchy-bridge-operator)|Operator responsible for establishing API communications with Crunchy Bridge Managed Postgres Database.
 CockroachCloud Operator |[CockroachCloud Operator](https://github.com/cockroachdb/ccapi-k8s-operator/)|Operator responsible for establishing API communications with CockroachCloud Provider Platform.
 Service Binding Operator|[Service Binding Operator](https://github.com/redhat-developer/service-binding-operator)|Red Hat operator for binding resources together via Topology View. 
+RDS Operator|[RDS Operator](https://github.com/RHEcosystemAppEng/rds-dbaas-operator)| Operator for Amazon RDS building on top of ACK (AWS Controller for Kubernetes).
+Observability Operator |[Observability Operator](https://github.com/rhobs/observability-operator)| Operator for installing the monitoring stack and configuring remote write Observatorium.
 
 ## Building the Operator
 Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
