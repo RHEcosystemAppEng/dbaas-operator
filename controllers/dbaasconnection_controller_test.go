@@ -449,7 +449,14 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 					AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
 					It("should create a provider connection", func() {
-						assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec)()
+						expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+							InventoryRef: v1alpha1.NamespacedName{
+								Name:      inventoryRefName,
+								Namespace: testNamespace,
+							},
+							InstanceID: instanceID,
+						}
+						assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec)()
 
 						By("checking if the Deployment is created")
 						deployment := &appv1.Deployment{
@@ -503,8 +510,11 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 									LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 								},
 							},
-							Binding: &v1.LocalObjectReference{
+							CredentialsRef: &v1.LocalObjectReference{
 								Name: testSecret.Name,
+							},
+							ConnectionInfoRef: &v1.LocalObjectReference{
+								Name: "testConnectionInfoRef",
 							},
 						}
 						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
