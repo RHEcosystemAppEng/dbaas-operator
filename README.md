@@ -63,6 +63,9 @@ options), you can create a DBaaSInventory & will receive a DBaaSConnection, but 
 - If you wish to uninstall operator and dependencies from your cluster: delete dbaas-platform(DBaaSPlatform) CR manually wait for the operator to uninstall its dependencies and then uninstall RHODA operators by going →**Operators → Installed Operators → Actions → Uninstall Operator**.
   Then delete the catalog source.
 
+## Configuration Observability Operator
+
+See the document :  [Observability Operator configuration](docs/observability-operator-config.md)
 
 ## Using the Operator
 
