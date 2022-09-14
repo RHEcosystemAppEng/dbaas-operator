@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  description: The official Red Hat OpenShift Database Access API.
+  title: Schema for the DBaaSPlatform API
+  version: v1alpha1
+components:
+  schemas:
+    DBaaSPlatform:
+      description: The Schema for the DBaaSPlatform API.
+      properties:
+        apiVersion:
+          description: 'Defines the versioned schema of this representation of an object.
+            Servers should convert recognized schemas to the latest internal value, and might reject unrecognized values.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'A string value representing the REST resource this object represents.
+            Servers might infer this from the endpoint the client submits requests to.
+            Cannot update, and uses CamelCase formatting.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: Defines the desired state of DBaaSPlatform.
+          properties:
+            syncPeriod:
+              description: Sets the minimum interval at which the provider operator controllers reconcile.
+                The default value is 180 minutes.
+              maximum: 1440
+              minimum: 1
+              type: integer
+          type: object
+        status:
+          description: Defines the observed state of DBaaSPlatform.
+          properties:
+            conditions:
+              items:
+                description: "Has details for one aspect of the current state of this API resource.
+                  This structure is for direct use as an array at the field path .status.conditions.
+                  For example,
+                  type FooStatus struct{     // Represents the observations of a foo's
+                  current state.     // Known .status.conditions.type are: \"Available\",
+                  \"Progressing\", and \"Degraded\"     // +patchMergeKey=type     //
+                  +patchStrategy=merge     // +listType=map     // +listMapKey=type
+                  \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                  patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                  \n     // other fields }"
+                properties:
+                  lastTransitionTime:
+                    description: The last time the condition transitioned from one status to another when the underlying condition changed.
+                      If that is not known, then use the time when the API field changed.
+                    format: date-time
+                    type: string
+                  message:
+                    description: A human readable message indicating details about the change.
+                      This can be an empty string.
+                    maxLength: 32768
+                    type: string
+                  observedGeneration:
+                    description: Represents the .metadata.generation based upon the condition that was set.
+                      For example, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                  reason:
+                    description: Has a programmatic identifier indicating the reason for the condition's last change.
+                      Producers of specific condition types can define expected values and meanings for this field, and consider whether the values are genuine APIs.
+                      Use CamelCase formatting value.
+                      This field might have a value set.
+                    maxLength: 1024
+                    minLength: 1
+                    pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                    type: string
+                  status:
+                    description: 'The status of the condition is one of the following: True, False, or Unknown.'
+                    enum:
+                    - "True"
+                    - "False"
+                    - Unknown
+                    type: string
+                  type:
+                    description: Type of condition in CamelCase formatting, or in foo.example.com/CamelCase.
+                      Many .condition.type values are consistent across resources, for example, the Available condition.
+                      Because arbitrary conditions can be useful, the ability to minimize collisions is important.
+                      See .node.status.conditions for more information.
+                      The regular expression match is (dns1123SubdomainFmt/)?(qualifiedNameFmt).
+                    maxLength: 316
+                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                    type: string
+                required:
+                - lastTransitionTime
+                - message
+                - reason
+                - status
+                - type
+                type: object
+              type: array
+            platformsStatus:
+              items:
+                description: Defines the status of the DBaaSPlatform object.
+                properties:
+                  lastMessage:
+                    type: string
+                  platformName:
+                    description: Name of the platform.
+                    type: string
+                  platformStatus:
+                    description: The status of a platform installation.
+                    type: string
+                required:
+                - platformName
+                - platformStatus
+                type: object
+              type: array
+          required:
+          - platformsStatus
+          type: object
+      type: object
