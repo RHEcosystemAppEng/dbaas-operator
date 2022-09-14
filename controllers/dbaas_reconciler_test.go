@@ -370,8 +370,8 @@ var _ = Describe("Check inventory", func() {
 				},
 			},
 		}
-		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
-		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory2, metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory2, metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory2))
 

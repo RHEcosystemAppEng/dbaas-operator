@@ -128,7 +128,7 @@ func assertResourceCreation(object client.Object) func() {
 	}
 }
 
-func assertInventoryCreationWithProviderStatus(object client.Object, inventroyDBaaSStatus metav1.ConditionStatus, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
+func assertResourceCreationWithProviderStatus(object client.Object, inventroyDBaaSStatus metav1.ConditionStatus, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		assertResourceCreation(object)()
 		err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object)
@@ -232,7 +232,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, status metav1.Condit
 	}
 }
 
-func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBaaSStatus metav1.ConditionStatus, providerResourceKind string, providerResourceStatus interface{}) func() {
+func assertDBaaSResourceProviderStatusUpdated(object client.Object, resourceDBaaSStatus metav1.ConditionStatus, providerResourceKind string, providerResourceStatus interface{}) func() {
 	return func() {
 		By("retrieving current DBaaS resource")
 		objectKey := client.ObjectKeyFromObject(object)
@@ -282,11 +282,11 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBa
 				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
 				return len(conds), nil
 			case *v1alpha1.DBaaSConnection:
-				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, inventoryDBaaSStatus)()
+				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, resourceDBaaSStatus)()
 				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSConnectionReadyType)
 				return len(conds), nil
 			case *v1alpha1.DBaaSInstance:
-				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, inventoryDBaaSStatus)()
+				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, resourceDBaaSStatus)()
 				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInstanceReadyType)
 				return len(conds), nil
 			default:
@@ -296,7 +296,7 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, inventoryDBa
 		}, timeout).Should(Equal(1))
 		switch v := object.(type) {
 		case *v1alpha1.DBaaSInventory:
-			assertInventoryStatus(v, v1alpha1.DBaaSInventoryReadyType, inventoryDBaaSStatus, providerResourceStatus)()
+			assertInventoryStatus(v, v1alpha1.DBaaSInventoryReadyType, resourceDBaaSStatus, providerResourceStatus)()
 		case *v1alpha1.DBaaSConnection:
 			assertConnectionStatus(v, v1alpha1.DBaaSConnectionReadyType, providerResourceStatus)()
 		case *v1alpha1.DBaaSInstance:

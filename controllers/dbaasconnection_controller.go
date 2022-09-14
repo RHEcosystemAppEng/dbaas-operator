@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -99,7 +101,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return provider.Spec.ConnectionKind
 			},
 			func() interface{} {
-				return connection.Spec.DeepCopy()
+				return r.getConnectionSpec(ctx, connection.Spec.DeepCopy())
 			},
 			func() interface{} {
 				return &v1alpha1.DBaaSProviderConnection{}
@@ -218,4 +220,42 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	CleanConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connectionObj)
 	return nil
 
+}
+
+func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha1.DBaaSConnectionSpec) interface{} {
+	logger := ctrl.LoggerFrom(ctx)
+
+	if len(spec.InstanceID) > 0 {
+		return spec
+	}
+
+	instanceRef := spec.InstanceRef
+	spec.InstanceRef = nil
+
+	if instanceRef == nil || len(instanceRef.Name) == 0 {
+		logger.Error(fmt.Errorf("instance reference is not properly set"), "Cannot read the instance reference")
+		return spec
+	}
+
+	instance := &v1alpha1.DBaaSInstance{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name:      instanceRef.Name,
+		Namespace: instanceRef.Namespace,
+	}, instance); err != nil {
+		logger.Error(err, "Cannot read the instance reference")
+		return spec
+	}
+
+	if !reflect.DeepEqual(instance.Spec.InventoryRef, spec.InventoryRef) {
+		logger.Error(fmt.Errorf("instance and connection don't use the same inventory reference"), "Cannot use the instance reference")
+		return spec
+	}
+
+	if len(instance.Status.InstanceID) == 0 {
+		logger.Error(fmt.Errorf("instance ID is not avaiable"), "Cannot use the instance reference")
+		return spec
+	}
+
+	spec.InstanceID = instance.Status.InstanceID
+	return spec
 }
