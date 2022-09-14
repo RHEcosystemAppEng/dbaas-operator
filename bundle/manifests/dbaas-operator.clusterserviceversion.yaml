@@ -473,9 +473,9 @@ spec:
                 - name: CSV_VERSION_CRUNCHY_BRIDGE
                   value: crunchy-bridge-operator.v0.0.6-rc.1
                 - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
-                  value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+                  value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
                 - name: CSV_VERSION_MONGODB_ATLAS
-                  value: mongodb-atlas-kubernetes.v0.2.0
+                  value: mongodb-atlas-kubernetes.v0.3.0
                 - name: RELATED_IMAGE_COCKROACHDB_CATALOG
                   value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
                 - name: CSV_VERSION_COCKROACHDB
@@ -588,7 +588,7 @@ spec:
     name: observability-catalog
   - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6-rc.1
     name: crunchy-bridge-catalog
-  - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+  - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
     name: mongodb-atlas-catalog
   - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
     name: cockroachdb-catalog
