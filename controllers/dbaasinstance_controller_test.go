@@ -141,7 +141,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-					ConnectionNamespaces: []string{"valid-ns", "random"},
+					ConnectionNamespaces: &[]string{"valid-ns", "random"},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
@@ -339,7 +339,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{otherNS.Name},
+						ConnectionNamespaces: &[]string{otherNS.Name},
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
@@ -453,7 +453,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{"*"},
+						ConnectionNamespaces: &[]string{"*"},
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
@@ -568,7 +568,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{"*"},
+						ConnectionNamespaces: &[]string{"*"},
 						DisableProvisions:    &isTrue,
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{

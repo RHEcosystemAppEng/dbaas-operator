@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -97,6 +98,12 @@ func validateInventory(inv *DBaaSInventory, oldInv *DBaaSInventory) error {
 	// Check RDS
 	if oldInv == nil && inv.Spec.ProviderRef.Name == rdsRegistration {
 		if err := validateRDS(); err != nil {
+			return err
+		}
+	}
+	// Check ns selector
+	if inv.Spec.ConnectionNsSelector != nil {
+		if _, err := metav1.LabelSelectorAsSelector(inv.Spec.ConnectionNsSelector); err != nil {
 			return err
 		}
 	}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 )
 
@@ -248,7 +247,7 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 }
 
 // setConnectionRequestDurationSeconds set the metrics for connection request duration in seconds
-func setConnectionRequestDurationSeconds(provider string, account string, connection v1alpha1.DBaaSConnection, execution Execution) {
+func setConnectionRequestDurationSeconds(provider string, account string, connection dbaasv1alpha1.DBaaSConnection, execution Execution) {
 	httpDuration := time.Since(execution.begin)
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionProviderSyncType {
@@ -303,7 +302,7 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1a
 }
 
 // setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
-func setInstanceRequestDurationSeconds(provider string, account string, instance v1alpha1.DBaaSInstance, execution Execution) {
+func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1alpha1.DBaaSInstance, execution Execution) {
 	httpDuration := time.Since(execution.begin)
 	for _, cond := range instance.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInstanceProviderSyncType {
