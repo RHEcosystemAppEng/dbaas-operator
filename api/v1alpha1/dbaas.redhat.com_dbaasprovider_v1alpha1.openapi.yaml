@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  description: The official Red Hat OpenShift Database Access API.
+  title: Schema for the DBaaSProvider API
+  version: v1alpha1
+components:
+  schemas:
+    DBaaSProvider:
+      description: The schema for the DBaaSProvider API.
+      properties:
+        apiVersion:
+          description: 'Defines the versioned schema of this representation of an object.
+            Servers should convert recognized schemas to the latest internal value, and might reject unrecognized values.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'A string value representing the REST resource this object represents.
+            Servers might infer this from the endpoint the client submits requests to.
+            Cannot update, and uses CamelCase formatting.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: Defines the desired state of a DBaaSProvider object.
+          properties:
+            allowsFreeTrial:
+              description: Indicates whether the provider provides free trials.
+              type: boolean
+            connectionKind:
+              description: The name of the connection resource (CRD) as defined by the provider.
+              type: string
+            credentialFields:
+              description: Indicates what information to collect from the user interface and how to display fields in a form.
+              items:
+                description: Defines the attributes.
+                properties:
+                  displayName:
+                    description: A user-friendly name for this field.
+                    type: string
+                  helpText:
+                    description: Additional information about the field.
+                    type: string
+                  key:
+                    description: The name for this field.
+                    type: string
+                  required:
+                    description: Defines if the field is required or not.
+                    type: boolean
+                  type:
+                    description: 'The type of field: string, maskedstring, integer, or boolean.'
+                    type: string
+                required:
+                - displayName
+                - key
+                - required
+                - type
+                type: object
+              type: array
+            externalProvisionDescription:
+              description: Instructions on how to provision instances by using the database provider's web portal.
+              type: string
+            externalProvisionURL:
+              description: The URL for provisioning instances by using the database provider's web portal.
+              type: string
+            instanceKind:
+              description: The name of the instance resource (CRD) as defined by the provider for provisioning.
+              type: string
+            instanceParameterSpecs:
+              description: Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+              items:
+                description: Defines the information for how a parameter can be collected from the user interface, and how to display fields in a form to provision a database instance.
+                properties:
+                  defaultValue:
+                    description: The default value for this field.
+                    type: string
+                  displayName:
+                    description: A user-friendly name for this parameter.
+                    type: string
+                  name:
+                    description: The name for this field.
+                    type: string
+                  required:
+                    description: Defines if the field is required or not.
+                    type: boolean
+                  type:
+                    description: 'The type of field: string, maskedstring, integer, or boolean.'
+                    type: string
+                required:
+                - displayName
+                - name
+                - required
+                - type
+                type: object
+              type: array
+            inventoryKind:
+              description: The name of the inventory resource (CRD) as defined by the database provider.
+              type: string
+            provider:
+              description: Has information about database provider and platform.
+              properties:
+                displayDescription:
+                  description: Indicates the description text shown for a database provider within the user interface.
+                    For example, the developers catalog tile description.
+                  type: string
+                displayName:
+                  description: A user-friendly name for this database provider.
+                    For example, 'MongoDB Atlas'.
+                  type: string
+                icon:
+                  description: Indicates what logo to display on developers catalog tile.
+                  properties:
+                    base64data:
+                      type: string
+                    mediatype:
+                      type: string
+                  required:
+                  - base64data
+                  - mediatype
+                  type: object
+                name:
+                  description: The name used to specify the service binding origin parameter.
+                    For example, 'Red Hat DBaaS / MongoDB Atlas'.
+                  type: string
+              required:
+              - displayDescription
+              - displayName
+              - icon
+              - name
+              type: object
+          required:
+          - allowsFreeTrial
+          - connectionKind
+          - credentialFields
+          - externalProvisionDescription
+          - externalProvisionURL
+          - instanceKind
+          - instanceParameterSpecs
+          - inventoryKind
+          - provider
+          type: object
+        status:
+          description: Defines the observed state of a DBaaSProvider object.
+          type: object
+      type: object

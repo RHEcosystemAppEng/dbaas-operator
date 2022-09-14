@@ -1,0 +1,153 @@
+openapi: 3.0.0
+info:
+  description: The official Red Hat OpenShift Database Access APIs.
+  title: Schema for the DBaaSInventory API
+  version: v1alpha1
+components:
+  schemas:
+    DBaaSInventory:
+      description: The schema for the DBaaSInventory API.
+        Creation of inventory objects requires a valid namespace, and controlled by the existence of a DBaaSPolicy object.
+      properties:
+        apiVersion:
+          description: 'Defines the versioned schema of this representation of an object.
+            Servers should convert recognized schemas to the latest internal value, and might reject unrecognized values.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'A string value representing the REST resource this object represents.
+            Servers might infer this from the endpoint the client submits requests to.
+            Cannot update, and uses CamelCase formatting.
+            For more information: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: The DBaaSOperatorInventorySpec defines the desired state of a DBaaSInventory.
+          properties:
+            connectionNamespaces:
+              description: Namespaces where DBaaSConnections and DBaaSInstances are only allowed to reference a policy's inventories.
+                Each inventory can individually override this.
+                Using an asterisk (*) allows all namespaces.
+                If not set in either the policy or by an inventory object, connections are only allowed in the inventory's namespace.
+              items:
+                type: string
+              type: array
+            credentialsRef:
+              description: The secret containing the provider-specific connection credentials to use with its API endpoint.
+                The format of the secret specifies in the provider’s operator in its DBaaSProvider CR, the CredentialFields key.
+                The secret must exist within the same namespace as the inventory.
+              properties:
+                name:
+                  description: Name of the referent.
+                  type: string
+              required:
+              - name
+              type: object
+            disableProvisions:
+              description: Disable provisioning against inventory accounts.
+              type: boolean
+            providerRef:
+              description: A reference to a DBaaSProvider custom resource (CR).
+              properties:
+                name:
+                  description: The name for an object of a known type.
+                  type: string
+                namespace:
+                  description: Name of the namespace containing an object of a known type.
+                  type: string
+              required:
+              - name
+              type: object
+          required:
+          - credentialsRef
+          - providerRef
+          type: object
+        status:
+          description: Defines the inventory status that the provider's operator uses.
+          properties:
+            conditions:
+              items:
+                description: "Has details for one aspect of the current state of this API resource.
+                  This structure is for direct use as an array at the field path .status.conditions.
+                  For example,
+                  type FooStatus struct{     // Represents the observations of a foo's
+                  current state.     // Known .status.conditions.type are: \"Available\",
+                  \"Progressing\", and \"Degraded\"     // +patchMergeKey=type     //
+                  +patchStrategy=merge     // +listType=map     // +listMapKey=type
+                  \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                  patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                  \n     // other fields }"
+                properties:
+                  lastTransitionTime:
+                    description: The last time the condition transitioned from one status to another when the underlying condition changed.
+                      If that is not known, then use the time when the API field changed.
+                    format: date-time
+                    type: string
+                  message:
+                    description: A human readable message indicating details about the change.
+                      This can be an empty string.
+                    maxLength: 32768
+                    type: string
+                  observedGeneration:
+                    description: Represents the .metadata.generation based upon the condition that was set.
+                      For example, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                    format: int64
+                    minimum: 0
+                    type: integer
+                  reason:
+                    description: Has a programmatic identifier indicating the reason for the condition's last change.
+                      Producers of specific condition types can define expected values and meanings for this field, and consider whether the values are genuine APIs.
+                      Use CamelCase formatting value.
+                      This field might have a value set.
+                    maxLength: 1024
+                    minLength: 1
+                    pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                    type: string
+                  status:
+                    description: 'The status of the condition is one of the following: True, False, or Unknown.'
+                    enum:
+                    - "True"
+                    - "False"
+                    - Unknown
+                    type: string
+                  type:
+                    description: Type of condition in CamelCase formatting, or in foo.example.com/CamelCase.
+                      Many .condition.type values are consistent across resources, for example, the Available condition.
+                      Because arbitrary conditions can be useful, the ability to minimize collisions is important.
+                      See .node.status.conditions for more information.
+                      The regular expression match is (dns1123SubdomainFmt/)?(qualifiedNameFmt).
+                    maxLength: 316
+                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                    type: string
+                required:
+                - lastTransitionTime
+                - message
+                - reason
+                - status
+                - type
+                type: object
+              type: array
+            instances:
+              description: A list of instances returned from querying the database provider.
+              items:
+                description: Defines the information of a database instance.
+                properties:
+                  instanceID:
+                    description: A provider-specific identifier for this instance in the database service.
+                      It can contain one or more pieces of information used by the provider operator to identify the instance on the database service.
+                    type: string
+                  instanceInfo:
+                    additionalProperties:
+                      type: string
+                    description: Any other provider-specific information related to this instance.
+                    type: object
+                  name:
+                    description: The name of this instance in the database service.
+                    type: string
+                required:
+                - instanceID
+                type: object
+              type: array
+          type: object
+      type: object
