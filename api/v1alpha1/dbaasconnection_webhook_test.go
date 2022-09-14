@@ -127,7 +127,7 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 			}
 			err := k8sClient.Create(ctx, testDBaaSConnectionNoInstance)
 			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
-				"spec.instanceID: Invalid value: \"\": both instanceID and instanceRef are not specified"))
+				"spec.instanceID: Invalid value: \"\": either instanceID or instanceRef must be specified"))
 		})
 	})
 
