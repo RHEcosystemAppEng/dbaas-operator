@@ -63,7 +63,7 @@ func (r *DBaaSConnection) validateCreateDBaaSConnectionSpec() error {
 		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "both instanceID and instanceRef are specified")
 	}
 	if len(r.Spec.InstanceID) == 0 && (r.Spec.InstanceRef == nil || len(r.Spec.InstanceRef.Name) == 0) {
-		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "both instanceID and instanceRef are not specified")
+		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "either instanceID or instanceRef must be specified")
 	}
 	return nil
 }
