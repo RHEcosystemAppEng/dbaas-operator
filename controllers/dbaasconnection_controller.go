@@ -94,6 +94,19 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
 		return ctrl.Result{}, nil
 	} else {
+		spec, err := r.getConnectionSpec(ctx, connection.Spec.DeepCopy())
+		if err != nil {
+			logger.Error(err, "Cannot read the instance reference")
+			cond := metav1.Condition{
+				Type:    v1alpha1.DBaaSConnectionReadyType,
+				Status:  metav1.ConditionFalse,
+				Reason:  v1alpha1.DBaaSInstanceNotAvailable,
+				Message: err.Error(),
+			}
+			r.updateConnectionStatus(ctx, &connection, &cond)
+			SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
+			return ctrl.Result{}, err
+		}
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&connection,
@@ -101,7 +114,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return provider.Spec.ConnectionKind
 			},
 			func() interface{} {
-				return r.getConnectionSpec(ctx, connection.Spec.DeepCopy())
+				return spec
 			},
 			func() interface{} {
 				return &v1alpha1.DBaaSProviderConnection{}
@@ -222,19 +235,15 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 
 }
 
-func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha1.DBaaSConnectionSpec) interface{} {
-	logger := ctrl.LoggerFrom(ctx)
-
+func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha1.DBaaSConnectionSpec) (interface{}, error) {
 	if len(spec.InstanceID) > 0 {
-		return spec
+		return spec, nil
 	}
 
 	instanceRef := spec.InstanceRef
-	spec.InstanceRef = nil
 
 	if instanceRef == nil || len(instanceRef.Name) == 0 {
-		logger.Error(fmt.Errorf("instance reference is not properly set"), "Cannot read the instance reference")
-		return spec
+		return nil, fmt.Errorf("instance reference is not properly set")
 	}
 
 	instance := &v1alpha1.DBaaSInstance{}
@@ -242,20 +251,30 @@ func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec 
 		Name:      instanceRef.Name,
 		Namespace: instanceRef.Namespace,
 	}, instance); err != nil {
-		logger.Error(err, "Cannot read the instance reference")
-		return spec
+		return nil, fmt.Errorf("cannot read the instance reference")
 	}
 
 	if !reflect.DeepEqual(instance.Spec.InventoryRef, spec.InventoryRef) {
-		logger.Error(fmt.Errorf("instance and connection don't use the same inventory reference"), "Cannot use the instance reference")
-		return spec
+		return nil, fmt.Errorf("instance and connection don't use the same inventory reference")
 	}
 
 	if len(instance.Status.InstanceID) == 0 {
-		logger.Error(fmt.Errorf("instance ID is not avaiable"), "Cannot use the instance reference")
-		return spec
+		return nil, fmt.Errorf("instance ID is not available")
 	}
 
 	spec.InstanceID = instance.Status.InstanceID
-	return spec
+	spec.InstanceRef = nil
+	return spec, nil
+}
+
+func (r *DBaaSConnectionReconciler) updateConnectionStatus(ctx context.Context, connection *v1alpha1.DBaaSConnection, cond *metav1.Condition) {
+	apimeta.SetStatusCondition(&connection.Status.Conditions, *cond)
+	logger := ctrl.LoggerFrom(ctx)
+	if err := r.Client.Status().Update(ctx, connection); err != nil {
+		if errors.IsConflict(err) {
+			logger.V(1).Info("DBaaSConnection Object modified", "DBaaSConnection Object", connection)
+		} else {
+			logger.Error(err, "Error updating the DBaaSConnection Object status", "DBaaSConnection Object", connection)
+		}
+	}
 }
