@@ -157,6 +157,6 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instanceObj)
+	CleanInstanceMetrics(instanceObj)
 	return nil
 }
