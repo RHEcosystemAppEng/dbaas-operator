@@ -42,6 +42,7 @@ const (
 	DBaaSInventoryNotReady         string = "DBaaSInventoryNotReady"
 	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
 	DBaaSInvalidNamespace          string = "InvalidNamespace"
+	DBaaSInstanceNotAvailable      string = "DBaaSInstanceNotAvailable"
 	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
 	ProviderReconcileError         string = "ProviderReconcileError"
 	ProviderParsingError           string = "ProviderParsingError"
