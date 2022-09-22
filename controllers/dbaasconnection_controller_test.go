@@ -192,6 +192,97 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSConnection, metav1.ConditionFalse, v1alpha1.DBaaSInvalidNamespace))
 	})
+	Context("after creating DBaaSConnection with an invalid instanceRef", func() {
+		connectionName := "test-connection"
+		instanceName := "test-instance-invalid"
+		inventoryName := "test-connection-inventory"
+		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
+			CredentialsRef: &v1alpha1.LocalObjectReference{
+				Name: testSecret.Name,
+			},
+		}
+		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha1.NamespacedName{
+					Name: testProviderName,
+				},
+				DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
+					ConnectionNamespaces: []string{"valid-ns", "random"},
+				},
+				DBaaSInventorySpec: *DBaaSInventorySpec,
+			},
+		}
+		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
+			InventoryRef: v1alpha1.NamespacedName{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			Name:          "test-instance-to-create",
+			CloudProvider: "aws",
+			CloudRegion:   "test-region",
+			OtherInstanceParams: map[string]string{
+				"testParam": "test-param",
+			},
+		}
+		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      instanceName,
+				Namespace: testNamespace,
+			},
+			Spec: *DBaaSInstanceSpec,
+		}
+		lastTransitionTime := getLastTransitionTimeForTest()
+		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+			Instances: []v1alpha1.Instance{
+				{
+					InstanceID: "testInstanceID",
+					Name:       "testInstance",
+					InstanceInfo: map[string]string{
+						"testInstanceInfo": "testInstanceInfo",
+					},
+				},
+			},
+			Conditions: []metav1.Condition{
+				{
+					Type:               "SpecSynced",
+					Status:             metav1.ConditionTrue,
+					Reason:             "Ready",
+					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+				},
+			},
+		}
+		DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+			InventoryRef: v1alpha1.NamespacedName{
+				Name:      inventoryName,
+				Namespace: testNamespace,
+			},
+			InstanceRef: &v1alpha1.NamespacedName{
+				Name:      createdDBaaSInstance.Name,
+				Namespace: createdDBaaSInstance.Namespace,
+			},
+		}
+		createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      connectionName,
+				Namespace: testNamespace,
+			},
+			Spec: *DBaaSConnectionSpec,
+		}
+		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
+		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
+		AfterEach(assertResourceDeletion(createdDBaaSConnection))
+		AfterEach(assertResourceDeletion(createdDBaaSInstance))
+		AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSConnection, metav1.ConditionFalse, v1alpha1.DBaaSInstanceNotAvailable))
+	})
 })
 
 var _ = Describe("DBaaSConnection controller - nominal", func() {
