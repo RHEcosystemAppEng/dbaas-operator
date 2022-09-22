@@ -250,7 +250,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				{
 					Type:               "SpecSynced",
 					Status:             metav1.ConditionTrue,
-					Reason:             "Ready",
+					Reason:             "SyncOK",
 					LastTransitionTime: metav1.Time{Time: lastTransitionTime},
 				},
 			},

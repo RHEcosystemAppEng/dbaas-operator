@@ -240,7 +240,8 @@ func SetConnectionMetrics(provider string, account string, connection dbaasv1alp
 func setConnectionStatusMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection) {
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionReadyType {
-			DBaaSConnectionStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace})
+			// First clean up existing metrics for this connection
+			DBaaSConnectionStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(1)
 			} else {
