@@ -19,6 +19,9 @@ const (
 	// ConsolePlugin49Tag tag for the console plugin in OpenShift 4.9
 	ConsolePlugin49Tag = "-4.9"
 
+	// DBaaSQuickStartVersion version for the quick start guide
+	DBaaSQuickStartVersion = "dbaas-quick-starts:0.3.0"
+
 	// CRUNCHY_BRIDGE
 	crunchyBridgeCatalogImg  = "RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG"
 	crunchyBridgeCSV         = "CSV_VERSION_CRUNCHY_BRIDGE"
@@ -113,6 +116,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
+		CSV:  DBaaSQuickStartVersion,
 	},
 	dbaasv1alpha1.RDSProviderInstallation: {
 		Name:           rdsProviderName,
