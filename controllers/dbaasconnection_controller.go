@@ -230,7 +230,7 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connectionObj)
+	CleanConnectionMetrics(connectionObj)
 	return nil
 
 }
