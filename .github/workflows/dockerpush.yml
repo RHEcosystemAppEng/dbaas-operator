@@ -7,10 +7,6 @@ on:
     - release-*
     tags:
       - '*'
-  pull_request:
-    branches:
-    - main
-    - release-*
 
 jobs:
   build:
