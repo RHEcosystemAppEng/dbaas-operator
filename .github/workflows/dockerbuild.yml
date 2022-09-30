@@ -24,7 +24,8 @@ jobs:
       id: build-image
       with:
         image: dbaas-operator
-        tags: ${{ github.ref_name }} ${{ github.sha }}
+        platforms: linux/amd64
+        tags: ${{ github.sha }}
         containerfiles: |
           ./Dockerfile
 
