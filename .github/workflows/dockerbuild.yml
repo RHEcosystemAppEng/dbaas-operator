@@ -1,20 +1,12 @@
 name: Build Image
 
 on:
-  push:
-    branches:
-    - main
-    - release-*
-    tags:
-      - '*'
   pull_request:
     branches:
     - main
     - release-*
 
 env:
-  REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
-  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWOR }}
   REGISTRY_ORG: tchughesiv
 
 jobs:
@@ -23,6 +15,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Log in to Quay.io
+      uses: redhat-actions/podman-login@v1
+      id: quay-login
+      with:
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PASSWOR }}
+        registry: quay.io
 
     - name: Image build
       uses: redhat-actions/buildah-build@v2
@@ -33,14 +33,6 @@ jobs:
         tags: ${{ github.sha }}
         containerfiles: |
           ./Dockerfile
-
-    - name: Log in to Quay.io
-      uses: redhat-actions/podman-login@v1
-      id: quay-login
-      with:
-        username: ${{ env.REGISTRY_USER }}
-        password: ${{ env.REGISTRY_PASSWORD }}
-        registry: quay.io
 
     - name: Image push
       uses: redhat-actions/push-to-registry@v2
