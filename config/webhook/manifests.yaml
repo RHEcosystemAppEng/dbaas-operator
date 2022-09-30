@@ -46,3 +46,23 @@ webhooks:
     resources:
     - dbaasinventories
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-dbaas-redhat-com-v1alpha1-dbaaspolicy
+  failurePolicy: Fail
+  name: vdbaaspolicy.kb.io
+  rules:
+  - apiGroups:
+    - dbaas.redhat.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - dbaaspolicies
+  sideEffects: None

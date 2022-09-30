@@ -116,19 +116,44 @@ func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace str
 	if namespace == inventory.Namespace {
 		return true, nil
 	}
-	validNamespaces := inventory.Spec.ConnectionNamespaces
-	if len(validNamespaces) == 0 {
-		policyList, err := r.policyListByNS(ctx, inventory.Namespace)
+	var validNamespaces []string
+	var validNsSelector *metav1.LabelSelector
+	policyList, err := r.policyListByNS(ctx, inventory.Namespace)
+	if err != nil {
+		return false, err
+	}
+	if policy := getActivePolicy(policyList); policy != nil {
+		if policy.Spec.ConnectionNamespaces != nil {
+			validNamespaces = *policy.Spec.ConnectionNamespaces
+		}
+		if policy.Spec.ConnectionNsSelector != nil {
+			validNsSelector = policy.Spec.ConnectionNsSelector
+		}
+	}
+	if inventory.Spec.ConnectionNamespaces != nil {
+		validNamespaces = *inventory.Spec.ConnectionNamespaces
+	}
+	if inventory.Spec.ConnectionNsSelector != nil {
+		validNsSelector = inventory.Spec.ConnectionNsSelector
+	}
+
+	// valid if all namespaces are supported via wildcard
+	if contains(validNamespaces, "*") || contains(validNamespaces, namespace) {
+		return true, nil
+	}
+
+	if validNsSelector != nil {
+		selector, err := metav1.LabelSelectorAsSelector(validNsSelector)
 		if err != nil {
 			return false, err
 		}
-		for _, policy := range policyList.Items {
-			validNamespaces = append(validNamespaces, policy.Spec.ConnectionNamespaces...)
+		var selNS corev1.NamespaceList
+		if err := r.List(ctx, &selNS, &client.ListOptions{LabelSelector: selector}); err != nil {
+			return false, err
 		}
-	}
-	// valid if all namespaces are supported via wildcard
-	if contains(validNamespaces, "*") {
-		return true, nil
+		for _, ns := range selNS.Items {
+			validNamespaces = append(validNamespaces, ns.Name)
+		}
 	}
 	return contains(validNamespaces, namespace), nil
 }
