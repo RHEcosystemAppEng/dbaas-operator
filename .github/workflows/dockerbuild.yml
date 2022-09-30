@@ -12,6 +12,11 @@ on:
     - main
     - release-*
 
+env:
+  REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWOR }}
+  REGISTRY_ORG: tchughesiv
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,15 +38,15 @@ jobs:
       uses: redhat-actions/podman-login@v1
       id: quay-login
       with:
-        username: ${{ secrets.REGISTRY_USER }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
         registry: quay.io
 
     - name: Image push
       uses: redhat-actions/push-to-registry@v2
       id: push-to-quay
       with:
-        registry: ${{ steps.quay-login.outputs.registry }}/tchughesiv
+        registry: ${{ steps.quay-login.outputs.registry }}/${{ env.REGISTRY_ORG }}
         image: ${{ steps.build-image.outputs.image }}
         tags: ${{ steps.build-image.outputs.tags }}
 
