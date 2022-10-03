@@ -1,10 +1,6 @@
 name: Build Image
 
 on:
-  push:
-    branches:
-    - main
-    - release-*
   pull_request:
     branches:
     - main
@@ -16,10 +12,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Buildah Action
+
+    - name: Image build
       uses: redhat-actions/buildah-build@v2
       with:
         image: dbaas-operator
-        tags: ${{ github.sha }}
+        platforms: linux/amd64
         containerfiles: |
           ./Dockerfile
