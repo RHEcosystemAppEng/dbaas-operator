@@ -39,17 +39,6 @@ jobs:
       run: echo "::set-output name=VERSION::$(DEV=true make get-version)"
       id: version
 
-    - name: Catalog build
-      run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} CONTAINER_ENGINE='"buildah bud"' make catalog-build
-
-    - name: Catalog push
-      uses: redhat-actions/push-to-registry@v2
-      id: catalog-to-quay
-      with:
-        registry: ${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}
-        image: ${{ env.IMG }}-catalog
-        tags: ${{ steps.version.outputs.VERSION }}
-
     - name: Print image url
       run: |
         echo "Image pushed to ${{ env.IMAGE_TAG_BASE }}:v${{ steps.version.outputs.VERSION }}"
