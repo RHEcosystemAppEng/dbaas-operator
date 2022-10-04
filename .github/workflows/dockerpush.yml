@@ -7,15 +7,19 @@ on:
     - release-*
     tags:
       - '*'
+  pull_request:
+    branches:
+    - main
+    - release-*
 
 env:
   REGISTRY: quay.io
-  REGISTRY_ORG: ecosystem-appeng
+  REGISTRY_ORG: tchughesiv
   IMG: dbaas-operator-dev
 
 jobs:
   push:
-    if: github.repository == 'RHEcosystemAppEng/dbaas-operator'
+    #if: github.repository == 'RHEcosystemAppEng/dbaas-operator'
     runs-on: ubuntu-latest
     environment: quay push
     steps:
@@ -77,6 +81,7 @@ jobs:
         registry: ${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}
         image: ${{ steps.build-bundle.outputs.image }}
         tags: ${{ steps.build-bundle.outputs.tags }}
+      run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} CONTAINER_ENGINE='"buildah bud"' make catalog-build
 
     - name: Catalog build
       run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} CONTAINER_ENGINE='"buildah bud"' make catalog-build
