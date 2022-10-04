@@ -78,7 +78,19 @@ jobs:
         image: ${{ steps.build-bundle.outputs.image }}
         tags: ${{ steps.build-bundle.outputs.tags }}
 
+    - name: Catalog build
+      run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} CONTAINER_ENGINE='"buildah bud"' make catalog-build
+
+    - name: Catalog push
+      uses: redhat-actions/push-to-registry@v2
+      id: catalog-to-quay
+      with:
+        registry: ${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}
+        image: ${{ env.IMG }}-catalog
+        tags: ${{ steps.version.outputs.VERSION }}
+
     - name: Print image url
       run: |
         echo "Image pushed to ${{ steps.image-to-quay.outputs.registry-paths }}"
         echo "Bundle pushed to ${{ steps.bundle-to-quay.outputs.registry-paths }}"
+        echo "Catalog pushed to ${{ steps.catalog-to-quay.outputs.registry-paths }}"
