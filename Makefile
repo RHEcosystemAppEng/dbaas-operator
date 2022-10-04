@@ -134,7 +134,7 @@ test: sdk-manifests vet ## Run tests.
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##@ Build
-release-build: build generate bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
+release-build: bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
 
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
