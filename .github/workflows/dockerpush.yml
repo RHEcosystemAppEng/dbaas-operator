@@ -74,6 +74,6 @@ jobs:
         tags: ${{ steps.build-bundle.outputs.tags }}
 
     - name: Print image url
-      run:
-      - echo "Image pushed to ${{ steps.image-to-quay.outputs.registry-paths }}"
-      - echo "Bundle pushed to ${{ steps.bundle-to-quay.outputs.registry-paths }}"
+      run: |
+        echo "Image pushed to ${{ steps.image-to-quay.outputs.registry-paths }}"
+        echo "Bundle pushed to ${{ steps.bundle-to-quay.outputs.registry-paths }}"
