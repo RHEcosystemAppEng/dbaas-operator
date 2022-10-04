@@ -7,6 +7,11 @@ VERSION ?= 0.3.0
 
 CONTAINER_ENGINE?=docker
 
+DEV ?= false
+ifeq ($(DEV),true)
+  VERSION := $(VERSION)-$(shell git rev-parse --short HEAD)
+endif
+
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
 #
 # This is NOT required if you are incrementally building the catalog index. If you need to increment on
@@ -21,8 +26,8 @@ CONTAINER_ENGINE?=docker
 ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-# 0.2.0 catalog image - quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
-CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
+# CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
+CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
@@ -311,3 +316,7 @@ wrapper-build: ## Build the catalog wrapper image.
 .PHONY: wrapper-push
 wrapper-push: ## Push the catalog wrapper image.
 	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper 
+
+.PHONY: get-version
+get-version: ; $(info ${VERSION})
+	@echo -n
