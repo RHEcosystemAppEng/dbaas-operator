@@ -9,9 +9,7 @@ on:
       - '*'
 
 env:
-  REGISTRY: quay.io
-  REGISTRY_ORG: ecosystem-appeng
-  IMG: dbaas-operator-dev
+  IMAGE_TAG_BASE: quay.io/ecosystem-appeng/dbaas-operator-dev
 
 jobs:
   push:
@@ -27,56 +25,19 @@ jobs:
       with:
         go-version: 1.17.x
 
-    - name: Generate manifests and bundle
-      run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} make bundle
-
-    - name: Retrieve version
-      run: |
-        echo "::set-output name=VERSION::$(DEV=true make get-version)"
-      id: version
-
-    - name: Image build
-      uses: redhat-actions/buildah-build@v2
-      id: build-image
-      with:
-        image: ${{ env.IMG }}
-        platforms: linux/amd64
-        tags: ${{ steps.version.outputs.VERSION }} ${{ github.sha }}
-        containerfiles: |
-          ./Dockerfile
-
-    - name: Bundle build
-      uses: redhat-actions/buildah-build@v2
-      id: build-bundle
-      with:
-        image: ${{ env.IMG }}-bundle
-        platforms: linux/amd64
-        tags: ${{ steps.version.outputs.VERSION }} ${{ github.sha }}
-        containerfiles: |
-          ./bundle.Dockerfile
-
     - name: Log in to image registry
       uses: redhat-actions/podman-login@v1
       with:
         username: ${{ secrets.REGISTRY_USER }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
-        registry: ${{ env.REGISTRY }}
+        registry: quay.io
 
-    - name: Image push
-      uses: redhat-actions/push-to-registry@v2
-      id: image-to-quay
-      with:
-        registry: ${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}
-        image: ${{ steps.build-image.outputs.image }}
-        tags: ${{ steps.build-image.outputs.tags }}
+    - name: Build and push release
+      run: IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} CONTAINER_ENGINE=podman DEV=true make release-build release-push
 
-    - name: Bundle push
-      uses: redhat-actions/push-to-registry@v2
-      id: bundle-to-quay
-      with:
-        registry: ${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}
-        image: ${{ steps.build-bundle.outputs.image }}
-        tags: ${{ steps.build-bundle.outputs.tags }}
+    - name: Retrieve version
+      run: echo "::set-output name=VERSION::$(DEV=true make get-version)"
+      id: version
 
     - name: Catalog build
       run: DEV=true IMAGE_TAG_BASE=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.IMG }} CONTAINER_ENGINE='"buildah bud"' make catalog-build
@@ -91,6 +52,6 @@ jobs:
 
     - name: Print image url
       run: |
-        echo "Image pushed to ${{ steps.image-to-quay.outputs.registry-paths }}"
-        echo "Bundle pushed to ${{ steps.bundle-to-quay.outputs.registry-paths }}"
-        echo "Catalog pushed to ${{ steps.catalog-to-quay.outputs.registry-paths }}"
+        echo "Image pushed to ${{ env.IMAGE_TAG_BASE }}:v${{ steps.version.outputs.VERSION }}"
+        echo "Bundle pushed to ${{ env.IMAGE_TAG_BASE }}-bundle:v${{ steps.version.outputs.VERSION }}"
+        echo "Catalog pushed to ${{ env.IMAGE_TAG_BASE }}-catalog:v${{ steps.version.outputs.VERSION }}"
