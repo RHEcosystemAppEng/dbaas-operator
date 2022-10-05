@@ -19,9 +19,9 @@ spec:
         - name: CSV_VERSION_OBSERVABILITY
           value: observability-operator.v0.0.13
         - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
-          value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6-rc.1
+          value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
         - name: CSV_VERSION_CRUNCHY_BRIDGE
-          value: crunchy-bridge-operator.v0.0.6-rc.1
+          value: crunchy-bridge-operator.v0.0.6
         - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
           value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
         - name: CSV_VERSION_MONGODB_ATLAS
