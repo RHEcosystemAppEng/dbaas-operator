@@ -4,9 +4,6 @@ on:
   push:
     branches:
     - main
-    - release-*
-    tags:
-      - '*'
 
 env:
   IMAGE_TAG_BASE: quay.io/ecosystem-appeng/dbaas-operator-dev
@@ -20,6 +17,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Retrieve version
+      run: echo "::set-output name=VERSION::$(DEV=true make get-version).plugin-$(echo ${{ secrets.DYNAMIC_PLUGIN_DEV_IMAGE }} | awk -F ":" {'print $2'})"
+      id: version
+
     - name: Install Go
       uses: actions/setup-go@v2
       with:
@@ -32,14 +33,16 @@ jobs:
         password: ${{ secrets.REGISTRY_PASSWORD }}
         registry: quay.io
 
+    - name: Replace dynamic plugin image w/ dev image
+      run: |
+        yq='(.spec.template.spec.containers[0].env | .[(to_entries | .[] | select(.value.name == env(name)).key) // length]) += {"name": env(name), "value": env(value)}'
+        name=RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN value=${{ secrets.DYNAMIC_PLUGIN_DEV_IMAGE }} yq "$yq" -i config/default/manager-env-images.yaml
+        git diff
+
     - name: Build and push release
-      run: IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} CONTAINER_ENGINE=podman DEV=true make release-build release-push
+      run: VERSION=${{ steps.version.outputs.VERSION }} IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} CONTAINER_ENGINE=podman make release-build release-push
 
-    - name: Retrieve version
-      run: echo "::set-output name=VERSION::$(DEV=true make get-version)"
-      id: version
-
-    - name: Print image url
+    - name: Print image urls
       run: |
         echo "Image pushed to ${{ env.IMAGE_TAG_BASE }}:v${{ steps.version.outputs.VERSION }}"
         echo "Bundle pushed to ${{ env.IMAGE_TAG_BASE }}-bundle:v${{ steps.version.outputs.VERSION }}"
