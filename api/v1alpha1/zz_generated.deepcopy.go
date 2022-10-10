@@ -514,8 +514,8 @@ func (in *DBaaSPlatformStatus) DeepCopyInto(out *DBaaSPlatformStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.PlatformStatus != nil {
-		in, out := &in.PlatformStatus, &out.PlatformStatus
+	if in.PlatformsStatus != nil {
+		in, out := &in.PlatformsStatus, &out.PlatformsStatus
 		*out = make([]PlatformStatus, len(*in))
 		copy(*out, *in)
 	}

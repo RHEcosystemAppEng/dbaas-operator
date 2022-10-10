@@ -87,8 +87,8 @@ type DBaaSPlatformSpec struct {
 
 // DBaaSPlatformStatus defines the observed state of DBaaSPlatform
 type DBaaSPlatformStatus struct {
-	Conditions     []metav1.Condition `json:"conditions,omitempty"`
-	PlatformStatus []PlatformStatus   `json:"platformStatus"`
+	Conditions      []metav1.Condition `json:"conditions,omitempty"`
+	PlatformsStatus []PlatformStatus   `json:"platformsStatus"`
 }
 
 // PlatformStatus defines status of DBaaSPlatform
