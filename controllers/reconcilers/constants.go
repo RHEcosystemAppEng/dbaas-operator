@@ -20,7 +20,7 @@ const (
 	ConsolePlugin49Tag = "-4.9"
 
 	// DBaaSQuickStartVersion version for the quick start guide
-	DBaaSQuickStartVersion = "dbaas-quick-starts:0.3.0"
+	DBaaSQuickStartVersion = "dbaas-quick-starts:0.3.1"
 
 	// CRUNCHY_BRIDGE
 	crunchyBridgeCatalogImg  = "RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG"
