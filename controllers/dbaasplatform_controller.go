@@ -157,7 +157,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// Reset error message when everything went well
 			nextPlatformStatus.LastMessage = ""
 			nextPlatformStatus.PlatformStatus = status
-			setStatusPlatform(&nextStatus.PlatformsStatus, nextPlatformStatus)
+			setStatusPlatform(&nextStatus.PlatformStatus, nextPlatformStatus)
 
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
