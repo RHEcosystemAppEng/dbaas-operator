@@ -8,7 +8,6 @@ metadata:
     containerImage: controller:latest
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
-    olm.skipRange: '>0.2.0 <0.3.1'
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
     operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
