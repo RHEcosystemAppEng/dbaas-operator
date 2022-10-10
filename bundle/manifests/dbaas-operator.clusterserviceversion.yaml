@@ -160,7 +160,6 @@ metadata:
     containerImage: quay.io/ecosystem-appeng/dbaas-operator:v0.3.1
     description: Discover & connect with database instances hosted on 3rd-party ISV
       cloud platforms.
-    olm.skipRange: '>0.2.0 <0.3.1'
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
     operators.operatorframework.io/builder: operator-sdk-v1.19.0+git
     operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
