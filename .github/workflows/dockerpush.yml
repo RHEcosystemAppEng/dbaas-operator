@@ -1,0 +1,48 @@
+name: Push Image
+
+on:
+  push:
+    branches:
+    - main
+
+env:
+  IMAGE_TAG_BASE: quay.io/ecosystem-appeng/dbaas-operator-dev
+
+jobs:
+  push:
+    if: github.repository == 'RHEcosystemAppEng/dbaas-operator'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Retrieve version
+      run: echo "::set-output name=VERSION::$(DEV=true make get-version).plugin-$(echo ${{ secrets.DYNAMIC_PLUGIN_DEV_IMAGE }} | awk -F ":" {'print $2'})"
+      id: version
+
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+
+    - name: Log in to image registry
+      uses: redhat-actions/podman-login@v1
+      with:
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        registry: quay.io
+
+    - name: Replace dynamic plugin image w/ dev image
+      run: |
+        yq='(.spec.template.spec.containers[0].env | .[(to_entries | .[] | select(.value.name == env(name)).key) // length]) += {"name": env(name), "value": env(value)}'
+        name=RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN value=${{ secrets.DYNAMIC_PLUGIN_DEV_IMAGE }} yq "$yq" -i config/default/manager-env-images.yaml
+        git diff
+
+    - name: Build and push release
+      run: VERSION=${{ steps.version.outputs.VERSION }} IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} CONTAINER_ENGINE=podman make release-build release-push
+
+    - name: Print image urls
+      run: |
+        echo "Image pushed to ${{ env.IMAGE_TAG_BASE }}:v${{ steps.version.outputs.VERSION }}"
+        echo "Bundle pushed to ${{ env.IMAGE_TAG_BASE }}-bundle:v${{ steps.version.outputs.VERSION }}"
+        echo "Catalog pushed to ${{ env.IMAGE_TAG_BASE }}-catalog:v${{ steps.version.outputs.VERSION }}"

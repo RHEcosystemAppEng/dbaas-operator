@@ -2,13 +2,13 @@ package reconcilers
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var repoOrg = "quay.io/ecosystem-appeng/"
 var _ = Describe("FetchImageAndVersion", func() {
 	Context("Missing env var", func() {
 		It("invalid, should return empty value", func() {
@@ -17,8 +17,8 @@ var _ = Describe("FetchImageAndVersion", func() {
 		})
 		It("valid, should return default values from embedded file - config/default/manager-env-images.yaml", func() {
 			os.Unsetenv(dbaasDynamicPluginVersion)
-			os.Unsetenv(dbaasDynamicPluginImg)
-			Expect(fetchEnvValue(dbaasDynamicPluginImg)).To(Equal(repoOrg + fetchEnvValue(dbaasDynamicPluginVersion)))
+			valArray := strings.Split(fetchEnvValue(dbaasDynamicPluginVersion), ":")
+			Expect(valArray[0]).To(Equal(dbaasDynamicPluginName))
 		})
 	})
 

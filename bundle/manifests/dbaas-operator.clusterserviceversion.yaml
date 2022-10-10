@@ -79,18 +79,21 @@ metadata:
             "credentialFields": [
               {
                 "displayName": "Organization ID",
+                "helpText": "You can find the Organization ID from the Organization Settings page on your MongoDB account home page.",
                 "key": "organizationId",
                 "required": true,
                 "type": "string"
               },
               {
                 "displayName": "Organization Public Key",
+                "helpText": "You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
                 "key": "publicApiKey",
                 "required": true,
                 "type": "string"
               },
               {
                 "displayName": "Organization Private Key",
+                "helpText": "You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
                 "key": "privateApiKey",
                 "required": true,
                 "type": "maskedstring"
@@ -266,6 +269,22 @@ spec:
           - list
           - watch
         - apiGroups:
+          - config.openshift.io
+          resources:
+          - consoles
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - config.openshift.io
+          resources:
+          - infrastructures
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - console.openshift.io
           resources:
           - consoleplugins
@@ -275,6 +294,14 @@ spec:
           - get
           - list
           - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+          - list
           - watch
         - apiGroups:
           - ""
@@ -433,6 +460,7 @@ spec:
                     drop:
                     - ALL
                   readOnlyRootFilesystem: true
+                  runAsNonRoot: true
               - args:
                 - --health-probe-bind-address=:8081
                 - --metrics-bind-address=0.0.0.0:8080
@@ -444,30 +472,26 @@ spec:
                   value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
                 - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
                   value: dbaas-dynamic-plugin:0.3.0
-                - name: RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN
-                  value: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
-                - name: CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN
-                  value: console-telemetry-plugin:0.1.4
                 - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
-                  value: quay.io/rhobs/observability-operator-catalog:0.0.12
+                  value: quay.io/rhobs/observability-operator-catalog:0.0.13
                 - name: CSV_VERSION_OBSERVABILITY
-                  value: observability-operator.v0.0.12
+                  value: observability-operator.v0.0.13
                 - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
-                  value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
+                  value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
                 - name: CSV_VERSION_CRUNCHY_BRIDGE
-                  value: crunchy-bridge-operator.v0.0.5
+                  value: crunchy-bridge-operator.v0.0.6
                 - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
-                  value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+                  value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
                 - name: CSV_VERSION_MONGODB_ATLAS
-                  value: mongodb-atlas-kubernetes.v0.2.0
+                  value: mongodb-atlas-kubernetes.v0.3.0
                 - name: RELATED_IMAGE_COCKROACHDB_CATALOG
-                  value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3
+                  value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
                 - name: CSV_VERSION_COCKROACHDB
-                  value: ccapi-k8s-operator.v0.0.3
+                  value: ccapi-k8s-operator.v0.0.4
                 - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
-                  value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0
+                  value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.2.0
                 - name: CSV_VERSION_RDS_PROVIDER
-                  value: rds-dbaas-operator.v0.1.0
+                  value: rds-dbaas-operator.v0.2.0
                 - name: INSTALL_NAMESPACE
                   valueFrom:
                     fieldRef:
@@ -506,8 +530,7 @@ spec:
                     drop:
                     - ALL
                   readOnlyRootFilesystem: true
-              securityContext:
-                runAsNonRoot: true
+                  runAsNonRoot: true
               serviceAccountName: dbaas-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
@@ -569,17 +592,15 @@ spec:
   relatedImages:
   - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
     name: dbaas-dynamic-plugin
-  - image: quay.io/ecosystem-appeng/console-telemetry-plugin:0.1.4
-    name: console-telemetry-plugin
-  - image: quay.io/rhobs/observability-operator-catalog:0.0.12
+  - image: quay.io/rhobs/observability-operator-catalog:0.0.13
     name: observability-catalog
-  - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.5
+  - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
     name: crunchy-bridge-catalog
-  - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.2.0
+  - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
     name: mongodb-atlas-catalog
-  - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.3
+  - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
     name: cockroachdb-catalog
-  - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.1.0
+  - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.2.0
     name: rds-provider-catalog
   replaces: dbaas-operator.v0.2.0
   version: 0.3.0
@@ -596,6 +617,7 @@ spec:
       apiVersions:
       - v1alpha1
       operations:
+      - CREATE
       - UPDATE
       resources:
       - dbaasconnections
@@ -623,3 +645,23 @@ spec:
     targetPort: 9443
     type: ValidatingAdmissionWebhook
     webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: dbaas-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vdbaaspolicy.kb.io
+    rules:
+    - apiGroups:
+      - dbaas.redhat.com
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - dbaaspolicies
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaaspolicy

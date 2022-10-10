@@ -8,6 +8,7 @@
 bin
 testbin/*
 bundle_tmp*
+config/samples/secret-dbaas-operator-dev-prom-remote-write.yaml
 
 # Test binary, build with `go test -c`
 *.test

@@ -7,6 +7,11 @@ VERSION ?= 0.3.0
 
 CONTAINER_ENGINE?=docker
 
+DEV ?= false
+ifeq ($(DEV),true)
+  VERSION := $(VERSION)-$(shell git rev-parse --short HEAD)
+endif
+
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
 #
 # This is NOT required if you are incrementally building the catalog index. If you need to increment on
@@ -21,8 +26,8 @@ CONTAINER_ENGINE?=docker
 ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
-# 0.2.0 catalog image - quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
-CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
+# CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
+CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
@@ -123,18 +128,18 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
+test: sdk-manifests vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##@ Build
-release-build: build generate bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
+release-build: bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images
 
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 
-run: manifests generate fmt vet ## Run a controller from your host.
+run: sdk-manifests vet ## Run a controller from your host.
 	go run ./main.go
 
 docker-build: test ## Build docker image with the manager.
@@ -220,19 +225,19 @@ rm -rf $$TMP_DIR ;\
 endef
 
 .PHONY: sdk-manifests
-sdk-manifests: manifests kustomize ## Generate bundle manifests and metadata.
-	operator-sdk generate kustomize manifests -q
+sdk-manifests: manifests generate fmt kustomize sdk ## Generate bundle manifests and metadata.
+	$(SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 
 .PHONY: bundle
 bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(SDK) bundle validate ./bundle
 
 .PHONY: bundle-w-digests
 bundle-w-digests: sdk-manifests ## Generate bundle manifests w/ image digests, then validate generated files.
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	$(SDK) bundle validate ./bundle
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
@@ -256,6 +261,23 @@ ifeq (,$(shell which opm 2>/dev/null))
 	}
 else
 OPM = $(shell which opm)
+endif
+endif
+
+.PHONY: sdk
+SDK = ./bin/operator-sdk
+sdk: ## Download operator-sdk locally if necessary.
+ifeq (,$(wildcard $(SDK)))
+ifeq (,$(shell which operator-sdk 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(SDK)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.20.1/operator-sdk_$${OS}_$${ARCH} ;\
+	chmod +x $(SDK) ;\
+	}
+else
+SDK = $(shell which operator-sdk)
 endif
 endif
 
@@ -294,3 +316,7 @@ wrapper-build: ## Build the catalog wrapper image.
 .PHONY: wrapper-push
 wrapper-push: ## Push the catalog wrapper image.
 	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.2.0-wrapper 
+
+.PHONY: get-version
+get-version: ; $(info ${VERSION})
+	@echo -n

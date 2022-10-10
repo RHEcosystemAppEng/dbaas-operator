@@ -34,7 +34,13 @@ type DBaaSInventoryPolicy struct {
 	// Namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a policy's inventories.
 	// Each inventory can individually override this. Use "*" to allow all namespaces.
 	// If not set in either the policy or inventory object, connections will only be allowed in the inventory's namespace.
-	ConnectionNamespaces []string `json:"connectionNamespaces,omitempty"`
+	ConnectionNamespaces *[]string `json:"connectionNamespaces,omitempty"`
+
+	// Use a label selector to determine namespaces where DBaaSConnections/DBaaSInstances are allowed to reference a policy's inventories.
+	// Each inventory can individually override this. A label selector is a label query over a set of resources. The result of matchLabels and
+	// matchExpressions are ANDed. An empty label selector matches all objects. A null
+	// label selector matches no objects.
+	ConnectionNsSelector *metav1.LabelSelector `json:"connectionNsSelector,omitempty"`
 }
 
 // DBaaSPolicyStatus defines the observed state of DBaaSPolicy

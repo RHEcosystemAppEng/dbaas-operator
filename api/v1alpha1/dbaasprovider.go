@@ -42,6 +42,7 @@ const (
 	DBaaSInventoryNotReady         string = "DBaaSInventoryNotReady"
 	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
 	DBaaSInvalidNamespace          string = "InvalidNamespace"
+	DBaaSInstanceNotAvailable      string = "DBaaSInstanceNotAvailable"
 	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
 	ProviderReconcileError         string = "ProviderReconcileError"
 	ProviderParsingError           string = "ProviderParsingError"
@@ -58,21 +59,25 @@ const (
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
 	MsgPolicyNotReady                string = "Another active Policy already exists"
 
-	// DBaaS instance provisioning phases
-
-	PhaseUnknown  string = "Unknown"
-	PhasePending  string = "Pending"
-	PhaseCreating string = "Creating"
-	PhaseUpdating string = "Updating"
-	PhaseDeleting string = "Deleting"
-	PhaseDeleted  string = "Deleted"
-	PhaseReady    string = "Ready"
-	PhaseError    string = "Error"
-	PhaseFailed   string = "Failed"
-
 	TypeLabelValue    = "credentials"
 	TypeLabelKey      = "db-operator/type"
 	TypeLabelKeyMongo = "atlas.mongodb.com/type"
+)
+
+// DBaasInstancePhase instance provisioning phases
+type DBaasInstancePhase string
+
+// Constants for instance phases
+const (
+	InstancePhaseUnknown  DBaasInstancePhase = "Unknown"
+	InstancePhasePending  DBaasInstancePhase = "Pending"
+	InstancePhaseCreating DBaasInstancePhase = "Creating"
+	InstancePhaseUpdating DBaasInstancePhase = "Updating"
+	InstancePhaseDeleting DBaasInstancePhase = "Deleting"
+	InstancePhaseDeleted  DBaasInstancePhase = "Deleted"
+	InstancePhaseReady    DBaasInstancePhase = "Ready"
+	InstancePhaseError    DBaasInstancePhase = "Error"
+	InstancePhaseFailed   DBaasInstancePhase = "Failed"
 )
 
 // DBaaSProviderSpec defines the desired state of DBaaSProvider
@@ -139,6 +144,9 @@ type CredentialField struct {
 
 	// If this field is required or not
 	Required bool `json:"required"`
+
+	// Additional info about the field
+	HelpText string `json:"helpText,omitempty"`
 }
 
 // DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
@@ -195,7 +203,11 @@ type DBaaSConnectionSpec struct {
 
 	// The ID of the instance to connect to, as seen in the Status of
 	// the referenced DBaaSInventory
-	InstanceID string `json:"instanceID"`
+	InstanceID string `json:"instanceID,omitempty"`
+
+	// A reference to the DBaaSInstance CR that is used if the ID of the
+	// instance is not specified
+	InstanceRef *NamespacedName `json:"instanceRef,omitempty"`
 }
 
 // DBaaSConnectionStatus defines the observed state of DBaaSConnection
@@ -253,14 +265,19 @@ type DBaaSInstanceStatus struct {
 	// Any other provider-specific information related to this instance
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 
+	// +kubebuilder:validation:Enum=Unknown;Pending;Creating;Updating;Deleting;Deleted;Ready;Error;Failed
+	// +kubebuilder:default=Unknown
 	// Represents the cluster provisioning phase
+	// Unknown - unknown cluster provisioning status
 	// Pending - provisioning not yet started
 	// Creating - provisioning in progress
 	// Updating - cluster updating in progress
 	// Deleting - cluster deletion in progress
 	// Deleted - cluster has been deleted
 	// Ready - cluster provisioning complete
-	Phase string `json:"phase"`
+	// Error - cluster provisioning with error
+	// Failed - cluster provisioning failed
+	Phase DBaasInstancePhase `json:"phase"`
 }
 
 // DBaaSProviderInstance is the schema for unmarshalling provider instance object

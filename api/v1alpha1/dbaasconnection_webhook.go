@@ -36,14 +36,14 @@ func (r *DBaaSConnection) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1alpha1-dbaasconnection,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasconnections,verbs=update,versions=v1alpha1,name=vdbaasconnection.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1alpha1-dbaasconnection,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasconnections,verbs=create;update,versions=v1alpha1,name=vdbaasconnection.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &DBaaSConnection{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *DBaaSConnection) ValidateCreate() error {
 	dbaasconnectionlog.Info("validate create", "name", r.Name)
-	return nil
+	return r.validateCreateDBaaSConnectionSpec()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -58,13 +58,27 @@ func (r *DBaaSConnection) ValidateDelete() error {
 	return nil
 }
 
-func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection) *field.Error {
+func (r *DBaaSConnection) validateCreateDBaaSConnectionSpec() error {
+	if len(r.Spec.InstanceID) > 0 && r.Spec.InstanceRef != nil && len(r.Spec.InstanceRef.Name) > 0 {
+		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "both instanceID and instanceRef are specified")
+	}
+	if len(r.Spec.InstanceID) == 0 && (r.Spec.InstanceRef == nil || len(r.Spec.InstanceRef.Name) == 0) {
+		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "either instanceID or instanceRef must be specified")
+	}
+	return nil
+}
+
+func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection) error {
 	if r.Spec.InstanceID != old.Spec.InstanceID {
 		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "instanceID is immutable")
 	}
 
 	if !reflect.DeepEqual(r.Spec.InventoryRef, old.Spec.InventoryRef) {
 		return field.Invalid(field.NewPath("spec").Child("inventoryRef"), r.Spec.InventoryRef, "inventoryRef is immutable")
+	}
+
+	if !reflect.DeepEqual(r.Spec.InstanceRef, old.Spec.InstanceRef) {
+		return field.Invalid(field.NewPath("spec").Child("instanceRef"), r.Spec.InstanceRef, "instanceRef is immutable")
 	}
 
 	return nil

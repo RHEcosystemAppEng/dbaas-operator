@@ -118,6 +118,9 @@ var _ = BeforeSuite(func() {
 	err = (&DBaaSInventory{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = (&DBaaSPolicy{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	ns2 := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testNamespace2,

@@ -116,19 +116,44 @@ func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace str
 	if namespace == inventory.Namespace {
 		return true, nil
 	}
-	validNamespaces := inventory.Spec.ConnectionNamespaces
-	if len(validNamespaces) == 0 {
-		policyList, err := r.policyListByNS(ctx, inventory.Namespace)
+	var validNamespaces []string
+	var validNsSelector *metav1.LabelSelector
+	policyList, err := r.policyListByNS(ctx, inventory.Namespace)
+	if err != nil {
+		return false, err
+	}
+	if policy := getActivePolicy(policyList); policy != nil {
+		if policy.Spec.ConnectionNamespaces != nil {
+			validNamespaces = *policy.Spec.ConnectionNamespaces
+		}
+		if policy.Spec.ConnectionNsSelector != nil {
+			validNsSelector = policy.Spec.ConnectionNsSelector
+		}
+	}
+	if inventory.Spec.ConnectionNamespaces != nil {
+		validNamespaces = *inventory.Spec.ConnectionNamespaces
+	}
+	if inventory.Spec.ConnectionNsSelector != nil {
+		validNsSelector = inventory.Spec.ConnectionNsSelector
+	}
+
+	// valid if all namespaces are supported via wildcard
+	if contains(validNamespaces, "*") || contains(validNamespaces, namespace) {
+		return true, nil
+	}
+
+	if validNsSelector != nil {
+		selector, err := metav1.LabelSelectorAsSelector(validNsSelector)
 		if err != nil {
 			return false, err
 		}
-		for _, policy := range policyList.Items {
-			validNamespaces = append(validNamespaces, policy.Spec.ConnectionNamespaces...)
+		var selNS corev1.NamespaceList
+		if err := r.List(ctx, &selNS, &client.ListOptions{LabelSelector: selector}); err != nil {
+			return false, err
 		}
-	}
-	// valid if all namespaces are supported via wildcard
-	if contains(validNamespaces, "*") {
-		return true, nil
+		for _, ns := range selNS.Items {
+			validNamespaces = append(validNamespaces, ns.Name)
+		}
 	}
 	return contains(validNamespaces, namespace), nil
 }
@@ -225,12 +250,12 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 }
 
 func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
-	conditionFn func(string, string), logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
+	statusErrorFn func(string, string), logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
 	inventory = &v1alpha1.DBaaSInventory{}
 	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "DBaaS Inventory resource not found for DBaaS Object", "DBaaS Object", DBaaSObject, "DBaaS Inventory", inventoryRef)
-			conditionFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
+			statusErrorFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
 			if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
 				if errors.IsConflict(errCond) {
 					logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
@@ -260,17 +285,17 @@ func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alp
 		if invCond == nil || invCond.Status == metav1.ConditionFalse {
 			err = fmt.Errorf("inventory %v is not ready", inventoryRef)
 			logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			conditionFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
+			statusErrorFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
 		} else if !provision &&
 			reflect.TypeOf(DBaaSObject) == reflect.TypeOf(&v1alpha1.DBaaSInstance{}) {
 			err = fmt.Errorf("inventory %v provisioning is disabled", inventoryRef)
 			logger.Error(err, "Inventory provisioning is disabled", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			conditionFn(v1alpha1.DBaaSInventoryNotProvisionable, v1alpha1.MsgInventoryNotProvisionable)
+			statusErrorFn(v1alpha1.DBaaSInventoryNotProvisionable, v1alpha1.MsgInventoryNotProvisionable)
 		} else {
 			return
 		}
 	} else {
-		conditionFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
+		statusErrorFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
 	}
 
 	if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {

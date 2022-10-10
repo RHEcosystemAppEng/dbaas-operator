@@ -117,7 +117,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
-		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -141,7 +141,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 					Name: testProviderName,
 				},
 				DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-					ConnectionNamespaces: []string{"valid-ns", "random"},
+					ConnectionNamespaces: &[]string{"valid-ns", "random"},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
@@ -195,7 +195,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
-		BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -248,7 +248,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					},
 				},
 			}
-			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 			Context("after creating DBaaSInstance", func() {
 				instanceName := "test-instance"
@@ -290,7 +290,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
@@ -339,7 +339,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{otherNS.Name},
+						ConnectionNamespaces: &[]string{otherNS.Name},
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
@@ -409,7 +409,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
@@ -432,7 +432,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -453,7 +453,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{"*"},
+						ConnectionNamespaces: &[]string{"*"},
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
 						CredentialsRef: &v1alpha1.LocalObjectReference{
@@ -523,7 +523,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: "ready",
+						Phase: v1alpha1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
@@ -546,7 +546,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -568,7 +568,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name: testProviderName,
 					},
 					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: []string{"*"},
+						ConnectionNamespaces: &[]string{"*"},
 						DisableProvisions:    &isTrue,
 					},
 					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
@@ -627,7 +627,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertInventoryCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})

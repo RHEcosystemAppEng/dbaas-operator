@@ -106,6 +106,7 @@ func main() {
 	opts := zap.Options{
 		Development: true,
 		Level:       level,
+		TimeEncoder: zapcore.ISO8601TimeEncoder,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -182,6 +183,10 @@ func main() {
 		}
 		if err = (&v1alpha1.DBaaSInventory{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInventory")
+			os.Exit(1)
+		}
+		if err = (&v1alpha1.DBaaSPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSPolicy")
 			os.Exit(1)
 		}
 	}

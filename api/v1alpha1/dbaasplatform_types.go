@@ -32,14 +32,13 @@ type PlatformsType int
 
 // Supported platforms
 const (
-	CrunchyBridgeInstallation          PlatformsName = "crunchy-bridge"
-	MongoDBAtlasInstallation           PlatformsName = "mongodb-atlas"
-	DBaaSDynamicPluginInstallation     PlatformsName = "dbaas-dynamic-plugin"
-	ConsoleTelemetryPluginInstallation PlatformsName = "console-telemetry-plugin"
-	CockroachDBInstallation            PlatformsName = "cockroachdb-cloud"
-	ObservabilityInstallation          PlatformsName = "observability"
-	DBaaSQuickStartInstallation        PlatformsName = "dbaas-quick-starts"
-	RDSProviderInstallation            PlatformsName = "rds-provider"
+	CrunchyBridgeInstallation      PlatformsName = "crunchy-bridge"
+	MongoDBAtlasInstallation       PlatformsName = "mongodb-atlas"
+	DBaaSDynamicPluginInstallation PlatformsName = "dbaas-dynamic-plugin"
+	CockroachDBInstallation        PlatformsName = "cockroachdb-cloud"
+	ObservabilityInstallation      PlatformsName = "observability"
+	DBaaSQuickStartInstallation    PlatformsName = "dbaas-quick-starts"
+	RDSProviderInstallation        PlatformsName = "rds-provider"
 )
 
 // Platform types
@@ -67,6 +66,15 @@ type PlatformConfig struct {
 	DisplayName    string
 	Envs           []corev1.EnvVar
 	Type           PlatformsType
+}
+
+// ObservabilityConfig defines parameters for a observatorium
+type ObservabilityConfig struct {
+	AuthType        string
+	RemoteWritesURL string
+	RHSSOTokenURL   string
+	AddonName       string
+	RHOBSSecretName string
 }
 
 // DBaaSPlatformSpec defines the desired state of DBaaSPlatform

@@ -1,6 +1,7 @@
 package reconcilers
 
 import (
+	"fmt"
 	"os"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
@@ -17,6 +18,9 @@ const (
 	CatalogNamespace = "openshift-marketplace"
 	// ConsolePlugin49Tag tag for the console plugin in OpenShift 4.9
 	ConsolePlugin49Tag = "-4.9"
+
+	// DBaaSQuickStartVersion version for the quick start guide
+	DBaaSQuickStartVersion = "dbaas-quick-starts:0.3.0"
 
 	// CRUNCHY_BRIDGE
 	crunchyBridgeCatalogImg  = "RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG"
@@ -51,14 +55,6 @@ const (
 	dbaasDynamicPluginName        = "dbaas-dynamic-plugin"
 	dbaasDynamicPluginDisplayName = "OpenShift Database as a Service Dynamic Plugin"
 
-	// CONSOLE_TELEMETRY_PLUGIN
-	consoleTelemetryPluginImg           = "RELATED_IMAGE_CONSOLE_TELEMETRY_PLUGIN"
-	consoleTelemetryPluginVersion       = "CSV_VERSION_CONSOLE_TELEMETRY_PLUGIN"
-	consoleTelemetryPluginName          = "console-telemetry-plugin"
-	consoleTelemetryPluginDisplayName   = "Telemetry Plugin"
-	consoleTelemetryPluginSegmentKeyEnv = "SEGMENT_KEY"
-	consoleTelemetryPluginSegmentKey    = "qejcCDG37ICCLIDsM1FcJDkd68hglCoK"
-
 	// RDS_PROVIDER
 	rdsProviderCSV         = "CSV_VERSION_RDS_PROVIDER"
 	rdsProviderCatalogImg  = "RELATED_IMAGE_RDS_PROVIDER_CATALOG"
@@ -68,9 +64,9 @@ const (
 	rdsProviderPkg         = "rds-dbaas-operator"
 	rdsProviderChannel     = "alpha"
 
-	// OBSERVABILITY
-	// ObservabilityName platform name for observability, epxorted for the controllers to use
-	ObservabilityName        = "observability"
+	//ObservabilityName platform name for observability
+	ObservabilityName = "observability"
+	//other constants for observability
 	observabilityCatalogImg  = "RELATED_IMAGE_OBSERVABILITY_CATALOG"
 	observabilityCSV         = "CSV_VERSION_OBSERVABILITY"
 	observabilityDisplayName = "observability Operator"
@@ -86,14 +82,6 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		CSV:         fetchEnvValue(dbaasDynamicPluginVersion),
 		Image:       fetchEnvValue(dbaasDynamicPluginImg),
 		DisplayName: dbaasDynamicPluginDisplayName,
-		Type:        dbaasv1alpha1.TypeConsolePlugin,
-	},
-	dbaasv1alpha1.ConsoleTelemetryPluginInstallation: {
-		Name:        consoleTelemetryPluginName,
-		CSV:         fetchEnvValue(consoleTelemetryPluginVersion),
-		Image:       fetchEnvValue(consoleTelemetryPluginImg),
-		DisplayName: consoleTelemetryPluginDisplayName,
-		Envs:        []corev1.EnvVar{{Name: consoleTelemetryPluginSegmentKeyEnv, Value: consoleTelemetryPluginSegmentKey}},
 		Type:        dbaasv1alpha1.TypeConsolePlugin,
 	},
 	dbaasv1alpha1.CrunchyBridgeInstallation: {
@@ -128,6 +116,7 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 	},
 	dbaasv1alpha1.DBaaSQuickStartInstallation: {
 		Type: dbaasv1alpha1.TypeQuickStart,
+		CSV:  DBaaSQuickStartVersion,
 	},
 	dbaasv1alpha1.RDSProviderInstallation: {
 		Name:           rdsProviderName,
@@ -149,6 +138,17 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		DisplayName:    observabilityDisplayName,
 		Type:           dbaasv1alpha1.TypeOperator,
 	},
+}
+
+// GetObservabilityConfig return observatorium configuration
+func GetObservabilityConfig() dbaasv1alpha1.ObservabilityConfig {
+	return dbaasv1alpha1.ObservabilityConfig{
+		AuthType:        os.Getenv("RHOBS_AUTH_TYPE"),
+		RemoteWritesURL: os.Getenv("RHOBS_API_URL"),
+		RHSSOTokenURL:   os.Getenv("RH_SSO_TOKEN_ENDPOINT"),
+		AddonName:       os.Getenv("ADDON_NAME"),
+		RHOBSSecretName: fmt.Sprintf("%v-prom-remote-write", os.Getenv("ADDON_NAME")),
+	}
 }
 
 // fetchEnvValue returns the value of a set variable. if env var not set, returns the

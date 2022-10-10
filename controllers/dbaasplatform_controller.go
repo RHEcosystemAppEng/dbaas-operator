@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
@@ -32,6 +32,7 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
 	"golang.org/x/mod/semver"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
 	"github.com/go-logr/logr"
 
@@ -48,20 +49,17 @@ Platform resources to be created or updated explicitly by the DBaaS operator:
 	MongoDB Atlas operator: CatalogSource, Subscription, OperatorGroup
 	Service Binding operator: Subscription
 	DBaaS Dynamic Plugin: Service, Deployment, ConsolePlugin, Console (updated)
-	Console Telemetry Plugin: Service, Deployment, ConsolePlugin, Console (updated)
 
 Platform resources to be removed by the DBaaS operator by setting owner reference:
 	Crunchy Bridge operator: Subscription, CSV
 	MongoDB Atlas operator: Subscription, CSV
 	Service Binding operator: Subscription, CSV
 	DBaaS Dynamic Plugin: Service, Deployment
-	Console Telemetry Plugin: Service, Deployment
 
 Platform resources NOT to be removed or updated by the DBaaS operator:
 	Crunchy Bridge operator: CatalogSource (in different namespace), OperatorGroup (in different namespace)
 	MongoDB Atlas operator: CatalogSource (in different namespace), OperatorGroup (in different namespace)
 	DBaaS Dynamic Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
-	Console Telemetry Plugin: ConsolePlugin (cluster-scoped), Console (cluster-scoped)
 */
 
 // Constants for requeue
@@ -92,6 +90,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
 //+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
+//+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -118,6 +118,16 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	execution := PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
+	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift consoleURl")
+	}
+
+	platformType, err := util.GetOpenshiftPlatform(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift platform Type")
+	}
+	SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType))
 	if cr.DeletionTimestamp == nil {
 		platforms = reconcilers.InstallationPlatforms
 	}
@@ -152,7 +162,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
-					execution.PlatformStackInstallationMetric(r.operatorNameVersion)
+					execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
 					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
@@ -167,7 +177,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
 		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
-		execution.PlatformStackInstallationMetric(r.operatorNameVersion)
+		execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 

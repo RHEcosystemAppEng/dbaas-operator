@@ -215,6 +215,13 @@ var (
 					Name: testSecretName,
 				},
 			},
+			DBaaSInventoryPolicy: DBaaSInventoryPolicy{
+				ConnectionNsSelector: &metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{Key: "test", Operator: "DoesNotExist"},
+					},
+				},
+			},
 		},
 	}
 )
@@ -282,6 +289,16 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			BeforeEach(assertResourceCreation(&testProvider))
 			AfterEach(assertResourceDeletion(&testProvider))
 			AfterEach(assertResourceDeletion(&testSecret2))
+			It("missing required values field", func() {
+				inv := testDBaaSInventory.DeepCopy()
+				inv.Spec.ConnectionNsSelector = &metav1.LabelSelector{
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{Key: "test", Operator: "In"},
+					},
+				}
+				err := k8sClient.Create(ctx, inv)
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
+			})
 			It("missing required credential fields", func() {
 				err := k8sClient.Create(ctx, &testDBaaSInventory)
 				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
@@ -301,6 +318,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				It("Update CR should succeed", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
+					inv.Spec.ConnectionNsSelector.MatchExpressions = nil
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
 					Expect(err).Should(BeNil())
@@ -315,6 +333,13 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
 					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
+				})
+				It("update fails with missing required values field", func() {
+					inv := testDBaaSInventory.DeepCopy()
+					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
+					inv.Spec.ConnectionNsSelector.MatchExpressions = []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}}
+					err := k8sClient.Update(ctx, inv)
+					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
 				})
 			})
 			It("update fails with provider name change", func() {
