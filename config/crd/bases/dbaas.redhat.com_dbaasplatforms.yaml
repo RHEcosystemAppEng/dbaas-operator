@@ -116,17 +116,25 @@ spec:
                   - type
                   type: object
                 type: array
-              lastMessage:
-                type: string
-              platformName:
-                description: PlatformsName name of platform
-                type: string
-              platformStatus:
-                description: PlatformsInstlnStatus status of platform installation
-                type: string
+              platformsStatus:
+                items:
+                  description: PlatformStatus defines status of DBaaSPlatform
+                  properties:
+                    lastMessage:
+                      type: string
+                    platformName:
+                      description: PlatformsName name of platform
+                      type: string
+                    platformStatus:
+                      description: PlatformsInstlnStatus status of platform installation
+                      type: string
+                  required:
+                  - platformName
+                  - platformStatus
+                  type: object
+                type: array
             required:
-            - platformName
-            - platformStatus
+            - platformsStatus
             type: object
         type: object
     served: true
