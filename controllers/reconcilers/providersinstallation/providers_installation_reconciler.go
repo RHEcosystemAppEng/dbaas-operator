@@ -128,6 +128,9 @@ func (r *reconciler) reconcileSubscription(ctx context.Context, cr *v1.DBaaSPlat
 			Channel:                r.config.Channel,
 			InstallPlanApproval:    v1alpha1.ApprovalAutomatic,
 		}
+		if r.config.CSV != "" {
+			subscription.Spec.StartingCSV = r.config.CSV
+		}
 		if cr.Spec.SyncPeriod != nil {
 			subscription.Spec.Config = &v1alpha1.SubscriptionConfig{
 				Env: []corev1.EnvVar{
