@@ -32,7 +32,7 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     IFS="$saveIFS"  # Set IFS back to normal!
     for nsPerm in "${ocPerms[@]}"; do
         if [ $(oc auth can-i ${nsPerm} -n ${installns02}) == "yes" ]; then
-            echo ""
+            echo -n "."
         else
             echo "user cannot '${nsPerm}' in the ${installns02} project"
             echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
@@ -46,6 +46,7 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     fi
 
     if [ ! -z ${subname} ]; then
+        echo ""
         # add if check to see if manager exists first
         deploy=$(oc get deploy dbaas-operator-controller-manager -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
         if [ ! -z ${deploy} ]; then
@@ -56,11 +57,11 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
         # now that replica is scale down, catch any CTRL+C interrupt and scale it back up
         function restoreDeploy()
         {
-          "Interrupt caught, scaling controller manager & exiting..."
+          echo "Interrupt caught, scaling controller manager & exiting..."
           if [ ! -z ${deploy} ]; then
                 oc scale --replicas=1 deploy dbaas-operator-controller-manager -n ${installns02}
           fi
-          EXIT 1
+          exit 1
         }
         trap restoreDeploy SIGINT
 
