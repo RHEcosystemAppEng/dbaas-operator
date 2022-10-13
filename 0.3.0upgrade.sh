@@ -43,6 +43,16 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
             oc scale --replicas=0 deploy dbaas-operator-controller-manager -n ${installns02}
             sleep 3
         fi
+        # now that replica is scale down, catch any CTRL+C interrupt and scale it back up
+        function restoreDeploy()
+        {
+          "Interrupt caught, scaling controller manager & exiting..."
+          if [ ! -z ${deploy} ]; then
+                oc scale --replicas=1 deploy dbaas-operator-controller-manager -n ${installns02}
+          fi
+          EXIT 1
+        }
+        trap restoreDeploy SIGINT
 
         oc patch sub ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}'
         subspec=$(oc get sub ${subname} -n ${installns02} -o jsonpath='{.spec}')
