@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.3.1
+VERSION ?= 0.4.0
 
 CONTAINER_ENGINE?=docker
 
@@ -27,7 +27,7 @@ ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
 # CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
-CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.2.0-wrapper
+CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.3.0-wrapper
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 

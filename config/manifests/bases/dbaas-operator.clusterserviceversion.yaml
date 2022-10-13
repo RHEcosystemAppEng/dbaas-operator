@@ -98,6 +98,4 @@ spec:
     name: Red Hat
     url: https://www.redhat.com
   replaces: dbaas-operator.prior
-  skips:
-  - dbaas-operator.v0.3.0
   version: 0.0.0
