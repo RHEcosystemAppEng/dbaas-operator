@@ -12,7 +12,9 @@ fi
 ocuser=$(oc whoami)
 echo "Logged in as ${ocuser}"
 
-if [ $(oc auth can-i get csv) != "yes" ]; then
+if [ $(oc auth can-i get csv) == "yes" ]; then
+    echo ""
+else
     oc project
     exit
 fi
@@ -22,12 +24,16 @@ installns02=$(oc get csv dbaas-operator.v0.2.0 --ignore-not-found -o template --
 installns03=$(oc get csv dbaas-operator.v0.3.0 --ignore-not-found -o template --template '{{index .metadata.annotations "olm.operatorNamespace"}}')
 
 if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
-    echo ""
     echo "Running script against ${installns02} project"
 
     ocNsPerms="get sub,patch sub,create sub,delete sub,get deploy,patch deploy,delete dbaasplatform,delete csv"
-    for nsPerm in ${ocNsPerms}; do
-        if [ $(oc auth can-i ${nsPerm} -n ${installns02}) != "yes" ]; then
+    saveIFS="$IFS"
+    IFS=, ocPerms=($ocNsPerms)
+    IFS="$saveIFS"  # Set IFS back to normal!
+    for nsPerm in "${ocPerms[@]}"; do
+        if [ $(oc auth can-i ${nsPerm} -n ${installns02}) == "yes" ]; then
+            echo ""
+        else
             echo "user cannot '${nsPerm}' in the ${installns02} project"
             echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
             exit
