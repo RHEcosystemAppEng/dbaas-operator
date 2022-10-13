@@ -20,7 +20,7 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo ""
     echo "Running script against ${installns02} project"
 
-    if [ $(oc auth can-i edit roles -n ${installns02}) == "yes" ]; then
+    if [ $(oc auth can-i update roles -n ${installns02}) == "yes" ]; then
         echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
         exit
     fi
