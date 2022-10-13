@@ -66,7 +66,17 @@ EOF
         echo "If the script fails mid-run for an unexpected reason, you will need to apply this subscription manually."
         echo "PLEASE COPY THE SUBSCRIPTION JSON ABOVE TO A SAFE PLACE BEFORE CONTINUING."
         echo ""
-        read -rsp $'Press any key to acknowledge & continue.\n' -n1 key
+        printf "Press any key to continue or 'CTRL+C' to exit:\n"
+
+        # preserve input mode for restoration
+        (tty_state=$(stty -g)
+        # swap to canonical input to respect signals and allow ctrl+c
+        stty -icanon
+        # take input
+        LC_ALL=C dd bs=1 count=1 >/dev/null 2>&1
+        #restore input mode
+        stty "$tty_state"
+        ) </dev/tty
 
         oc delete sub \
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
