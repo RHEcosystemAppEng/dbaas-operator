@@ -3,14 +3,15 @@ kind: Subscription
 metadata:
   labels:
     operators.coreos.com/dbaas-operator.openshift-dbaas-operator: ""
-  name: addon-dbaas-operator
-  namespace: redhat-dbaas-operator
+  name: dbaas-operator
+  namespace: openshift-dbaas-operator
 spec:
   channel: alpha
   installPlanApproval: Automatic
   name: dbaas-operator
-  source: addon-dbaas-operator-catalog
-  sourceNamespace: redhat-dbaas-operator
+  source: dbaas-operator
+  sourceNamespace: openshift-marketplace
+  startingCSV: dbaas-operator.v0.3.0
   config:
     env:
       - name: ADDON_NAME
