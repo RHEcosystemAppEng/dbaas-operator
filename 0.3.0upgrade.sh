@@ -47,6 +47,16 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
             oc scale --replicas=0 deploy dbaas-operator-controller-manager -n ${installns02}
             sleep 3
         fi
+        # now that replica is scale down, catch any CTRL+C interrupt and scale it back up
+        function restoreDeploy()
+        {
+          "Interrupt caught, scaling controller manager & exiting..."
+          if [ ! -z ${deploy} ]; then
+                oc scale --replicas=1 deploy dbaas-operator-controller-manager -n ${installns02}
+          fi
+          EXIT 1
+        }
+        trap restoreDeploy SIGINT
 
         oc patch sub ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}'
         subspec=$(oc get sub ${subname} -n ${installns02} -o jsonpath='{.spec}')
@@ -70,7 +80,17 @@ EOF
         echo "If the script fails mid-run for an unexpected reason, you will need to apply this subscription manually."
         echo "PLEASE COPY THE SUBSCRIPTION JSON ABOVE TO A SAFE PLACE BEFORE CONTINUING."
         echo ""
-        read -rsp $'Press any key to acknowledge & continue.\n' -n1 key
+        printf "Press any key to continue or 'CTRL+C' to exit:\n"
+
+        # preserve input mode for restoration
+        (tty_state=$(stty -g)
+        # swap to canonical input to respect signals and allow ctrl+c
+        stty -icanon
+        # take input
+        LC_ALL=C dd bs=1 count=1 >/dev/null 2>&1
+        #restore input mode
+        stty "$tty_state"
+        ) </dev/tty
 
         oc delete sub \
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
