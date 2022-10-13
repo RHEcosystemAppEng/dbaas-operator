@@ -6,4 +6,4 @@ metadata:
 spec:
   sourceType: grpc
   image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.3.1
-  displayName: DBaaS Operator
+  displayName: Red Hat OpenShift Database Access

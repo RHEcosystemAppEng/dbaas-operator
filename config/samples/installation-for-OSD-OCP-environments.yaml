@@ -2,9 +2,6 @@ apiVersion: v1
 kind: Namespace
 metadata:
  name: redhat-dbaas-operator
-spec:
- finalizers:
-   - kubernetes
 
 ---
 apiVersion: operators.coreos.com/v1alpha1
@@ -15,7 +12,7 @@ metadata:
 spec:
   sourceType: grpc
   image: quay.io/osd-addons/dbaas-operator-index@sha256:f7bd64974ab6c2d4e055fdd5de7939961db2306e28282350d34c9ddb85bbb50c
-  displayName: DBaaS Operator
+  displayName: Red Hat OpenShift Database Access
 
 ---
 apiVersion: operators.coreos.com/v1
