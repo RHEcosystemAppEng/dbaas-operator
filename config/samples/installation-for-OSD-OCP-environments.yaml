@@ -18,7 +18,7 @@ spec:
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: dbaas-operator-group
+  name: redhat-layered-product-og
   namespace: redhat-dbaas-operator
 
 ---
