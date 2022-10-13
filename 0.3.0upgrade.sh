@@ -25,10 +25,14 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo ""
     echo "Running script against ${installns02} project"
 
-    if [ $(oc auth can-i update roles -n ${installns02}) != "yes" ]; then
-        echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
-        exit
-    fi
+    ocNsPerms="get sub,patch sub,create sub,delete sub,get deploy,patch deploy,delete dbaasplatform,delete csv"
+    for nsPerm in ${ocNsPerms}; do
+        if [ $(oc auth can-i ${nsPerm} -n ${installns02}) != "yes" ]; then
+            echo "user cannot '${nsPerm}' in the ${installns02} project"
+            echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
+            exit
+        fi
+    done
 
     subname=$(oc get sub addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
     if [ -z ${subname} ]; then
