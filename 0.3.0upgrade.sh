@@ -52,6 +52,10 @@ EOF
         echo "Subscription which will be applied by this script after some further cleanup."
         echo ${subscription}
         echo ""
+        echo "If the script fails mid-run for an unexpected reason, you will need to apply this subscription manually."
+        echo "PLEASE COPY THE SUBSCRIPTION JSON ABOVE TO A SAFE PLACE BEFORE CONTINUING."
+        echo ""
+        read -rsp $'Press any key to acknowledge & continue.\n' -n1 key
 
         oc delete sub \
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
