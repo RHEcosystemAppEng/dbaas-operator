@@ -5,5 +5,5 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.3.1
+  image: quay.io/osd-addons/dbaas-operator-index@sha256:f7bd64974ab6c2d4e055fdd5de7939961db2306e28282350d34c9ddb85bbb50c
   displayName: Red Hat OpenShift Database Access

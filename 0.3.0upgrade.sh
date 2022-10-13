@@ -9,6 +9,8 @@ if ! which oc > /dev/null; then
 fi
 
 # oc login ... (as user with admin access to the dbaas operator install ns. e.g. openshift-dbaas-operator / redhat-dbaas-operator)
+ocuser=$(oc whoami)
+echo "Logged in as ${ocuser}"
 
 # first verify 0.2.0 has previously been deployed
 installns02=$(oc get csv dbaas-operator.v0.2.0 --ignore-not-found -o template --template '{{index .metadata.annotations "olm.operatorNamespace"}}')
@@ -16,7 +18,12 @@ installns03=$(oc get csv dbaas-operator.v0.3.0 --ignore-not-found -o template --
 
 if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo ""
-    echo ${installns02}
+    echo "Running script against ${installns02} project"
+
+    if [ $(oc auth can-i edit roles -n ${installns02}) == "yes" ]; then
+        echo "'oc login ...' with a user that has admin rights to the ${installns02} project and try again"
+        exit
+    fi
 
     subname=$(oc get sub addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
     if [ -z ${subname} ]; then
@@ -26,8 +33,7 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     if [ ! -z ${subname} ]; then
         # add if check to see if manager exists first
         deploy=$(oc get deploy dbaas-operator-controller-manager -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
-        if [ ! -z ${deploy} ]
-        then
+        if [ ! -z ${deploy} ]; then
             # stop 0.2.0 operator
             oc scale --replicas=0 deploy dbaas-operator-controller-manager -n ${installns02}
             sleep 3
