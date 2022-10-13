@@ -78,7 +78,7 @@ EOF
         sleep 3
 
         # upgrade should succeed regardless, but will attempt to remove the offending crd
-        if [ $(oc auth can-i delete crds) == "yes" ]; then
+        if [ $(oc auth can-i delete crds --all-namespaces) == "yes" ]; then
             oc delete crd dbaasplatforms.dbaas.redhat.com --ignore-not-found
         fi
 
