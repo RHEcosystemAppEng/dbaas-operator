@@ -2,25 +2,28 @@
 # this should be run if RHODA gets stuck in "pending" when attempting to upgrade from 0.2.0 -> 0.3.0
 set -e
 
+if ! which oc > /dev/null; then
+   echo "'oc' command not found"
+   echo 'install and try again - https://docs.okd.io/latest/cli_reference/openshift_cli/getting-started-cli.html'
+   exit
+fi
+
 # oc login ... (as user with admin access to the dbaas operator install ns. e.g. openshift-dbaas-operator / redhat-dbaas-operator)
 
 # first verify 0.2.0 has previously been deployed
 installns02=$(oc get csv dbaas-operator.v0.2.0 --ignore-not-found -o template --template '{{index .metadata.annotations "olm.operatorNamespace"}}')
 installns03=$(oc get csv dbaas-operator.v0.3.0 --ignore-not-found -o template --template '{{index .metadata.annotations "olm.operatorNamespace"}}')
 
-if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]
-then
+if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo ""
     echo ${installns02}
 
     subname=$(oc get sub addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
-    if [ -z ${subname} ]
-    then
+    if [ -z ${subname} ]; then
         subname=$(oc get sub dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
     fi
 
-    if [ ! -z ${subname} ]
-    then
+    if [ ! -z ${subname} ]; then
         # add if check to see if manager exists first
         deploy=$(oc get deploy dbaas-operator-controller-manager -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
         if [ ! -z ${deploy} ]
@@ -60,8 +63,7 @@ EOF
         sleep 3
 
         # upgrade should succeed regardless, but will attempt to remove the offending crd
-        if [ $(oc auth can-i delete crds) == "yes" ]
-        then
+        if [ $(oc auth can-i delete crds) == "yes" ]; then
             oc delete crd dbaasplatforms.dbaas.redhat.com --ignore-not-found
         fi
 
