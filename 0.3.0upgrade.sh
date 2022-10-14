@@ -26,7 +26,7 @@ installns03=$(oc get csv dbaas-operator.v0.3.0 --ignore-not-found -o template --
 if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo "Running script against ${installns02} project"
 
-    ocNsPerms="get subscriptions.operators.coreos.com,patch sub,create subscriptions.operators.coreos.com,delete subscriptions.operators.coreos.com,get deploy,patch deploy,delete dbaasplatform,delete csv"
+    ocNsPerms="get subscriptions.operators.coreos.com,patch subscriptions.operators.coreos.com,create subscriptions.operators.coreos.com,delete subscriptions.operators.coreos.com,get deploy,patch deploy,delete dbaasplatform,delete csv"
     saveIFS="$IFS"
     IFS=, ocPerms=($ocNsPerms)
     IFS="$saveIFS"  # Set IFS back to normal!
