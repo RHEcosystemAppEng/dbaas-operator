@@ -99,20 +99,28 @@ EOF
         stty "$tty_state"
         ) </dev/tty
 
+        echo ""
+        echo "Removing RHODA 0.2.0 subscriptions"
         oc delete sub \
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
             ${subname} \
-            --ignore-not-found -n ${installns02}
+            --ignore-not-found --wait -n ${installns02}
         sleep 5
 
-        oc delete dbaasplatform dbaas-platform --ignore-not-found -n ${installns02}
+        echo ""
+        echo "Removing RHODA 0.2.0 platform CR"
+        oc delete dbaasplatform dbaas-platform --ignore-not-found --wait -n ${installns02}
         sleep 3
 
         # upgrade should succeed regardless, but will attempt to remove the offending crd
         if [ $(oc auth can-i delete crds --all-namespaces) == "yes" ]; then
-            oc delete crd dbaasplatforms.dbaas.redhat.com --ignore-not-found
+            echo ""
+            echo "Removing RHODA 0.2.0 dbaasplatform CRD"
+            oc delete crd dbaasplatforms.dbaas.redhat.com --ignore-not-found --wait
         fi
 
+        echo ""
+        echo "Removing RHODA 0.2.0 CSVs"
         oc delete csv \
             ack-rds-controller.v0.0.27 \
             ccapi-k8s-operator.v0.0.3 \
@@ -121,7 +129,7 @@ EOF
             mongodb-atlas-kubernetes.v0.2.0 \
             dbaas-operator.v0.2.0 \
             dbaas-operator.v0.3.0 \
-            --ignore-not-found -n ${installns02}
+            --ignore-not-found --wait -n ${installns02}
 
         cat <<EOF | oc create -f -
 ${subscription}
