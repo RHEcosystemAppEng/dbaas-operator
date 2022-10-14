@@ -26,7 +26,7 @@ installns03=$(oc get csv dbaas-operator.v0.3.0 --ignore-not-found -o template --
 if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
     echo "Running script against ${installns02} project"
 
-    ocNsPerms="get sub,patch sub,create sub,delete sub,get deploy,patch deploy,delete dbaasplatform,delete csv"
+    ocNsPerms="get subscriptions.operators.coreos.com,patch sub,create subscriptions.operators.coreos.com,delete subscriptions.operators.coreos.com,get deploy,patch deploy,delete dbaasplatform,delete csv"
     saveIFS="$IFS"
     IFS=, ocPerms=($ocNsPerms)
     IFS="$saveIFS"  # Set IFS back to normal!
@@ -40,9 +40,9 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
         fi
     done
 
-    subname=$(oc get sub addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
+    subname=$(oc get subscriptions.operators.coreos.com addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
     if [ -z ${subname} ]; then
-        subname=$(oc get sub dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
+        subname=$(oc get subscriptions.operators.coreos.com dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
     fi
 
     if [ ! -z ${subname} ]; then
@@ -65,8 +65,8 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
         }
         trap restoreDeploy SIGINT
 
-        oc patch sub ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}'
-        subspec=$(oc get sub ${subname} -n ${installns02} -o jsonpath='{.spec}')
+        oc patch subscriptions.operators.coreos.com ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}'
+        subspec=$(oc get subscriptions.operators.coreos.com ${subname} -n ${installns02} -o jsonpath='{.spec}')
 
         subscription=$(cat <<EOF
 {
@@ -101,7 +101,7 @@ EOF
 
         echo ""
         echo "Removing RHODA 0.2.0 subscriptions"
-        oc delete sub \
+        oc delete subscriptions.operators.coreos.com \
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
             ${subname} \
             --ignore-not-found --wait -n ${installns02}
