@@ -8,6 +8,32 @@ if ! which oc > /dev/null; then
    exit
 fi
 
+# require oc client version 4.9 or greater
+verlt() {
+    requiredVer="4.9"
+    ocVer=$(oc version --client | awk -F : {'print $2'} | tr -d "[:space:]")
+    if [ -z ${ocVer} ]; then
+        return 0
+    fi
+    if [ "${ocVer}" == "${requiredVer}" ]; then
+        return 1
+    fi
+    if [  "${ocVer}" == "`echo -e "${ocVer}\n${requiredVer}" | sort -V | head -n1`" ]; then
+        return 0
+    fi
+    return 1
+}
+
+if verlt; then
+    echo ""
+    echo "This script requires 'oc' client version ${requiredVer} or greater."
+    echo "Currently running ${ocVer}"
+    echo ""
+    echo 'upgrade and try again - https://docs.okd.io/latest/cli_reference/openshift_cli/getting-started-cli.html'
+    echo ""
+    exit
+fi
+
 # oc login ... (as user with admin access to the dbaas operator install ns. e.g. openshift-dbaas-operator / redhat-dbaas-operator)
 ocuser=$(oc whoami)
 echo "Logged in as ${ocuser}"
