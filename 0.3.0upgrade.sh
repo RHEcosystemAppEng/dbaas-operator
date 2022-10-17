@@ -91,9 +91,7 @@ if [ ! -z ${installns02} ] && [ ! -z ${installns03} ]; then
         }
         trap restoreDeploy SIGINT
 
-        oc patch subscriptions.operators.coreos.com ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}'
-        subspec=$(oc get subscriptions.operators.coreos.com ${subname} -n ${installns02} -o jsonpath='{.spec}')
-
+        subspec=$(oc patch subscriptions.operators.coreos.com ${subname} -n ${installns02} --type=merge -p '{"spec":{"startingCSV": "dbaas-operator.v0.3.0"}}' --dry-run=client -o jsonpath='{.spec}')
         subscription=$(cat <<EOF
 {
     "apiVersion":"operators.coreos.com/v1alpha1",
@@ -131,12 +129,16 @@ EOF
             ack-rds-controller-alpha-community-operators-openshift-marketplace \
             ${subname} \
             --ignore-not-found --wait -n ${installns02}
-        sleep 5
+        sleep 3
 
         echo ""
         echo "Removing RHODA 0.2.0 platform CR"
         oc delete dbaasplatform dbaas-platform --ignore-not-found --wait -n ${installns02}
-        sleep 3
+        if [ $(oc auth can-i delete dbaasplatforms --all-namespaces) == "yes" ]; then
+            echo ""
+            echo "Removing RHODA 0.2.0 dbaasplatform CRD"
+            oc delete dbaasplatforms --all --all-namespaces --ignore-not-found --wait
+        fi
 
         # upgrade should succeed regardless, but will attempt to remove the offending crd
         if [ $(oc auth can-i delete crds --all-namespaces) == "yes" ]; then
@@ -157,9 +159,18 @@ EOF
             dbaas-operator.v0.3.0 \
             --ignore-not-found --wait -n ${installns02}
 
-        cat <<EOF | oc create -f -
+        addon=$(oc get addon dbaas-operator --ignore-not-found --template '{{.metadata.name}}')
+        addonSub=$(oc get subscriptions.operators.coreos.com addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
+        if [ ! -z ${addon} ] && [ ! -z ${addonSub} ]; then
+            oc delete subscriptions.operators.coreos.com ${addonSub} --ignore-not-found --wait -n ${installns02}
+            sleep 5
+        fi
+        addonSubcheck=$(oc get subscriptions.operators.coreos.com addon-dbaas-operator -n ${installns02} --ignore-not-found --template '{{.metadata.name}}')
+        if [ -z ${addonSubcheck} ]; then
+            cat <<EOF | oc create -f -
 ${subscription}
 EOF
+        fi
     fi
 else
     echo "Nothing to do"
