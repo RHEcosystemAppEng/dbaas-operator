@@ -86,9 +86,9 @@ var _ = Describe("Get DBaaSProvider", func() {
 			Provider: v1alpha1.DatabaseProvider{
 				Name: "test-provider",
 			},
-			InventoryKind:                "testInventoryKind",
-			ConnectionKind:               "testConnectionKind",
-			InstanceKind:                 "testInstanceKind",
+			InventoryKind:                "MongoDBAtlasInventory",
+			ConnectionKind:               "MongoDBAtlasConnection",
+			InstanceKind:                 "MongoDBAtlasInstance",
 			CredentialFields:             []v1alpha1.CredentialField{},
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",

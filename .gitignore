@@ -6,7 +6,6 @@
 *.so
 *.dylib
 bin
-testbin/*
 bundle_tmp*
 config/samples/secret-dbaas-operator-dev-prom-remote-write.yaml
 
