@@ -15,9 +15,9 @@ spec:
             - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
               value: dbaas-dynamic-plugin:0.3.0
             - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
-              value: quay.io/rhobs/observability-operator-catalog:0.0.13
+              value: quay.io/rhobs/observability-operator-catalog:0.0.14
             - name: CSV_VERSION_OBSERVABILITY
-              value: observability-operator.v0.0.13
+              value: observability-operator.v0.0.14
             - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
               value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
             - name: CSV_VERSION_CRUNCHY_BRIDGE
