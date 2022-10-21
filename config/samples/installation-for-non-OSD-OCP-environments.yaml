@@ -5,7 +5,7 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.3.0
+  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.4.0
   displayName: DBaaS Operator
 
 ---
@@ -39,7 +39,6 @@ spec:
   name: dbaas-operator
   source: dbaas-operator
   sourceNamespace: openshift-marketplace
-  startingCSV: dbaas-operator.v0.3.0
   config:
     env:
       - name: ADDON_NAME
