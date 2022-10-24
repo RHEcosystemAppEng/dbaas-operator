@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/onsi/gomega/gexec"
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -154,14 +155,13 @@ var _ = BeforeSuite(func() {
 	go func() {
 		defer GinkgoRecover()
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
+		gexec.KillAndWait(4 * time.Second)
+
+		// Teardown the test environment once controller is fnished.
+		// Otherwise from Kubernetes 1.21+, teardon timeouts waiting on
+		// kube-apiserver to return
+		err := testEnv.Stop()
 		Expect(err).ToNot(HaveOccurred())
 	}()
 }, 60)
-
-var _ = AfterSuite(func() {
-	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
-	err = os.Unsetenv(InstallNamespaceEnvVar)
-	Expect(err).NotTo(HaveOccurred())
-})

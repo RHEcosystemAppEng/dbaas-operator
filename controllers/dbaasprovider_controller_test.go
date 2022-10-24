@@ -30,10 +30,10 @@ import (
 )
 
 var _ = Describe("DBaaSProvider controller", func() {
-	Describe("trigger reconcile", func() {
-		createdInventoryKind := "createdInventoryKind"
-		createdConnectionKind := "createdConnectionKind"
-		createdInstanceKind := "createdInstanceKind"
+	Context("after creating and updating a DBaaSProvider", func() {
+		createdInventoryKind := "DBaaSCreateInventory"
+		createdConnectionKind := "DBaaSCreateConnection"
+		createdInstanceKind := "DBaaSCreateInstance"
 
 		provider := &v1alpha1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
@@ -82,125 +82,119 @@ var _ = Describe("DBaaSProvider controller", func() {
 		AfterEach(assertResourceDeletion(provider))
 		AfterEach(func() { reset(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner) })
 
-		Context("after creating a DBaaSProvider", func() {
-			It("should make DBaaSInventory, DBaaSConnection and DBaaSInstance watch the provider inventory, connection and instance", func() {
-				assertWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
-			})
+		updatedInventoryKind := "DBaaSUpdateInventory"
+		updatedConnectionKind := "DBaaSUpdateConnection"
+		updatedInstanceKind := "DBaaSUpdateInstance"
+
+		uiSrc := &unstructured.Unstructured{}
+		uiSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    updatedInventoryKind,
+		})
+		ucSrc := &unstructured.Unstructured{}
+		ucSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    updatedConnectionKind,
+		})
+		uinSrc := &unstructured.Unstructured{}
+		uinSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    updatedInstanceKind,
 		})
 
-		Context("after updating a DBaaSProvider", func() {
-			updatedInventoryKind := "updatedInventoryKind"
-			updatedConnectionKind := "updatedConnectionKind"
-			updatedInstanceKind := "updatedInstanceKind"
+		AfterEach(func() { reset(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner) })
 
-			uiSrc := &unstructured.Unstructured{}
-			uiSrc.SetGroupVersionKind(schema.GroupVersionKind{
-				Group:   v1alpha1.GroupVersion.Group,
-				Version: v1alpha1.GroupVersion.Version,
-				Kind:    updatedInventoryKind,
-			})
-			ucSrc := &unstructured.Unstructured{}
-			ucSrc.SetGroupVersionKind(schema.GroupVersionKind{
-				Group:   v1alpha1.GroupVersion.Group,
-				Version: v1alpha1.GroupVersion.Version,
-				Kind:    updatedConnectionKind,
-			})
-			uinSrc := &unstructured.Unstructured{}
-			uinSrc.SetGroupVersionKind(schema.GroupVersionKind{
-				Group:   v1alpha1.GroupVersion.Group,
-				Version: v1alpha1.GroupVersion.Version,
-				Kind:    updatedInstanceKind,
-			})
+		It("should make DBaaSInventory, DBaaSConnection and DBaaSInstance watch the provider inventory, connection and instance", func() {
+			assertWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
+			assertNotWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner)
 
-			BeforeEach(func() { assertNotWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner) })
-			AfterEach(func() { reset(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner) })
+			updatedProvider := &v1alpha1.DBaaSProvider{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-create-update-provider",
+					Namespace: testNamespace,
+				},
+			}
+			err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), updatedProvider)
+			Expect(err).NotTo(HaveOccurred())
 
-			It("should make DBaaSInventory, DBaaSConnection and DBaaSInstance watch the provider inventory, connection and instance", func() {
-				updatedProvider := &v1alpha1.DBaaSProvider{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test-create-update-provider",
-						Namespace: testNamespace,
-					},
+			updatedProvider.Spec.InventoryKind = updatedInventoryKind
+			updatedProvider.Spec.ConnectionKind = updatedConnectionKind
+			updatedProvider.Spec.InstanceKind = updatedInstanceKind
+			Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
+			Eventually(func() v1alpha1.DBaaSProviderSpec {
+				pProvider := &v1alpha1.DBaaSProvider{}
+				err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
+				if err != nil {
+					return v1alpha1.DBaaSProviderSpec{}
 				}
-				err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), updatedProvider)
-				Expect(err).NotTo(HaveOccurred())
+				return pProvider.Spec
+			}, timeout).Should(Equal(updatedProvider.Spec))
 
-				updatedProvider.Spec.InventoryKind = updatedInventoryKind
-				updatedProvider.Spec.ConnectionKind = updatedConnectionKind
-				updatedProvider.Spec.InstanceKind = updatedInstanceKind
-				Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
-				Eventually(func() v1alpha1.DBaaSProviderSpec {
-					pProvider := &v1alpha1.DBaaSProvider{}
-					err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
-					if err != nil {
-						return v1alpha1.DBaaSProviderSpec{}
-					}
-					return pProvider.Spec
-				}, timeout).Should(Equal(updatedProvider.Spec))
-
-				assertWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner)
-			})
+			assertWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner)
 		})
 	})
 
-	Describe("not trigger reconcile", func() {
-		Context("after deleting a DBaaSProvider", func() {
-			It("should not watch the provider inventory, connection and instance", func() {
-				deletedInventoryKind := "deletedInventoryKind"
-				deletedConnectionKind := "deletedConnectionKind"
-				deletedInstanceKind := "deletedInstanceKind"
+	Context("after deleting a DBaaSProvider", func() {
+		deletedInventoryKind := "DBaaSDeleteInventory"
+		deletedConnectionKind := "DBaaSDeleteConnection"
+		deletedInstanceKind := "DBaaSDeleteInstance"
 
-				provider := &v1alpha1.DBaaSProvider{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "test-delete-provider",
-						Namespace: testNamespace,
-					},
-					Spec: v1alpha1.DBaaSProviderSpec{
-						Provider: v1alpha1.DatabaseProvider{
-							Name: "test-delete-provider",
-						},
-						InventoryKind:                deletedInventoryKind,
-						ConnectionKind:               deletedConnectionKind,
-						InstanceKind:                 deletedInstanceKind,
-						CredentialFields:             []v1alpha1.CredentialField{},
-						AllowsFreeTrial:              false,
-						ExternalProvisionURL:         "",
-						ExternalProvisionDescription: "",
-						InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
-					},
-				}
+		provider := &v1alpha1.DBaaSProvider{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-delete-provider",
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.DBaaSProviderSpec{
+				Provider: v1alpha1.DatabaseProvider{
+					Name: "test-delete-provider",
+				},
+				InventoryKind:                deletedInventoryKind,
+				ConnectionKind:               deletedConnectionKind,
+				InstanceKind:                 deletedInstanceKind,
+				CredentialFields:             []v1alpha1.CredentialField{},
+				AllowsFreeTrial:              false,
+				ExternalProvisionURL:         "",
+				ExternalProvisionDescription: "",
+				InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+			},
+		}
 
-				iSrc := &unstructured.Unstructured{}
-				iSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    deletedInventoryKind,
-				})
-				iOwner := &v1alpha1.DBaaSInventory{}
-				cSrc := &unstructured.Unstructured{}
-				cSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    deletedConnectionKind,
-				})
-				cOwner := &v1alpha1.DBaaSConnection{}
-				inSrc := &unstructured.Unstructured{}
-				inSrc.SetGroupVersionKind(schema.GroupVersionKind{
-					Group:   v1alpha1.GroupVersion.Group,
-					Version: v1alpha1.GroupVersion.Version,
-					Kind:    deletedInstanceKind,
-				})
-				inOwner := &v1alpha1.DBaaSInstance{}
+		iSrc := &unstructured.Unstructured{}
+		iSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    deletedInventoryKind,
+		})
+		iOwner := &v1alpha1.DBaaSInventory{}
+		cSrc := &unstructured.Unstructured{}
+		cSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    deletedConnectionKind,
+		})
+		cOwner := &v1alpha1.DBaaSConnection{}
+		inSrc := &unstructured.Unstructured{}
+		inSrc.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   v1alpha1.GroupVersion.Group,
+			Version: v1alpha1.GroupVersion.Version,
+			Kind:    deletedInstanceKind,
+		})
+		inOwner := &v1alpha1.DBaaSInstance{}
 
-				assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
-				assertResourceCreation(provider)()
-				assertWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
+		BeforeEach(func() { assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner) })
+		BeforeEach(assertResourceCreation(provider))
+		AfterEach(func() { reset(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner) })
 
-				reset(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
+		It("should not watch the provider inventory, connection and instance", func() {
+			assertWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
 
-				assertResourceDeletion(provider)()
-				assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
-			})
+			reset(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
+
+			assertResourceDeletion(provider)()
+			assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
 		})
 	})
 })
