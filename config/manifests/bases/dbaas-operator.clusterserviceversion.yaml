@@ -22,12 +22,24 @@ spec:
       displayName: DBaaSConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
+      version: v1alpha2
+    - description: DBaaSConnection is the Schema for the dbaasconnections API
+      displayName: DBaaSConnection
+      kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
     - description: DBaaSInstance is the Schema for the dbaasinstances API
       displayName: DBaaSInstance
       kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSInventory is the Schema for the dbaasinventories API Inventory
+        objects must be created in a valid namespace, determined by the existence
+        of a DBaaSPolicy object
+      displayName: Provider Account
+      kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
+      version: v1alpha2
     - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
         objects must be created in a valid namespace, determined by the existence
         of a DBaaSPolicy object.

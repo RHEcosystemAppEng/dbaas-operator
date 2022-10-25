@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1alpha2 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2"
 )
 
 const (
@@ -174,13 +175,13 @@ func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL strin
 }
 
 // SetInventoryMetrics set the metrics for inventory
-func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution) {
+func SetInventoryMetrics(inventory dbaasv1alpha2.DBaaSInventory, execution Execution) {
 	setInventoryStatusMetrics(inventory)
 	setInventoryRequestDurationSeconds(execution, inventory)
 }
 
 // setInventoryStatusMetrics set the metrics for inventory status
-func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
+func setInventoryStatusMetrics(inventory dbaasv1alpha2.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
 			DBaaSInventoryStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace})
@@ -195,7 +196,7 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 }
 
 // setInventoryRequestDurationSeconds set the metrics for inventory request duration in seconds
-func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory) {
+func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1alpha2.DBaaSInventory) {
 	httpDuration := time.Since(execution.begin)
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
@@ -214,7 +215,7 @@ func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1al
 }
 
 // CleanInventoryMetrics delete inventory metrics based on the condition type
-func CleanInventoryMetrics(inventory *dbaasv1alpha1.DBaaSInventory) {
+func CleanInventoryMetrics(inventory *dbaasv1alpha2.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		switch cond.Type {
 		case dbaasv1alpha1.DBaaSInventoryReadyType:
@@ -226,20 +227,20 @@ func CleanInventoryMetrics(inventory *dbaasv1alpha1.DBaaSInventory) {
 }
 
 // SetConnectionMetrics set the metrics for a connection
-func SetConnectionMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection, execution Execution) {
+func SetConnectionMetrics(provider string, account string, connection dbaasv1alpha2.DBaaSConnection, execution Execution) {
 	setConnectionStatusMetrics(provider, account, connection)
 	setConnectionRequestDurationSeconds(provider, account, connection, execution)
 }
 
 // setConnectionStatusMetrics set the metrics based on connection status
-func setConnectionStatusMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection) {
+func setConnectionStatusMetrics(provider string, account string, connection dbaasv1alpha2.DBaaSConnection) {
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionReadyType {
 			DBaaSConnectionStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelName: connection.Name, metricLabelNameSpace: connection.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(1)
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.DatabaseServiceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(1)
 			} else {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(0)
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.DatabaseServiceID, metricLabelConnectionName: connection.GetName(), metricLabelNameSpace: connection.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(0)
 			}
 			break
 		}
@@ -247,18 +248,18 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 }
 
 // setConnectionRequestDurationSeconds set the metrics for connection request duration in seconds
-func setConnectionRequestDurationSeconds(provider string, account string, connection dbaasv1alpha1.DBaaSConnection, execution Execution) {
+func setConnectionRequestDurationSeconds(provider string, account string, connection dbaasv1alpha2.DBaaSConnection, execution Execution) {
 	httpDuration := time.Since(execution.begin)
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionProviderSyncType {
 			if cond.Status == metav1.ConditionTrue {
 				lastTransitionTime := cond.LastTransitionTime
 				httpDuration = lastTransitionTime.Sub(connection.CreationTimestamp.Time)
-				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
+				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.DatabaseServiceID, metricLabelConnectionName: connection.GetName(),
 					metricLabelNameSpace: connection.Namespace, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 
 			} else {
-				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.InstanceID, metricLabelConnectionName: connection.GetName(),
+				DBaasConnectionRequestDurationSeconds.With(prometheus.Labels{metricLabelProvider: provider, metricLabelAccountName: account, metricLabelInstanceID: connection.Spec.DatabaseServiceID, metricLabelConnectionName: connection.GetName(),
 					metricLabelNameSpace: connection.Namespace, metricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Observe(httpDuration.Seconds())
 			}
 			break
@@ -267,7 +268,7 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 }
 
 // CleanConnectionMetrics delete connection metrics based on the condition type
-func CleanConnectionMetrics(connection *dbaasv1alpha1.DBaaSConnection) {
+func CleanConnectionMetrics(connection *dbaasv1alpha2.DBaaSConnection) {
 	for _, cond := range connection.Status.Conditions {
 		switch cond.Type {
 		case dbaasv1alpha1.DBaaSConnectionReadyType:

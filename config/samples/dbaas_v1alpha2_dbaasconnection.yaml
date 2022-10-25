@@ -1,0 +1,16 @@
+apiVersion: dbaas.redhat.com/v1alpha2
+kind: DBaaSConnection
+metadata:
+  labels:
+    app.kubernetes.io/name: dbaasconnection
+    app.kubernetes.io/instance: dbaasconnection-sample
+    app.kubernetes.io/part-of: dbaas-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: dbaas-operator
+  name: atlas-connection
+spec:
+  inventoryRef:
+    namespace: openshift-dbaas-operator
+    name: atlas-inventory
+  databaseServiceID: atlas-instance
+  databaseServiceType: instance

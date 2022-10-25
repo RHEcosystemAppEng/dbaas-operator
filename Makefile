@@ -87,7 +87,7 @@ OLD_BUNDLE_IMGS ?= $(patsubst %$(COMMA),%$(EMPTY),$(subst $(SPACE),$(EMPTY),$(fo
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -258,6 +258,7 @@ sdk-manifests: manifests generate fmt kustomize sdk ## Generate bundle manifests
 .PHONY: bundle
 bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	hack/openshift-conversion-webhook.sh
 	$(SDK) bundle validate ./bundle
 
 .PHONY: bundle-w-digests

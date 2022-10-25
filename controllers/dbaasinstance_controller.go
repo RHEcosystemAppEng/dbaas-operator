@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -30,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2"
 )
 
 // DBaaSInstanceReconciler reconciles a DBaaSInstance object
@@ -61,16 +63,21 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if inventory, validNS, provision, err := r.checkInventory(ctx, instance.Spec.InventoryRef, &instance, func(reason string, message string) {
-		cond := metav1.Condition{
-			Type:    v1alpha1.DBaaSInstanceReadyType,
-			Status:  metav1.ConditionFalse,
-			Reason:  reason,
-			Message: message,
-		}
-		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-		instance.Status.Phase = v1alpha1.InstancePhaseError
-	}, logger); err != nil {
+	if inventory, validNS, provision, err := r.checkInventory(ctx,
+		v1alpha2.NamespacedName{
+			Name:      instance.Spec.InventoryRef.Name,
+			Namespace: instance.Spec.InventoryRef.Namespace,
+		},
+		&instance, func(reason string, message string) {
+			cond := metav1.Condition{
+				Type:    v1alpha1.DBaaSInstanceReadyType,
+				Status:  metav1.ConditionFalse,
+				Reason:  reason,
+				Message: message,
+			}
+			apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
+			instance.Status.Phase = v1alpha1.InstancePhaseError
+		}, logger); err != nil {
 		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
@@ -83,6 +90,9 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&instance,
+			func() *schema.GroupVersion {
+				return &v1alpha1.GroupVersion
+			},
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
 			},
@@ -154,7 +164,7 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	}
 	log.Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
 
-	inventory := &v1alpha1.DBaaSInventory{}
+	inventory := &v1alpha2.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
 	CleanInstanceMetrics(instanceObj)

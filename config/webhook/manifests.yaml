@@ -12,14 +12,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
+      path: /validate-dbaas-redhat-com-v1alpha2-dbaasconnection
   failurePolicy: Fail
   name: vdbaasconnection.kb.io
   rules:
   - apiGroups:
     - dbaas.redhat.com
     apiVersions:
-    - v1alpha1
+    - v1alpha2
     operations:
     - CREATE
     - UPDATE
@@ -32,14 +32,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+      path: /validate-dbaas-redhat-com-v1alpha2-dbaasinventory
   failurePolicy: Fail
   name: vdbaasinventory.kb.io
   rules:
   - apiGroups:
     - dbaas.redhat.com
     apiVersions:
-    - v1alpha1
+    - v1alpha2
     operations:
     - CREATE
     - UPDATE

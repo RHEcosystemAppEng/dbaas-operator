@@ -1,5 +1,5 @@
 /*
-Copyright 2021, Red Hat.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -42,88 +45,90 @@ const (
 	ackLogLevel           = "ACK_LOG_LEVEL"
 )
 
-var (
-	testProvider = DBaaSProvider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      testProviderName,
-			Namespace: testNamespace,
+var _ = Describe("DBaaSInventory Webhook", func() {
+	testProvider := &unstructured.Unstructured{}
+	testProvider.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   v1alpha1GroupVersion.Group,
+		Version: v1alpha1GroupVersion.Version,
+		Kind:    "DBaaSProvider",
+	})
+	testProvider.SetName(testProviderName)
+	testProvider.UnstructuredContent()["spec"] = ProviderSpec{
+		Provider: DatabaseProvider{
+			Name: testProviderName,
 		},
-		Spec: DBaaSProviderSpec{
-			Provider: DatabaseProvider{
-				Name: testProviderName,
+		InventoryKind:  testInventoryKind,
+		ConnectionKind: testConnectionKind,
+		InstanceKind:   testInstanceKind,
+		CredentialFields: []CredentialField{
+			{
+				Key:      "field1",
+				Type:     "String",
+				Required: true,
 			},
-			InventoryKind:  testInventoryKind,
-			ConnectionKind: testConnectionKind,
-			InstanceKind:   testInstanceKind,
-			CredentialFields: []CredentialField{
-				{
-					Key:      "field1",
-					Type:     "String",
-					Required: true,
-				},
-				{
-					Key:      "field2",
-					Type:     "String",
-					Required: false,
-				},
+			{
+				Key:      "field2",
+				Type:     "String",
+				Required: false,
 			},
-			AllowsFreeTrial:              false,
-			ExternalProvisionURL:         "",
-			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
+		AllowsFreeTrial:              false,
+		ExternalProvisionURL:         "",
+		ExternalProvisionDescription: "",
+		InstanceParameterSpecs:       []InstanceParameterSpec{},
 	}
-	testProviderRDS = DBaaSProvider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      rdsRegistration,
-			Namespace: testNamespace,
+	testProviderRDS := &unstructured.Unstructured{}
+	testProviderRDS.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   v1alpha1GroupVersion.Group,
+		Version: v1alpha1GroupVersion.Version,
+		Kind:    "DBaaSProvider",
+	})
+	testProviderRDS.SetName(rdsRegistration)
+	testProviderRDS.UnstructuredContent()["spec"] = ProviderSpec{
+		Provider: DatabaseProvider{
+			Name: rdsRegistration,
 		},
-		Spec: DBaaSProviderSpec{
-			Provider: DatabaseProvider{
-				Name: rdsRegistration,
+		InventoryKind:  testInventoryKindRDS,
+		ConnectionKind: testConnectionKindRDS,
+		InstanceKind:   testInstanceKindRDS,
+		CredentialFields: []CredentialField{
+			{
+				Key:         awsAccessKeyID,
+				DisplayName: "AWS Access Key ID",
+				Type:        "maskedstring",
+				Required:    true,
 			},
-			InventoryKind:  testInventoryKindRDS,
-			ConnectionKind: testConnectionKindRDS,
-			InstanceKind:   testInstanceKindRDS,
-			CredentialFields: []CredentialField{
-				{
-					Key:         awsAccessKeyID,
-					DisplayName: "AWS Access Key ID",
-					Type:        "maskedstring",
-					Required:    true,
-				},
-				{
-					Key:         awsSecretAccessKey,
-					DisplayName: "AWS Secret Access Key",
-					Type:        "maskedstring",
-					Required:    true,
-				},
-				{
-					Key:         awsRegion,
-					DisplayName: "AWS Region",
-					Type:        "string",
-					Required:    true,
-				},
-				{
-					Key:         ackResourceTags,
-					DisplayName: "ACK Resource Tags",
-					Type:        "string",
-					Required:    false,
-				},
-				{
-					Key:         ackLogLevel,
-					DisplayName: "ACK Log Level",
-					Type:        "string",
-					Required:    false,
-				},
+			{
+				Key:         awsSecretAccessKey,
+				DisplayName: "AWS Secret Access Key",
+				Type:        "maskedstring",
+				Required:    true,
 			},
-			AllowsFreeTrial:              true,
-			ExternalProvisionURL:         "",
-			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
+			{
+				Key:         awsRegion,
+				DisplayName: "AWS Region",
+				Type:        "string",
+				Required:    true,
+			},
+			{
+				Key:         ackResourceTags,
+				DisplayName: "ACK Resource Tags",
+				Type:        "string",
+				Required:    false,
+			},
+			{
+				Key:         ackLogLevel,
+				DisplayName: "ACK Log Level",
+				Type:        "string",
+				Required:    false,
+			},
 		},
+		AllowsFreeTrial:              true,
+		ExternalProvisionURL:         "",
+		ExternalProvisionDescription: "",
+		InstanceParameterSpecs:       []InstanceParameterSpec{},
 	}
-	testSecret = corev1.Secret{
+	testSecret := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -137,7 +142,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2 = corev1.Secret{
+	testSecret2 := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -150,7 +155,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret2update = corev1.Secret{
+	testSecret2update := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -163,7 +168,7 @@ var (
 			"field3": []byte("test3"),
 		},
 	}
-	testSecret3 = corev1.Secret{
+	testSecret3 := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -175,7 +180,7 @@ var (
 			"field1": []byte("test1"),
 		},
 	}
-	testSecret3update = corev1.Secret{
+	testSecret3update := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -187,7 +192,7 @@ var (
 			"field1": []byte("test1"),
 		},
 	}
-	testSecretRDS = corev1.Secret{
+	testSecretRDS := &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Opaque",
 		},
@@ -201,7 +206,7 @@ var (
 			"AWS_REGION":            []byte("myregion"),
 		},
 	}
-	testDBaaSInventory = DBaaSInventory{
+	testDBaaSInventory := &DBaaSInventory{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      inventoryName,
 			Namespace: testNamespace,
@@ -224,16 +229,14 @@ var (
 			},
 		},
 	}
-)
 
-var _ = Describe("DBaaSInventory Webhook", func() {
 	Context("creation succeeds",
 		func() {
-			BeforeEach(assertResourceCreation(&testProvider))
-			AfterEach(assertResourceDeletion(&testProvider))
+			BeforeEach(assertResourceCreation(testProvider))
+			AfterEach(assertResourceDeletion(testProvider))
 			Context("without optional fields", func() {
-				BeforeEach(assertResourceCreation(&testSecret3))
-				AfterEach(assertResourceDeletion(&testSecret3))
+				BeforeEach(assertResourceCreation(testSecret3))
+				AfterEach(assertResourceDeletion(testSecret3))
 				It("should succeed without optional fields", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					inv.Name = "inv-no-optional"
@@ -243,8 +246,8 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				})
 			})
 			Context("with optional fields", func() {
-				BeforeEach(assertResourceCreation(&testSecret))
-				AfterEach(assertResourceDeletion(&testSecret))
+				BeforeEach(assertResourceCreation(testSecret))
+				AfterEach(assertResourceDeletion(testSecret))
 				It("should succeed with optional fields", func() {
 					const suffix = "a"
 					secret := testSecret.DeepCopy()
@@ -285,10 +288,10 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 		})
 	Context("creation fails",
 		func() {
-			BeforeEach(assertResourceCreation(&testSecret2))
-			BeforeEach(assertResourceCreation(&testProvider))
-			AfterEach(assertResourceDeletion(&testProvider))
-			AfterEach(assertResourceDeletion(&testSecret2))
+			BeforeEach(assertResourceCreation(testSecret2))
+			BeforeEach(assertResourceCreation(testProvider))
+			AfterEach(assertResourceDeletion(testProvider))
+			AfterEach(assertResourceDeletion(testSecret2))
 			It("missing required values field", func() {
 				inv := testDBaaSInventory.DeepCopy()
 				inv.Spec.ConnectionNsSelector = &metav1.LabelSelector{
@@ -300,21 +303,21 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
 			})
 			It("missing required credential fields", func() {
-				err := k8sClient.Create(ctx, &testDBaaSInventory)
-				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
+				err := k8sClient.Create(ctx, testDBaaSInventory)
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha2.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
 			})
 		})
 	Context("update",
 		func() {
-			BeforeEach(assertResourceCreation(&testSecret))
-			BeforeEach(assertResourceCreation(&testProvider))
-			BeforeEach(assertResourceCreation(&testDBaaSInventory))
-			AfterEach(assertResourceDeletion(&testDBaaSInventory))
-			AfterEach(assertResourceDeletion(&testProvider))
-			AfterEach(assertResourceDeletion(&testSecret))
+			BeforeEach(assertResourceCreation(testSecret))
+			BeforeEach(assertResourceCreation(testProvider))
+			BeforeEach(assertResourceCreation(testDBaaSInventory))
+			AfterEach(assertResourceDeletion(testDBaaSInventory))
+			AfterEach(assertResourceDeletion(testProvider))
+			AfterEach(assertResourceDeletion(testSecret))
 			Context("nominal", func() {
-				BeforeEach(assertResourceCreation(&testSecret3update))
-				AfterEach(assertResourceDeletion(&testSecret3update))
+				BeforeEach(assertResourceCreation(testSecret3update))
+				AfterEach(assertResourceDeletion(testSecret3update))
 				It("Update CR should succeed", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
@@ -325,14 +328,14 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				})
 			})
 			Context("update fails", func() {
-				BeforeEach(assertResourceCreation(&testSecret2update))
-				AfterEach(assertResourceDeletion(&testSecret2update))
+				BeforeEach(assertResourceCreation(testSecret2update))
+				AfterEach(assertResourceDeletion(testSecret2update))
 				It("update fails with missing required credential fields", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
-					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
+					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha2.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
 				})
 				It("update fails with missing required values field", func() {
 					inv := testDBaaSInventory.DeepCopy()
@@ -351,7 +354,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			})
 		})
 	Context("After creating DBaaSInventory for RDS", func() {
-		testSecretRDS2 := corev1.Secret{
+		testSecretRDS2 := &corev1.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "Opaque",
 			},
@@ -365,7 +368,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				"AWS_REGION":            []byte("myregion"),
 			},
 		}
-		testDBaaSInventoryRDS := DBaaSInventory{
+		testDBaaSInventoryRDS := &DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-inventory-rds",
 				Namespace: testNamespace,
@@ -381,14 +384,14 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				},
 			},
 		}
-		BeforeEach(assertResourceCreation(&testSecretRDS2))
-		BeforeEach(assertResourceCreation(&testSecretRDS))
-		BeforeEach(assertResourceCreation(&testProviderRDS))
-		BeforeEach(assertResourceCreation(&testDBaaSInventoryRDS))
-		AfterEach(assertResourceDeletion(&testDBaaSInventoryRDS))
-		AfterEach(assertResourceDeletion(&testProviderRDS))
-		AfterEach(assertResourceDeletion(&testSecretRDS))
-		AfterEach(assertResourceDeletion(&testSecretRDS2))
+		BeforeEach(assertResourceCreation(testSecretRDS2))
+		BeforeEach(assertResourceCreation(testSecretRDS))
+		BeforeEach(assertResourceCreation(testProviderRDS))
+		BeforeEach(assertResourceCreation(testDBaaSInventoryRDS))
+		AfterEach(assertResourceDeletion(testDBaaSInventoryRDS))
+		AfterEach(assertResourceDeletion(testProviderRDS))
+		AfterEach(assertResourceDeletion(testSecretRDS))
+		AfterEach(assertResourceDeletion(testSecretRDS2))
 		Context("creating another DBaaSInventory for RDS", func() {
 			It("should not allow creating DBaaSInventory for RDS in the same namespace", func() {
 				testDBaaSInventoryRDSNotAllowed := DBaaSInventory{

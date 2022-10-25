@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	"context"
@@ -29,6 +29,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -48,7 +52,10 @@ var ctx context.Context
 var cancel context.CancelFunc
 
 const (
-	testNamespace = "default"
+	testNamespace  = "default"
+	testNamespace2 = "testnamespace2"
+	timeout        = time.Second * 10
+	interval       = time.Millisecond * 250
 )
 
 func TestAPIs(t *testing.T) {
@@ -84,6 +91,9 @@ var _ = BeforeSuite(func() {
 	err = admissionv1beta1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = corev1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
@@ -102,8 +112,19 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&DBaaSPolicy{}).SetupWebhookWithManager(mgr)
+	err = (&DBaaSConnection{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
+
+	err = (&DBaaSInventory{}).SetupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	ns2 := corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: testNamespace2,
+		},
+	}
+
+	assertResourceCreation(&ns2)()
 
 	//+kubebuilder:scaffold:webhook
 
@@ -135,3 +156,35 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func assertResourceCreation(object client.Object) func() {
+	return func() {
+		By("creating resource")
+		object.SetResourceVersion("")
+		Expect(k8sClient.Create(ctx, object)).Should(Succeed())
+
+		By("checking the resource created")
+		Eventually(func() bool {
+			if err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+				return false
+			}
+			return true
+		}, timeout, interval).Should(BeTrue())
+	}
+}
+
+func assertResourceDeletion(object client.Object) func() {
+	return func() {
+		By("deleting resource")
+		Expect(k8sClient.Delete(ctx, object)).Should(Succeed())
+
+		By("checking the resource deleted")
+		Eventually(func() bool {
+			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(object), object)
+			if err != nil && errors.IsNotFound(err) {
+				return true
+			}
+			return false
+		}, timeout, interval).Should(BeTrue())
+	}
+}

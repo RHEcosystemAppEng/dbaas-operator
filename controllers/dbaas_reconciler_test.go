@@ -24,6 +24,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -57,18 +59,18 @@ var testSecret2 = corev1.Secret{
 
 var _ = Describe("Create provider object", func() {
 	It("should create the expected provider object", func() {
-		object := &v1alpha1.DBaaSConnection{
+		object := &v1alpha2.DBaaSConnection{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-connection",
 				Namespace: "test-namespace",
 			},
 		}
-		result := dRec.createProviderObject(object, "test-kind")
+		result := dRec.createProviderObject(object, &v1alpha2.GroupVersion, "test-kind")
 
 		expected := &unstructured.Unstructured{}
 		expected.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   "dbaas.redhat.com",
-			Version: "v1alpha1",
+			Version: "v1alpha2",
 			Kind:    "test-kind",
 		})
 		expected.SetNamespace("test-namespace")
@@ -117,29 +119,29 @@ var _ = Describe("Get install Namespace", func() {
 })
 
 var _ = Describe("Parse provider object", func() {
-	connectionSpec := v1alpha1.DBaaSConnectionSpec{
-		InventoryRef: v1alpha1.NamespacedName{
+	connectionSpec := v1alpha2.DBaaSConnectionSpec{
+		InventoryRef: v1alpha2.NamespacedName{
 			Name:      "test-inventory",
 			Namespace: "test-namespace",
 		},
-		InstanceID: "test-instance-id",
+		DatabaseServiceID: "test-instance-id",
 	}
 	uConnection := &unstructured.Unstructured{}
 	uConnection.SetUnstructuredContent(make(map[string]interface{}, 1))
 	uConnection.UnstructuredContent()["spec"] = connectionSpec
-	eConnection := &v1alpha1.DBaaSProviderConnection{
+	eConnection := &v1alpha2.DBaaSProviderConnection{
 		Spec: connectionSpec,
 	}
 
-	inventorySpec := v1alpha1.DBaaSInventorySpec{
-		CredentialsRef: &v1alpha1.LocalObjectReference{
+	inventorySpec := v1alpha2.DBaaSInventorySpec{
+		CredentialsRef: &v1alpha2.LocalObjectReference{
 			Name: "test-credential-ref",
 		},
 	}
 	uInventory := &unstructured.Unstructured{}
 	uInventory.SetUnstructuredContent(make(map[string]interface{}, 1))
 	uInventory.UnstructuredContent()["spec"] = inventorySpec
-	eInventory := &v1alpha1.DBaaSProviderInventory{
+	eInventory := &v1alpha2.DBaaSProviderInventory{
 		Spec: inventorySpec,
 	}
 
@@ -149,22 +151,22 @@ var _ = Describe("Parse provider object", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(object).Should(Equal(expected))
 		},
-		Entry("parse DBaaSConnection", &v1alpha1.DBaaSProviderConnection{}, uConnection, eConnection),
-		Entry("parse DBaaSInventory", &v1alpha1.DBaaSProviderInventory{}, uInventory, eInventory),
+		Entry("parse DBaaSConnection", &v1alpha2.DBaaSProviderConnection{}, uConnection, eConnection),
+		Entry("parse DBaaSInventory", &v1alpha2.DBaaSProviderInventory{}, uInventory, eInventory),
 	)
 })
 
 var _ = Describe("Provider object MutateFn", func() {
 	It("should create the expected MutateFn", func() {
-		object := &v1alpha1.DBaaSConnection{}
+		object := &v1alpha2.DBaaSConnection{}
 		providerObject := &unstructured.Unstructured{}
 		providerObject.SetUnstructuredContent(make(map[string]interface{}, 1))
-		connectionSpec := &v1alpha1.DBaaSConnectionSpec{
-			InventoryRef: v1alpha1.NamespacedName{
+		connectionSpec := &v1alpha2.DBaaSConnectionSpec{
+			InventoryRef: v1alpha2.NamespacedName{
 				Name:      "test-inventory",
 				Namespace: "test-namespace",
 			},
-			InstanceID: "test-instance-id",
+			DatabaseServiceID: "test-instance-id",
 		}
 		fn := dRec.providerObjectMutateFn(object, providerObject, connectionSpec)
 		err := fn()
@@ -184,14 +186,14 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 	It("should invoke controller watch with correctly input", func() {
 		source := &unstructured.Unstructured{}
 		source.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
+			Group:   v1alpha2.GroupVersion.Group,
+			Version: v1alpha2.GroupVersion.Version,
 			Kind:    "test-kind",
 		})
-		owner := &v1alpha1.DBaaSInventory{}
+		owner := &v1alpha2.DBaaSInventory{}
 		spyController := newSpyController(nil)
 
-		err := dRec.watchDBaaSProviderObject(spyController, owner, "test-kind")
+		err := dRec.watchDBaaSProviderObject(spyController, owner, &v1alpha2.GroupVersion, "test-kind")
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(func() bool {
 			return spyController.watched(&watchable{
@@ -252,7 +254,7 @@ var _ = Describe("list policies by inventory namespace", func() {
 			}))
 			Expect(isOwner(&policy1, &rqList.Items[0], dRec.Scheme)).Should(BeTrue())
 
-			inventory := v1alpha1.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
+			inventory := v1alpha2.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
 			Expect(canProvision(inventory, activePolicy)).Should(BeTrue())
 			activePolicy.Spec.DisableProvisions = &isTrue
 			Expect(canProvision(inventory, activePolicy)).Should(BeFalse())
@@ -302,7 +304,7 @@ var _ = Describe("list policies by inventory namespace", func() {
 			Expect(activePolicy).Should(Not(BeNil()))
 			Expect(activePolicy.Name).Should(Equal(policy2.Name))
 
-			inventory := v1alpha1.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
+			inventory := v1alpha2.DBaaSInventory{ObjectMeta: metav1.ObjectMeta{Namespace: ns.Name}}
 			Expect(canProvision(inventory, activePolicy)).Should(BeFalse())
 		})
 	})
@@ -318,45 +320,46 @@ var _ = Describe("Check inventory", func() {
 
 	Context("after creating DBaaSInventory", func() {
 		inventoryName := "test-check-inventory"
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1alpha2.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1alpha2.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha2.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.LocalObjectReference{
+				DBaaSInventorySpec: v1alpha2.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha2.LocalObjectReference{
 						Name: testSecret.Name,
 					},
 				},
 			},
 		}
-		createdDBaaSInventory2 := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory2 := &v1alpha2.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName + "-2",
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1alpha2.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha2.NamespacedName{
 					Name: "crunchy-bridge-registration",
 				},
-				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.LocalObjectReference{
+				DBaaSInventorySpec: v1alpha2.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha2.LocalObjectReference{
 						Name: testSecret2.Name,
 					},
 				},
 			},
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
-		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-			Instances: []v1alpha1.Instance{
+		providerInventoryStatus := &v1alpha2.DBaaSInventoryStatus{
+			DatabaseServices: []v1alpha2.DatabaseService{
 				{
-					InstanceID: "testInstanceID",
-					Name:       "testInstance",
-					InstanceInfo: map[string]string{
+					ServiceID:   "testInstanceID",
+					ServiceName: "testInstance",
+					ServiceType: v1alpha2.InstanceDatabaseService,
+					ServiceInfo: map[string]string{
 						"testInstanceInfo": "testInstanceInfo",
 					},
 				},
@@ -378,14 +381,14 @@ var _ = Describe("Check inventory", func() {
 		Context("after creating DBaaSConnection", func() {
 			connectionName := "test-check-inventory-connection"
 			instanceID := "test-instanceID"
-			DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
-				InventoryRef: v1alpha1.NamespacedName{
+			DBaaSConnectionSpec := &v1alpha2.DBaaSConnectionSpec{
+				InventoryRef: v1alpha2.NamespacedName{
 					Name:      inventoryName,
 					Namespace: testNamespace,
 				},
-				InstanceID: instanceID,
+				DatabaseServiceID: instanceID,
 			}
-			createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+			createdDBaaSConnection := &v1alpha2.DBaaSConnection{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      connectionName,
 					Namespace: testNamespace,
@@ -398,7 +401,7 @@ var _ = Describe("Check inventory", func() {
 			When("check the right inventory", func() {
 				It("should return the inventory without error", func() {
 					i, validNS, provision, err := dRec.checkInventory(ctx,
-						v1alpha1.NamespacedName{
+						v1alpha2.NamespacedName{
 							Name:      inventoryName,
 							Namespace: testNamespace,
 						}, createdDBaaSConnection, func(reason string, message string) {
@@ -438,7 +441,7 @@ var _ = Describe("Check inventory", func() {
 			When("check an inventory not exists", func() {
 				It("should return error", func() {
 					_, _, _, err := dRec.checkInventory(ctx,
-						v1alpha1.NamespacedName{
+						v1alpha2.NamespacedName{
 							Name:      "test-check-not-exist-inventory",
 							Namespace: testNamespace,
 						}, createdDBaaSConnection, func(reason string, message string) {
@@ -460,17 +463,17 @@ var _ = Describe("Check inventory", func() {
 
 	Context("after creating not ready DBaaSInventory", func() {
 		inventoryName := "test-check-inventory-not-ready"
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1alpha2.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1alpha2.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha2.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.LocalObjectReference{
+				DBaaSInventorySpec: v1alpha2.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha2.LocalObjectReference{
 						Name: testSecret.Name,
 					},
 				},
@@ -482,14 +485,14 @@ var _ = Describe("Check inventory", func() {
 		Context("after creating DBaaSConnection", func() {
 			connectionName := "test-check-not-ready-inventory-connection"
 			instanceID := "test-instanceID"
-			DBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
-				InventoryRef: v1alpha1.NamespacedName{
+			DBaaSConnectionSpec := &v1alpha2.DBaaSConnectionSpec{
+				InventoryRef: v1alpha2.NamespacedName{
 					Name:      inventoryName,
 					Namespace: testNamespace,
 				},
-				InstanceID: instanceID,
+				DatabaseServiceID: instanceID,
 			}
-			createdDBaaSConnection := &v1alpha1.DBaaSConnection{
+			createdDBaaSConnection := &v1alpha2.DBaaSConnection{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      connectionName,
 					Namespace: testNamespace,
@@ -502,7 +505,7 @@ var _ = Describe("Check inventory", func() {
 			When("check an not ready inventory", func() {
 				It("should return error", func() {
 					_, _, _, err := dRec.checkInventory(ctx,
-						v1alpha1.NamespacedName{
+						v1alpha2.NamespacedName{
 							Name:      inventoryName,
 							Namespace: testNamespace,
 						}, createdDBaaSConnection, func(reason string, message string) {
@@ -531,17 +534,17 @@ var _ = Describe("Reconcile Provider Resource", func() {
 
 	Context("after creating DBaaSInventory", func() {
 		inventoryName := "test-reconcile-provider-resource-inventory"
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1alpha2.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1alpha2.DBaaSOperatorInventorySpec{
+				ProviderRef: v1alpha2.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.LocalObjectReference{
+				DBaaSInventorySpec: v1alpha2.DBaaSInventorySpec{
+					CredentialsRef: &v1alpha2.LocalObjectReference{
 						Name: testSecret.Name,
 					},
 				},
@@ -556,6 +559,9 @@ var _ = Describe("Reconcile Provider Resource", func() {
 				_, err := dRec.reconcileProviderResource(ctx,
 					createdDBaaSInventory.Spec.ProviderRef.Name,
 					createdDBaaSInventory,
+					func() *schema.GroupVersion {
+						return &v1alpha2.GroupVersion
+					},
 					func(provider *v1alpha1.DBaaSProvider) string {
 						return provider.Spec.InventoryKind
 					},
@@ -563,10 +569,10 @@ var _ = Describe("Reconcile Provider Resource", func() {
 						return createdDBaaSInventory.Spec.DeepCopy()
 					},
 					func() interface{} {
-						return &v1alpha1.DBaaSProviderInventory{}
+						return &v1alpha2.DBaaSProviderInventory{}
 					},
 					func(i interface{}) metav1.Condition {
-						providerInventory := i.(*v1alpha1.DBaaSProviderInventory)
+						providerInventory := i.(*v1alpha2.DBaaSProviderInventory)
 						return mergeInventoryStatus(createdDBaaSInventory, providerInventory)
 					},
 					func() *[]metav1.Condition {

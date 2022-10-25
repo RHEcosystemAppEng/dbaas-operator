@@ -20,6 +20,8 @@ config/samples/secret-dbaas-operator-dev-prom-remote-write.yaml
 !vendor/**/zz_generated.*
 /vendor/
 
+_.yaml
+
 # editor and IDE paraphernalia
 .idea
 *.swp

@@ -19,8 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -56,7 +57,7 @@ type DBaaSConnectionReconciler struct {
 func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
 
-	var connection v1alpha1.DBaaSConnection
+	var connection v1alpha2.DBaaSConnection
 	execution := PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
@@ -96,11 +97,11 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	} else {
 		spec, err := r.getConnectionSpec(ctx, connection.Spec.DeepCopy())
 		if err != nil {
-			logger.Error(err, "Cannot read the instance reference")
+			logger.Error(err, "Cannot read the database service reference")
 			cond := metav1.Condition{
 				Type:    v1alpha1.DBaaSConnectionReadyType,
 				Status:  metav1.ConditionFalse,
-				Reason:  v1alpha1.DBaaSInstanceNotAvailable,
+				Reason:  v1alpha2.DBaaSServiceNotAvailable,
 				Message: err.Error(),
 			}
 			r.updateConnectionStatus(ctx, &connection, &cond)
@@ -110,6 +111,9 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&connection,
+			func() *schema.GroupVersion {
+				return &v1alpha2.GroupVersion
+			},
 			func(provider *v1alpha1.DBaaSProvider) string {
 				return provider.Spec.ConnectionKind
 			},
@@ -117,10 +121,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return spec
 			},
 			func() interface{} {
-				return &v1alpha1.DBaaSProviderConnection{}
+				return &v1alpha2.DBaaSProviderConnection{}
 			},
 			func(i interface{}) metav1.Condition {
-				providerConn := i.(*v1alpha1.DBaaSProviderConnection)
+				providerConn := i.(*v1alpha2.DBaaSProviderConnection)
 				return mergeConnectionStatus(&connection, providerConn)
 			},
 			func() *[]metav1.Condition {
@@ -137,15 +141,15 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSConnectionReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSConnection{}).
-		Watches(&source.Kind{Type: &v1alpha1.DBaaSConnection{}}, &EventHandlerWithDelete{Controller: r}).
+		For(&v1alpha2.DBaaSConnection{}).
+		Watches(&source.Kind{Type: &v1alpha2.DBaaSConnection{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
 		Build(r)
 }
 
-func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(ctx context.Context, connection *v1alpha1.DBaaSConnection) (controllerutil.OperationResult, error) {
+func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(ctx context.Context, connection *v1alpha2.DBaaSConnection) (controllerutil.OperationResult, error) {
 	deployment := &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      connection.Name,
@@ -156,7 +160,7 @@ func (r *DBaaSConnectionReconciler) reconcileDevTopologyResource(ctx context.Con
 	return result, err
 }
 
-func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1alpha1.DBaaSConnection, deployment *appv1.Deployment) controllerutil.MutateFn {
+func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1alpha2.DBaaSConnection, deployment *appv1.Deployment) controllerutil.MutateFn {
 	return func() error {
 		if deployment.ObjectMeta.Annotations == nil {
 			deployment.ObjectMeta.Annotations = make(map[string]string, 4)
@@ -197,7 +201,7 @@ func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1alpha1.DBaa
 }
 
 // mergeConnectionStatus: merge the status from DBaaSProviderConnection into the current DBaaSConnection status
-func mergeConnectionStatus(conn *v1alpha1.DBaaSConnection, providerConn *v1alpha1.DBaaSProviderConnection) metav1.Condition {
+func mergeConnectionStatus(conn *v1alpha2.DBaaSConnection, providerConn *v1alpha2.DBaaSProviderConnection) metav1.Condition {
 	providerConn.Status.DeepCopyInto(&conn.Status)
 	// Update connection status condition (type: DBaaSConnectionReadyType) based on the provider status
 	specSync := apimeta.FindStatusCondition(providerConn.Status.Conditions, v1alpha1.DBaaSConnectionProviderSyncType)
@@ -221,13 +225,13 @@ func mergeConnectionStatus(conn *v1alpha1.DBaaSConnection, providerConn *v1alpha
 func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSConnectionReconciler DeleteEvent")
 
-	connectionObj, ok := e.Object.(*v1alpha1.DBaaSConnection)
+	connectionObj, ok := e.Object.(*v1alpha2.DBaaSConnection)
 	if !ok {
 		return nil
 	}
 	log.Info("connectionObj", "connectionObj", objectKeyFromObject(connectionObj))
 
-	inventory := &v1alpha1.DBaaSInventory{}
+	inventory := &v1alpha2.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
 	CleanConnectionMetrics(connectionObj)
@@ -235,39 +239,44 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 
 }
 
-func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha1.DBaaSConnectionSpec) (interface{}, error) {
-	if len(spec.InstanceID) > 0 {
+func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha2.DBaaSConnectionSpec) (interface{}, error) {
+	if len(spec.DatabaseServiceID) > 0 {
 		return spec, nil
 	}
 
-	instanceRef := spec.InstanceRef
+	databaseServiceRef := spec.DatabaseServiceRef
 
-	if instanceRef == nil || len(instanceRef.Name) == 0 {
-		return nil, fmt.Errorf("instance reference is not properly set")
+	if databaseServiceRef == nil || len(databaseServiceRef.Name) == 0 {
+		return nil, fmt.Errorf("database service reference is not properly set")
 	}
 
-	instance := &v1alpha1.DBaaSInstance{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      instanceRef.Name,
-		Namespace: instanceRef.Namespace,
-	}, instance); err != nil {
-		return nil, fmt.Errorf("cannot read the instance reference")
-	}
+	if len(spec.DatabaseServiceType) == 0 || spec.DatabaseServiceType == v1alpha2.InstanceDatabaseService {
+		instance := &v1alpha1.DBaaSInstance{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      databaseServiceRef.Name,
+			Namespace: databaseServiceRef.Namespace,
+		}, instance); err != nil {
+			return nil, fmt.Errorf("cannot read the instance reference")
+		}
 
-	if !reflect.DeepEqual(instance.Spec.InventoryRef, spec.InventoryRef) {
-		return nil, fmt.Errorf("instance and connection don't use the same inventory reference")
-	}
+		if instance.Spec.InventoryRef.Namespace != spec.InventoryRef.Namespace ||
+			instance.Spec.InventoryRef.Name != spec.InventoryRef.Name {
+			return nil, fmt.Errorf("instance and connection don't use the same inventory reference")
+		}
 
-	if len(instance.Status.InstanceID) == 0 {
-		return nil, fmt.Errorf("instance ID is not available")
-	}
+		if len(instance.Status.InstanceID) == 0 {
+			return nil, fmt.Errorf("instance ID is not available")
+		}
 
-	spec.InstanceID = instance.Status.InstanceID
-	spec.InstanceRef = nil
+		spec.DatabaseServiceID = instance.Status.InstanceID
+		spec.DatabaseServiceRef = nil
+	} else {
+		return nil, fmt.Errorf("using database service reference of type %s is not supported", spec.DatabaseServiceType)
+	}
 	return spec, nil
 }
 
-func (r *DBaaSConnectionReconciler) updateConnectionStatus(ctx context.Context, connection *v1alpha1.DBaaSConnection, cond *metav1.Condition) {
+func (r *DBaaSConnectionReconciler) updateConnectionStatus(ctx context.Context, connection *v1alpha2.DBaaSConnection, cond *metav1.Condition) {
 	apimeta.SetStatusCondition(&connection.Status.Conditions, *cond)
 	logger := ctrl.LoggerFrom(ctx)
 	if err := r.Client.Status().Update(ctx, connection); err != nil {

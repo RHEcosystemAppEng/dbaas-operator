@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2"
 )
 
 // DBaaSProviderReconciler reconciles a DBaaSProvider object
@@ -60,19 +61,19 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1alpha1.DBaaSInventory{}, provider.Spec.InventoryKind); err != nil {
+	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1alpha2.DBaaSInventory{}, &v1alpha2.GroupVersion, provider.Spec.InventoryKind); err != nil {
 		logger.Error(err, "Error watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 
-	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1alpha1.DBaaSConnection{}, provider.Spec.ConnectionKind); err != nil {
+	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1alpha2.DBaaSConnection{}, &v1alpha2.GroupVersion, provider.Spec.ConnectionKind); err != nil {
 		logger.Error(err, "Error watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 
-	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1alpha1.DBaaSInstance{}, provider.Spec.InstanceKind); err != nil {
+	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1alpha1.DBaaSInstance{}, &v1alpha1.GroupVersion, provider.Spec.InstanceKind); err != nil {
 		logger.Error(err, "Error watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
 		return ctrl.Result{}, err
 	}

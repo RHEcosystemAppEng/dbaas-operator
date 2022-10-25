@@ -17,7 +17,7 @@ resources:
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
-    validation: true
+    conversion: true
     webhookVersion: v1
 - api:
     crdVersion: v1
@@ -29,7 +29,7 @@ resources:
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
-    validation: true
+    conversion: true
     webhookVersion: v1
 - api:
     crdVersion: v1
@@ -69,4 +69,28 @@ resources:
   kind: DBaaSInstance
   path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: redhat.com
+  group: dbaas
+  kind: DBaaSConnection
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2
+  version: v1alpha2
+  webhooks:
+    validation: true
+    conversion: true
+    webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: redhat.com
+  group: dbaas
+  kind: DBaaSInventory
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha2
+  version: v1alpha2
+  webhooks:
+    validation: true
+    conversion: true
+    webhookVersion: v1
 version: "3"

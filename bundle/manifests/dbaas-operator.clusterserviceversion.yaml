@@ -153,6 +153,50 @@ metadata:
               "name": "Red Hat DBaaS / MongoDB Atlas"
             }
           }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha2",
+          "kind": "DBaaSConnection",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "dbaas-operator",
+              "app.kubernetes.io/instance": "dbaasconnection-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "dbaasconnection",
+              "app.kubernetes.io/part-of": "dbaas-operator"
+            },
+            "name": "atlas-connection"
+          },
+          "spec": {
+            "databaseServiceID": "atlas-instance",
+            "databaseServiceType": "instance",
+            "inventoryRef": {
+              "name": "atlas-inventory",
+              "namespace": "openshift-dbaas-operator"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha2",
+          "kind": "DBaaSInventory",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "dbaas-operator",
+              "app.kubernetes.io/instance": "dbaasinventory-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "dbaasinventory",
+              "app.kubernetes.io/part-of": "dbaas-operator"
+            },
+            "name": "atlas-inventory"
+          },
+          "spec": {
+            "credentialsRef": {
+              "name": "atlas-inventory-credentials"
+            },
+            "providerRef": {
+              "name": "mongodb-atlas-registration"
+            }
+          }
         }
       ]
     capabilities: Basic Install
@@ -177,6 +221,11 @@ spec:
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSConnection is the Schema for the dbaasconnections API
+      displayName: DBaaSConnection
+      kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
+      version: v1alpha2
     - description: DBaaSInstance is the Schema for the dbaasinstances API
       displayName: DBaaSInstance
       kind: DBaaSInstance
@@ -189,6 +238,13 @@ spec:
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
+    - description: DBaaSInventory is the Schema for the dbaasinventories API Inventory
+        objects must be created in a valid namespace, determined by the existence
+        of a DBaaSPolicy object
+      displayName: Provider Account
+      kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
+      version: v1alpha2
     - description: DBaaSPlatform is the Schema for the dbaasplatforms API
       displayName: DBaaSPlatform
       kind: DBaaSPlatform
@@ -608,6 +664,18 @@ spec:
   - admissionReviewVersions:
     - v1
     containerPort: 443
+    conversionCRDs:
+    - dbaasconnections.dbaas.redhat.com
+    - dbaasinventories.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaasconnectionsdbaasinventories.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
     deploymentName: dbaas-operator-controller-manager
     failurePolicy: Fail
     generateName: vdbaasconnection.kb.io
@@ -615,7 +683,7 @@ spec:
     - apiGroups:
       - dbaas.redhat.com
       apiVersions:
-      - v1alpha1
+      - v1alpha2
       operations:
       - CREATE
       - UPDATE
@@ -624,7 +692,7 @@ spec:
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
+    webhookPath: /validate-dbaas-redhat-com-v1alpha2-dbaasconnection
   - admissionReviewVersions:
     - v1
     containerPort: 443
@@ -635,7 +703,7 @@ spec:
     - apiGroups:
       - dbaas.redhat.com
       apiVersions:
-      - v1alpha1
+      - v1alpha2
       operations:
       - CREATE
       - UPDATE
@@ -644,7 +712,7 @@ spec:
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+    webhookPath: /validate-dbaas-redhat-com-v1alpha2-dbaasinventory
   - admissionReviewVersions:
     - v1
     containerPort: 443
