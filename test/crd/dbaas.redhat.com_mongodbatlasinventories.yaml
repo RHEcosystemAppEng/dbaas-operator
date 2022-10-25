@@ -21,8 +21,7 @@ spec:
     - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: MongoDBAtlasInventory is the Schema for the MongoDBAtlasInventory
-            API
+          description: MongoDBAtlasInventory is the Schema for the MongoDBAtlasInventory API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -41,17 +40,14 @@ spec:
                 by provider operators
               properties:
                 credentialsRef:
-                  description: The Secret containing the provider-specific connection
-                    credentials to use with its API endpoint. The format of the Secret
-                    is specified in the provider’s operator in its DBaaSProvider CR
-                    (CredentialFields key). It is recommended to place the Secret in
-                    a namespace with limited accessibility.
+                  description: The secret containing the provider-specific connection
+                    credentials to use with the provider's API endpoint. The format
+                    specifies the secret in the provider’s operator for its DBaaSProvider
+                    custom resource (CR), such as the CredentialFields key. The secret
+                    must exist within the same namespace as the inventory.
                   properties:
                     name:
-                      description: The name for object of known type
-                      type: string
-                    namespace:
-                      description: The namespace where object of known type is stored
+                      description: Name of the referent.
                       type: string
                   required:
                     - name
@@ -60,21 +56,20 @@ spec:
                 - credentialsRef
               type: object
             status:
-              description: DBaaSInventoryStatus defines the Inventory status to be used
-                by provider operators
+              description: Defines the inventory status that the provider's operator
+                uses.
               properties:
                 conditions:
                   items:
                     description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                     properties:
                       lastTransitionTime:
                         description: lastTransitionTime is the last time the condition
@@ -132,27 +127,31 @@ spec:
                       - type
                     type: object
                   type: array
-                instances:
-                  description: A list of instances returned from querying the DB provider
+                databaseServices:
+                  description: A list of database services returned from querying the
+                    database provider.
                   items:
+                    description: Defines the information of a database service.
                     properties:
-                      instanceID:
-                        description: A provider-specific identifier for this instance
-                          in the database service. It may contain one or more pieces
-                          of information used by the provider operator to identify the
-                          instance on the database service.
+                      serviceID:
+                        description: A provider-specific identifier for the database
+                          service. It can contain one or more pieces of information
+                          used by the provider's operator to identify the database service.
                         type: string
-                      instanceInfo:
+                      serviceInfo:
                         additionalProperties:
                           type: string
                         description: Any other provider-specific information related
-                          to this instance
+                          to this service.
                         type: object
-                      name:
-                        description: The name of this instance in the database service
+                      serviceName:
+                        description: The name of the database service.
+                        type: string
+                      serviceType:
+                        description: The type of the database service.
                         type: string
                     required:
-                      - instanceID
+                      - serviceID
                     type: object
                   type: array
               type: object

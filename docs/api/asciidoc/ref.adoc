@@ -95,8 +95,9 @@ Defines the desired state of a DBaaSConnection object.
 |===
 | Field | Description
 | *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
-| *`instanceID`* __string__ | The ID of the instance to connect to, as seen in the status of the referenced DBaaSInventory.
-| *`instanceRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the DBaaSInstance CR used, if the InstanceID is not specified.
+| *`databaseServiceID`* __string__ | The ID of the database service to connect to, as seen in the status of the referenced DBaaSInventory.
+| *`databaseServiceRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the database service CR used, if the DatabaseServiceID is not specified.
+| *`databaseServiceType`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseservicetype[$$DatabaseServiceType$$]__ | The type of the database service to connect to, as seen in the status of the referenced DBaaSInventory.
 |===
 
 
@@ -351,6 +352,21 @@ Defines the information for a DBaaSProvider object.
 | *`displayDescription`* __string__ | Indicates the description text shown for a database provider within the user interface. For example, the catalog tile description.
 | *`icon`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-providericon[$$ProviderIcon$$]__ | Indicates what icon to display on the catalog tile.
 |===
+
+
+
+
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseservicetype"]
+==== DatabaseServiceType (string) 
+
+Defines the type of the supported database service.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionspec[$$DBaaSConnectionSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseservice[$$DatabaseService$$]
+****
+
 
 
 

@@ -444,29 +444,31 @@ spec:
                   - type
                   type: object
                 type: array
-              instances:
-                description: A list of instances returned from querying the database
-                  provider.
+              databaseServices:
+                description: A list of database services returned from querying the
+                  database provider.
                 items:
-                  description: Defines the information of a database instance.
+                  description: Defines the information of a database service.
                   properties:
-                    instanceID:
-                      description: A provider-specific identifier for this instance
-                        in the database service. It can contain one or more pieces
-                        of information used by the provider's operator to identify
-                        the instance on the database service.
+                    serviceID:
+                      description: A provider-specific identifier for the database
+                        service. It can contain one or more pieces of information
+                        used by the provider's operator to identify the database service.
                       type: string
-                    instanceInfo:
+                    serviceInfo:
                       additionalProperties:
                         type: string
                       description: Any other provider-specific information related
-                        to this instance.
+                        to this service.
                       type: object
-                    name:
-                      description: The name of this instance in the database service.
+                    serviceName:
+                      description: The name of the database service.
+                      type: string
+                    serviceType:
+                      description: The type of the database service.
                       type: string
                   required:
-                  - instanceID
+                  - serviceID
                   type: object
                 type: array
             type: object

@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 // notes on writing good spokes https://book.kubebuilder.io/multiversion-tutorial/conversion.html
@@ -32,9 +33,9 @@ func (src *DBaaSConnection) ConvertTo(dstRaw conversion.Hub) error {
 
 	// Spec
 	dst.Spec.InventoryRef = v1beta1.NamespacedName(src.Spec.InventoryRef)
-	dst.Spec.InstanceID = src.Spec.InstanceID
+	dst.Spec.DatabaseServiceID = src.Spec.InstanceID
 	if src.Spec.InstanceRef != nil {
-		dst.Spec.InstanceRef = &v1beta1.NamespacedName{
+		dst.Spec.DatabaseServiceRef = &v1beta1.NamespacedName{
 			Name:      src.Spec.InstanceRef.Name,
 			Namespace: src.Spec.InstanceRef.Namespace,
 		}
@@ -55,11 +56,11 @@ func (dst *DBaaSConnection) ConvertFrom(srcRaw conversion.Hub) error {
 
 	// Spec
 	dst.Spec.InventoryRef = NamespacedName(src.Spec.InventoryRef)
-	dst.Spec.InstanceID = src.Spec.InstanceID
-	if src.Spec.InstanceRef != nil {
+	dst.Spec.InstanceID = src.Spec.DatabaseServiceID
+	if src.Spec.DatabaseServiceRef != nil {
 		dst.Spec.InstanceRef = &NamespacedName{
-			Name:      src.Spec.InstanceRef.Name,
-			Namespace: src.Spec.InstanceRef.Namespace,
+			Name:      src.Spec.DatabaseServiceRef.Name,
+			Namespace: src.Spec.DatabaseServiceRef.Namespace,
 		}
 	}
 

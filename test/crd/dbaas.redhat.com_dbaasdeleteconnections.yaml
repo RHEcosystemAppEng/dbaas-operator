@@ -32,33 +32,40 @@ spec:
             metadata:
               type: object
             spec:
-              description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
+              description: Defines the desired state of a DBaaSConnection object.
               properties:
-                instanceID:
-                  description: The ID of the instance to connect to, as seen in the
-                    Status of the referenced DBaaSInventory
+                databaseServiceID:
+                  description: The ID of the database service to connect to, as seen
+                    in the status of the referenced DBaaSInventory.
                   type: string
-                instanceRef:
-                  description: A reference to the DBaaSInstance CR that is used if the
-                    ID of the instance is not specified
+                databaseServiceRef:
+                  description: A reference to the database service CR used, if the DatabaseServiceID
+                    is not specified.
                   properties:
                     name:
-                      description: The name for object of known type
+                      description: The name for object of a known type.
                       type: string
                     namespace:
-                      description: The namespace where object of known type is stored
+                      description: The namespace where an object of a known type is
+                        stored.
                       type: string
                   required:
                     - name
                   type: object
+                databaseServiceType:
+                  description: The type of the database service to connect to, as seen
+                    in the status of the referenced DBaaSInventory.
+                  type: string
                 inventoryRef:
-                  description: A reference to the relevant DBaaSInventory CR
+                  description: A reference to the relevant DBaaSInventory custom resource
+                    (CR).
                   properties:
                     name:
-                      description: The name for object of known type
+                      description: The name for object of a known type.
                       type: string
                     namespace:
-                      description: The namespace where object of known type is stored
+                      description: The namespace where an object of a known type is
+                        stored.
                       type: string
                   required:
                     - name
@@ -67,7 +74,7 @@ spec:
                 - inventoryRef
               type: object
             status:
-              description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
+              description: Defines the observed state of a DBaaSConnection object.
               properties:
                 conditions:
                   items:
@@ -138,8 +145,8 @@ spec:
                     type: object
                   type: array
                 connectionInfoRef:
-                  description: A ConfigMap holding non-sensitive information needed
-                    for connecting to the DB instance
+                  description: A ConfigMap object holding non-sensitive information
+                    for connecting to the database instance.
                   properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -147,8 +154,8 @@ spec:
                       type: string
                   type: object
                 credentialsRef:
-                  description: Secret holding the credentials needed for accessing the
-                    DB instance
+                  description: The secret holding account credentials for accessing
+                    the database instance.
                   properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

@@ -169,7 +169,8 @@ metadata:
             "name": "dbaasconnection-sample"
           },
           "spec": {
-            "instanceID": "atlas-instance",
+            "databaseServiceID": "atlas-instance",
+            "databaseServiceType": "instance",
             "inventoryRef": {
               "name": "atlas-inventory",
               "namespace": "openshift-dbaas-operator"

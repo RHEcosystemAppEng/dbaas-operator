@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,7 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object

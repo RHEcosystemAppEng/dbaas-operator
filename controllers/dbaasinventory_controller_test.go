@@ -19,10 +19,10 @@ package controllers
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
@@ -125,14 +125,23 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 
 			Context("when updating provider inventory status", func() {
 				lastTransitionTime := getLastTransitionTimeForTest()
+				clusterType := v1beta1.DatabaseServiceType("cluster")
 				status := &v1beta1.DBaaSInventoryStatus{
-					Instances: []v1beta1.Instance{
+					DatabaseServices: []v1beta1.DatabaseService{
 						{
-							InstanceID: "testInstanceID",
-							Name:       "testInstance",
-							InstanceInfo: map[string]string{
+							ServiceID:   "testInstanceID",
+							ServiceName: "testInstance",
+							ServiceInfo: map[string]string{
 								"testInstanceInfo": "testInstanceInfo",
 							},
+						},
+						{
+							ServiceID:   "testClusterID",
+							ServiceName: "testCluster",
+							ServiceInfo: map[string]string{
+								"testClusterInfo": "testClusterInfo",
+							},
+							ServiceType: &clusterType,
 						},
 					},
 					Conditions: []metav1.Condition{
