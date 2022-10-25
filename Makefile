@@ -148,7 +148,12 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: test
 test: sdk-manifests vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.tmp.out -covermode count
+
+.PHONY: coverage
+coverage: test
+	cat cover.tmp.out | grep -v "_generated.*.go" > cover.out
+	go tool cover -func=cover.out
 
 ##@ Build
 release-build: bundle docker-build bundle-build bundle-push catalog-build ## Build operator docker, bundle, catalog images

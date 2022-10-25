@@ -18,7 +18,45 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.x
+
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Unit tests
         run: make test
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v33
+
+      - name: List all changed files
+        run: |
+          touch cover.files.out
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file" >> cover.files.out
+          done
+
+      - name: Quality Gate - test coverage for modified files shall be above 70%
+        env:
+          TESTCOVERAGE_THRESHOLD: 70
+        run: |
+          cat cover.tmp.out | grep -v "_generated.*.go" > cover.tmp2.out
+          head -n 1 cover.tmp2.out > cover.out
+          grep -f cover.files.out cover.tmp2.out >> cover.out || true
+          if [ $(cat cover.out | wc -l) -gt 1 ]; then
+            go tool cover -func=cover.out
+            echo ""
+            echo "Quality Gate: checking test coverage is above threshold ..."
+            echo "Threshold             : $TESTCOVERAGE_THRESHOLD %"
+            totalCoverage=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            echo "Current test coverage : $totalCoverage %"
+            if (( $(echo "$totalCoverage $TESTCOVERAGE_THRESHOLD" | awk '{print ($1 >= $2)}') )); then
+                echo "OK"
+            else
+                echo "Current test coverage is below threshold. Please add more unit tests."
+                echo "Failed"
+                exit 1
+            fi
+          fi
