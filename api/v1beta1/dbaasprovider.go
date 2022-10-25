@@ -42,7 +42,7 @@ const (
 	DBaaSInventoryNotReady         string = "DBaaSInventoryNotReady"
 	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
 	DBaaSInvalidNamespace          string = "InvalidNamespace"
-	DBaaSInstanceNotAvailable      string = "DBaaSInstanceNotAvailable"
+	DBaaSServiceNotAvailable       string = "DBaaSServiceNotAvailable"
 	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
 	ProviderReconcileError         string = "ProviderReconcileError"
 	ProviderParsingError           string = "ProviderParsingError"
@@ -92,6 +92,9 @@ const (
 
 // Defines the phases for instance provisioning.
 type DBaasInstancePhase string
+
+// Defines the type of the supported database service.
+type DatabaseServiceType string
 
 // Constants for the instance phases.
 const (
@@ -205,8 +208,24 @@ type LocalObjectReference struct {
 type DBaaSInventoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// A list of instances returned from querying the database provider.
-	Instances []Instance `json:"instances,omitempty"`
+	// A list of database services returned from querying the database provider.
+	DatabaseServices []DatabaseService `json:"databaseServices,omitempty"`
+}
+
+// Defines the information of a database service.
+type DatabaseService struct {
+	// A provider-specific identifier for the database service.
+	// It can contain one or more pieces of information used by the provider's operator to identify the database service.
+	ServiceID string `json:"serviceID"`
+
+	// The name of the database service.
+	ServiceName string `json:"serviceName,omitempty"`
+
+	// The type of the database service.
+	ServiceType *DatabaseServiceType `json:"serviceType,omitempty"`
+
+	// Any other provider-specific information related to this service.
+	ServiceInfo map[string]string `json:"serviceInfo,omitempty"`
 }
 
 // Defines the information of a database instance.
@@ -236,11 +255,14 @@ type DBaaSConnectionSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
 
-	// The ID of the instance to connect to, as seen in the status of the referenced DBaaSInventory.
-	InstanceID string `json:"instanceID,omitempty"`
+	// The ID of the database service to connect to, as seen in the status of the referenced DBaaSInventory.
+	DatabaseServiceID string `json:"databaseServiceID,omitempty"`
 
-	// A reference to the DBaaSInstance CR used, if the InstanceID is not specified.
-	InstanceRef *NamespacedName `json:"instanceRef,omitempty"`
+	// A reference to the database service CR used, if the DatabaseServiceID is not specified.
+	DatabaseServiceRef *NamespacedName `json:"databaseServiceRef,omitempty"`
+
+	// The type of the database service to connect to, as seen in the status of the referenced DBaaSInventory.
+	DatabaseServiceType *DatabaseServiceType `json:"databaseServiceType,omitempty"`
 }
 
 // Defines the observed state of a DBaaSConnection object.

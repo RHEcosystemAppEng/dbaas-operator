@@ -95,11 +95,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
 		providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-			Instances: []v1beta1.Instance{
+			DatabaseServices: []v1beta1.DatabaseService{
 				{
-					InstanceID: "testInstanceID",
-					Name:       "testInstance",
-					InstanceInfo: map[string]string{
+					ServiceID:   "testInstanceID",
+					ServiceName: "testInstance",
+					ServiceInfo: map[string]string{
 						"testInstanceInfo": "testInstanceInfo",
 					},
 				},
@@ -172,11 +172,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
 		providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-			Instances: []v1beta1.Instance{
+			DatabaseServices: []v1beta1.DatabaseService{
 				{
-					InstanceID: "testInstanceID",
-					Name:       "testInstance",
-					InstanceInfo: map[string]string{
+					ServiceID:   "testInstanceID",
+					ServiceName: "testInstance",
+					ServiceInfo: map[string]string{
 						"testInstanceInfo": "testInstanceInfo",
 					},
 				},
@@ -230,11 +230,11 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
 			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-				Instances: []v1beta1.Instance{
+				DatabaseServices: []v1beta1.DatabaseService{
 					{
-						InstanceID: "testInstanceID",
-						Name:       "testInstance",
-						InstanceInfo: map[string]string{
+						ServiceID:   "testInstanceID",
+						ServiceName: "testInstance",
+						ServiceInfo: map[string]string{
 							"testInstanceInfo": "testInstanceInfo",
 						},
 					},
@@ -350,11 +350,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
 			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-				Instances: []v1beta1.Instance{
+				DatabaseServices: []v1beta1.DatabaseService{
 					{
-						InstanceID: "testInstanceID",
-						Name:       "testInstance",
-						InstanceInfo: map[string]string{
+						ServiceID:   "testInstanceID",
+						ServiceName: "testInstance",
+						ServiceInfo: map[string]string{
 							"testInstanceInfo": "testInstanceInfo",
 						},
 					},
@@ -464,11 +464,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
 			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-				Instances: []v1beta1.Instance{
+				DatabaseServices: []v1beta1.DatabaseService{
 					{
-						InstanceID: "testInstanceID",
-						Name:       "testInstance",
-						InstanceInfo: map[string]string{
+						ServiceID:   "testInstanceID",
+						ServiceName: "testInstance",
+						ServiceInfo: map[string]string{
 							"testInstanceInfo": "testInstanceInfo",
 						},
 					},
@@ -580,11 +580,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
 			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-				Instances: []v1beta1.Instance{
+				DatabaseServices: []v1beta1.DatabaseService{
 					{
-						InstanceID: "testInstanceID",
-						Name:       "testInstance",
-						InstanceInfo: map[string]string{
+						ServiceID:   "testInstanceID",
+						ServiceName: "testInstance",
+						ServiceInfo: map[string]string{
 							"testInstanceInfo": "testInstanceInfo",
 						},
 					},

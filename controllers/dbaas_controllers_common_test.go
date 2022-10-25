@@ -67,6 +67,7 @@ var mongoProvider = &v1beta1.DBaaSProvider{
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
+		GroupVersion:                 v1beta1.GroupVersion.String(),
 	},
 }
 
@@ -85,6 +86,7 @@ var crunchyProvider = &v1beta1.DBaaSProvider{
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
+		GroupVersion:                 v1beta1.GroupVersion.String(),
 	},
 }
 

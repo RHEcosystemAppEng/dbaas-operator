@@ -6,4 +6,5 @@ spec:
   inventoryRef:
     namespace: openshift-dbaas-operator
     name: atlas-inventory
-  instanceID: atlas-instance
+  databaseServiceID: atlas-instance
+  databaseServiceType: instance
