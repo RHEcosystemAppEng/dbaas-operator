@@ -63,8 +63,14 @@ func (r *DBaaSConnection) validateCreateDBaaSConnectionSpec() error {
 		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "both instanceID and instanceRef are specified")
 	}
 	if len(r.Spec.InstanceID) == 0 && (r.Spec.InstanceRef == nil || len(r.Spec.InstanceRef.Name) == 0) {
-		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "either instanceID or instanceRef must be specified")
+		if len(r.Spec.DatabaseServiceID) > 0 && r.Spec.DatabaseServiceRef != nil && len(r.Spec.DatabaseServiceRef.Name) > 0 {
+			return field.Invalid(field.NewPath("spec").Child("databaseServiceID"), r.Spec.DatabaseServiceID, "both databaseServiceID and databaseServiceRef are specified")
+		}
+		if len(r.Spec.DatabaseServiceID) == 0 && (r.Spec.DatabaseServiceRef == nil || len(r.Spec.DatabaseServiceRef.Name) == 0) {
+			return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "either instanceID or instanceRef must be specified")
+		}
 	}
+
 	return nil
 }
 
@@ -79,6 +85,19 @@ func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection
 
 	if !reflect.DeepEqual(r.Spec.InstanceRef, old.Spec.InstanceRef) {
 		return field.Invalid(field.NewPath("spec").Child("instanceRef"), r.Spec.InstanceRef, "instanceRef is immutable")
+	}
+
+	if len(old.Spec.DatabaseServiceID) > 0 && r.Spec.DatabaseServiceID != old.Spec.DatabaseServiceID {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceID"), r.Spec.DatabaseServiceID, "databaseServiceID is immutable")
+	}
+
+	if old.Spec.DatabaseServiceRef != nil && len(old.Spec.DatabaseServiceRef.Name) > 0 &&
+		!reflect.DeepEqual(r.Spec.DatabaseServiceRef, old.Spec.DatabaseServiceRef) {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceRef"), r.Spec.DatabaseServiceRef, "databaseServiceRef is immutable")
+	}
+
+	if len(old.Spec.DatabaseServiceType) > 0 && r.Spec.DatabaseServiceType != old.Spec.DatabaseServiceType {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceType"), r.Spec.DatabaseServiceType, "databaseServiceType is immutable")
 	}
 
 	return nil

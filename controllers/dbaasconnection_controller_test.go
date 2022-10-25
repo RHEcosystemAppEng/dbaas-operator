@@ -352,7 +352,16 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
 				It("should create a provider connection", func() {
-					assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec)()
+					expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+						InventoryRef: v1alpha1.NamespacedName{
+							Name:      inventoryRefName,
+							Namespace: testNamespace,
+						},
+						InstanceID:          instanceID,
+						DatabaseServiceID:   instanceID,
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
+					}
+					assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec)()
 
 					By("checking if the Deployment is created")
 					deployment := &appv1.Deployment{
@@ -422,7 +431,9 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						InstanceID: "updated-test-instanceID",
+						InstanceID:          "updated-test-instanceID",
+						DatabaseServiceID:   "updated-test-instanceID",
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})
@@ -545,7 +556,9 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 								Name:      inventoryRefName,
 								Namespace: testNamespace,
 							},
-							InstanceID: instanceID,
+							InstanceID:          instanceID,
+							DatabaseServiceID:   instanceID,
+							DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 						}
 						assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec)()
 
@@ -690,7 +703,16 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID:          instanceID,
+					DatabaseServiceID:   instanceID,
+					DatabaseServiceType: v1alpha1.InstanceDatabaseService,
+				}
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1alpha1.DBaaSConnectionStatus{
@@ -718,7 +740,9 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						InstanceID: "updated-test-instanceID",
+						InstanceID:          "updated-test-instanceID",
+						DatabaseServiceID:   "updated-test-instanceID",
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})
@@ -797,7 +821,16 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID:          instanceID,
+					DatabaseServiceID:   instanceID,
+					DatabaseServiceType: v1alpha1.InstanceDatabaseService,
+				}
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1alpha1.DBaaSConnectionStatus{
@@ -825,7 +858,9 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						InstanceID: "updated-test-instanceID",
+						InstanceID:          "updated-test-instanceID",
+						DatabaseServiceID:   "updated-test-instanceID",
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})
@@ -922,7 +957,16 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID:          instanceID,
+					DatabaseServiceID:   instanceID,
+					DatabaseServiceType: v1alpha1.InstanceDatabaseService,
+				}
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1alpha1.DBaaSConnectionStatus{
@@ -950,7 +994,9 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						InstanceID: "updated-test-instanceID",
+						InstanceID:          "updated-test-instanceID",
+						DatabaseServiceID:   "updated-test-instanceID",
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})
@@ -1033,7 +1079,16 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				expectedDBaaSConnectionSpec := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID:          instanceID,
+					DatabaseServiceID:   instanceID,
+					DatabaseServiceType: v1alpha1.InstanceDatabaseService,
+				}
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1alpha1.DBaaSConnectionStatus{
@@ -1061,7 +1116,9 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						InstanceID: "updated-test-instanceID",
+						InstanceID:          "updated-test-instanceID",
+						DatabaseServiceID:   "updated-test-instanceID",
+						DatabaseServiceType: v1alpha1.InstanceDatabaseService,
 					}
 					It("should update provider connection spec", assertProviderResourceSpecUpdated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
 				})

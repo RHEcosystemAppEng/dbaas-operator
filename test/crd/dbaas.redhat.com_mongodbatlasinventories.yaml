@@ -132,6 +132,38 @@ spec:
                       - type
                     type: object
                   type: array
+                databaseServices:
+                  description: A list of database services returned from querying the
+                    DB provider
+                  items:
+                    description: DatabaseService defines the information of a database
+                      service
+                    properties:
+                      serviceID:
+                        description: A provider-specific identifier for the database
+                          service. It may contain one or more pieces of information
+                          used by the provider operator to identify the database service.
+                        type: string
+                      serviceInfo:
+                        additionalProperties:
+                          type: string
+                        description: Any other provider-specific information related
+                          to this service
+                        type: object
+                      serviceName:
+                        description: The name of the database service
+                        type: string
+                      serviceType:
+                        default: instance
+                        description: The type of the database service
+                        enum:
+                          - instance
+                          - cluster
+                        type: string
+                    required:
+                      - serviceID
+                    type: object
+                  type: array
                 instances:
                   description: A list of instances returned from querying the DB provider
                   items:

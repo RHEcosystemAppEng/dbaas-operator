@@ -35,6 +35,23 @@ spec:
             spec:
               description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
               properties:
+                databaseServiceID:
+                  description: The ID of the database service to connect to, as seen
+                    in the Status of the referenced DBaaSInventory
+                  type: string
+                databaseServiceRef:
+                  description: A reference to the database service CR that is used if
+                    the ID of the service is not specified
+                  properties:
+                    name:
+                      description: The name for object of known type
+                      type: string
+                    namespace:
+                      description: The namespace where object of known type is stored
+                      type: string
+                  required:
+                    - name
+                  type: object
                 instanceID:
                   description: The ID of the instance to connect to, as seen in the
                     Status of the referenced DBaaSInventory
@@ -64,6 +81,14 @@ spec:
                   required:
                     - name
                   type: object
+                databaseServiceType:
+                  default: instance
+                  description: The type of the database service to connect to, as seen
+                    in the Status of the referenced DBaaSInventory
+                  enum:
+                    - instance
+                    - cluster
+                  type: string
               required:
                 - inventoryRef
               type: object

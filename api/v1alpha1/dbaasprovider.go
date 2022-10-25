@@ -80,6 +80,15 @@ const (
 	InstancePhaseFailed   DBaasInstancePhase = "Failed"
 )
 
+// Defines the types of database services.
+type DatabaseServiceType string
+
+// Constants for database service types.
+const (
+	InstanceDatabaseService DatabaseServiceType = "instance"
+	ClusterDatabaseService  DatabaseServiceType = "cluster"
+)
+
 // Defines the desired state of a DBaaSProvider object.
 type DBaaSProviderSpec struct {
 	// Contains information about database provider and platform.
@@ -172,6 +181,9 @@ type DBaaSInventoryStatus struct {
 
 	// A list of instances returned from querying the database provider.
 	Instances []Instance `json:"instances,omitempty"`
+
+	// A list of database services returned from querying the DB provider
+	DatabaseServices []DatabaseService `json:"databaseServices,omitempty"`
 }
 
 // Defines the information of a database instance.
@@ -185,6 +197,24 @@ type Instance struct {
 
 	// Any other provider-specific information related to this instance.
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
+}
+
+// Defines the information of a database service.
+type DatabaseService struct {
+	// A provider-specific identifier for the database service. It may contain one or
+	// more pieces of information used by the provider operator to identify the database service.
+	ServiceID string `json:"serviceID"`
+
+	// The name of the database service
+	ServiceName string `json:"serviceName,omitempty"`
+
+	// The type of the database service
+	// +kubebuilder:validation:Enum=instance;cluster
+	// +kubebuilder:default=instance
+	ServiceType DatabaseServiceType `json:"serviceType,omitempty"`
+
+	// Any other provider-specific information related to this service
+	ServiceInfo map[string]string `json:"serviceInfo,omitempty"`
 }
 
 // Defines the namespace and name of a k8s resource.
@@ -206,6 +236,17 @@ type DBaaSConnectionSpec struct {
 
 	// A reference to the DBaaSInstance CR used, if the InstanceID is not specified.
 	InstanceRef *NamespacedName `json:"instanceRef,omitempty"`
+
+	// The ID of the database service to connect to, as seen in the status of the referenced DBaaSInventory.
+	DatabaseServiceID string `json:"databaseServiceID,omitempty"`
+
+	// A reference to the database service CR used, if the DatabaseServiceID is not specified.
+	DatabaseServiceRef *NamespacedName `json:"databaseServiceRef,omitempty"`
+
+	// The type of the database service to connect to, as seen in the Status of the referenced DBaaSInventory.
+	// +kubebuilder:validation:Enum=instance;cluster
+	// +kubebuilder:default=instance
+	DatabaseServiceType DatabaseServiceType `json:"databaseServiceType,omitempty"`
 }
 
 // Defines the observed state of a DBaaSConnection object.

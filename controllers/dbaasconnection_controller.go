@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -66,6 +65,13 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		logger.Error(err, "Error fetching DBaaS Connection for reconcile")
 		return ctrl.Result{}, err
+	}
+
+	if re, err := r.convertConnectionSpec(ctx, &connection); err != nil {
+		logger.Error(err, "Error converting DBaaS Connection spec")
+		return ctrl.Result{}, err
+	} else if re {
+		return ctrl.Result{}, nil
 	}
 
 	res, err := r.reconcileDevTopologyResource(ctx, &connection)
@@ -235,35 +241,58 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 
 }
 
+func (r *DBaaSConnectionReconciler) convertConnectionSpec(ctx context.Context, connection *v1alpha1.DBaaSConnection) (bool, error) {
+	if (len(connection.Spec.InstanceID) > 0 && len(connection.Spec.DatabaseServiceID) == 0) ||
+		((connection.Spec.InstanceRef != nil && len(connection.Spec.InstanceRef.Name) >= 0) &&
+			(connection.Spec.DatabaseServiceRef == nil || len(connection.Spec.DatabaseServiceRef.Name) == 0)) {
+		connection.Spec.DatabaseServiceID = connection.Spec.InstanceID
+		connection.Spec.DatabaseServiceRef = connection.Spec.InstanceRef
+		connection.Spec.DatabaseServiceType = v1alpha1.InstanceDatabaseService
+
+		if err := r.Update(ctx, connection); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
 func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1alpha1.DBaaSConnectionSpec) (interface{}, error) {
-	if len(spec.InstanceID) > 0 {
+	if len(spec.DatabaseServiceID) > 0 {
 		return spec, nil
 	}
 
-	instanceRef := spec.InstanceRef
+	databaseServiceRef := spec.DatabaseServiceRef
 
-	if instanceRef == nil || len(instanceRef.Name) == 0 {
-		return nil, fmt.Errorf("instance reference is not properly set")
+	if databaseServiceRef == nil || len(databaseServiceRef.Name) == 0 {
+		return nil, fmt.Errorf("database service reference is not properly set")
 	}
 
-	instance := &v1alpha1.DBaaSInstance{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      instanceRef.Name,
-		Namespace: instanceRef.Namespace,
-	}, instance); err != nil {
-		return nil, fmt.Errorf("cannot read the instance reference")
-	}
+	if len(spec.DatabaseServiceType) == 0 || spec.DatabaseServiceType == v1alpha1.InstanceDatabaseService {
+		instance := &v1alpha1.DBaaSInstance{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      databaseServiceRef.Name,
+			Namespace: databaseServiceRef.Namespace,
+		}, instance); err != nil {
+			return nil, fmt.Errorf("cannot read the instance reference")
+		}
 
-	if !reflect.DeepEqual(instance.Spec.InventoryRef, spec.InventoryRef) {
-		return nil, fmt.Errorf("instance and connection don't use the same inventory reference")
-	}
+		if instance.Spec.InventoryRef.Namespace != spec.InventoryRef.Namespace ||
+			instance.Spec.InventoryRef.Name != spec.InventoryRef.Name {
+			return nil, fmt.Errorf("instance and connection don't use the same inventory reference")
+		}
 
-	if len(instance.Status.InstanceID) == 0 {
-		return nil, fmt.Errorf("instance ID is not available")
-	}
+		if len(instance.Status.InstanceID) == 0 {
+			return nil, fmt.Errorf("instance ID is not available")
+		}
 
-	spec.InstanceID = instance.Status.InstanceID
-	spec.InstanceRef = nil
+		spec.DatabaseServiceID = instance.Status.InstanceID
+		spec.InstanceID = instance.Status.InstanceID
+		spec.DatabaseServiceRef = nil
+		spec.InstanceRef = nil
+	} else {
+		return nil, fmt.Errorf("using database service reference of type %s is not supported", spec.DatabaseServiceType)
+	}
 	return spec, nil
 }
 
