@@ -1,0 +1,23 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rhoda-dbaas-operator
+  description: |
+    Rhoda Dbaas operator.
+  links:
+    - title: Website
+      url: https://www.redhat.com
+    - title: Documentation
+      url: https://github.com/RHEcosystemAppEng/dbaas-operator
+    - title: Storybook
+      url: https://github.com/RHEcosystemAppEng/dbaas-operator
+    - title: Discord Chat
+      url: https://github.com/RHEcosystemAppEng/dbaas-operator
+  annotations:
+    github.com/project-slug: RHEcosystemAppEng/dbaas-operator
+    backstage.io/techdocs-ref: dir:.
+    lighthouse.com/website-url: https://www.redhat.com
+spec:
+  type: Operator
+  owner: Redhat
+  lifecycle: experimental
