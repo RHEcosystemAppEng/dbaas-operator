@@ -30,31 +30,27 @@ Reqs:
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
 ## Running the Operator
+Recommended way of running the operator is on a OCP 4.9 or higher cluster. You can use Red Hat Demo System to provision a test cluster, which typically is available 2 days extendable upto a week.
+
+### Provisioning a Red Hat OCP 4.9 Cluster
+* Regsiter your account and have your credentials working at: https://rhpds.redhat.com/
+* Navigate to https://demo.redhat.com/catalog, under Catalog tab, search for "
+  OpenShift 4.10 Workshop" and order this SKU.  
+* You will receive emails when the cluster is available for use.
+* Login to the OpenShift console using the admin credentials provided and copy the admin login command.
+* From terminal window, login to the OpenShift cluster.
+* Create a project for use such as `oc create ns test-dbaas-operator`
 
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
-If you run locally or via direct deploy (first 2
-options), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see DBaaS console UI and bindable in Topology view.
-
-
-**Run as a local instance**:
-- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
-- Continue below by following the [Using the Operator](#using-the-operator) section
-- When finished, remove created resources via:
-  - `make clean-namespace`
-
-**Deploy & run on a cluster:**
-- `oc project <your_target_namespace>`
-- `make deploy`
-- Continue below by following the [Using the Operator](#using-the-operator) section
-- When finished, clean up & remove deployment via:
-  - `make clean-namespace undeploy`
+If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see DBaaS console UI and bindable in Topology view.
 
 **Deploy via OLM on cluster:**
 - **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
 - **Next `make release-build`**
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
-- `make release-push catalog-update`
+- `make release-push`
 - Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
+- `make catalog-update`
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
   The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
@@ -112,3 +108,59 @@ See the document :  [Observability Operator configuration](docs/observability-op
 - create feature branches within your fork to complete your work
 - raise PR's from your feature branch targeting upstream main branch
 - add `jeremyary` (and others as needed) as reviewer
+
+## Appendix
+
+### Go Installation
+* If the go installation version on your dev machine is different from the one required e.g. go1.17, visit the [go.dev/dl](go.dev/dl)
+* Download the installer package for the needed version e.g. go1.17.13 and follow official go installation instructions
+* Verify the go installation is successful
+
+### Operator SDK Installation
+* Install the specific version of the Operator SDK e.g. v1.20.1, NOTE: If you may have a different version of Operator SDK installed, you may need to delete it.
+* Execute the following commands
+```shell
+export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)\nexport OS=$(uname | awk '{print tolower($0)}')
+
+export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.20.1
+
+curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+
+chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+```
+* Verify the operator-sdk installation is successful
+
+### Registration on MongoDB Atlas
+* Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration with Red Hat email.
+* Request Jianrong Zhang for adding you to the AppEng MongoDB Atlas account.
+* When you receive the AppEng MongoDB Atlas account invitation, accept it.
+* After invitation is accepted, capture the API Keys and credentials
+  * Invoke dialog: Mongo console -> Access Manager -> Organization Access -> Create API Key
+  * Add description and be sure to select "Organization Project Creator" & "Organization Member" and click Next or OK.
+  * Copy Public and Private keys for later use.
+  * Also copy Organization ID from Settings for later use.
+
+### Import MongoDB Atlas Provider Account in OpenShift
+* In the OpenShift Console, Administrator View, navigate to Data Services -> Data Access -> Configuration -> Import Database Provider Account
+* In the "Database provider" list select "MongoDB Atlas Cloud Database Service", provide appropriate values for Organization ID, Public Key, Private Key and Name and click Import.
+
+### Create a MongoDB Atlas Database Instance
+* In the OpenShift Console, Administrator View, navigate to Data Services -> Data Access -> Configuration -> Create Database Instance
+* In the "Database provider" list select "MongoDB Atlas Cloud Database Service", select Provider Account, provide Instance and Project Name and click Create to create a MongoDB Atlas instance.
+
+### Deploying a Sample MongoDB Atlas Client Application
+* Clone repository at https://github.com/RHEcosystemAppEng/mongo-quickstart
+* Deploy the application to the OpenShift Cluster with `oc apply -f deployment.yaml`
+
+### No longer recommended - Run as a local instance
+- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
+- Continue below by following the [Using the Operator](#using-the-operator) section
+- When finished, remove created resources via:
+  - `make clean-namespace`
+
+### No longer recommeneded - Deploy & run on a cluster
+- `oc project <your_target_namespace>`
+- `make deploy`
+- Continue below by following the [Using the Operator](#using-the-operator) section
+- When finished, clean up & remove deployment via:
+  - `make clean-namespace undeploy`
