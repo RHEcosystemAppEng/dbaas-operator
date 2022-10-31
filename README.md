@@ -51,6 +51,9 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 - `make release-push`
 - Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
 - `make catalog-update`
+  - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here: 
+    https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
+  - You can also find the exact commit you want to deploy based on the commit sha.
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
   The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
@@ -115,20 +118,6 @@ See the document :  [Observability Operator configuration](docs/observability-op
 * If the go installation version on your dev machine is different from the one required e.g. go1.17, visit the [go.dev/dl](go.dev/dl)
 * Download the installer package for the needed version e.g. go1.17.13 and follow official go installation instructions
 * Verify the go installation is successful
-
-### Operator SDK Installation
-* Install the specific version of the Operator SDK e.g. v1.20.1, NOTE: If you may have a different version of Operator SDK installed, you may need to delete it.
-* Execute the following commands
-```shell
-export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)\nexport OS=$(uname | awk '{print tolower($0)}')
-
-export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.20.1
-
-curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
-
-chmod +x operator-sdk_${OS}_${ARCH} && sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
-```
-* Verify the operator-sdk installation is successful
 
 ### Registration on MongoDB Atlas
 * Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration with Red Hat email.
