@@ -32,7 +32,7 @@ Reqs:
 ## Running the Operator
 Recommended way of running the operator is on a OCP 4.9 or higher cluster. You can use Red Hat Demo System to provision a test cluster, which typically is available 2 days extendable upto a week.
 
-### Provisioning a Red Hat OCP 4.9 Cluster
+### Provisioning a Red Hat OCP 4.9 Cluster for Development Testing
 * Regsiter your account and have your credentials working at: https://rhpds.redhat.com/
 * Navigate to https://demo.redhat.com/catalog, under Catalog tab, search for "
   OpenShift 4.10 Workshop" and order this SKU.  
@@ -120,8 +120,8 @@ See the document :  [Observability Operator configuration](docs/observability-op
 * Verify the go installation is successful
 
 ### Registration on MongoDB Atlas
-* Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration with Red Hat email.
-* Request Jianrong Zhang for adding you to the AppEng MongoDB Atlas account.
+* Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration.
+* Request your organization's MongoDB Atlas administrator for adding you to your MongoDB Atlas account.
 * When you receive the AppEng MongoDB Atlas account invitation, accept it.
 * After invitation is accepted, capture the API Keys and credentials
   * Invoke dialog: Mongo console -> Access Manager -> Organization Access -> Create API Key
@@ -141,13 +141,13 @@ See the document :  [Observability Operator configuration](docs/observability-op
 * Clone repository at https://github.com/RHEcosystemAppEng/mongo-quickstart
 * Deploy the application to the OpenShift Cluster with `oc apply -f deployment.yaml`
 
-### No longer recommended - Run as a local instance
+### Alternatively - Run as a local instance
 - `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
 - Continue below by following the [Using the Operator](#using-the-operator) section
 - When finished, remove created resources via:
   - `make clean-namespace`
 
-### No longer recommeneded - Deploy & run on a cluster
+### Deploy & run on a cluster
 - `oc project <your_target_namespace>`
 - `make deploy`
 - Continue below by following the [Using the Operator](#using-the-operator) section
