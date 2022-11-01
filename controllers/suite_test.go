@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/onsi/gomega/gexec"
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -48,6 +47,7 @@ import (
 
 var testEnv *envtest.Environment
 var ctx context.Context
+var cancel context.CancelFunc
 var dRec *DBaaSReconciler
 var iCtrl *spyctrl
 var cCtrl *spyctrl
@@ -94,7 +94,7 @@ var _ = BeforeSuite(func() {
 
 	//+kubebuilder:scaffold:scheme
 
-	ctx = context.Background()
+	ctx, cancel = context.WithCancel(context.Background())
 
 	err = os.Setenv(InstallNamespaceEnvVar, testNamespace)
 	Expect(err).NotTo(HaveOccurred())
@@ -154,14 +154,16 @@ var _ = BeforeSuite(func() {
 
 	go func() {
 		defer GinkgoRecover()
-		err = k8sManager.Start(ctrl.SetupSignalHandler())
-		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
-		gexec.KillAndWait(4 * time.Second)
-
-		// Teardown the test environment once controller is fnished.
-		// Otherwise from Kubernetes 1.21+, teardon timeouts waiting on
-		// kube-apiserver to return
-		err := testEnv.Stop()
-		Expect(err).ToNot(HaveOccurred())
+		err = k8sManager.Start(ctx)
+		Expect(err).NotTo(HaveOccurred())
 	}()
 }, 60)
+
+var _ = AfterSuite(func() {
+	cancel()
+	By("tearing down the test environment")
+	err := testEnv.Stop()
+	Expect(err).NotTo(HaveOccurred())
+	err = os.Unsetenv(InstallNamespaceEnvVar)
+	Expect(err).NotTo(HaveOccurred())
+})
