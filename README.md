@@ -42,7 +42,7 @@ Recommended way of running the operator is on a OCP 4.9 or higher cluster. You c
 * Create a project for use such as `oc create ns test-dbaas-operator`
 
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
-If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see DBaaS console UI and bindable in Topology view.
+If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
 **Deploy via OLM on cluster:**
 - **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
@@ -122,7 +122,7 @@ See the document :  [Observability Operator configuration](docs/observability-op
 ### Registration on MongoDB Atlas
 * Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration.
 * Request your organization's MongoDB Atlas administrator for adding you to your MongoDB Atlas account.
-* When you receive the AppEng MongoDB Atlas account invitation, accept it.
+* When you receive the MongoDB Atlas account invitation, accept it.
 * After invitation is accepted, capture the API Keys and credentials
   * Invoke dialog: Mongo console -> Access Manager -> Organization Access -> Create API Key
   * Add description and be sure to select "Organization Project Creator" & "Organization Member" and click Next or OK.
