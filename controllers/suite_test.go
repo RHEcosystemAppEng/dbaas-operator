@@ -154,21 +154,15 @@ var _ = BeforeSuite(func() {
 
 	go func() {
 		defer GinkgoRecover()
-		err = k8sManager.Start(ctrl.SetupSignalHandler())
+		err = k8sManager.Start(ctx)
 		Expect(err).NotTo(HaveOccurred())
 	}()
 }, 60)
 
 var _ = AfterSuite(func() {
-	// https://github.com/kubernetes-sigs/controller-runtime/issues/1571
 	cancel()
-	By("tearing down the test environment,but I do nothing here.")
+	By("tearing down the test environment")
 	err := testEnv.Stop()
-	// Set 4 with random
-	if err != nil {
-		time.Sleep(4 * time.Second)
-	}
-	err = testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 	err = os.Unsetenv(InstallNamespaceEnvVar)
 	Expect(err).NotTo(HaveOccurred())
