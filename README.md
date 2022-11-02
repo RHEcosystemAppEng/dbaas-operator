@@ -29,32 +29,20 @@ Reqs:
 - `make build`
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
-## Running the Operator
-
+## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
-If you run locally or via direct deploy (first 2
-options), you can create a DBaaSInventory & will receive a DBaaSConnection, but will not see DBaaS console UI and bindable in Topology view.
-
-
-**Run as a local instance**:
-- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
-- Continue below by following the [Using the Operator](#using-the-operator) section
-- When finished, remove created resources via:
-  - `make clean-namespace`
-
-**Deploy & run on a cluster:**
-- `oc project <your_target_namespace>`
-- `make deploy`
-- Continue below by following the [Using the Operator](#using-the-operator) section
-- When finished, clean up & remove deployment via:
-  - `make clean-namespace undeploy`
+If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
 **Deploy via OLM on cluster:**
 - **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
 - **Next `make release-build`**
 - **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
-- `make release-push catalog-update`
+- `make release-push`
 - Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
+- `make catalog-update`
+  - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here: 
+    https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
+  - You can also find the exact commit you want to deploy based on the commit sha.
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
   The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
@@ -112,3 +100,45 @@ See the document :  [Observability Operator configuration](docs/observability-op
 - create feature branches within your fork to complete your work
 - raise PR's from your feature branch targeting upstream main branch
 - add `jeremyary` (and others as needed) as reviewer
+
+## Appendix
+
+### Go Installation
+* If the go installation version on your dev machine is different from the one required e.g. go1.17, visit the [go.dev/dl](go.dev/dl)
+* Download the installer package for the needed version e.g. go1.17.13 and follow official go installation instructions
+* Verify the go installation is successful
+
+### Registration on MongoDB Atlas
+* Navigate to https://www.mongodb.com/cloud/atlas/register and complete the registration.
+* Request your organization's MongoDB Atlas administrator for adding you to your MongoDB Atlas account.
+* When you receive the MongoDB Atlas account invitation, accept it.
+* After invitation is accepted, capture the API Keys and credentials
+  * Invoke dialog: Mongo console -> Access Manager -> Organization Access -> Create API Key
+  * Add description and be sure to select "Organization Project Creator" & "Organization Member" and click Next or OK.
+  * Copy Public and Private keys for later use.
+  * Also copy Organization ID from Settings for later use.
+
+### Import MongoDB Atlas Provider Account in OpenShift
+* In the OpenShift Console, Administrator View, navigate to Data Services -> Data Access -> Configuration -> Import Database Provider Account
+* In the "Database provider" list select "MongoDB Atlas Cloud Database Service", provide appropriate values for Organization ID, Public Key, Private Key and Name and click Import.
+
+### Create a MongoDB Atlas Database Instance
+* In the OpenShift Console, Administrator View, navigate to Data Services -> Data Access -> Configuration -> Create Database Instance
+* In the "Database provider" list select "MongoDB Atlas Cloud Database Service", select Provider Account, provide Instance and Project Name and click Create to create a MongoDB Atlas instance.
+
+### Deploying a Sample MongoDB Atlas Client Application
+* Clone repository at https://github.com/RHEcosystemAppEng/mongo-quickstart
+* Deploy the application to the OpenShift Cluster with `oc apply -f deployment.yaml`
+
+### Alternatively - Run as a local instance
+- `make install run INSTALL_NAMESPACE=<your_target_namespace> ENABLE_WEBHOOKS=false`
+- Continue below by following the [Using the Operator](#using-the-operator) section
+- When finished, remove created resources via:
+  - `make clean-namespace`
+
+### Deploy & run on a cluster
+- `oc project <your_target_namespace>`
+- `make deploy`
+- Continue below by following the [Using the Operator](#using-the-operator) section
+- When finished, clean up & remove deployment via:
+  - `make clean-namespace undeploy`
