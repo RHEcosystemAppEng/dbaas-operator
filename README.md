@@ -29,18 +29,7 @@ Reqs:
 - `make build`
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
-## Running the Operator
-Recommended way of running the operator is on a OCP 4.9 or higher cluster. You can use Red Hat Demo System to provision a test cluster, which typically is available 2 days extendable upto a week.
-
-### Provisioning a Red Hat OCP 4.9 Cluster for Development Testing
-* Regsiter your account and have your credentials working at: https://rhpds.redhat.com/
-* Navigate to https://demo.redhat.com/catalog, under Catalog tab, search for "
-  OpenShift 4.10 Workshop" and order this SKU.  
-* You will receive emails when the cluster is available for use.
-* Login to the OpenShift console using the admin credentials provided and copy the admin login command.
-* From terminal window, login to the OpenShift cluster.
-* Create a project for use such as `oc create ns test-dbaas-operator`
-
+## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
