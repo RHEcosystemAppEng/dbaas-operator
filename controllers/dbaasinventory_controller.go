@@ -45,22 +45,27 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	execution := PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
-	execution := PlatformInstallStart()
+	metricLabelErrCdValue := emptyString
+
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
 			logger.V(1).Info("DBaaS Inventory resource not found, has been deleted")
+			metricLabelErrCdValue = labelErrorCdValueResourceNotFound
 			return ctrl.Result{}, nil
 		}
 		logger.Error(err, "Error fetching DBaaS Inventory for reconcile")
+		metricLabelErrCdValue = labelErrorCdValueErrorFetchingDBaaSInventoryResources
 		return ctrl.Result{}, err
 	}
 
 	policyList, err := r.policyListByNS(ctx, req.Namespace)
 	if err != nil {
 		logger.Error(err, "unable to list policies")
+		metricLabelErrCdValue = labelErrorCdValueUnableToListPolicies
 		return ctrl.Result{}, err
 	}
 	activePolicy := getActivePolicy(policyList)
@@ -79,6 +84,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				return ctrl.Result{Requeue: true}, nil
 			}
 			logger.Error(err, "Error updating the DBaaS Inventory resource status", "DBaaS Inventory", inventory)
+			metricLabelErrCdValue = labelErrorCdValueErrorUpdatingInventoryStatus
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -92,8 +98,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	defer func() {
-		SetInventoryMetrics(inventory, execution)
-
+		SetInventoryMetrics(inventory, execution, labelEventValueCreate, metricLabelErrCdValue)
 	}()
 
 	//
@@ -157,15 +162,16 @@ func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DB
 
 // Delete implements a handler for the Delete event.
 func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
+	execution := PlatformInstallStart()
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
-	inventoryObj, ok := e.Object.(*v1alpha1.DBaaSInventory)
+	inventory, ok := e.Object.(*v1alpha1.DBaaSInventory)
 	if !ok {
 		return nil
 	}
-	log.Info("inventoryObj", "inventoryObj", objectKeyFromObject(inventoryObj))
+	log.Info("inventoryObj", "inventoryObj", objectKeyFromObject(inventory))
 
-	CleanInventoryMetrics(inventoryObj)
+	SetInventoryMetrics(*inventory, execution, labelEventValueDelete, emptyString)
 
 	return nil
 
