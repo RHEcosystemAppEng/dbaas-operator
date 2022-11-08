@@ -23,6 +23,8 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
+OPM_VERSION ?= v1.23.2
+OPERATOR_SDK_VERSION ?= v1.20.1
 CONTROLLER_TOOLS_VERSION ?= v0.4.1
 ENVTEST_K8S_VERSION ?= 1.24.2
 
@@ -272,37 +274,29 @@ bundle-push: ## Push the bundle image.
 	$(MAKE) docker-push IMG=$(BUNDLE_IMG)
 
 .PHONY: opm
-OPM = ./bin/opm
+OPM = ./bin/opm.$(OPM_VERSION)
 opm: ## Download opm locally if necessary.
 ifeq (,$(wildcard $(OPM)))
-ifeq (,$(shell which opm 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.2/$${OS}-$${ARCH}-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
 	}
-else
-OPM = $(shell which opm)
-endif
 endif
 
 .PHONY: sdk
-SDK = ./bin/operator-sdk
-sdk: ## Download operator-sdk locally if necessary.
+SDK = ./bin/operator-sdk.$(OPERATOR_SDK_VERSION)
+sdk: ## Download operator-sdk if necessary.
 ifeq (,$(wildcard $(SDK)))
-ifeq (,$(shell which operator-sdk 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(SDK)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.20.1/operator-sdk_$${OS}_$${ARCH} ;\
+	curl -sSLo $(SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
 	chmod +x $(SDK) ;\
 	}
-else
-SDK = $(shell which operator-sdk)
-endif
 endif
 
 # A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
