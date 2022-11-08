@@ -22,8 +22,7 @@ const (
 	metricNameDBaasInstanceDuration               = "dbaas_instance_request_duration_seconds"
 	metricNameInstancePhase                       = "dbaas_instance_phase"
 	metricNameOperatorVersion                     = "dbaas_version_info"
-	metricNameDBaaSRequestsDurationHistogram      = "dbaas_requests_duration_histogram"
-	metricNameDBaaSResourceCountGauge             = "dbaas_resource_count_gauge"
+	metricNameDBaaSRequestsDurationSeconds        = "dbaas_requests_duration_seconds"
 	metricNameDBaaSRequestsErrorCount             = "dbaas_requests_error_count"
 
 	// Metrics labels.
@@ -61,6 +60,7 @@ const (
 	labelErrorCdValueErrorFetchingDBaaSInventoryResources = "error_fetching_dbaas_inventory_resources"
 	labelErrorCdValueUnableToListPolicies                 = "unable_to_list_policies"
 	labelErrorCdValueErrorUpdatingInventoryStatus         = "error_updating_inventory_status"
+	labelErrorCdValueErrorDeletingInventory               = "error_deleting_inventory"
 
 	// installationTimeStart base time == 0
 	installationTimeStart = 0
@@ -140,18 +140,10 @@ var DBaasInstanceRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.
 // DBaaS Requests Duration Histogram for all DBaaS Resources
 var DBaaSRequestsDurationHistogram = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: metricNameDBaaSRequestsDurationHistogram,
+		Name: metricNameDBaaSRequestsDurationSeconds,
 		Help: "Request durations histogram for given resource(e.g. inventory) and for a given event(e.g. create or delete)",
 	},
 	[]string{metricLabelProvider, metricLabelAccountName, metricLabelNameSpace, metricLabelResource, metricLabelEvent})
-
-// DBaaS Resource Count Gauge for all DBaaS Resources
-var DBaaSResourceCountGauge = prometheus.NewGaugeVec(
-	prometheus.GaugeOpts{
-		Name: metricNameDBaaSResourceCountGauge,
-		Help: "Resource counts for a given dbaas resource",
-	},
-	[]string{metricLabelProvider, metricLabelAccountName, metricLabelNameSpace, metricLabelResource})
 
 // Total errors encountered counter
 var DBaaSRequestsErrorsCounter = prometheus.NewCounterVec(
@@ -223,23 +215,20 @@ func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL strin
 
 // SetInventoryMetrics set the metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution, event string, errCd string) {
-	switch event {
-	case labelEventValueCreate:
-		setInventoryStatusMetrics(inventory)
-		setInventoryRequestDurationSeconds(execution, inventory, event)
-		UpdateErrorsTotal(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, labelEventValueCreate, errCd)
-
-	case labelEventValueDelete:
-		UpdateResourceCountGauge(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, false)
-	}
+	setInventoryStatusMetrics(inventory)
+	setInventoryRequestDurationSeconds(execution, inventory, event)
+	UpdateErrorsTotal(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, labelEventValueCreate, errCd)
 }
 
 // setInventoryStatusMetrics set the metrics for inventory status
 func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
+			DBaaSInventoryStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
-				UpdateResourceCountGauge(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, true)
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason}).Set(1)
+			} else {
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{metricLabelProvider: inventory.Spec.ProviderRef.Name, metricLabelName: inventory.Name, metricLabelNameSpace: inventory.Namespace, metricLabelStatus: string(cond.Status), metricLabelReason: cond.Reason}).Set(0)
 			}
 			break
 		}
@@ -256,8 +245,10 @@ func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1al
 					duration := time.Now().Sub(inventory.CreationTimestamp.Time)
 					UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
 				case labelEventValueDelete:
-					duration := time.Now().Sub(inventory.DeletionTimestamp.Time)
-					UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
+					if inventory.DeletionTimestamp != nil {
+						duration := time.Now().Sub(inventory.DeletionTimestamp.Time)
+						UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
+					}
 				}
 			}
 			break
@@ -410,13 +401,5 @@ func UpdateRequestsDurationHistogram(provider string, account string, namespace 
 func UpdateErrorsTotal(provider string, account string, namespace string, resource string, event string, errCd string) {
 	if len(errCd) > 0 {
 		DBaaSRequestsErrorsCounter.WithLabelValues(provider, account, namespace, resource, event, errCd).Add(1)
-	}
-}
-
-func UpdateResourceCountGauge(provider string, account string, namespace string, resource string, increment bool) {
-	if increment {
-		DBaaSResourceCountGauge.WithLabelValues(provider, account, namespace, resource).Inc()
-	} else {
-		DBaaSResourceCountGauge.WithLabelValues(provider, account, namespace, resource).Dec()
 	}
 }

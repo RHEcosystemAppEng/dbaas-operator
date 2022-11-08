@@ -49,6 +49,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
 	metricLabelErrCdValue := emptyString
+	event := emptyString
 
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
@@ -60,6 +61,12 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		logger.Error(err, "Error fetching DBaaS Inventory for reconcile")
 		metricLabelErrCdValue = labelErrorCdValueErrorFetchingDBaaSInventoryResources
 		return ctrl.Result{}, err
+	}
+
+	if inventory.DeletionTimestamp != nil {
+		event = labelEventValueDelete
+	} else {
+		event = labelEventValueCreate
 	}
 
 	policyList, err := r.policyListByNS(ctx, req.Namespace)
@@ -98,7 +105,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	defer func() {
-		SetInventoryMetrics(inventory, execution, labelEventValueCreate, metricLabelErrCdValue)
+		SetInventoryMetrics(inventory, execution, event, metricLabelErrCdValue)
 	}()
 
 	//
@@ -163,15 +170,19 @@ func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DB
 // Delete implements a handler for the Delete event.
 func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 	execution := PlatformInstallStart()
+	metricLabelErrCdValue := emptyString
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
 	inventory, ok := e.Object.(*v1alpha1.DBaaSInventory)
 	if !ok {
+		metricLabelErrCdValue = labelErrorCdValueErrorDeletingInventory
 		return nil
 	}
 	log.Info("inventoryObj", "inventoryObj", objectKeyFromObject(inventory))
 
-	SetInventoryMetrics(*inventory, execution, labelEventValueDelete, emptyString)
+	defer func() {
+		SetInventoryMetrics(*inventory, execution, labelEventValueDelete, metricLabelErrCdValue)
+	}()
 
 	return nil
 

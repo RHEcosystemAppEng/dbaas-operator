@@ -70,7 +70,6 @@ func init() {
 	customMetrics.Registry.MustRegister(controllers.DBaasInstanceRequestDurationSeconds)
 	customMetrics.Registry.MustRegister(controllers.DBaasOperatorVersionInfo)
 	customMetrics.Registry.MustRegister(controllers.DBaaSRequestsDurationHistogram)
-	customMetrics.Registry.MustRegister(controllers.DBaaSResourceCountGauge)
 	customMetrics.Registry.MustRegister(controllers.DBaaSRequestsErrorsCounter)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
