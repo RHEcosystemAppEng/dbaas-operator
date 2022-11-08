@@ -47,11 +47,8 @@ const (
 	labelResourceValueInventory = "dbaas_inventory"
 
 	// Event label values
-	labelEventValueReconcile = "reconcile"
-	labelEventValueCreate    = "create"
-	labelEventValueUpdate    = "update"
-	labelEventValueDelete    = "delete"
-	labelEventValueRead      = "read"
+	labelEventValueCreate = "create"
+	labelEventValueDelete = "delete"
 
 	// Error Code label values
 	labelErrorCdValueResourceNotFound                     = "resource_not_found"
@@ -135,7 +132,7 @@ var DBaasInstanceRequestDurationSeconds = prometheus.NewHistogramVec(prometheus.
 	Help: "Request/Response duration of instance of upstream calls to provider operator/service endpoints",
 }, []string{metricLabelProvider, metricLabelAccountName, metricLabelInstanceName, metricLabelNameSpace, metricLabelCreationTimestamp})
 
-// DBaaS Requests Duration Histogram for all DBaaS Resources
+// DBaaSRequestsDurationHistogram DBaaS Requests Duration Histogram for all DBaaS Resources
 var DBaaSRequestsDurationHistogram = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
 		Name: metricNameDBaaSRequestsDurationSeconds,
@@ -143,7 +140,7 @@ var DBaaSRequestsDurationHistogram = prometheus.NewHistogramVec(
 	},
 	[]string{metricLabelProvider, metricLabelAccountName, metricLabelNameSpace, metricLabelResource, metricLabelEvent})
 
-// Total errors encountered counter
+// DBaaSRequestsErrorsCounter Total errors encountered counter
 var DBaaSRequestsErrorsCounter = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: metricNameDBaaSRequestsErrorCount,
@@ -214,7 +211,7 @@ func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL strin
 // SetInventoryMetrics set the metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution, event string, errCd string) {
 	setInventoryStatusMetrics(inventory)
-	setInventoryRequestDurationSeconds(execution, inventory, event)
+	setInventoryRequestDurationSeconds(inventory, event)
 	UpdateErrorsTotal(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, labelEventValueCreate, errCd)
 }
 
@@ -234,7 +231,7 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 }
 
 // setInventoryRequestDurationSeconds set the metrics for inventory request duration in seconds
-func setInventoryRequestDurationSeconds(execution Execution, inventory dbaasv1alpha1.DBaaSInventory, event string) {
+func setInventoryRequestDurationSeconds(inventory dbaasv1alpha1.DBaaSInventory, event string) {
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
 			if cond.Status == metav1.ConditionTrue {
@@ -392,10 +389,12 @@ func CleanInstanceMetrics(instance *dbaasv1alpha1.DBaaSInstance) {
 	}
 }
 
+// UpdateRequestsDurationHistogram Utility function to update request duration histogram
 func UpdateRequestsDurationHistogram(provider string, account string, namespace string, resource string, event string, duration float64) {
 	DBaaSRequestsDurationHistogram.WithLabelValues(provider, account, namespace, resource, event).Observe(duration)
 }
 
+// UpdateErrorsTotal Utility function to update errors total
 func UpdateErrorsTotal(provider string, account string, namespace string, resource string, event string, errCd string) {
 	if len(errCd) > 0 {
 		DBaaSRequestsErrorsCounter.WithLabelValues(provider, account, namespace, resource, event, errCd).Add(1)
