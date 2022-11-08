@@ -35,15 +35,13 @@ const (
 	metricLabelNameSpace         = "namespace"
 	metricLabelInstanceID        = "instance_id"
 	metricLabelReason            = "reason"
-	metricLabelInstanceName      = "name" // shouldn't be 'instance_name'
+	metricLabelInstanceName      = "instance_name"
 	metricLabelCreationTimestamp = "creation_timestamp"
 	metricLabelConsoleULR        = "openshift_url"
 	metricLabelPlatformName      = "cloud_platform_name"
 	metricLabelResource          = "resource"
 	metricLabelEvent             = "event"
 	metricLabelErrorCd           = "error_cd"
-
-	emptyString = ""
 
 	// Resource label values
 	labelResourceValueInventory = "dbaas_inventory"

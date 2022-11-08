@@ -48,8 +48,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	execution := PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
-	metricLabelErrCdValue := emptyString
-	event := emptyString
+	metricLabelErrCdValue := ""
+	event := ""
 
 	if err := r.Get(ctx, req.NamespacedName, &inventory); err != nil {
 		if errors.IsNotFound(err) {
@@ -170,7 +170,7 @@ func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DB
 // Delete implements a handler for the Delete event.
 func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 	execution := PlatformInstallStart()
-	metricLabelErrCdValue := emptyString
+	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
 	inventory, ok := e.Object.(*v1alpha1.DBaaSInventory)
