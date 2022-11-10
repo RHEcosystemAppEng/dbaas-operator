@@ -8,6 +8,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
@@ -156,7 +158,7 @@ type Execution struct {
 // PlatformInstallStart creates an Execution instance and starts the timer
 func PlatformInstallStart() Execution {
 	return Execution{
-		begin: time.Now(),
+		begin: time.Now().UTC(),
 	}
 }
 
@@ -211,7 +213,7 @@ func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL strin
 // SetInventoryMetrics set the metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution, event string, errCd string) {
 	setInventoryStatusMetrics(inventory)
-	setInventoryRequestDurationSeconds(inventory, event)
+	setInventoryRequestDurationSeconds(inventory, event, execution)
 	UpdateErrorsTotal(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, labelEventValueCreate, errCd)
 }
 
@@ -231,23 +233,31 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 }
 
 // setInventoryRequestDurationSeconds set the metrics for inventory request duration in seconds
-func setInventoryRequestDurationSeconds(inventory dbaasv1alpha1.DBaaSInventory, event string) {
-	for _, cond := range inventory.Status.Conditions {
-		if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
-			if cond.Status == metav1.ConditionTrue {
-				switch event {
-				case labelEventValueCreate:
-					duration := time.Now().Sub(inventory.CreationTimestamp.Time)
+func setInventoryRequestDurationSeconds(inventory dbaasv1alpha1.DBaaSInventory, event string, execution Execution) {
+	log := ctrl.Log.WithName("Inventory Request Duration for event: " + event)
+	switch event {
+
+	case labelEventValueCreate:
+		for _, cond := range inventory.Status.Conditions {
+			if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
+				if cond.Status == metav1.ConditionTrue {
+					duration := time.Now().UTC().Sub(inventory.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
-				case labelEventValueDelete:
-					if inventory.DeletionTimestamp != nil {
-						duration := time.Now().Sub(inventory.DeletionTimestamp.Time)
-						UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
-					}
+					log.Info("Set the request duration for create event")
 				}
+				break
 			}
-			break
 		}
+
+	case labelEventValueDelete:
+		deletionTimestamp := execution.begin.UTC()
+		if inventory.DeletionTimestamp != nil {
+			deletionTimestamp = inventory.DeletionTimestamp.UTC()
+		}
+
+		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
+		UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, labelResourceValueInventory, event, duration.Seconds())
+		log.Info("Set the request duration for delete event")
 	}
 }
 

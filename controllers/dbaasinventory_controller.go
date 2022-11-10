@@ -174,16 +174,19 @@ func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
 	inventory, ok := e.Object.(*v1alpha1.DBaaSInventory)
+
 	if !ok {
+		log.Info("Error getting inventory object during delete")
 		metricLabelErrCdValue = labelErrorCdValueErrorDeletingInventory
 		return nil
 	}
+
 	log.Info("inventoryObj", "inventoryObj", objectKeyFromObject(inventory))
 
 	defer func() {
+		log.Info("Calling metrics for deleting of DBaaSInventory")
 		SetInventoryMetrics(*inventory, execution, labelEventValueDelete, metricLabelErrCdValue)
 	}()
 
 	return nil
-
 }
