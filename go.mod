@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/RHsyseng/operator-utils v1.4.9
+	github.com/fatih/structs v1.1.0
 	github.com/go-logr/logr v1.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0

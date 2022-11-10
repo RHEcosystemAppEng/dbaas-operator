@@ -93,7 +93,6 @@ var _ = Describe("Get DBaaSProvider", func() {
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
 		},
 	}
 	BeforeEach(assertResourceCreation(provider))

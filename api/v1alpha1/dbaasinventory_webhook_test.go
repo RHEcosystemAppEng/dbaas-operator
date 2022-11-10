@@ -70,7 +70,6 @@ var (
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
 	testProviderRDS = DBaaSProvider{
@@ -120,7 +119,6 @@ var (
 			AllowsFreeTrial:              true,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
 	testSecret = corev1.Secret{

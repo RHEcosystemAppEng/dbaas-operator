@@ -17,6 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
+	"github.com/fatih/structs"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -59,9 +62,35 @@ const (
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
 	MsgPolicyNotReady                string = "Another active Policy already exists"
 
+	// Labels
 	TypeLabelValue    = "credentials"
 	TypeLabelKey      = "db-operator/type"
 	TypeLabelKeyMongo = "atlas.mongodb.com/type"
+)
+
+type ProvisioningParameterType int64
+
+func (t ProvisioningParameterType) GetName() string {
+	s := &ProvisioningParametersSpec{}
+	n := structs.Names(s)
+	name := n[t]
+	return strings.ToLower(name[0:0]) + name[1:]
+}
+
+// DBaaS provisioning fields
+const (
+	ProvisioningName ProvisioningParameterType = iota
+	ProvisioningPlan
+	ProvisioningCloudProvider
+	ProvisioningRegions
+	ProvisioningAvailabilityZones
+	ProvisioningNodes
+	ProvisioningMachineType
+	ProvisioningStorageGib
+	ProvisioningSpendLimit
+	ProvisioningTeamProject
+	ProvisioningLocationLabel
+	ProvisioningHardwareLabel
 )
 
 // Defines the phases for instance provisioning.
@@ -106,11 +135,16 @@ type DBaaSProviderSpec struct {
 	// Instructions on how to provision instances by using the database provider's web portal.
 	ExternalProvisionDescription string `json:"externalProvisionDescription"`
 
-	// Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
-	InstanceParameterSpecs []InstanceParameterSpec `json:"instanceParameterSpecs"`
+	// Parameter specs used by UX for provisioning a database instance
+	ProvisioningParametersSpec *ProvisioningParametersSpec `json:"provisioningParametersSpec,omitempty"`
 }
 
-// Defines the information for a DBaaSProvider object.
+// DBaaSProviderStatus defines the observed state of DBaaSProvider
+type DBaaSProviderStatus struct {
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+// DatabaseProvider defines the information for a DBaaSProvider
 type DatabaseProvider struct {
 	// The name used to specify the service binding origin parameter.
 	// For example, 'Red Hat DBaaS / MongoDB Atlas'.
@@ -288,20 +322,79 @@ type DBaaSProviderInstance struct {
 	Status DBaaSInstanceStatus `json:"status,omitempty"`
 }
 
-// Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
-type InstanceParameterSpec struct {
-	// The name for this field.
-	Name string `json:"name"`
+// Option defines the value and display value for an option in a dropdown, radio button or checkbox
+type Option struct {
+	// Value of the option
+	Value string `json:"value,omitempty"`
 
-	// A user-friendly name for this parameter.
+	// Corresponding display value
+	DisplayValue string `json:"displayValue,omitempty"`
+}
+
+// FieldDependency defines the name and value of a field used as a dependency
+type FieldDependency struct {
+	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel
+	Name              string `json:"name,omitempty"`
+	Plan              string `json:"plan,omitempty"`
+	CloudProvider     string `json:"cloudProvider,omitempty"`
+	Regions           string `json:"regions,omitempty"`
+	AvailabilityZones string `json:"availabilityZones,omitempty"`
+	Nodes             string `json:"nodes,omitempty"`
+	MachineType       string `json:"machineType,omitempty"`
+	StorageGib        string `json:"storageGib,omitempty"`
+	SpendLimit        string `json:"spendLimit,omitempty"`
+	TeamProject       string `json:"teamProject,omitempty"`
+	LocationLabel     string `json:"locationLabel,omitempty"`
+	HardwareLabel     string `json:"hardwareLabel,omitempty"`
+	// Name of the field used as a dependency
+	Field string `json:"field,omitempty"`
+
+	// Value of the field used as a dependency
+	Value string `json:"value,omitempty"`
+}
+
+// Specs for the common parameters used by UX for provisioning a database instance.
+type ProvisioningParametersSpec struct {
+	Name              string `json:"name,omitempty"`
+	Plan              string `json:"plan,omitempty"`
+	CloudProvider     string `json:"cloudProvider,omitempty"`
+	Regions           string `json:"regions,omitempty"`
+	AvailabilityZones string `json:"availabilityZones,omitempty"`
+	Nodes             string `json:"nodes,omitempty"`
+	MachineType       string `json:"machineType,omitempty"`
+	StorageGib        string `json:"storageGib,omitempty"`
+	SpendLimit        string `json:"spendLimit,omitempty"`
+	TeamProject       string `json:"teamProject,omitempty"`
+	LocationLabel     string `json:"locationLabel,omitempty"`
+	HardwareLabel     string `json:"hardwareLabel,omitempty"`
+}
+
+// Information for a provisioning parameter
+type ProvisioningParameter struct {
+	// A user-friendly name for this field.
 	DisplayName string `json:"displayName"`
 
-	// The type of field: string, maskedstring, integer, or boolean.
-	Type string `json:"type"`
+	// Additional info about the field
+	HelpText string `json:"helpText,omitempty"`
 
-	// Define if this field is required or not.
-	Required bool `json:"required"`
+	// Lists of options for the field. May have multiple option lists based on the dependecies.
+	OptionsLists []ProvisioningParameterOptions `json:"optionsLists,omitempty"`
 
-	// Default value for this field.
+	// Default value for the field
 	DefaultValue string `json:"defaultValue,omitempty"`
+}
+
+// ProvisioningParameterOptions defines the list of options available for UX for a field based on the dependencies
+// A single parameter can have multiple option lists depending on the dependent parameters.
+// For instance, there are 4 different lists for regions: one for dedicated cluster on GCP,
+// one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS.
+type ProvisioningParameterOptions struct {
+	// List of the dependent fields and their values
+	Dependencies []FieldDependency `json:"dependencies,omitempty"`
+
+	// Options displayed in the UX
+	Options []Option `json:"options,omitempty"`
+
+	// Default option for this option list
+	DefaultOption Option `json:"defaultOption,omitempty"`
 }
