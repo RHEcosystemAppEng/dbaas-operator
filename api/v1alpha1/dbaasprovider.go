@@ -214,11 +214,10 @@ type DBaaSConnectionSpec struct {
 type DBaaSConnectionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
-	// Secret holding the credentials needed for accessing the DB instance
-	CredentialsRef *corev1.LocalObjectReference `json:"credentialsRef,omitempty"`
-
-	// A ConfigMap holding non-sensitive information needed for connecting to the DB instance
-	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
+	// Binding exposes a secret containing the binding information for the
+	// instance. It implements the service binding Provisioned Service
+	// duck type. See: https://github.com/servicebinding/spec#provisioned-service
+	Binding *corev1.LocalObjectReference `json:"binding,omitempty"`
 }
 
 // DBaaSProviderConnection is the schema for unmarshalling provider connection object

@@ -3,9 +3,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
-    service.binding/configuration: path={.status.connectionInfoRef.name},objectType=ConfigMap
-    service.binding/credentials: path={.status.credentialsRef.name},objectType=Secret
   creationTimestamp: null
+  labels:
+    servicebinding.io/provisioned-service: "true"
   name: dbaasconnections.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
@@ -71,6 +71,16 @@ spec:
           status:
             description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
             properties:
+              binding:
+                description: 'Binding exposes a secret containing the binding information
+                  for the instance. It implements the service binding Provisioned
+                  Service duck type. See: https://github.com/servicebinding/spec#provisioned-service'
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
@@ -140,24 +150,6 @@ spec:
                   - type
                   type: object
                 type: array
-              connectionInfoRef:
-                description: A ConfigMap holding non-sensitive information needed
-                  for connecting to the DB instance
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
-              credentialsRef:
-                description: Secret holding the credentials needed for accessing the
-                  DB instance
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
             type: object
         type: object
     served: true

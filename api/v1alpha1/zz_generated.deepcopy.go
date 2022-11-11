@@ -132,13 +132,8 @@ func (in *DBaaSConnectionStatus) DeepCopyInto(out *DBaaSConnectionStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.CredentialsRef != nil {
-		in, out := &in.CredentialsRef, &out.CredentialsRef
-		*out = new(v1.LocalObjectReference)
-		**out = **in
-	}
-	if in.ConnectionInfoRef != nil {
-		in, out := &in.ConnectionInfoRef, &out.ConnectionInfoRef
+	if in.Binding != nil {
+		in, out := &in.Binding, &out.Binding
 		*out = new(v1.LocalObjectReference)
 		**out = **in
 	}
