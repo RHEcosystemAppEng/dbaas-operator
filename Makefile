@@ -29,6 +29,7 @@ OPM_VERSION ?= v1.23.2
 OPERATOR_SDK_VERSION ?= v1.20.1
 CONTROLLER_TOOLS_VERSION ?= v0.4.1
 ENVTEST_K8S_VERSION ?= 1.24.2
+YQ_VERSION ?= v4.30.5
 
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
 #
@@ -269,12 +270,17 @@ sdk-manifests: manifests generate-ref kustomize sdk ## Generate bundle manifests
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 
 .PHONY: bundle
-bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
+bundle: sdk-manifests # yq ## Generate bundle manifests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+#	$(YQ) 'del(.spec.conversion.webhook.clientConfig.service)' -i bundle/manifests/dbaas.redhat.com_dbaasconnections.yaml
+#	$(YQ) 'del(.spec.conversion.webhook.clientConfig.service)' -i bundle/manifests/dbaas.redhat.com_dbaasinstances.yaml
+#	$(YQ) 'del(.spec.conversion.webhook.clientConfig.service)' -i bundle/manifests/dbaas.redhat.com_dbaasinventories.yaml
+#	$(YQ) 'del(.spec.conversion.webhook.clientConfig.service)' -i bundle/manifests/dbaas.redhat.com_dbaaspolicies.yaml
+#	$(YQ) 'del(.spec.conversion.webhook.clientConfig.service)' -i bundle/manifests/dbaas.redhat.com_dbaasproviders.yaml
 	$(SDK) bundle validate ./bundle
 
 .PHONY: bundle-w-digests
-bundle-w-digests: sdk-manifests ## Generate bundle manifests w/ image digests, then validate generated files.
+bundle-w-digests: sdk-manifests # yq ## Generate bundle manifests w/ image digests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	$(SDK) bundle validate ./bundle
 
@@ -309,6 +315,19 @@ ifeq (,$(wildcard $(SDK)))
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
 	curl -sSLo $(SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$${OS}_$${ARCH} ;\
 	chmod +x $(SDK) ;\
+	}
+endif
+
+.PHONY: yq
+YQ = ./bin/yq.$(YQ_VERSION)
+yq: ## Download yq if necessary.
+ifeq (,$(wildcard $(YQ)))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(YQ)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(YQ) https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_$${OS}_$${ARCH} ;\
+	chmod +x $(YQ) ;\
 	}
 endif
 
