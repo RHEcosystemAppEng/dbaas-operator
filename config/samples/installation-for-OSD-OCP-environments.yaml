@@ -11,7 +11,7 @@ metadata:
   namespace: redhat-dbaas-operator
 spec:
   sourceType: grpc
-  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.4.0
+  image: quay.io/tchughesiv/dbaas-operator-catalog:v0.4.0
   displayName: Red Hat OpenShift Database Access
 
 ---
