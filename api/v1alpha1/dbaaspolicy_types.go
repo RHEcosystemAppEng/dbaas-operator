@@ -59,7 +59,6 @@ type DBaaSPolicyStatus struct {
 
 // Enables administrative capabilities within a namespace, and sets a default inventory policy.
 // Policy defaults can be overridden on a per-inventory basis.
-//+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account Policy"
 type DBaaSPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

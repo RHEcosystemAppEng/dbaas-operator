@@ -19,7 +19,7 @@ package controllers
 import (
 	"context"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -39,7 +39,7 @@ type DBaaSPolicyReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
-//+kubebuilder:rbac:groups=core,resources=resourcequotas,verbs=get;list;create;update;watch
+//+kubebuilder:rbac:groups=core,resources=resourcequotas,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=resourcequotas/finalizers,verbs=update
 //+kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch
 
@@ -62,7 +62,7 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 	activePolicy := getActivePolicy(policyList)
 
-	var policy v1alpha1.DBaaSPolicy
+	var policy v1beta1.DBaaSPolicy
 	if err := r.Get(ctx, req.NamespacedName, &policy); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued
@@ -91,20 +91,20 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	cond := &metav1.Condition{
-		Type:    v1alpha1.DBaaSPolicyReadyType,
+		Type:    v1beta1.DBaaSPolicyReadyType,
 		Status:  metav1.ConditionTrue,
-		Reason:  v1alpha1.Ready,
-		Message: v1alpha1.MsgPolicyReady,
+		Reason:  v1beta1.Ready,
+		Message: v1beta1.MsgPolicyReady,
 	}
 
 	// if an active policy exists, and it's not this one... set status to false
 	if activePolicy != nil &&
 		activePolicy.GetName() != policy.Name {
 		cond = &metav1.Condition{
-			Type:    v1alpha1.DBaaSPolicyReadyType,
+			Type:    v1beta1.DBaaSPolicyReadyType,
 			Status:  metav1.ConditionFalse,
-			Reason:  v1alpha1.DBaaSPolicyNotReady,
-			Message: v1alpha1.MsgPolicyNotReady + " - " + activePolicy.GetName(),
+			Reason:  v1beta1.DBaaSPolicyNotReady,
+			Message: v1beta1.MsgPolicyNotReady + " - " + activePolicy.GetName(),
 		}
 	}
 
@@ -119,7 +119,7 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, &resQuota, func() error {
 			resQuota.Spec = v1.ResourceQuotaSpec{
 				Hard: v1.ResourceList{
-					v1.ResourceName("count/dbaaspolicies." + v1alpha1.GroupVersion.Group): resource.MustParse("1"),
+					v1.ResourceName("count/dbaaspolicies." + v1beta1.GroupVersion.Group): resource.MustParse("1"),
 				},
 			}
 			resQuota.SetGroupVersionKind(v1.SchemeGroupVersion.WithKind("ResourceQuota"))
@@ -144,12 +144,12 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSPolicy{}).
+		For(&v1beta1.DBaaSPolicy{}).
 		Owns(&v1.ResourceQuota{}).
 		Complete(r)
 }
 
-func (r *DBaaSPolicyReconciler) updateStatusCondition(ctx context.Context, policy v1alpha1.DBaaSPolicy, cond *metav1.Condition) (ctrl.Result, error) {
+func (r *DBaaSPolicyReconciler) updateStatusCondition(ctx context.Context, policy v1beta1.DBaaSPolicy, cond *metav1.Condition) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
 	apimeta.SetStatusCondition(&policy.Status.Conditions, *cond)
 	if err := r.Client.Status().Update(ctx, &policy); err != nil {
@@ -164,9 +164,9 @@ func (r *DBaaSPolicyReconciler) updateStatusCondition(ctx context.Context, polic
 }
 
 // get active policy, return nil if none exists
-func getActivePolicy(policyList v1alpha1.DBaaSPolicyList) *v1alpha1.DBaaSPolicy {
+func getActivePolicy(policyList v1beta1.DBaaSPolicyList) *v1beta1.DBaaSPolicy {
 	for i := range policyList.Items {
-		if apimeta.IsStatusConditionTrue(policyList.Items[i].Status.Conditions, v1alpha1.DBaaSPolicyReadyType) {
+		if apimeta.IsStatusConditionTrue(policyList.Items[i].Status.Conditions, v1beta1.DBaaSPolicyReadyType) {
 			return &policyList.Items[i]
 		}
 	}
@@ -180,7 +180,7 @@ func (r *DBaaSPolicyReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSPolicyReconciler DeleteEvent")
 	log.Info("Delete event started")
 
-	policyObj, ok := e.Object.(*v1alpha1.DBaaSPolicy)
+	policyObj, ok := e.Object.(*v1beta1.DBaaSPolicy)
 	if !ok {
 		log.Info("Error getting DBaaSPolicy object during delete")
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPolicy

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/go-logr/logr"
 
 	corev1 "k8s.io/api/core/v1"
@@ -37,11 +38,12 @@ var (
 type DBaaSReconciler struct {
 	client.Client
 	*runtime.Scheme
-	InstallNamespace string
+	InstallNamespace    string
+	operatorNameVersion string
 }
 
-func (r *DBaaSReconciler) getDBaaSProvider(ctx context.Context, providerName string) (*v1alpha1.DBaaSProvider, error) {
-	provider := &v1alpha1.DBaaSProvider{}
+func (r *DBaaSReconciler) getDBaaSProvider(ctx context.Context, providerName string) (*v1beta1.DBaaSProvider, error) {
+	provider := &v1beta1.DBaaSProvider{}
 	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, provider); err != nil {
 		return nil, err
 	}
@@ -102,39 +104,38 @@ func (r *DBaaSReconciler) parseProviderObject(unstructured *unstructured.Unstruc
 	return nil
 }
 
-func (r *DBaaSReconciler) policyListByNS(ctx context.Context, namespace string) (v1alpha1.DBaaSPolicyList, error) {
-	var policyListByNS v1alpha1.DBaaSPolicyList
+func (r *DBaaSReconciler) policyListByNS(ctx context.Context, namespace string) (v1beta1.DBaaSPolicyList, error) {
+	var policyListByNS v1beta1.DBaaSPolicyList
 	if err := r.List(ctx, &policyListByNS, &client.ListOptions{Namespace: namespace}); err != nil {
-		return v1alpha1.DBaaSPolicyList{}, err
+		return v1beta1.DBaaSPolicyList{}, err
 	}
 	return policyListByNS, nil
 }
 
 // check if namespace is a valid connection namespace
-func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace string, inventory *v1alpha1.DBaaSInventory) (bool, error) {
+func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace string, inventory *v1beta1.DBaaSInventory, activePolicy *v1beta1.DBaaSPolicy) (bool, error) {
 	// valid if in same namespace as inventory
 	if namespace == inventory.Namespace {
 		return true, nil
 	}
 	var validNamespaces []string
 	var validNsSelector *metav1.LabelSelector
-	policyList, err := r.policyListByNS(ctx, inventory.Namespace)
-	if err != nil {
-		return false, err
-	}
-	if policy := getActivePolicy(policyList); policy != nil {
-		if policy.Spec.ConnectionNamespaces != nil {
-			validNamespaces = *policy.Spec.ConnectionNamespaces
+	if inventory.Spec.Policy != nil {
+		if inventory.Spec.Policy.Connections.Namespaces != nil {
+			validNamespaces = *inventory.Spec.Policy.Connections.Namespaces
 		}
-		if policy.Spec.ConnectionNsSelector != nil {
-			validNsSelector = policy.Spec.ConnectionNsSelector
+		if inventory.Spec.Policy.Connections.NsSelector != nil {
+			validNsSelector = inventory.Spec.Policy.Connections.NsSelector
 		}
-	}
-	if inventory.Spec.ConnectionNamespaces != nil {
-		validNamespaces = *inventory.Spec.ConnectionNamespaces
-	}
-	if inventory.Spec.ConnectionNsSelector != nil {
-		validNsSelector = inventory.Spec.ConnectionNsSelector
+	} else {
+		if activePolicy != nil {
+			if activePolicy.Spec.Connections.Namespaces != nil {
+				validNamespaces = *activePolicy.Spec.Connections.Namespaces
+			}
+			if activePolicy.Spec.Connections.NsSelector != nil {
+				validNsSelector = activePolicy.Spec.Connections.NsSelector
+			}
+		}
 	}
 
 	// valid if all namespaces are supported via wildcard
@@ -159,22 +160,25 @@ func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace str
 }
 
 // check if provisioning is allowed against an inventory. inventory takes precedence over dbaaspolicy.
-func canProvision(inventory v1alpha1.DBaaSInventory, activePolicy *v1alpha1.DBaaSPolicy) bool {
+func canProvision(inventory *v1beta1.DBaaSInventory, activePolicy *v1beta1.DBaaSPolicy) bool {
 	if activePolicy == nil {
 		// not an active namespace
 		return false
 	}
-	if inventory.Spec.DisableProvisions != nil {
-		return !*inventory.Spec.DisableProvisions
-	}
-	if activePolicy.Spec.DisableProvisions != nil {
-		return !*activePolicy.Spec.DisableProvisions
+	if inventory.Spec.Policy != nil {
+		if inventory.Spec.Policy.DisableProvisions != nil {
+			return !*inventory.Spec.Policy.DisableProvisions
+		}
+	} else {
+		if activePolicy.Spec.DisableProvisions != nil {
+			return !*activePolicy.Spec.DisableProvisions
+		}
 	}
 	return true
 }
 
 func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, providerName string, DBaaSObject client.Object,
-	providerObjectKindFn func(*v1alpha1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
+	providerObjectKindFn func(*v1beta1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
 	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,
 	DBaaSObjectConditionsFn func() *[]metav1.Condition, DBaaSObjectReadyType string,
 	logger logr.Logger) (result ctrl.Result, recErr error) {
@@ -186,8 +190,8 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 		condition = &metav1.Condition{
 			Type:    DBaaSObjectReadyType,
 			Status:  metav1.ConditionFalse,
-			Reason:  v1alpha1.ProviderReconcileInprogress,
-			Message: v1alpha1.MsgProviderCRReconcileInProgress,
+			Reason:  v1beta1.ProviderReconcileInprogress,
+			Message: v1beta1.MsgProviderCRReconcileInProgress,
 		}
 	}
 
@@ -214,7 +218,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 		recErr = err
 		if errors.IsNotFound(err) {
 			logger.Error(err, "Requested DBaaS Provider is not configured in this environment", "DBaaS Provider", providerName)
-			*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.DBaaSProviderNotFound, Message: err.Error()}
+			*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1beta1.DBaaSProviderNotFound, Message: err.Error()}
 			return
 		}
 		logger.Error(err, "Error reading configured DBaaS Provider", "DBaaS Provider", providerName)
@@ -230,7 +234,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 			return
 		}
 		logger.Error(err, "Error reconciling the Provider resource", "Provider Object", providerObject)
-		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.ProviderReconcileError, Message: err.Error()}
+		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1beta1.ProviderReconcileError, Message: err.Error()}
 		recErr = err
 		return
 	} else if res != controllerutil.OperationResultNone {
@@ -240,7 +244,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 	DBaaSProviderObject := providerObjectFn()
 	if err := r.parseProviderObject(providerObject, DBaaSProviderObject); err != nil {
 		logger.Error(err, "Error parsing the Provider object", "Provider Object", providerObject)
-		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1alpha1.ProviderParsingError, Message: err.Error()}
+		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1beta1.ProviderParsingError, Message: err.Error()}
 		recErr = err
 		return
 	}
@@ -249,13 +253,13 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 	return
 }
 
-func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alpha1.NamespacedName, DBaaSObject client.Object,
-	statusErrorFn func(string, string), logger logr.Logger) (inventory *v1alpha1.DBaaSInventory, validNS, provision bool, err error) {
-	inventory = &v1alpha1.DBaaSInventory{}
+func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1beta1.NamespacedName, DBaaSObject client.Object,
+	statusErrorFn func(string, string), logger logr.Logger) (inventory *v1beta1.DBaaSInventory, validNS, provision bool, err error) {
+	inventory = &v1beta1.DBaaSInventory{}
 	if err = r.Get(ctx, types.NamespacedName{Namespace: inventoryRef.Namespace, Name: inventoryRef.Name}, inventory); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Error(err, "DBaaS Inventory resource not found for DBaaS Object", "DBaaS Object", DBaaSObject, "DBaaS Inventory", inventoryRef)
-			statusErrorFn(v1alpha1.DBaaSInventoryNotFound, err.Error())
+			statusErrorFn(v1beta1.DBaaSInventoryNotFound, err.Error())
 			if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
 				if errors.IsConflict(errCond) {
 					logger.V(1).Info("DBaaS Object modified", "DBaaS Object", DBaaSObject)
@@ -273,29 +277,30 @@ func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alp
 	if err != nil {
 		return
 	}
-	provision = canProvision(*inventory, getActivePolicy(policyList))
+	activePolicy := getActivePolicy(policyList)
+	provision = canProvision(inventory, activePolicy)
 
-	validNS, err = r.isValidConnectionNS(ctx, DBaaSObject.GetNamespace(), inventory)
+	validNS, err = r.isValidConnectionNS(ctx, DBaaSObject.GetNamespace(), inventory, activePolicy)
 	if err != nil {
 		return
 	}
 	if validNS {
 		// The inventory must be in ready status before we can move on
-		invCond := apimeta.FindStatusCondition(inventory.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+		invCond := apimeta.FindStatusCondition(inventory.Status.Conditions, v1beta1.DBaaSInventoryReadyType)
 		if invCond == nil || invCond.Status == metav1.ConditionFalse {
 			err = fmt.Errorf("inventory %v is not ready", inventoryRef)
 			logger.Error(err, "Inventory is not ready", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			statusErrorFn(v1alpha1.DBaaSInventoryNotReady, v1alpha1.MsgInventoryNotReady)
+			statusErrorFn(v1beta1.DBaaSInventoryNotReady, v1beta1.MsgInventoryNotReady)
 		} else if !provision &&
-			reflect.TypeOf(DBaaSObject) == reflect.TypeOf(&v1alpha1.DBaaSInstance{}) {
+			reflect.TypeOf(DBaaSObject) == reflect.TypeOf(&v1beta1.DBaaSInstance{}) {
 			err = fmt.Errorf("inventory %v provisioning is disabled", inventoryRef)
 			logger.Error(err, "Inventory provisioning is disabled", "Inventory", inventory.Name, "Namespace", inventory.Namespace)
-			statusErrorFn(v1alpha1.DBaaSInventoryNotProvisionable, v1alpha1.MsgInventoryNotProvisionable)
+			statusErrorFn(v1beta1.DBaaSInventoryNotProvisionable, v1beta1.MsgInventoryNotProvisionable)
 		} else {
 			return
 		}
 	} else {
-		statusErrorFn(v1alpha1.DBaaSInvalidNamespace, v1alpha1.MsgInvalidNamespace)
+		statusErrorFn(v1beta1.DBaaSInvalidNamespace, v1beta1.MsgInvalidNamespace)
 	}
 
 	if errCond := r.Client.Status().Update(ctx, DBaaSObject); errCond != nil {
@@ -309,7 +314,7 @@ func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1alp
 	return
 }
 
-func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1alpha1.DBaaSInventory) error {
+func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1beta1.DBaaSInventory) error {
 	if inventory.Spec.CredentialsRef != nil && len(inventory.Spec.CredentialsRef.Name) != 0 {
 		secret := corev1.Secret{}
 		if err := r.Get(ctx, types.NamespacedName{
@@ -321,11 +326,11 @@ func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1al
 
 		secretPatch := corev1.Secret{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
 		if strings.Contains(inventory.Spec.ProviderRef.Name, "mongodb") {
-			if secret.GetLabels()[v1alpha1.TypeLabelKeyMongo] != v1alpha1.TypeLabelValue {
-				secretPatch.Labels[v1alpha1.TypeLabelKeyMongo] = v1alpha1.TypeLabelValue
+			if secret.GetLabels()[v1beta1.TypeLabelKeyMongo] != v1beta1.TypeLabelValue {
+				secretPatch.Labels[v1beta1.TypeLabelKeyMongo] = v1beta1.TypeLabelValue
 			}
-		} else if secret.GetLabels()[v1alpha1.TypeLabelKey] != v1alpha1.TypeLabelValue {
-			secretPatch.Labels[v1alpha1.TypeLabelKey] = v1alpha1.TypeLabelValue
+		} else if secret.GetLabels()[v1beta1.TypeLabelKey] != v1beta1.TypeLabelValue {
+			secretPatch.Labels[v1beta1.TypeLabelKey] = v1beta1.TypeLabelValue
 		}
 
 		if len(secretPatch.Labels) > 0 {

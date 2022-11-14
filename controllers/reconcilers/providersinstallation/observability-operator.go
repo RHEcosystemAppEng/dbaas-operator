@@ -9,7 +9,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
@@ -33,7 +33,7 @@ const (
 var metricsToInclude = []string{"dbaas_.*$", "csv_succeeded$", "csv_abnormal$", "ALERTS$", "subscription_sync_total"}
 var replicas int32 = 1
 
-func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha1.DBaaSPlatform) (dbaasv1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1beta1.DBaaSPlatform) (dbaasv1beta1.PlatformInstlnStatus, error) {
 	config := reconcilers.GetObservabilityConfig()
 	monitoringStackCR := getDefaultMonitoringStackCR(cr.Namespace)
 
@@ -43,7 +43,7 @@ func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha
 	}
 	err := r.client.List(ctx, monitoringStackList, listOpts...)
 	if err != nil {
-		return dbaasv1alpha1.ResultFailed, fmt.Errorf("could not get a list of monitoring stack CR: %w", err)
+		return dbaasv1beta1.ResultFailed, fmt.Errorf("could not get a list of monitoring stack CR: %w", err)
 	}
 
 	if len(monitoringStackList.Items) == 0 {
@@ -53,7 +53,7 @@ func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha
 		}
 		err = controllerutil.SetControllerReference(cr, monitoringStackCR, r.scheme)
 		if err != nil {
-			return dbaasv1alpha1.ResultFailed, err
+			return dbaasv1beta1.ResultFailed, err
 		}
 		if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringStackCR, func() error {
 			monitoringStackCR.Labels = map[string]string{
@@ -62,7 +62,7 @@ func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha
 
 			return nil
 		}); err != nil {
-			return dbaasv1alpha1.ResultFailed, err
+			return dbaasv1beta1.ResultFailed, err
 		}
 	} else if len(monitoringStackList.Items) == 1 {
 		monitoringStackCR = &monitoringStackList.Items[0]
@@ -75,14 +75,14 @@ func (r *reconciler) createObservabilityCR(ctx context.Context, cr *dbaasv1alpha
 				}
 				return nil
 			}); err != nil {
-				return dbaasv1alpha1.ResultFailed, err
+				return dbaasv1beta1.ResultFailed, err
 			}
 		}
 
 	} else {
-		return dbaasv1alpha1.ResultFailed, fmt.Errorf("too many monitoringStackCR resources found. Expecting 1, found %d MonitoringStack resources in %s namespace", len(monitoringStackList.Items), cr.Namespace)
+		return dbaasv1beta1.ResultFailed, fmt.Errorf("too many monitoringStackCR resources found. Expecting 1, found %d MonitoringStack resources in %s namespace", len(monitoringStackList.Items), cr.Namespace)
 	}
-	return dbaasv1alpha1.ResultSuccess, nil
+	return dbaasv1beta1.ResultSuccess, nil
 
 }
 
@@ -104,7 +104,7 @@ func getDefaultMonitoringStackCR(namespace string) *msoapi.MonitoringStack {
 	return monitoringStackCR
 }
 
-func (r *reconciler) setPrometheusConfig(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (*msoapi.PrometheusConfig, error) {
+func (r *reconciler) setPrometheusConfig(ctx context.Context, config dbaasv1beta1.ObservabilityConfig, namespace string) (*msoapi.PrometheusConfig, error) {
 
 	prometheusConfig := &msoapi.PrometheusConfig{}
 	prometheusConfig.Replicas = &replicas
@@ -124,7 +124,7 @@ func (r *reconciler) setPrometheusConfig(ctx context.Context, config dbaasv1alph
 }
 
 // configureRemoteWrite setting up environment params for RemoteWrite based on different Auth Type
-func (r *reconciler) configureRemoteWrite(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
+func (r *reconciler) configureRemoteWrite(ctx context.Context, config dbaasv1beta1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
 
 	switch config.AuthType {
 	case authTypeDex:
@@ -137,7 +137,7 @@ func (r *reconciler) configureRemoteWrite(ctx context.Context, config dbaasv1alp
 }
 
 // getDexRemoteWriteSpec setting up internal dev environment params for remote write
-func (r *reconciler) getDexRemoteWriteSpec(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
+func (r *reconciler) getDexRemoteWriteSpec(ctx context.Context, config dbaasv1beta1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
 
 	remoteWriteSpec := monv1.RemoteWriteSpec{}
 	if config.RemoteWritesURL != "" {
@@ -159,7 +159,7 @@ func (r *reconciler) getDexRemoteWriteSpec(ctx context.Context, config dbaasv1al
 }
 
 // getRHOBSRemoteWriteSpec setting up the params for RHOBS remote write
-func (r *reconciler) getRHOBSRemoteWriteSpec(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
+func (r *reconciler) getRHOBSRemoteWriteSpec(ctx context.Context, config dbaasv1beta1.ObservabilityConfig, namespace string) (monv1.RemoteWriteSpec, error) {
 
 	remoteWriteSpec := monv1.RemoteWriteSpec{}
 
@@ -205,7 +205,7 @@ func (r *reconciler) getRHOBSRemoteWriteSpec(ctx context.Context, config dbaasv1
 	return remoteWriteSpec, nil
 }
 
-func (r *reconciler) validateSecret(ctx context.Context, config dbaasv1alpha1.ObservabilityConfig, namespace string) (*corev1.Secret, error) {
+func (r *reconciler) validateSecret(ctx context.Context, config dbaasv1beta1.ObservabilityConfig, namespace string) (*corev1.Secret, error) {
 
 	rhobsRemoteWriteConfigSecret := &corev1.Secret{}
 	rhobsRemoteWriteConfigSecret.Name = config.RHOBSSecretName

@@ -24,54 +24,54 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 var _ = Describe("DBaaSInventory controller with errors", func() {
+	ns := "testns-no-policy"
+	nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
+	BeforeEach(assertResourceCreationIfNotExists(nsSpec))
 	Context("after creating DBaaSInventory without policy in the target namespace", func() {
 		inventoryName := "test-inventory-no-policy"
-		ns := "testns-no-policy"
-		nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
-
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.LocalObjectReference{
-				Name: testSecret.Name,
+		testSecret2 := testSecret.DeepCopy()
+		testSecret2.Namespace = ns
+		DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+			CredentialsRef: &v1beta1.LocalObjectReference{
+				Name: testSecret2.Name,
 			},
 		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		testCreatedDBaaSInventory := &v1beta1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: ns,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1beta1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1beta1.NamespacedName{
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
 		}
-
-		BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-		BeforeEach(assertResourceCreationIfNotExists(nsSpec))
-		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSPolicyNotFound))
+		BeforeEach(assertResourceCreationIfNotExists(testSecret2))
+		BeforeEach(assertResourceCreationIfNotExists(testCreatedDBaaSInventory))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(testCreatedDBaaSInventory, metav1.ConditionFalse, v1beta1.DBaaSPolicyNotFound))
 	})
 
 	Context("after creating DBaaSInventory without valid provider", func() {
 		inventoryName := "test-inventory-no-provider"
 		providerName := "provider-no-exist"
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.LocalObjectReference{
+		DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+			CredentialsRef: &v1beta1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
 		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1beta1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1beta1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1beta1.NamespacedName{
 					Name: providerName,
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
@@ -79,9 +79,14 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 		}
 		BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
-		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInventory, metav1.ConditionFalse, v1alpha1.DBaaSProviderNotFound))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
+		Context("when updating DBaaSInventory spec to non-existant provider", func() {
+			It("should not be allow", func() {
+				err := dRec.Create(ctx, createdDBaaSInventory)
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: " +
+					"DBaaSProvider.dbaas.redhat.com \"provider-no-exist\" not found"))
+			})
+		})
 	})
 })
 
@@ -89,23 +94,23 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
 			inventoryName := "test-inventory"
-			DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-				CredentialsRef: &v1alpha1.LocalObjectReference{
+			DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+				CredentialsRef: &v1beta1.LocalObjectReference{
 					Name: testSecret.Name,
 				},
 			}
-			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryName,
 					Namespace: testNamespace,
 				},
-				Spec: v1alpha1.DBaaSOperatorInventorySpec{
-					ProviderRef: v1alpha1.NamespacedName{
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
 					DBaaSInventorySpec: *DBaaSInventorySpec,
@@ -120,8 +125,8 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 
 			Context("when updating provider inventory status", func() {
 				lastTransitionTime := getLastTransitionTimeForTest()
-				status := &v1alpha1.DBaaSInventoryStatus{
-					Instances: []v1alpha1.Instance{
+				status := &v1beta1.DBaaSInventoryStatus{
+					Instances: []v1beta1.Instance{
 						{
 							InstanceID: "testInstanceID",
 							Name:       "testInstance",
@@ -150,8 +155,8 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 						Namespace: testNamespace,
 					},
 				}
-				DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-					CredentialsRef: &v1alpha1.LocalObjectReference{
+				DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+					CredentialsRef: &v1beta1.LocalObjectReference{
 						Name: updatedTestSecret.Name,
 					},
 				}
@@ -163,7 +168,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					Expect(err).NotTo(HaveOccurred())
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
-					Expect(labels[v1alpha1.TypeLabelKeyMongo]).Should(Equal(v1alpha1.TypeLabelValue))
+					Expect(labels[v1beta1.TypeLabelKeyMongo]).Should(Equal(v1beta1.TypeLabelValue))
 				})
 			})
 		})

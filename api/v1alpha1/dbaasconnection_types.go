@@ -27,7 +27,6 @@ import (
 //+kubebuilder:subresource:status
 
 // The schema for the DBaaSConnection API.
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSConnection"
 type DBaaSConnection struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

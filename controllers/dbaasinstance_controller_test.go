@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 var _ = Describe("DBaaSInstance controller with errors", func() {
@@ -30,8 +30,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 	Context("after creating DBaaSInstance without inventory", func() {
 		instanceName := "test-instance-no-inventory"
 		inventoryRefName := "test-inventory-no-exist-ref"
-		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-			InventoryRef: v1alpha1.NamespacedName{
+		DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+			InventoryRef: v1beta1.NamespacedName{
 				Name:      inventoryRefName,
 				Namespace: testNamespace,
 			},
@@ -42,7 +42,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				"testParam": "test-param",
 			},
 		}
-		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+		createdDBaaSInstance := &v1beta1.DBaaSInstance{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      instanceName,
 				Namespace: testNamespace,
@@ -52,30 +52,30 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 
 		BeforeEach(assertResourceCreation(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotFound))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1beta1.DBaaSInventoryNotFound))
 	})
 	Context("after creating DBaaSInstance with inventory that is not ready", func() {
 		instanceName := "test-instance-not-ready"
 		inventoryName := "test-instance-inventory-not-ready"
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.LocalObjectReference{
+		DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+			CredentialsRef: &v1beta1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
 		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1beta1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1beta1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1beta1.NamespacedName{
 					Name: testProviderName,
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
 		}
-		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-			InventoryRef: v1alpha1.NamespacedName{
+		DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+			InventoryRef: v1beta1.NamespacedName{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
@@ -86,7 +86,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				"testParam": "test-param",
 			},
 		}
-		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+		createdDBaaSInstance := &v1beta1.DBaaSInstance{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      instanceName,
 				Namespace: testNamespace,
@@ -94,8 +94,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			Spec: *DBaaSInstanceSpec,
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
-		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-			Instances: []v1alpha1.Instance{
+		providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+			Instances: []v1beta1.Instance{
 				{
 					InstanceID: "testInstanceID",
 					Name:       "testInstance",
@@ -116,38 +116,38 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotReady))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1beta1.DBaaSInventoryNotReady))
 	})
 	Context("after creating DBaaSInstance in an invalid namespace", func() {
 		instanceName := "test-instance-not-ready-2"
 		inventoryName := "test-instance-inventory-diff-ns"
-		DBaaSInventorySpec := &v1alpha1.DBaaSInventorySpec{
-			CredentialsRef: &v1alpha1.LocalObjectReference{
+		DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+			CredentialsRef: &v1beta1.LocalObjectReference{
 				Name: testSecret.Name,
 			},
 		}
-		createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+		createdDBaaSInventory := &v1beta1.DBaaSInventory{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1alpha1.NamespacedName{
+			Spec: v1beta1.DBaaSOperatorInventorySpec{
+				ProviderRef: v1beta1.NamespacedName{
 					Name: testProviderName,
 				},
-				DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-					ConnectionNamespaces: &[]string{"valid-ns", "random"},
+				Policy: &v1beta1.DBaaSInventoryPolicy{
+					Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"valid-ns", "random"}},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
 		}
-		DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-			InventoryRef: v1alpha1.NamespacedName{
+		DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+			InventoryRef: v1beta1.NamespacedName{
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
@@ -163,7 +163,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name: "other",
 			},
 		}
-		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+		createdDBaaSInstance := &v1beta1.DBaaSInstance{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      instanceName,
 				Namespace: otherNS.Name,
@@ -171,8 +171,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			Spec: *DBaaSInstanceSpec,
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
-		providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-			Instances: []v1alpha1.Instance{
+		providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+			Instances: []v1beta1.Instance{
 				{
 					InstanceID: "testInstanceID",
 					Name:       "testInstance",
@@ -194,12 +194,12 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInvalidNamespace))
+		It("reconcile with error", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1beta1.DBaaSInvalidNamespace))
 	})
 })
 
@@ -207,30 +207,30 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory", func() {
 			inventoryRefName := "test-inventory-ref"
-			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
 					Namespace: testNamespace,
 				},
-				Spec: v1alpha1.DBaaSOperatorInventorySpec{
-					ProviderRef: v1alpha1.NamespacedName{
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.LocalObjectReference{
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
 					},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
-			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-				Instances: []v1alpha1.Instance{
+			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+				Instances: []v1beta1.Instance{
 					{
 						InstanceID: "testInstanceID",
 						Name:       "testInstance",
@@ -252,8 +252,8 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 			Context("after creating DBaaSInstance", func() {
 				instanceName := "test-instance"
-				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-					InventoryRef: v1alpha1.NamespacedName{
+				DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+					InventoryRef: v1beta1.NamespacedName{
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
@@ -264,7 +264,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						"testParam": "test-param",
 					},
 				}
-				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+				createdDBaaSInstance := &v1beta1.DBaaSInstance{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      instanceName,
 						Namespace: testNamespace,
@@ -277,10 +277,10 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
-					status := &v1alpha1.DBaaSInstanceStatus{
+					status := &v1beta1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
+								Type:               v1beta1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -290,14 +290,14 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: v1alpha1.InstancePhaseReady,
+						Phase: v1beta1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
-					DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-						InventoryRef: v1alpha1.NamespacedName{
+					DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+						InventoryRef: v1beta1.NamespacedName{
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
@@ -319,7 +319,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
-	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1alpha1.Ready))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
 	Describe("reconcile", func() {
 		Context("after creating DBaaSInventory w/ addtl dev namespace set", func() {
@@ -329,28 +329,28 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				},
 			}
 			inventoryRefName := "test-inventory-ref-2"
-			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
 					Namespace: testNamespace,
 				},
-				Spec: v1alpha1.DBaaSOperatorInventorySpec{
-					ProviderRef: v1alpha1.NamespacedName{
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: &[]string{otherNS.Name},
+					Policy: &v1beta1.DBaaSInventoryPolicy{
+						Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{otherNS.Name}},
 					},
-					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.LocalObjectReference{
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
 					},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
-			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-				Instances: []v1alpha1.Instance{
+			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+				Instances: []v1beta1.Instance{
 					{
 						InstanceID: "testInstanceID",
 						Name:       "testInstance",
@@ -371,8 +371,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 
 			Context("after creating DBaaSInstance in separate, valid dev namespace", func() {
 				instanceName := "test-instance-2"
-				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-					InventoryRef: v1alpha1.NamespacedName{
+				DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+					InventoryRef: v1beta1.NamespacedName{
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
@@ -383,7 +383,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						"testParam": "test-param",
 					},
 				}
-				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+				createdDBaaSInstance := &v1beta1.DBaaSInstance{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      instanceName,
 						Namespace: otherNS.Name,
@@ -396,10 +396,10 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
-					status := &v1alpha1.DBaaSInstanceStatus{
+					status := &v1beta1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
+								Type:               v1beta1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -409,14 +409,14 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: v1alpha1.InstancePhaseReady,
+						Phase: v1beta1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
-					DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-						InventoryRef: v1alpha1.NamespacedName{
+					DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+						InventoryRef: v1beta1.NamespacedName{
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
@@ -443,28 +443,28 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				},
 			}
 			inventoryRefName := "test-inventory-ref-3"
-			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
 					Namespace: testNamespace,
 				},
-				Spec: v1alpha1.DBaaSOperatorInventorySpec{
-					ProviderRef: v1alpha1.NamespacedName{
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: &[]string{"*"},
+					Policy: &v1beta1.DBaaSInventoryPolicy{
+						Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"*"}},
 					},
-					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.LocalObjectReference{
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
 					},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
-			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-				Instances: []v1alpha1.Instance{
+			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+				Instances: []v1beta1.Instance{
 					{
 						InstanceID: "testInstanceID",
 						Name:       "testInstance",
@@ -485,8 +485,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 
 			Context("after creating DBaaSInstance in separate, valid dev namespace", func() {
 				instanceName := "test-instance-3"
-				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-					InventoryRef: v1alpha1.NamespacedName{
+				DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+					InventoryRef: v1beta1.NamespacedName{
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
@@ -497,7 +497,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						"testParam": "test-param",
 					},
 				}
-				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+				createdDBaaSInstance := &v1beta1.DBaaSInstance{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      instanceName,
 						Namespace: otherNS.Name,
@@ -510,10 +510,10 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
-					status := &v1alpha1.DBaaSInstanceStatus{
+					status := &v1beta1.DBaaSInstanceStatus{
 						Conditions: []metav1.Condition{
 							{
-								Type:               v1alpha1.DBaaSInstanceProviderSyncType,
+								Type:               v1beta1.DBaaSInstanceProviderSyncType,
 								Status:             metav1.ConditionTrue,
 								Reason:             "SyncOK",
 								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
@@ -523,14 +523,14 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						InstanceInfo: map[string]string{
 							"instanceInfo": "test-instance-info",
 						},
-						Phase: v1alpha1.InstancePhaseReady,
+						Phase: v1beta1.InstancePhaseReady,
 					}
 					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
-					DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-						InventoryRef: v1alpha1.NamespacedName{
+					DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+						InventoryRef: v1beta1.NamespacedName{
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
@@ -558,29 +558,29 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			}
 			isTrue := true
 			inventoryRefName := "test-inventory-ref-4"
-			createdDBaaSInventory := &v1alpha1.DBaaSInventory{
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      inventoryRefName,
 					Namespace: testNamespace,
 				},
-				Spec: v1alpha1.DBaaSOperatorInventorySpec{
-					ProviderRef: v1alpha1.NamespacedName{
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-						ConnectionNamespaces: &[]string{"*"},
-						DisableProvisions:    &isTrue,
+					Policy: &v1beta1.DBaaSInventoryPolicy{
+						Connections:       v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"*"}},
+						DisableProvisions: &isTrue,
 					},
-					DBaaSInventorySpec: v1alpha1.DBaaSInventorySpec{
-						CredentialsRef: &v1alpha1.LocalObjectReference{
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
 							Name: testSecret.Name,
 						},
 					},
 				},
 			}
 			lastTransitionTime := getLastTransitionTimeForTest()
-			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
-				Instances: []v1alpha1.Instance{
+			providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
+				Instances: []v1beta1.Instance{
 					{
 						InstanceID: "testInstanceID",
 						Name:       "testInstance",
@@ -601,8 +601,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 
 			Context("instance should not provision", func() {
 				instanceName := "test-instance-4"
-				DBaaSInstanceSpec := &v1alpha1.DBaaSInstanceSpec{
-					InventoryRef: v1alpha1.NamespacedName{
+				DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+					InventoryRef: v1beta1.NamespacedName{
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
@@ -613,7 +613,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						"testParam": "test-param",
 					},
 				}
-				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
+				createdDBaaSInstance := &v1beta1.DBaaSInstance{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      instanceName,
 						Namespace: otherNS.Name,
@@ -623,7 +623,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should update DBaaSInstance status appropriately", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1alpha1.DBaaSInventoryNotProvisionable))
+				It("should update DBaaSInstance status appropriately", assertDBaaSResourceStatusUpdated(createdDBaaSInstance, metav1.ConditionFalse, v1beta1.DBaaSInventoryNotProvisionable))
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))

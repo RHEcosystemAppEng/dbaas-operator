@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 )
 
@@ -53,17 +53,17 @@ func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Log
 }
 
 // Reconcile reconciles a quickstart platform
-func (r *reconciler) Reconcile(ctx context.Context, _ *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) Reconcile(ctx context.Context, _ *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	for qsName, qsBytes := range quickStarts {
 		status, err := r.createQuickStartCR(ctx, qsName, qsBytes)
-		if status != v1alpha1.ResultSuccess {
+		if status != v1beta1.ResultSuccess {
 			return status, err
 		}
 	}
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
-func (r *reconciler) createQuickStartCR(ctx context.Context, qsName string, qsBytes []byte) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createQuickStartCR(ctx context.Context, qsName string, qsBytes []byte) (v1beta1.PlatformInstlnStatus, error) {
 	quickStart := r.getQuickStartModel(qsName)
 	quickStartFromFile := &consolev1.ConsoleQuickStart{}
 	err := yaml.Unmarshal(qsBytes, quickStartFromFile)
@@ -80,11 +80,11 @@ func (r *reconciler) createQuickStartCR(ctx context.Context, qsName string, qsBy
 
 	if err != nil {
 		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
+			return v1beta1.ResultInProgress, nil
 		}
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
 func (r *reconciler) getQuickStartModel(name string) *consolev1.ConsoleQuickStart {
@@ -95,13 +95,13 @@ func (r *reconciler) getQuickStartModel(name string) *consolev1.ConsoleQuickStar
 	}
 }
 
-func (r *reconciler) Cleanup(ctx context.Context, _ *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) Cleanup(ctx context.Context, _ *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	for qsName := range quickStarts {
 		quickstart := r.getQuickStartModel(qsName)
 		err := r.client.Delete(ctx, quickstart)
 		if err != nil && !errors.IsNotFound(err) {
-			return v1alpha1.ResultFailed, err
+			return v1beta1.ResultFailed, err
 		}
 	}
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }

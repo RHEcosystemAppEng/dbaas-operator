@@ -42,7 +42,7 @@ jobs:
         env:
           TESTCOVERAGE_THRESHOLD: 70
         run: |
-          cat cover.tmp.out | grep -v "_generated.*.go" > cover.tmp2.out
+          cat cover.tmp.out | grep -v "_generated.*.go" | grep -v "controllers/metrics.go" > cover.tmp2.out
           head -n 1 cover.tmp2.out > cover.out
           grep -f cover.files.out cover.tmp2.out >> cover.out || true
           if [ $(cat cover.out | wc -l) -gt 1 ]; then

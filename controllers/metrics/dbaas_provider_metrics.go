@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -21,7 +21,7 @@ const (
 )
 
 // setProviderRequestDurationSeconds set the metrics for provider request duration in seconds
-func setProviderRequestDurationSeconds(provider dbaasv1alpha1.DBaaSProvider, account string, execution Execution, event string) {
+func setProviderRequestDurationSeconds(provider dbaasv1beta1.DBaaSProvider, account string, execution Execution, event string) {
 	log := ctrl.Log.WithName("DBaaSProvider Request Duration for event: " + event)
 	switch event {
 	case LabelEventValueCreate:
@@ -41,7 +41,7 @@ func setProviderRequestDurationSeconds(provider dbaasv1alpha1.DBaaSProvider, acc
 }
 
 // SetProviderMetrics set the metrics for a provider
-func SetProviderMetrics(provider dbaasv1alpha1.DBaaSProvider, account string, execution Execution, event string, errCd string) {
+func SetProviderMetrics(provider dbaasv1beta1.DBaaSProvider, account string, execution Execution, event string, errCd string) {
 	log := ctrl.Log.WithName("Setting DBaaSProvider Metrics")
 	log.Info("provider - " + provider.Name + " account - " + account + " namespace - " + provider.Namespace + " event - " + event + " errCd - " + errCd)
 	setProviderRequestDurationSeconds(provider, account, execution, event)

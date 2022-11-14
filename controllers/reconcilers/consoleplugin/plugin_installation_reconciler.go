@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/go-logr/logr"
 	consolev1alpha1 "github.com/openshift/api/console/v1alpha1"
@@ -29,11 +29,11 @@ type reconciler struct {
 	client client.Client
 	logger logr.Logger
 	scheme *runtime.Scheme
-	config v1alpha1.PlatformConfig
+	config v1beta1.PlatformConfig
 }
 
 // NewReconciler returns a plugin installation reconciler
-func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, config v1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
+func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Logger, config v1beta1.PlatformConfig) reconcilers.PlatformReconciler {
 	return &reconciler{
 		client: client,
 		scheme: scheme,
@@ -43,65 +43,65 @@ func NewReconciler(client client.Client, scheme *runtime.Scheme, logger logr.Log
 }
 
 // Reconcile deploys the dynamic console plugin
-func (r *reconciler) Reconcile(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	status, err := r.reconcileService(ctx, cr)
-	if status != v1alpha1.ResultSuccess {
+	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
 	status, err = r.reconcileDeployment(ctx, cr)
-	if status != v1alpha1.ResultSuccess {
+	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
 
 	// create Console Plugin CR resource that includes Console Plugin service name.
 	status, err = r.createConsolePluginCR(ctx, cr)
-	if status != v1alpha1.ResultSuccess {
+	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
 	// enabled console plugins the console operator config
 	status, err = r.enableConsolePluginConfig(ctx)
-	if status != v1alpha1.ResultSuccess {
+	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
 
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
 // Cleanup cleanup resources related to the console plugin
-func (r *reconciler) Cleanup(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) Cleanup(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 	console.Spec.Plugins = r.removePlugin(console.Spec.Plugins)
 	err = r.client.Update(ctx, console)
 	if err != nil {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
 	plugin := r.getConsolePlugin()
 	err = r.client.Delete(ctx, plugin)
 	if err != nil && !errors.IsNotFound(err) {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
 	deployment := r.getDeployment(cr)
 	err = r.client.Delete(ctx, deployment)
 	if err != nil && !errors.IsNotFound(err) {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
 	service := r.getService(cr)
 	err = r.client.Delete(ctx, service)
 	if err != nil && !errors.IsNotFound(err) {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
-func (r *reconciler) reconcileService(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) reconcileService(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	service := r.getService(cr)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
 		if err := ctrl.SetControllerReference(cr, service, r.scheme); err != nil {
@@ -134,14 +134,14 @@ func (r *reconciler) reconcileService(ctx context.Context, cr *v1alpha1.DBaaSPla
 
 	if err != nil {
 		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
+			return v1beta1.ResultInProgress, nil
 		}
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
-func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	deployment := r.getDeployment(cr)
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		if err := ctrl.SetControllerReference(cr, deployment, r.scheme); err != nil {
@@ -240,25 +240,25 @@ func (r *reconciler) reconcileDeployment(ctx context.Context, cr *v1alpha1.DBaaS
 	})
 	if err != nil {
 		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
+			return v1beta1.ResultInProgress, nil
 		}
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
 	err = r.client.Get(ctx, client.ObjectKeyFromObject(deployment), deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return v1alpha1.ResultInProgress, nil
+			return v1beta1.ResultInProgress, nil
 		}
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 	if deployment.Status.ReadyReplicas == deployment.Status.Replicas {
-		return v1alpha1.ResultSuccess, nil
+		return v1beta1.ResultSuccess, nil
 	}
-	return v1alpha1.ResultInProgress, nil
+	return v1beta1.ResultInProgress, nil
 }
 
-func (r *reconciler) createConsolePluginCR(ctx context.Context, cr *v1alpha1.DBaaSPlatform) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) createConsolePluginCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	plugin := r.getConsolePlugin()
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, plugin, func() error {
 		plugin.Spec.DisplayName = r.config.DisplayName
@@ -273,18 +273,18 @@ func (r *reconciler) createConsolePluginCR(ctx context.Context, cr *v1alpha1.DBa
 
 	if err != nil {
 		if errors.IsConflict(err) {
-			return v1alpha1.ResultInProgress, nil
+			return v1beta1.ResultInProgress, nil
 		}
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
-	return v1alpha1.ResultSuccess, nil
+	return v1beta1.ResultSuccess, nil
 }
 
-func (r *reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.PlatformsInstlnStatus, error) {
+func (r *reconciler) enableConsolePluginConfig(ctx context.Context) (v1beta1.PlatformInstlnStatus, error) {
 	console := r.getOperatorConsole()
 	err := r.client.Get(ctx, client.ObjectKeyFromObject(console), console)
 	if err != nil {
-		return v1alpha1.ResultFailed, err
+		return v1beta1.ResultFailed, err
 	}
 
 	if plugins, add := r.addPlugin(console.Spec.Plugins); add {
@@ -292,27 +292,27 @@ func (r *reconciler) enableConsolePluginConfig(ctx context.Context) (v1alpha1.Pl
 		err := r.client.Update(ctx, console)
 		if err != nil {
 			if errors.IsConflict(err) {
-				return v1alpha1.ResultInProgress, nil
+				return v1beta1.ResultInProgress, nil
 			}
-			return v1alpha1.ResultFailed, err
+			return v1beta1.ResultFailed, err
 		}
-		return v1alpha1.ResultInProgress, nil
+		return v1beta1.ResultInProgress, nil
 	}
 
 	if console.Status.Conditions != nil {
 		for _, condition := range console.Status.Conditions {
 			if condition.Type == "DeploymentAvailable" {
 				if condition.Status == operatorv1.ConditionTrue {
-					return v1alpha1.ResultSuccess, nil
+					return v1beta1.ResultSuccess, nil
 				}
 				break
 			}
 		}
 	}
-	return v1alpha1.ResultInProgress, nil
+	return v1beta1.ResultInProgress, nil
 }
 
-func (r *reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
+func (r *reconciler) getService(cr *v1beta1.DBaaSPlatform) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.config.Name,
@@ -321,7 +321,7 @@ func (r *reconciler) getService(cr *v1alpha1.DBaaSPlatform) *v1.Service {
 	}
 }
 
-func (r *reconciler) getDeployment(cr *v1alpha1.DBaaSPlatform) *appv1.Deployment {
+func (r *reconciler) getDeployment(cr *v1beta1.DBaaSPlatform) *appv1.Deployment {
 	return &appv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.config.Name,

@@ -11,7 +11,7 @@ spec:
         - name: manager
           env:
             - name: RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN
-              value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
+              value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
             - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
               value: dbaas-dynamic-plugin:0.3.0
             - name: RELATED_IMAGE_OBSERVABILITY_CATALOG

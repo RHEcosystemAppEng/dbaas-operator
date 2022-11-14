@@ -14,9 +14,10 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSConnection
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
   webhooks:
+    conversion: true
     validation: true
     webhookVersion: v1
 - api:
@@ -26,9 +27,10 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSInventory
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
   webhooks:
+    conversion: true
     validation: true
     webhookVersion: v1
 - api:
@@ -37,8 +39,11 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSProvider
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
+  webhooks:
+    conversion: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -46,9 +51,10 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSPolicy
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
   webhooks:
+    conversion: true
     validation: true
     webhookVersion: v1
 - api:
@@ -58,8 +64,8 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSPlatform
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
 - api:
     crdVersion: v1
     namespaced: true
@@ -67,6 +73,9 @@ resources:
   domain: redhat.com
   group: dbaas
   kind: DBaaSInstance
-  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1
-  version: v1alpha1
+  path: github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1
+  version: v1beta1
+  webhooks:
+    conversion: true
+    webhookVersion: v1
 version: "3"
