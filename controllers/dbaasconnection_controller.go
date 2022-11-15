@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSConnectionReconciler reconciles a DBaaSConnection object
@@ -54,27 +55,39 @@ type DBaaSConnectionReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	execution := metrics.PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
-
 	var connection v1alpha1.DBaaSConnection
-	execution := PlatformInstallStart()
+	metricLabelErrCdValue := ""
+	event := ""
+
 	if err := r.Get(ctx, req.NamespacedName, &connection); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
 			logger.V(1).Info("DBaaS Connection resource not found, has been deleted")
+			metricLabelErrCdValue = metrics.LabelErrorCdValueResourceNotFound
 			return ctrl.Result{}, nil
 		}
 		logger.Error(err, "Error fetching DBaaS Connection for reconcile")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSInventoryResources
 		return ctrl.Result{}, err
+	}
+
+	if connection.DeletionTimestamp != nil {
+		event = metrics.LabelEventValueDelete
+	} else {
+		event = metrics.LabelEventValueCreate
 	}
 
 	res, err := r.reconcileDevTopologyResource(ctx, &connection)
 	if err != nil {
 		if errors.IsConflict(err) {
 			logger.V(1).Info("Deployment for Developer Topology view modified, retry reconciling")
+			metricLabelErrCdValue = metrics.LabelErrorCdValueDevTopologyModified
 			return ctrl.Result{Requeue: true}, nil
 		}
 		logger.Error(err, "Error reconciling Deployment for Developer Topology view")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrReconcilingWithDevTopology
 		return ctrl.Result{}, err
 	}
 	logger.Info("Deployment for Developer Topology view reconciled", "result", res)
@@ -88,10 +101,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		apimeta.SetStatusCondition(&connection.Status.Conditions, cond)
 	}, logger); err != nil {
-		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrCheckingInventory
 		return ctrl.Result{}, err
 	} else if !validNS {
-		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
+		metricLabelErrCdValue = metrics.LabelErrorCdValueInvalidNameSpace
 		return ctrl.Result{}, nil
 	} else {
 		spec, err := r.getConnectionSpec(ctx, connection.Spec.DeepCopy())
@@ -104,7 +117,7 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				Message: err.Error(),
 			}
 			r.updateConnectionStatus(ctx, &connection, &cond)
-			SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
+			metricLabelErrCdValue = metrics.LabelErrorCdCannotReadInstance
 			return ctrl.Result{}, err
 		}
 		result, err := r.reconcileProviderResource(ctx,
@@ -129,7 +142,9 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			v1alpha1.DBaaSConnectionReadyType,
 			logger,
 		)
-		SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution)
+		defer func() {
+			metrics.SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, connection, execution, event, metricLabelErrCdValue)
+		}()
 		return result, err
 	}
 }
@@ -219,10 +234,15 @@ func mergeConnectionStatus(conn *v1alpha1.DBaaSConnection, providerConn *v1alpha
 
 // Delete implements a handler for the Delete event.
 func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
+	execution := metrics.PlatformInstallStart()
+	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSConnectionReconciler DeleteEvent")
+	log.Info("Delete event started")
 
 	connectionObj, ok := e.Object.(*v1alpha1.DBaaSConnection)
 	if !ok {
+		log.Info("Error getting connection object during delete")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingConnection
 		return nil
 	}
 	log.Info("connectionObj", "connectionObj", objectKeyFromObject(connectionObj))
@@ -230,7 +250,11 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanConnectionMetrics(connectionObj)
+	defer func() {
+		log.Info("Calling metrics for deleting of DBaaSConnection")
+		metrics.SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, *connectionObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
+	}()
+
 	return nil
 
 }
