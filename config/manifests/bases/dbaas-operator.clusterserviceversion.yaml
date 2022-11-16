@@ -18,36 +18,36 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: DBaaSConnection is the Schema for the dbaasconnections API
+    - description: The schema for the DBaaSConnection API.
       displayName: DBaaSConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSInstance is the Schema for the dbaasinstances API
+    - description: The schema for the DBaaSInstance API.
       displayName: DBaaSInstance
       kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSInventory is the Schema for the dbaasinventory API. Inventory
-        objects must be created in a valid namespace, determined by the existence
-        of a DBaaSPolicy object.
+    - description: The schema for the DBaaSInventory API. Inventory objects must be
+        created in a valid namespace, determined by the existence of a DBaaSPolicy
+        object.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSPlatform is the Schema for the dbaasplatforms API
+    - description: The schema for the DBaaSPlatform API.
       displayName: DBaaSPlatform
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSPolicy enables admin capabilities within a namespace and sets
-        default inventory policy. Policy defaults can be overridden on a per-inventory
+    - description: Enables administrative capabilities within a namespace, and sets
+        a default inventory policy. Policy defaults can be overridden on a per-inventory
         basis.
       displayName: Provider Account Policy
       kind: DBaaSPolicy
       name: dbaaspolicies.dbaas.redhat.com
       version: v1alpha1
-    - description: DBaaSProvider is the Schema for the dbaasproviders API
+    - description: The schema for the DBaaSProvider API.
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com

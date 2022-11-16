@@ -155,8 +155,8 @@ type CredentialField struct {
 // DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
 type DBaaSInventorySpec struct {
 	// The secret containing the provider-specific connection credentials to use with the provider's API endpoint.
-    // The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key.
-    // The secret must exist within the same namespace as the inventory.
+	// The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key.
+	// The secret must exist within the same namespace as the inventory.
 	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
 }
 
@@ -177,7 +177,7 @@ type DBaaSInventoryStatus struct {
 // Defines the information of a database instance.
 type Instance struct {
 	// A provider-specific identifier for this instance in the database service.
-    // It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
+	// It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
 	InstanceID string `json:"instanceID"`
 
 	// The name of this instance in the database service.
@@ -247,7 +247,7 @@ type DBaaSInstanceSpec struct {
 	CloudProvider string `json:"cloudProvider,omitempty"`
 
 	// Identifies the deployment region for the cloud-hosted database provider.
-    // For example, us-east-1.
+	// For example, us-east-1.
 	CloudRegion string `json:"cloudRegion,omitempty"`
 
 	// Any other provider-specific parameters related to the instance, such as provisioning.
@@ -259,7 +259,7 @@ type DBaaSInstanceStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// A provider-specific identifier for this instance in the database service.
-    // It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
+	// It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
 	InstanceID string `json:"instanceID"`
 
 	// Any other provider-specific information related to this instance.
@@ -269,14 +269,14 @@ type DBaaSInstanceStatus struct {
 	// +kubebuilder:default=Unknown
 	// Represents the following cluster provisioning phases.
 	// Unknown: An unknown cluster provisioning status.
-    // Pending: In the queue, waiting for provisioning to start.
-    // Creating: Provisioning is in progress.
-    // Updating: Updating the cluster is in progress.
-    // Deleting: Cluster deletion is in progress.
-    // Deleted: Cluster has been deleted.
-    // Ready: Cluster provisioning is done.
-    // Error: Cluster provisioning error.
-    // Failed: Cluster provisioning failed.
+	// Pending: In the queue, waiting for provisioning to start.
+	// Creating: Provisioning is in progress.
+	// Updating: Updating the cluster is in progress.
+	// Deleting: Cluster deletion is in progress.
+	// Deleted: Cluster has been deleted.
+	// Ready: Cluster provisioning is done.
+	// Error: Cluster provisioning error.
+	// Failed: Cluster provisioning failed.
 	Phase DBaasInstancePhase `json:"phase"`
 }
 
