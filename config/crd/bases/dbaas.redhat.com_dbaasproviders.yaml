@@ -19,7 +19,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSProvider is the Schema for the dbaasproviders API
+        description: The schema for the DBaaSProvider API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,37 +34,36 @@ spec:
           metadata:
             type: object
           spec:
-            description: DBaaSProviderSpec defines the desired state of DBaaSProvider
+            description: Defines the desired state of a DBaaSProvider object.
             properties:
               allowsFreeTrial:
-                description: AllowsFreeTrial indicates whether the provider provides
-                  free trials
+                description: Indicates whether the provider offers free trials.
                 type: boolean
               connectionKind:
-                description: ConnectionKind is the name of the connection resource
-                  (CRD) defined by the provider
+                description: The name of the connection's custom resource definition
+                  (CRD) as defined by the provider.
                 type: string
               credentialFields:
-                description: CredentialFields indicates what information to collect
-                  from UX & how to display fields in a form
+                description: Indicates what information to collect from the user interface
+                  and how to display fields in a form.
                 items:
-                  description: CredentialField defines the attibutes
+                  description: Defines the attributes.
                   properties:
                     displayName:
-                      description: A user-friendly name for this field
+                      description: A user-friendly name for this field.
                       type: string
                     helpText:
-                      description: Additional info about the field
+                      description: Additional information about the field.
                       type: string
                     key:
-                      description: The name for this field
+                      description: The name for this field.
                       type: string
                     required:
-                      description: If this field is required or not
+                      description: Defines if the field is required or not.
                       type: boolean
                     type:
-                      description: The type of field (string, maskedstring, integer,
-                        boolean)
+                      description: 'The type of field: string, maskedstring, integer,
+                        or boolean.'
                       type: string
                   required:
                   - displayName
@@ -74,41 +73,41 @@ spec:
                   type: object
                 type: array
               externalProvisionDescription:
-                description: ExternalProvisionDescription instructions on how to provision
-                  instances using provider web portal
+                description: Instructions on how to provision instances by using the
+                  database provider's web portal.
                 type: string
               externalProvisionURL:
-                description: ExternalProvisionURL URL for provisioning instances through
-                  database provider web portal
+                description: The URL for provisioning instances by using the database
+                  provider's web portal.
                 type: string
               instanceKind:
-                description: InstanceKind is the name of the instance resource (CRD)
-                  defined by the provider for provisioning
+                description: The name of the instance's custom resource definition
+                  (CRD) as defined by the provider for provisioning.
                 type: string
               instanceParameterSpecs:
-                description: InstanceParameterSpecs  indicates what parameters to
-                  collect from UX & how to display fields in a form in order to provision
-                  an instance
+                description: Indicates what parameters to collect from the user interface,
+                  and how to display those fields in a form to provision a database
+                  instance.
                 items:
-                  description: InstanceParameterSpec defines the information for how
-                    a parameter can be collected from UX and how to display fields
-                    in a form in order to provision an instance
+                  description: Indicates what parameters to collect from the user
+                    interface, and how to display those fields in a form to provision
+                    a database instance.
                   properties:
                     defaultValue:
-                      description: Default value for this field
+                      description: Default value for this field.
                       type: string
                     displayName:
-                      description: A user-friendly name for this parameter
+                      description: A user-friendly name for this parameter.
                       type: string
                     name:
-                      description: The name for this field
+                      description: The name for this field.
                       type: string
                     required:
-                      description: If this field is required or not
+                      description: Define if this field is required or not.
                       type: boolean
                     type:
-                      description: The type of parameter (string, maskedstring, integer,
-                        boolean)
+                      description: 'The type of field: string, maskedstring, integer,
+                        or boolean.'
                       type: string
                   required:
                   - displayName
@@ -118,24 +117,23 @@ spec:
                   type: object
                 type: array
               inventoryKind:
-                description: InventoryKind is the name of the inventory resource (CRD)
-                  defined by the provider
+                description: The name of the inventory custom resource definition
+                  (CRD) as defined by the database provider.
                 type: string
               provider:
-                description: Provider contains information about database provider
-                  & platform
+                description: Contains information about database provider and platform.
                 properties:
                   displayDescription:
-                    description: DisplayDescription indicates the description text
-                      shown for a Provider within UX (e.g. developer’s catalog tile)
+                    description: Indicates the description text shown for a database
+                      provider within the user interface. For example, the catalog
+                      tile description.
                     type: string
                   displayName:
-                    description: A user-friendly name for this database provider (e.g.
-                      'MongoDB Atlas')
+                    description: A user-friendly name for this database provider.
+                      For example, 'MongoDB Atlas'.
                     type: string
                   icon:
-                    description: Icon information indicates what logo we display on
-                      developer catalog tile
+                    description: Indicates what icon to display on the catalog tile.
                     properties:
                       base64data:
                         type: string
@@ -146,8 +144,8 @@ spec:
                     - mediatype
                     type: object
                   name:
-                    description: Indicates the name used to specify Service Binding
-                      origin parameter (e.g. 'Red Hat DBaas / MongoDB Atlas')
+                    description: The name used to specify the service binding origin
+                      parameter. For example, 'Red Hat DBaaS / MongoDB Atlas'.
                     type: string
                 required:
                 - displayDescription
@@ -167,7 +165,7 @@ spec:
             - provider
             type: object
           status:
-            description: DBaaSProviderStatus defines the observed state of DBaaSProvider
+            description: Defines the observed state of a DBaaSProvider object.
             type: object
         type: object
     served: true

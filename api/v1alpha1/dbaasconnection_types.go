@@ -26,7 +26,7 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// DBaaSConnection is the Schema for the dbaasconnections API
+// The schema for the DBaaSConnection API.
 //+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSConnection"
 type DBaaSConnection struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -38,7 +38,7 @@ type DBaaSConnection struct {
 
 //+kubebuilder:object:root=true
 
-// DBaaSConnectionList contains a list of DBaaSConnection
+// Contains a list of DBaaSConnections.
 type DBaaSConnectionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

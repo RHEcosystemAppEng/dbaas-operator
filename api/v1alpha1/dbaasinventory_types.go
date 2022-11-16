@@ -20,22 +20,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DBaaSOperatorInventorySpec defines the desired state of DBaaSInventory
+// This object defines the desired state of a DBaaSInventory object.
 type DBaaSOperatorInventorySpec struct {
-	// A reference to a DBaaSProvider CR
+	// A reference to a DBaaSProvider custom resource (CR).
 	ProviderRef NamespacedName `json:"providerRef"`
 
-	// The properties that will be copied into the provider’s inventory Spec
+	// The properties that will be copied into the provider’s inventory.
 	DBaaSInventorySpec `json:",inline"`
 
-	// The policy for this inventory
+	// The policy for this inventory.
 	DBaaSInventoryPolicy `json:",inline"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// DBaaSInventory is the Schema for the dbaasinventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
+// The schema for the DBaaSInventory API.
+// Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
 //+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -47,7 +48,7 @@ type DBaaSInventory struct {
 
 //+kubebuilder:object:root=true
 
-// DBaaSInventoryList contains a list of DBaaSInventories
+// Contains a list of DBaaSInventories.
 type DBaaSInventoryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

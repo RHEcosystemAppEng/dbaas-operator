@@ -21,16 +21,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PlatformsName name of platform
+// The name of the platform.
 type PlatformsName string
 
-// PlatformsInstlnStatus status of platform installation
+// The status of a platform installation.
 type PlatformsInstlnStatus string
 
-// PlatformsType platform type
+// The platform type.
 type PlatformsType int
 
-// Supported platforms
+// Supported platform names.
 const (
 	CrunchyBridgeInstallation      PlatformsName = "crunchy-bridge"
 	MongoDBAtlasInstallation       PlatformsName = "mongodb-atlas"
@@ -41,21 +41,21 @@ const (
 	RDSProviderInstallation        PlatformsName = "rds-provider"
 )
 
-// Platform types
+// Platform types.
 const (
 	TypeQuickStart PlatformsType = iota
 	TypeConsolePlugin
 	TypeOperator
 )
 
-// Platform status values
+// Platform status values.
 const (
 	ResultSuccess    PlatformsInstlnStatus = "success"
 	ResultFailed     PlatformsInstlnStatus = "failed"
 	ResultInProgress PlatformsInstlnStatus = "in progress"
 )
 
-// PlatformConfig defines parameters for a platform
+// Defines parameters for a platform.
 type PlatformConfig struct {
 	Name           string
 	CSV            string
@@ -68,7 +68,7 @@ type PlatformConfig struct {
 	Type           PlatformsType
 }
 
-// ObservabilityConfig defines parameters for a observatorium
+// Defines parameters for observatorium.
 type ObservabilityConfig struct {
 	AuthType        string
 	RemoteWritesURL string
@@ -77,7 +77,7 @@ type ObservabilityConfig struct {
 	RHOBSSecretName string
 }
 
-// DBaaSPlatformSpec defines the desired state of DBaaSPlatform
+// Defines the desired state of a DBaaSPlatform object.
 type DBaaSPlatformSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=1440
@@ -85,13 +85,13 @@ type DBaaSPlatformSpec struct {
 	SyncPeriod *int `json:"syncPeriod,omitempty"`
 }
 
-// DBaaSPlatformStatus defines the observed state of DBaaSPlatform
+// Defines the observed state of a DBaaSPlatform object.
 type DBaaSPlatformStatus struct {
 	Conditions      []metav1.Condition `json:"conditions,omitempty"`
 	PlatformsStatus []PlatformStatus   `json:"platformsStatus"`
 }
 
-// PlatformStatus defines status of DBaaSPlatform
+// Defines the status of a DBaaSPlatform object.
 type PlatformStatus struct {
 	PlatformName   PlatformsName         `json:"platformName"`
 	PlatformStatus PlatformsInstlnStatus `json:"platformStatus"`
@@ -101,7 +101,7 @@ type PlatformStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// DBaaSPlatform is the Schema for the dbaasplatforms API
+// The schema for the DBaaSPlatform API.
 //+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 type DBaaSPlatform struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -113,7 +113,7 @@ type DBaaSPlatform struct {
 
 //+kubebuilder:object:root=true
 
-// DBaaSPlatformList contains a list of DBaaSPlatform
+// Contains a list of DBaaSPlatforms.
 type DBaaSPlatformList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DBaaSProviderStatus defines the observed state of DBaaSProvider
+// Defines the observed state of a DBaaSProvider object.
 type DBaaSProviderStatus struct {
 }
 
@@ -28,7 +28,7 @@ type DBaaSProviderStatus struct {
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster
 
-// DBaaSProvider is the Schema for the dbaasproviders API
+// The schema for the DBaaSProvider API.
 //+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSProvider"
 type DBaaSProvider struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -40,7 +40,7 @@ type DBaaSProvider struct {
 
 //+kubebuilder:object:root=true
 
-// DBaaSProviderList contains a list of DBaaSProvider
+// Contains a list of DBaaSProviders.
 type DBaaSProviderList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

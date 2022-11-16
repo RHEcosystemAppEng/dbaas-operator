@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DBaaSPlatform is the Schema for the dbaasplatforms API
+        description: The schema for the DBaaSPlatform API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,7 +32,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: DBaaSPlatformSpec defines the desired state of DBaaSPlatform
+            description: Defines the desired state of a DBaaSPlatform object.
             properties:
               syncPeriod:
                 description: The SyncPeriod set The minimum interval at which the
@@ -43,7 +43,7 @@ spec:
                 type: integer
             type: object
           status:
-            description: DBaaSPlatformStatus defines the observed state of DBaaSPlatform
+            description: Defines the observed state of a DBaaSPlatform object.
             properties:
               conditions:
                 items:
@@ -116,15 +116,15 @@ spec:
                 type: array
               platformsStatus:
                 items:
-                  description: PlatformStatus defines status of DBaaSPlatform
+                  description: Defines the status of a DBaaSPlatform object.
                   properties:
                     lastMessage:
                       type: string
                     platformName:
-                      description: PlatformsName name of platform
+                      description: The name of the platform.
                       type: string
                     platformStatus:
-                      description: PlatformsInstlnStatus status of platform installation
+                      description: The status of a platform installation.
                       type: string
                   required:
                   - platformName
