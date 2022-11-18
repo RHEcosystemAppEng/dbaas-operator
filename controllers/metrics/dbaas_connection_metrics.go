@@ -38,7 +38,7 @@ var DBaaSConnectionStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 // SetConnectionMetrics set the Metrics for a connection
 func SetConnectionMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection, execution Execution, event string, errCd string) {
-	log := ctrl.Log.WithName("Setting Connection Metrics")
+	log := ctrl.Log.WithName("Setting DBaaSConnection Metrics")
 	log.Info("provider - " + provider + " account - " + account + " namespace - " + connection.Namespace + " event - " + event + " errCd - " + errCd)
 	setConnectionStatusMetrics(provider, account, connection)
 	setConnectionRequestDurationSeconds(provider, account, connection, execution, event)

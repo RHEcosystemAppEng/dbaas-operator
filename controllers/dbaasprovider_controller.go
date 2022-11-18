@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSProviderReconciler reconciles a DBaaSProvider object
@@ -47,36 +48,54 @@ type DBaaSProviderReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	execution := metrics.PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
+	metricLabelErrCdValue := ""
+	event := ""
 
 	var provider v1alpha1.DBaaSProvider
 	if err := r.Get(ctx, req.NamespacedName, &provider); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
 			logger.V(1).Info("DBaaS Provider resource not found, has been deleted")
+			metricLabelErrCdValue = metrics.LabelErrorCdValueResourceNotFound
 			return ctrl.Result{}, nil
 		}
 		logger.Error(err, "Error fetching DBaaS Provider for reconcile")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSProviderResources
 		return ctrl.Result{}, err
+	}
+
+	if provider.DeletionTimestamp != nil {
+		event = metrics.LabelEventValueDelete
+	} else {
+		event = metrics.LabelEventValueCreate
 	}
 
 	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1alpha1.DBaaSInventory{}, provider.Spec.InventoryKind); err != nil {
 		logger.Error(err, "Error watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingInventoryCR
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 
 	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1alpha1.DBaaSConnection{}, provider.Spec.ConnectionKind); err != nil {
 		logger.Error(err, "Error watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingConnectionCR
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 
 	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1alpha1.DBaaSInstance{}, provider.Spec.InstanceKind); err != nil {
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingInstanceCR
 		logger.Error(err, "Error watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
+
+	defer func() {
+		metrics.SetProviderMetrics(provider, provider.Name, execution, event, metricLabelErrCdValue)
+	}()
 
 	return ctrl.Result{}, nil
 }
