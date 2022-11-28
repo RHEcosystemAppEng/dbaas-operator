@@ -250,10 +250,8 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
-	defer func() {
-		log.Info("Calling metrics for deleting of DBaaSConnection")
-		metrics.SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, *connectionObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
-	}()
+	log.Info("Calling metrics for deleting of DBaaSConnection")
+	metrics.SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, *connectionObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
 	return nil
 
