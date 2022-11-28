@@ -50,6 +50,7 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -61,16 +62,15 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	// Register custom metrics with the global prometheus registry
-	customMetrics.Registry.MustRegister(controllers.DBaasStackInstallationHistogram)
-	customMetrics.Registry.MustRegister(controllers.DBaasPlatformInstallationGauge)
-	customMetrics.Registry.MustRegister(controllers.DBaaSConnectionStatusGauge)
-	customMetrics.Registry.MustRegister(controllers.DBaaSInstanceStatusGauge)
-	customMetrics.Registry.MustRegister(controllers.DBaaSInstancePhaseGauge)
-	customMetrics.Registry.MustRegister(controllers.DBaasConnectionRequestDurationSeconds)
-	customMetrics.Registry.MustRegister(controllers.DBaasInstanceRequestDurationSeconds)
-	customMetrics.Registry.MustRegister(controllers.DBaasOperatorVersionInfo)
-	customMetrics.Registry.MustRegister(controllers.DBaaSRequestsDurationHistogram)
-	customMetrics.Registry.MustRegister(controllers.DBaaSRequestsErrorsCounter)
+	customMetrics.Registry.MustRegister(metrics.DBaasStackInstallationHistogram)
+	customMetrics.Registry.MustRegister(metrics.DBaasPlatformInstallationGauge)
+	customMetrics.Registry.MustRegister(metrics.DBaaSConnectionStatusGauge)
+	customMetrics.Registry.MustRegister(metrics.DBaaSInstanceStatusGauge)
+	customMetrics.Registry.MustRegister(metrics.DBaaSInstancePhaseGauge)
+	customMetrics.Registry.MustRegister(metrics.DBaasInstanceRequestDurationSeconds)
+	customMetrics.Registry.MustRegister(metrics.DBaasOperatorVersionInfo)
+	customMetrics.Registry.MustRegister(metrics.DBaaSRequestsDurationHistogram)
+	customMetrics.Registry.MustRegister(metrics.DBaaSRequestsErrorsCounter)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))

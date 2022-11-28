@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSInstanceReconciler reconciles a DBaaSInstance object
@@ -50,7 +51,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	logger := ctrl.LoggerFrom(ctx)
 
 	var instance v1alpha1.DBaaSInstance
-	execution := PlatformInstallStart()
+	execution := metrics.PlatformInstallStart()
 	if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
@@ -71,13 +72,13 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
 		instance.Status.Phase = v1alpha1.InstancePhaseError
 	}, logger); err != nil {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
+		metrics.SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, err
 	} else if !validNS {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
+		metrics.SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else if !provision {
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
+		metrics.SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return ctrl.Result{}, nil
 	} else {
 		result, err := r.reconcileProviderResource(ctx,
@@ -102,7 +103,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			v1alpha1.DBaaSInstanceReadyType,
 			logger,
 		)
-		SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
+		metrics.SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, instance, execution)
 		return result, err
 	}
 }
@@ -157,6 +158,6 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	inventory := &v1alpha1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
-	CleanInstanceMetrics(instanceObj)
+	metrics.CleanInstanceMetrics(instanceObj)
 	return nil
 }

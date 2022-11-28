@@ -27,6 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSInventoryReconciler reconciles a DBaaSInventory object
@@ -45,7 +47,7 @@ type DBaaSInventoryReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	execution := PlatformInstallStart()
+	execution := metrics.PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
 	var inventory v1alpha1.DBaaSInventory
 	metricLabelErrCdValue := ""
@@ -55,24 +57,24 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		if errors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
 			logger.V(1).Info("DBaaS Inventory resource not found, has been deleted")
-			metricLabelErrCdValue = labelErrorCdValueResourceNotFound
+			metricLabelErrCdValue = metrics.LabelErrorCdValueResourceNotFound
 			return ctrl.Result{}, nil
 		}
 		logger.Error(err, "Error fetching DBaaS Inventory for reconcile")
-		metricLabelErrCdValue = labelErrorCdValueErrorFetchingDBaaSInventoryResources
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSInventoryResources
 		return ctrl.Result{}, err
 	}
 
 	if inventory.DeletionTimestamp != nil {
-		event = labelEventValueDelete
+		event = metrics.LabelEventValueDelete
 	} else {
-		event = labelEventValueCreate
+		event = metrics.LabelEventValueCreate
 	}
 
 	policyList, err := r.policyListByNS(ctx, req.Namespace)
 	if err != nil {
 		logger.Error(err, "unable to list policies")
-		metricLabelErrCdValue = labelErrorCdValueUnableToListPolicies
+		metricLabelErrCdValue = metrics.LabelErrorCdValueUnableToListPolicies
 		return ctrl.Result{}, err
 	}
 	activePolicy := getActivePolicy(policyList)
@@ -91,7 +93,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				return ctrl.Result{Requeue: true}, nil
 			}
 			logger.Error(err, "Error updating the DBaaS Inventory resource status", "DBaaS Inventory", inventory)
-			metricLabelErrCdValue = labelErrorCdValueErrorUpdatingInventoryStatus
+			metricLabelErrCdValue = metrics.LabelErrorCdValueErrorUpdatingInventoryStatus
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -105,7 +107,7 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	defer func() {
-		SetInventoryMetrics(inventory, execution, event, metricLabelErrCdValue)
+		metrics.SetInventoryMetrics(inventory, execution, event, metricLabelErrCdValue)
 	}()
 
 	//
@@ -169,7 +171,7 @@ func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DB
 
 // Delete implements a handler for the Delete event.
 func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
-	execution := PlatformInstallStart()
+	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
@@ -177,7 +179,7 @@ func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 
 	if !ok {
 		log.Info("Error getting inventory object during delete")
-		metricLabelErrCdValue = labelErrorCdValueErrorDeletingInventory
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingInventory
 		return nil
 	}
 
@@ -185,7 +187,7 @@ func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 
 	defer func() {
 		log.Info("Calling metrics for deleting of DBaaSInventory")
-		SetInventoryMetrics(*inventory, execution, labelEventValueDelete, metricLabelErrCdValue)
+		metrics.SetInventoryMetrics(*inventory, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 	}()
 
 	return nil

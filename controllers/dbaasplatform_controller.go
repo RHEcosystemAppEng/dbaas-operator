@@ -36,6 +36,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -115,7 +116,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	var finished = true
-	execution := PlatformInstallStart()
+	execution := metrics.PlatformInstallStart()
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
@@ -127,7 +128,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		logger.Error(err, "Error in getting of openshift platform Type")
 	}
-	SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType))
+	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType))
 	if cr.DeletionTimestamp == nil {
 		platforms = reconcilers.InstallationPlatforms
 	}
@@ -143,11 +144,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			if cr.DeletionTimestamp == nil {
 				status, err = reconciler.Reconcile(ctx, cr)
-				SetPlatformStatusMetric(platform, status, platformConfig.CSV)
+				metrics.SetPlatformStatusMetric(platform, status, platformConfig.CSV)
 
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
-				CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
+				metrics.CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
 			}
 
 			if err != nil {
