@@ -17,6 +17,7 @@ const (
 	LabelErrorCdValueErrorWatchingInventoryCR            = "error_watching_inventory_cr"
 	LabelErrorCdValueErrorWatchingConnectionCR           = "error_watching_connection_cr"
 	LabelErrorCdValueErrorWatchingInstanceCR             = "error_watching_instance_cr"
+	LabelErrorCdValueErrorDeletingProvider               = "error_deleting_dbaas_provider"
 )
 
 // setProviderRequestDurationSeconds set the metrics for provider request duration in seconds
