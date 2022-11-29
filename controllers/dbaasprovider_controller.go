@@ -121,3 +121,24 @@ var filterEventPredicate = predicate.Funcs{
 		return false
 	},
 }
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSProviderReconciler) Delete(e event.DeleteEvent) error {
+	execution := metrics.PlatformInstallStart()
+	metricLabelErrCdValue := ""
+	log := ctrl.Log.WithName("DBaaSProviderReconciler DeleteEvent")
+	log.Info("Delete event started")
+
+	providerObj, ok := e.Object.(*v1alpha1.DBaaSProvider)
+	if !ok {
+		log.Info("Error getting DBaaSProvider object during delete")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingProvider
+		return nil
+	}
+	log.Info("providerObj", "providerObj", objectKeyFromObject(providerObj))
+
+	log.Info("Calling metrics for deleting of DBaaSProvider")
+	metrics.SetProviderMetrics(*providerObj, providerObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
+
+	return nil
+}
