@@ -64,10 +64,6 @@ func init() {
 	// Register custom metrics with the global prometheus registry
 	customMetrics.Registry.MustRegister(metrics.DBaasStackInstallationHistogram)
 	customMetrics.Registry.MustRegister(metrics.DBaasPlatformInstallationGauge)
-	customMetrics.Registry.MustRegister(metrics.DBaaSConnectionStatusGauge)
-	customMetrics.Registry.MustRegister(metrics.DBaaSInstanceStatusGauge)
-	customMetrics.Registry.MustRegister(metrics.DBaaSInstancePhaseGauge)
-	customMetrics.Registry.MustRegister(metrics.DBaasInstanceRequestDurationSeconds)
 	customMetrics.Registry.MustRegister(metrics.DBaasOperatorVersionInfo)
 	customMetrics.Registry.MustRegister(metrics.DBaaSRequestsDurationHistogram)
 	customMetrics.Registry.MustRegister(metrics.DBaaSRequestsErrorsCounter)

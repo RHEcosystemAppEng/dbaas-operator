@@ -24,8 +24,14 @@ const (
 	LabelErrorCdValueErrorFetchingDBaaSInventoryResources = "error_fetching_dbaas_inventory_resources"
 	LabelErrorCdValueErrorUpdatingInventoryStatus         = "error_updating_inventory_status"
 	LabelErrorCdValueErrorDeletingInventory               = "error_deleting_inventory"
-	LabelErrorCdValueErrCheckingInventory                 = "dbaas_connection_err_checking_inventory"
+	LabelErrorCdValueErrCheckingInventory                 = "error_checking_inventory"
 )
+
+// DBaaSInventoryStatusGauge defines a gauge for DBaaSInventoryStatus
+var DBaaSInventoryStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: MetricNameInventoryStatusReady,
+	Help: "The status of DBaaS Provider Account, values ( ready=1, error / not ready=0 )",
+}, []string{MetricLabelProvider, MetricLabelName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason})
 
 // SetInventoryMetrics set the Metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution, event string, errCd string) {
