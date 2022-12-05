@@ -1,3 +1,3 @@
 resources:
 #- monitor.yaml
-- service_monitor.yaml
+#- service_monitor.yaml
