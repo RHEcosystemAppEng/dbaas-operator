@@ -25,6 +25,11 @@ import (
 	"time"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/observability"
+
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
+
+	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
@@ -283,6 +288,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig v1beta
 		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case v1beta1.TypeQuickStart:
 		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
+	case v1beta1.TypeObservability:
+		return observability.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
