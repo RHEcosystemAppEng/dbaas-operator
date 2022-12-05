@@ -95,7 +95,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
-//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks;servicemonitors,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch

@@ -64,13 +64,8 @@ const (
 
 	//ObservabilityName platform name for observability
 	ObservabilityName = "observability"
-	//other constants for observability
-	observabilityCatalogImg  = "RELATED_IMAGE_OBSERVABILITY_CATALOG"
-	observabilityCSV         = "CSV_VERSION_OBSERVABILITY"
-	observabilityDisplayName = "observability Operator"
-	observabilityDeployment  = "observability-operator"
-	observabilityPkg         = "observability-operator"
-	observabilityChannel     = "stable"
+	//DisplayName for Observability Operator
+	ObservabilityDisplayName = "Observability Operator"
 )
 
 // InstallationPlatforms return the list of platforms
