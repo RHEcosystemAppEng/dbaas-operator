@@ -22,7 +22,7 @@ spec:
         2. Expand the **Data Services** navigation menu, and click **Database Access**.
 
            **NOTE** : You might need to scroll down the navigation menu.
-        3. Click the **Project** dropdown menu, and enable the **Show default projects** toogle switch.
+        3. Click the **Project** dropdown menu, and enable the **Show default projects** toggle switch.
         4. Type **dbaas** in the search field.
         5. Select **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace.
         6. On the database inventory page, click the **Configure** menu to import cloud-hosted database provider accounts, or create new database instances.

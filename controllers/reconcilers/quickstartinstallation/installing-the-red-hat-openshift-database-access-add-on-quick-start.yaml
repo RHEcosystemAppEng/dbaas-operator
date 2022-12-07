@@ -27,7 +27,7 @@ spec:
            
            **NOTE** : If a compatible cluster type was not detected, you can click **Create new cluster** to start the cluster creation process.
         5. After the installation process completes, an alert message tells you the status of the installation.
-           If successful, you have the option to open the **OpenShift console**.
+           If successful, you have the option to open the **OpenShift Cluster Manager console**.
            If a failure, a message displays an installation error to help you investigate the problem.
       summary:
         success: A alert message appears confirming you have successfully installed the add-on, and you have the option to open the OpenShift Cluster Manager console.
