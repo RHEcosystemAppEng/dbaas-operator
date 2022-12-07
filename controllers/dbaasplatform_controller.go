@@ -26,6 +26,7 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
@@ -41,6 +42,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -100,7 +102,10 @@ type DBaaSPlatformReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	execution := metrics.PlatformInstallStart()
 	logger := log.FromContext(ctx)
+	metricLabelErrCdValue := ""
+	event := ""
 
 	cr := &dbaasv1alpha1.DBaaSPlatform{}
 	err := r.Get(ctx, req.NamespacedName, cr)
@@ -108,15 +113,27 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		if apierrors.IsNotFound(err) {
 			// CR deleted since request queued, child objects getting GC'd, no requeue
 			logger.V(1).Info("DBaaSPlatform CR not found, has been deleted")
+			metricLabelErrCdValue = metrics.LabelErrorCdValueResourceNotFound
 			return ctrl.Result{}, nil
 		}
 		// error fetching DBaaSPlatform instance, requeue and try again
 		logger.Error(err, "Error in Get of DBaaSPlatform CR")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSProviderResources
 		return ctrl.Result{}, err
 	}
 
+	if cr.DeletionTimestamp != nil {
+		event = metrics.LabelEventValueDelete
+	} else {
+		event = metrics.LabelEventValueCreate
+	}
+
+	defer func() {
+		metrics.SetPlatformMetrics(*cr, cr.ClusterName, execution, event, metricLabelErrCdValue)
+	}()
+
 	var finished = true
-	execution := metrics.PlatformInstallStart()
+
 	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
 
 	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
@@ -148,7 +165,6 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			} else {
 				status, err = reconciler.Cleanup(ctx, cr)
-				metrics.CleanPlatformStatusMetric(platform, status, platformConfig.CSV)
 			}
 
 			if err != nil {
@@ -163,7 +179,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// If a platform is not complete, do not continue with the next
 			if status != dbaasv1alpha1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
-					execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
+					metrics.PlatformStackInstallationMetric(cr, r.operatorNameVersion, execution)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
 					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
@@ -178,7 +194,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
 		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
-		execution.PlatformStackInstallationMetric(cr, r.operatorNameVersion)
+		metrics.PlatformStackInstallationMetric(cr, r.operatorNameVersion, execution)
 		logger.Info("DBaaS platform stack installation complete")
 	}
 
@@ -335,4 +351,25 @@ func setStatusCondition(Conditions *[]metav1.Condition, conditionType string, st
 
 	apimeta.SetStatusCondition(Conditions, newCondition)
 
+}
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
+	execution := metrics.PlatformInstallStart()
+	metricLabelErrCdValue := ""
+	log := ctrl.Log.WithName("DBaaSPlatformReconciler DeleteEvent")
+	log.Info("Delete event started")
+
+	platformObj, ok := e.Object.(*v1alpha1.DBaaSPlatform)
+	if !ok {
+		log.Info("Error getting DBaaSPlatform object during delete")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPlatform
+		return nil
+	}
+	log.Info("platformObj", "platformObj", objectKeyFromObject(platformObj))
+
+	log.Info("Calling metrics for deleting of DBaaSProvider")
+	metrics.SetPlatformMetrics(*platformObj, platformObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
+
+	return nil
 }
