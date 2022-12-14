@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -27,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
 // DBaaSPolicyReconciler reconciles a DBaaSPolicy object
@@ -48,9 +50,14 @@ type DBaaSPolicyReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
+	execution := metrics.PlatformInstallStart()
+	metricLabelErrCdValue := ""
+	event := ""
+
 	policyList, err := r.policyListByNS(ctx, req.Namespace)
 	if err != nil {
 		logger.Error(err, "unable to list policies")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueUnableToListPolicies
 		return ctrl.Result{}, err
 	}
 	activePolicy := getActivePolicy(policyList)
@@ -68,9 +75,21 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		} else {
 			logger.Error(err, "Error fetching DBaaS Policy for reconcile")
+			metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSPolicyResources
 			return ctrl.Result{}, err
 		}
 	}
+
+	defer func() {
+		metrics.SetPolicyMetrics(policy, execution, event, metricLabelErrCdValue)
+	}()
+
+	if policy.DeletionTimestamp != nil {
+		event = metrics.LabelEventValueDelete
+	} else {
+		event = metrics.LabelEventValueCreate
+	}
+
 	cond := &metav1.Condition{
 		Type:    v1alpha1.DBaaSPolicyReadyType,
 		Status:  metav1.ConditionTrue,
@@ -108,9 +127,11 @@ func (r *DBaaSPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}); err != nil {
 			if errors.IsConflict(err) {
 				logger.V(1).Info("ResourceQuota resource modified, retry syncing status", "ResourceQuota", resQuota)
+				metricLabelErrCdValue = metrics.LabelErrorCdValueErrorResourceQuotaModified
 				return ctrl.Result{Requeue: true}, err
 			}
 			logger.Error(err, "Error updating the ResourceQuota resource status", "ResourceQuota", resQuota)
+			metricLabelErrCdValue = metrics.LabelErrorCdValueErrUpdatingResourceQuota
 			return ctrl.Result{}, err
 		} else if res != controllerutil.OperationResultNone {
 			logger.Info("ResourceQuota resource reconciled", "ResourceQuota", resQuota, "result", res)
@@ -149,5 +170,26 @@ func getActivePolicy(policyList v1alpha1.DBaaSPolicyList) *v1alpha1.DBaaSPolicy 
 			return &policyList.Items[i]
 		}
 	}
+	return nil
+}
+
+// Delete implements a handler for the Delete event.
+func (r *DBaaSPolicyReconciler) Delete(e event.DeleteEvent) error {
+	execution := metrics.PlatformInstallStart()
+	metricLabelErrCdValue := ""
+	log := ctrl.Log.WithName("DBaaSPolicyReconciler DeleteEvent")
+	log.Info("Delete event started")
+
+	policyObj, ok := e.Object.(*v1alpha1.DBaaSPolicy)
+	if !ok {
+		log.Info("Error getting DBaaSPolicy object during delete")
+		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPolicy
+		return nil
+	}
+	log.Info("policyObj", "policyObj", objectKeyFromObject(policyObj))
+
+	log.Info("Calling metrics for deleting of DBaaSPolicy")
+	metrics.SetPolicyMetrics(*policyObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
+
 	return nil
 }
