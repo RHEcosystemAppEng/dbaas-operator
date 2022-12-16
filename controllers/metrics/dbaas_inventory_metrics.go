@@ -41,17 +41,13 @@ func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execu
 
 // setInventoryStatusMetrics set the Metrics for inventory status
 func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
-	log := ctrl.Log.WithName("Setting DBaaSInventoryStatusGauge: ")
-	log.Info("Started")
 	for _, cond := range inventory.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
 			DBaaSInventoryStatusGauge.DeletePartialMatch(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
-				log.Info("Set to 1")
 			} else {
 				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
-				log.Info("Set to 0")
 			}
 			break
 		}
