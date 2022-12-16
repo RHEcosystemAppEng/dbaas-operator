@@ -43,17 +43,13 @@ var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 // setInstanceStatusMetrics set the metrics based on instance status
 func setInstanceStatusMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
-	log := ctrl.Log.WithName("Setting DBaaSInstanceStatusGauge: ")
-	log.Info("Started")
 	for _, cond := range instance.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSInstanceReadyType {
 			DBaaSInstanceStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
-				log.Info("Set to 1")
 			} else {
 				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
-				log.Info("Set to 0")
 			}
 			break
 		}
@@ -88,8 +84,6 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 
 // setInstancePhaseMetrics set the metrics for instance phase
 func setInstancePhaseMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
-	log := ctrl.Log.WithName("Setting DBaaSInstancePhaseGauge: ")
-	log.Info("Started")
 	var phase float64
 
 	switch instance.Status.Phase {
@@ -117,8 +111,6 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1al
 		metricLabelInstanceName: instance.Name,
 		MetricLabelNameSpace:    instance.Namespace,
 	}).Set(phase)
-
-	log.Info("Set to ", "phase", phase)
 }
 
 // SetInstanceMetrics set the metrics for an instance

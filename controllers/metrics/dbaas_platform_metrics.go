@@ -6,8 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
-
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
@@ -71,12 +69,10 @@ func SetPlatformStatusMetric(platformName dbaasv1alpha1.PlatformsName, status db
 
 // setPlatformRequestDurationSeconds set the metrics for platform request duration in seconds
 func setPlatformRequestDurationSeconds(platform dbaasv1alpha1.DBaaSPlatform, account string, execution Execution, event string) {
-	log := ctrl.Log.WithName("DBaaSPlatform Request Duration for event: " + event)
 	switch event {
 	case LabelEventValueCreate:
 		duration := time.Now().UTC().Sub(platform.CreationTimestamp.Time.UTC())
 		UpdateRequestsDurationHistogram(platform.Name, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
-		log.Info("Set the request duration for create event")
 	case LabelEventValueDelete:
 		deletionTimestamp := execution.begin.UTC()
 		if platform.DeletionTimestamp != nil {
@@ -85,7 +81,6 @@ func setPlatformRequestDurationSeconds(platform dbaasv1alpha1.DBaaSPlatform, acc
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(platform.Name, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
 	}
 }
 
