@@ -47,17 +47,13 @@ func SetConnectionMetrics(provider string, account string, connection dbaasv1alp
 
 // setConnectionStatusMetrics set the Metrics based on connection status
 func setConnectionStatusMetrics(provider string, account string, connection dbaasv1alpha1.DBaaSConnection) {
-	log := ctrl.Log.WithName("Setting DBaaSConnectionStatusGauge: ")
-	log.Info("Started")
 	for _, cond := range connection.Status.Conditions {
 		if cond.Type == dbaasv1alpha1.DBaaSConnectionReadyType {
 			DBaaSConnectionStatusGauge.DeletePartialMatch(prometheus.Labels{MetricLabelName: connection.Name, MetricLabelNameSpace: connection.Namespace})
 			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.InstanceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
-				log.Info("Set to 1")
 			} else {
 				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.InstanceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
-				log.Info("Set to 1")
 			}
 			break
 		}
