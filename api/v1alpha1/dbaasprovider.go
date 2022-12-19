@@ -334,18 +334,6 @@ type Option struct {
 // FieldDependency defines the name and value of a field used as a dependency
 type FieldDependency struct {
 	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel
-	Name              string `json:"name,omitempty"`
-	Plan              string `json:"plan,omitempty"`
-	CloudProvider     string `json:"cloudProvider,omitempty"`
-	Regions           string `json:"regions,omitempty"`
-	AvailabilityZones string `json:"availabilityZones,omitempty"`
-	Nodes             string `json:"nodes,omitempty"`
-	MachineType       string `json:"machineType,omitempty"`
-	StorageGib        string `json:"storageGib,omitempty"`
-	SpendLimit        string `json:"spendLimit,omitempty"`
-	TeamProject       string `json:"teamProject,omitempty"`
-	LocationLabel     string `json:"locationLabel,omitempty"`
-	HardwareLabel     string `json:"hardwareLabel,omitempty"`
 	// Name of the field used as a dependency
 	Field string `json:"field,omitempty"`
 
@@ -355,18 +343,18 @@ type FieldDependency struct {
 
 // Specs for the common parameters used by UX for provisioning a database instance.
 type ProvisioningParametersSpec struct {
-	Name              string `json:"name,omitempty"`
-	Plan              string `json:"plan,omitempty"`
-	CloudProvider     string `json:"cloudProvider,omitempty"`
-	Regions           string `json:"regions,omitempty"`
-	AvailabilityZones string `json:"availabilityZones,omitempty"`
-	Nodes             string `json:"nodes,omitempty"`
-	MachineType       string `json:"machineType,omitempty"`
-	StorageGib        string `json:"storageGib,omitempty"`
-	SpendLimit        string `json:"spendLimit,omitempty"`
-	TeamProject       string `json:"teamProject,omitempty"`
-	LocationLabel     string `json:"locationLabel,omitempty"`
-	HardwareLabel     string `json:"hardwareLabel,omitempty"`
+	Name              *ProvisioningParameter `json:"name,omitempty"`
+	Plan              *ProvisioningParameter `json:"plan,omitempty"`
+	CloudProvider     *ProvisioningParameter `json:"cloudProvider,omitempty"`
+	Regions           *ProvisioningParameter `json:"regions,omitempty"`
+	AvailabilityZones *ProvisioningParameter `json:"availabilityZones,omitempty"`
+	Nodes             *ProvisioningParameter `json:"nodes,omitempty"`
+	MachineType       *ProvisioningParameter `json:"machineType,omitempty"`
+	StorageGib        *ProvisioningParameter `json:"storageGib,omitempty"`
+	SpendLimit        *ProvisioningParameter `json:"spendLimit,omitempty"`
+	TeamProject       *ProvisioningParameter `json:"teamProject,omitempty"`
+	LocationLabel     *ProvisioningParameter `json:"locationLabel,omitempty"`
+	HardwareLabel     *ProvisioningParameter `json:"hardwareLabel,omitempty"`
 }
 
 // Information for a provisioning parameter
