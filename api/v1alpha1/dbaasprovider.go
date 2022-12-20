@@ -17,9 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"strings"
-
-	"github.com/fatih/structs"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -68,29 +65,22 @@ const (
 	TypeLabelKeyMongo = "atlas.mongodb.com/type"
 )
 
-type ProvisioningParameterType int64
-
-func (t ProvisioningParameterType) GetName() string {
-	s := &ProvisioningParametersSpec{}
-	n := structs.Names(s)
-	name := n[t]
-	return strings.ToLower(name[0:0]) + name[1:]
-}
+type ProvisioningParameterType string
 
 // DBaaS provisioning fields
 const (
-	ProvisioningName ProvisioningParameterType = iota
-	ProvisioningPlan
-	ProvisioningCloudProvider
-	ProvisioningRegions
-	ProvisioningAvailabilityZones
-	ProvisioningNodes
-	ProvisioningMachineType
-	ProvisioningStorageGib
-	ProvisioningSpendLimit
-	ProvisioningTeamProject
-	ProvisioningLocationLabel
-	ProvisioningHardwareLabel
+	ProvisioningName              ProvisioningParameterType = "name"
+	ProvisioningPlan              ProvisioningParameterType = "plan"
+	ProvisioningCloudProvider     ProvisioningParameterType = "cloudProvider"
+	ProvisioningRegions           ProvisioningParameterType = "regions"
+	ProvisioningAvailabilityZones ProvisioningParameterType = "availabilityZones"
+	ProvisioningNodes             ProvisioningParameterType = "nodes"
+	ProvisioningMachineType       ProvisioningParameterType = "machineType"
+	ProvisioningStorageGib        ProvisioningParameterType = "storageGib"
+	ProvisioningSpendLimit        ProvisioningParameterType = "spendLimit"
+	ProvisioningTeamProject       ProvisioningParameterType = "teamProject"
+	ProvisioningLocationLabel     ProvisioningParameterType = "locationLabel"
+	ProvisioningHardwareLabel     ProvisioningParameterType = "hardwareLabel"
 )
 
 // Defines the phases for instance provisioning.
@@ -136,7 +126,7 @@ type DBaaSProviderSpec struct {
 	ExternalProvisionDescription string `json:"externalProvisionDescription"`
 
 	// Parameter specs used by UX for provisioning a database instance
-	ProvisioningParametersSpec *ProvisioningParametersSpec `json:"provisioningParametersSpec,omitempty"`
+	ProvisioningParameters map[ProvisioningParameterType]ProvisioningParameter `json:"provisioningParameters,omitempty"`
 }
 
 // DBaaSProviderStatus defines the observed state of DBaaSProvider
@@ -335,26 +325,10 @@ type Option struct {
 type FieldDependency struct {
 	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel
 	// Name of the field used as a dependency
-	Field string `json:"field,omitempty"`
+	Field ProvisioningParameterType `json:"field,omitempty"`
 
 	// Value of the field used as a dependency
 	Value string `json:"value,omitempty"`
-}
-
-// Specs for the common parameters used by UX for provisioning a database instance.
-type ProvisioningParametersSpec struct {
-	Name              *ProvisioningParameter `json:"name,omitempty"`
-	Plan              *ProvisioningParameter `json:"plan,omitempty"`
-	CloudProvider     *ProvisioningParameter `json:"cloudProvider,omitempty"`
-	Regions           *ProvisioningParameter `json:"regions,omitempty"`
-	AvailabilityZones *ProvisioningParameter `json:"availabilityZones,omitempty"`
-	Nodes             *ProvisioningParameter `json:"nodes,omitempty"`
-	MachineType       *ProvisioningParameter `json:"machineType,omitempty"`
-	StorageGib        *ProvisioningParameter `json:"storageGib,omitempty"`
-	SpendLimit        *ProvisioningParameter `json:"spendLimit,omitempty"`
-	TeamProject       *ProvisioningParameter `json:"teamProject,omitempty"`
-	LocationLabel     *ProvisioningParameter `json:"locationLabel,omitempty"`
-	HardwareLabel     *ProvisioningParameter `json:"hardwareLabel,omitempty"`
 }
 
 // Information for a provisioning parameter
