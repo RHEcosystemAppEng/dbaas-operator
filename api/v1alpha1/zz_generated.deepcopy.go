@@ -219,7 +219,7 @@ func (in *DBaaSInstanceSpec) DeepCopyInto(out *DBaaSInstanceSpec) {
 	out.InventoryRef = in.InventoryRef
 	if in.OtherInstanceParams != nil {
 		in, out := &in.OtherInstanceParams, &out.OtherInstanceParams
-		*out = make(map[string]string, len(*in))
+		*out = make(map[ProvisioningParameterType]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}

@@ -224,8 +224,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			Name:          "test-instance-to-create",
 			CloudProvider: "aws",
 			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningMachineType: "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{

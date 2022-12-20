@@ -38,8 +38,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			Name:          "test-instance",
 			CloudProvider: "aws",
 			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningMachineType: "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -82,8 +82,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			Name:          "test-instance",
 			CloudProvider: "aws",
 			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningMachineType: "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -154,8 +154,8 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			Name:          "test-instance",
 			CloudProvider: "aws",
 			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningMachineType: "test-machine-type",
 			},
 		}
 		otherNS := v1.Namespace{
@@ -260,8 +260,8 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					Name:          "test-instance",
 					CloudProvider: "aws",
 					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningMachineType: "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -304,7 +304,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						Name:          "updated-test-instance",
 						CloudProvider: "azure",
 						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
+						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
 							"testParam": "updated-test-param",
 						},
 					}
@@ -379,8 +379,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					Name:          "test-instance",
 					CloudProvider: "aws",
 					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningMachineType: "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -423,7 +423,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:          "updated-test-instance",
 						CloudProvider: "azure",
 						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
+						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
 							"testParam": "updated-test-param",
 						},
 					}
@@ -493,8 +493,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					Name:          "test-instance",
 					CloudProvider: "aws",
 					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningMachineType: "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -537,7 +537,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:          "updated-test-instance",
 						CloudProvider: "azure",
 						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
+						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
 							"testParam": "updated-test-param",
 						},
 					}
@@ -609,8 +609,8 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 					Name:          "test-instance",
 					CloudProvider: "aws",
 					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningMachineType: "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{

@@ -275,7 +275,7 @@ type DBaaSInstanceSpec struct {
 	CloudRegion string `json:"cloudRegion,omitempty"`
 
 	// Any other provider-specific parameters related to the instance, such as provisioning.
-	OtherInstanceParams map[string]string `json:"otherInstanceParams,omitempty"`
+	OtherInstanceParams map[ProvisioningParameterType]string `json:"otherInstanceParams,omitempty"`
 }
 
 // Defines the observed state of a DBaaSInstance.
