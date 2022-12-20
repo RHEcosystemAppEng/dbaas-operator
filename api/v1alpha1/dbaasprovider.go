@@ -81,6 +81,7 @@ const (
 	ProvisioningTeamProject       ProvisioningParameterType = "teamProject"
 	ProvisioningLocationLabel     ProvisioningParameterType = "locationLabel"
 	ProvisioningHardwareLabel     ProvisioningParameterType = "hardwareLabel"
+	ProvisioningPlanLabel         ProvisioningParameterType = "planLabel"
 )
 
 // Defines the phases for instance provisioning.
@@ -323,7 +324,7 @@ type Option struct {
 
 // FieldDependency defines the name and value of a field used as a dependency
 type FieldDependency struct {
-	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel
+	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel;planLabel
 	// Name of the field used as a dependency
 	Field ProvisioningParameterType `json:"field,omitempty"`
 
