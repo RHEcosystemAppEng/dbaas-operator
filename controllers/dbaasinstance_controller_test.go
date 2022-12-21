@@ -35,11 +35,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryRefName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-				v1alpha1.ProvisioningMachineType: "test-machine-type",
+			ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningName:          "test-instance",
+				v1alpha1.ProvisioningCloudProvider: "aws",
+				v1alpha1.ProvisioningRegions:       "test-region",
+				v1alpha1.ProvisioningMachineType:   "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -79,11 +79,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-				v1alpha1.ProvisioningMachineType: "test-machine-type",
+			ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningName:          "test-instance",
+				v1alpha1.ProvisioningCloudProvider: "aws",
+				v1alpha1.ProvisioningRegions:       "test-region",
+				v1alpha1.ProvisioningMachineType:   "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -151,11 +151,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-				v1alpha1.ProvisioningMachineType: "test-machine-type",
+			ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningName:          "test-instance",
+				v1alpha1.ProvisioningCloudProvider: "aws",
+				v1alpha1.ProvisioningRegions:       "test-region",
+				v1alpha1.ProvisioningMachineType:   "test-machine-type",
 			},
 		}
 		otherNS := v1.Namespace{
@@ -257,11 +257,11 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-						v1alpha1.ProvisioningMachineType: "test-machine-type",
+					ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningName:          "test-instance",
+						v1alpha1.ProvisioningCloudProvider: "aws",
+						v1alpha1.ProvisioningRegions:       "test-region",
+						v1alpha1.ProvisioningMachineType:   "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -301,11 +301,11 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+							v1alpha1.ProvisioningName:          "updated-test-instance",
+							v1alpha1.ProvisioningCloudProvider: "azure",
+							v1alpha1.ProvisioningRegions:       "updated-test-region",
+							v1alpha1.ProvisioningMachineType:   "test-machine-type",
 						},
 					}
 					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
@@ -376,11 +376,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-						v1alpha1.ProvisioningMachineType: "test-machine-type",
+					ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningName:          "test-instance",
+						v1alpha1.ProvisioningCloudProvider: "aws",
+						v1alpha1.ProvisioningRegions:       "test-region",
+						v1alpha1.ProvisioningMachineType:   "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -420,11 +420,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+							v1alpha1.ProvisioningName:          "updated-test-instance",
+							v1alpha1.ProvisioningCloudProvider: "azure",
+							v1alpha1.ProvisioningRegions:       "updated-test-region",
+							v1alpha1.ProvisioningMachineType:   "test-machine-type",
 						},
 					}
 					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
@@ -490,11 +490,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-						v1alpha1.ProvisioningMachineType: "test-machine-type",
+					ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningName:          "test-instance",
+						v1alpha1.ProvisioningCloudProvider: "aws",
+						v1alpha1.ProvisioningRegions:       "test-region",
+						v1alpha1.ProvisioningMachineType:   "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -534,11 +534,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+							v1alpha1.ProvisioningName:          "updated-test-instance",
+							v1alpha1.ProvisioningCloudProvider: "azure",
+							v1alpha1.ProvisioningRegions:       "updated-test-region",
+							v1alpha1.ProvisioningMachineType:   "test-machine-type",
 						},
 					}
 					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
@@ -606,11 +606,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-						v1alpha1.ProvisioningMachineType: "test-machine-type",
+					ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+						v1alpha1.ProvisioningName:          "test-instance",
+						v1alpha1.ProvisioningCloudProvider: "aws",
+						v1alpha1.ProvisioningRegions:       "test-region",
+						v1alpha1.ProvisioningMachineType:   "test-machine-type",
 					},
 				}
 				createdDBaaSInstance := &v1alpha1.DBaaSInstance{

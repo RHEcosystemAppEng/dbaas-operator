@@ -265,18 +265,8 @@ type DBaaSInstanceSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
 
-	// The name of this instance in the database service.
-	Name string `json:"name"`
-
-	// Identifies the cloud-hosted database provider.
-	CloudProvider string `json:"cloudProvider,omitempty"`
-
-	// Identifies the deployment region for the cloud-hosted database provider.
-	// For example, us-east-1.
-	CloudRegion string `json:"cloudRegion,omitempty"`
-
-	// Any other provider-specific parameters related to the instance, such as provisioning.
-	OtherInstanceParams map[ProvisioningParameterType]string `json:"otherInstanceParams,omitempty"`
+	// Parameters with values used for provisioning.
+	ProvisioningParameters map[ProvisioningParameterType]string `json:"provisioningParameters,omitempty"`
 }
 
 // Defines the observed state of a DBaaSInstance.

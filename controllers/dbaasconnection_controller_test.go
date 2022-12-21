@@ -221,11 +221,11 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance-to-create",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[v1alpha1.ProvisioningParameterType]string{
-				v1alpha1.ProvisioningMachineType: "test-machine-type",
+			ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+				v1alpha1.ProvisioningName:          "test-instance-to-create",
+				v1alpha1.ProvisioningCloudProvider: "aws",
+				v1alpha1.ProvisioningRegions:       "utest-region",
+				v1alpha1.ProvisioningMachineType:   "test-machine-type",
 			},
 		}
 		createdDBaaSInstance := &v1alpha1.DBaaSInstance{
@@ -497,7 +497,9 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name: instanceRefName,
+						ProvisioningParameters: map[v1alpha1.ProvisioningParameterType]string{
+							v1alpha1.ProvisioningName: instanceRefName,
+						},
 					},
 				}
 				lastTransitionTime := getLastTransitionTimeForTest()

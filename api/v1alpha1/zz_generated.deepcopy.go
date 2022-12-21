@@ -217,8 +217,8 @@ func (in *DBaaSInstanceList) DeepCopyObject() runtime.Object {
 func (in *DBaaSInstanceSpec) DeepCopyInto(out *DBaaSInstanceSpec) {
 	*out = *in
 	out.InventoryRef = in.InventoryRef
-	if in.OtherInstanceParams != nil {
-		in, out := &in.OtherInstanceParams, &out.OtherInstanceParams
+	if in.ProvisioningParameters != nil {
+		in, out := &in.ProvisioningParameters, &out.ProvisioningParameters
 		*out = make(map[ProvisioningParameterType]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
