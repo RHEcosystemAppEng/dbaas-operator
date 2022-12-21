@@ -69,19 +69,22 @@ type ProvisioningParameterType string
 
 // DBaaS provisioning fields
 const (
-	ProvisioningName              ProvisioningParameterType = "name"
-	ProvisioningPlan              ProvisioningParameterType = "plan"
-	ProvisioningCloudProvider     ProvisioningParameterType = "cloudProvider"
-	ProvisioningRegions           ProvisioningParameterType = "regions"
-	ProvisioningAvailabilityZones ProvisioningParameterType = "availabilityZones"
-	ProvisioningNodes             ProvisioningParameterType = "nodes"
-	ProvisioningMachineType       ProvisioningParameterType = "machineType"
-	ProvisioningStorageGib        ProvisioningParameterType = "storageGib"
-	ProvisioningSpendLimit        ProvisioningParameterType = "spendLimit"
-	ProvisioningTeamProject       ProvisioningParameterType = "teamProject"
-	ProvisioningLocationLabel     ProvisioningParameterType = "locationLabel"
-	ProvisioningHardwareLabel     ProvisioningParameterType = "hardwareLabel"
-	ProvisioningPlanLabel         ProvisioningParameterType = "planLabel"
+	ProvisioningName                    ProvisioningParameterType = "name"
+	ProvisioningPlan                    ProvisioningParameterType = "plan"
+	ProvisioningCloudProvider           ProvisioningParameterType = "cloudProvider"
+	ProvisioningRegions                 ProvisioningParameterType = "regions"
+	ProvisioningAvailabilityZones       ProvisioningParameterType = "availabilityZones"
+	ProvisioningNodes                   ProvisioningParameterType = "nodes"
+	ProvisioningMachineType             ProvisioningParameterType = "machineType"
+	ProvisioningStorageGib              ProvisioningParameterType = "storageGib"
+	ProvisioningSpendLimit              ProvisioningParameterType = "spendLimit"
+	ProvisioningTeamProject             ProvisioningParameterType = "teamProject"
+	ProvisioningDatabaseType            ProvisioningParameterType = "databaseType"
+	ProvisioningDedicatedLocationLabel  ProvisioningParameterType = "dedicatedLocationLabel"
+	ProvisioningServerlessLocationLabel ProvisioningParameterType = "serverlessLocationLabel"
+	ProvisioningHardwareLabel           ProvisioningParameterType = "hardwareLabel"
+	ProvisioningPlanLabel               ProvisioningParameterType = "planLabel"
+	ProvisioningSpendLimitLabel         ProvisioningParameterType = "spendLimitLabel"
 )
 
 // Defines the phases for instance provisioning.
@@ -314,7 +317,7 @@ type Option struct {
 
 // FieldDependency defines the name and value of a field used as a dependency
 type FieldDependency struct {
-	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;locationLabel;hardwareLabel;planLabel
+	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;databaseType;dedicatedLocationLabel;serverlessLocationLabel;hardwareLabel;planLabel;spendLimitLabel
 	// Name of the field used as a dependency
 	Field ProvisioningParameterType `json:"field,omitempty"`
 

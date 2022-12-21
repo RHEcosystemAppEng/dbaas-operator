@@ -166,7 +166,7 @@ build: generate fmt vet ## Build manager binary.
 run: sdk-manifests vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: test ## Build docker image with the manager.
+docker-build: ## Build docker image with the manager.
 	$(CONTAINER_ENGINE) build --pull --platform linux/amd64 -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.

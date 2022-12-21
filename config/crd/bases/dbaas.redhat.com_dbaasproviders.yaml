@@ -175,9 +175,12 @@ spec:
                                   - storageGib
                                   - spendLimit
                                   - teamProject
-                                  - locationLabel
+                                  - databaseType
+                                  - dedicatedLocationLabel
+                                  - serverlessLocationLabel
                                   - hardwareLabel
                                   - planLabel
+                                  - spendLimitLabel
                                   type: string
                                 value:
                                   description: Value of the field used as a dependency
