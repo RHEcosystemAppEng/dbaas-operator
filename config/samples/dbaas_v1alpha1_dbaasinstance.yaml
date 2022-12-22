@@ -1,14 +1,16 @@
 apiVersion: dbaas.redhat.com/v1alpha1
 kind: DBaaSInstance
 metadata:
-  name: dbaasinstance-sample
+  name: test-dbaas-instance-crdb
 spec:
   inventoryRef:
-    name: atlas-inventory
+    name: crdb-inventory
     namespace: openshift-dbaas-operator
-  name: my-cluster-free
-  cloudProvider: AWS
-  cloudRegion: US_EAST_1
-  otherInstanceParams:
-    projectName: my-atlas-project-free
-    instanceSizeName: M0
+  provisioningParameters:
+    name: my-crdb-dedicated
+    plan: DEDICATED
+    cloudProvider: AWS
+    regions: us-east-1
+    nodes: "3"
+    machineType: m5.large
+    storageGib: "0"

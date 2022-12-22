@@ -1,64 +1,409 @@
 apiVersion: dbaas.redhat.com/v1alpha1
 kind: DBaaSProvider
 metadata:
-  name: atlas-provider-registration
+  creationTimestamp: "2022-12-22T18:20:39Z"
+  generation: 2
   labels:
     related-to: dbaas-operator
     type: dbaas-provider-registration
+  name: cockroachdb-cloud-registration
+  ownerReferences:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    blockOwnerDeletion: false
+    controller: true
+    kind: ClusterRole
+    name: ccapi-k8s-operator.v0.0.5-ccapi-k8s-operator-control-6b7b8cc6b8
+    uid: 81c0809c-c84a-4ce2-aeb6-b7efed3c575b
+  resourceVersion: "447248"
+  uid: e0b43fe7-a81c-4d05-878e-3ffb87820c11
 spec:
-  provider:
-    name: Red Hat DBaaS / MongoDB Atlas
-    displayName: MongoDB Atlas
-    displayDescription: Some nice description show to dev users in UX when selecting which provider from catalog.
-    icon:
-      base64data: <base64-encoded image data>
-      mediatype: image/png
-  inventoryKind: MongoDBAtlasInventory
-  connectionKind: MongoDBAtlasConnection
-  instanceKind: MongoDBAtlasInstance
-  credentialFields:
-    - key: organizationId
-      displayName: Organization ID
-      type: string
-      required: true
-      helpText: You can find the Organization ID from the Organization Settings page on your MongoDB account home page.
-    - key: publicApiKey
-      displayName: Organization Public Key
-      type: string
-      required: true
-      helpText: You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.
-    - key: privateApiKey
-      displayName: Organization Private Key
-      type: maskedstring
-      required: true
-      helpText: You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.
   allowsFreeTrial: true
-  instanceParameterSpecs:
-    - name: clusterName
-      displayName: Cluster Name
-      type: string
-      required: true
-    - name: ProjectName
-      displayName: Atlas Project Name
-      type: string
-      required: true
-    - name: clusterType
-      displayName: Cluster Type
-      type: string
-      required: false
-      defaultValue: Shared
-    - name: providerName
-      displayName: Cloud Provider
-      type: string
-      required: false
-      defaultValue: AWS
-    - name: regionName
-      displayName: Cloud Region
-      type: string
-      required: false
-      defaultValue: US_EAST_1
-    - name: instanceSizeName
-      displayName: Cluster Size Name
-      type: string
-      required: false
-      defaultValue: M0
+  connectionKind: CrdbDBaaSConnection
+  credentialFields:
+  - displayName: API Secret Key
+    helpText: The API Secret Key is a generated token associated with your CockroachDB
+      Cloud Service Account.
+    key: apiSecretKey
+    required: true
+    type: maskedstring
+  externalProvisionDescription: Follow the guide to start a free CockroachDB Serverless
+    (beta) cluster
+  externalProvisionURL: https://www.cockroachlabs.com/docs/cockroachcloud/quickstart.html
+  instanceKind: CrdbDBaaSInstance
+  inventoryKind: CrdbDBaaSInventory
+  provider:
+    displayDescription: A distributed SQL database designed for speed, scale, and
+      survival. Trusted by thousands of innovators around the globe.
+    displayName: CockroachDB Cloud
+    icon:
+      base64data: iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA/xJREFUeNq0V9uLE1cY/85k08wk2TWyf8AGH30oI8kigrLxgsULbqC1PrR0Z3rRQh928yD2ySUKgvhg9lFFZ1ZhZR+kkdaCgiUrBSm7YYc+9KmF2AfBBzF46V6SOcfvTM7kvu5kM/1gcgIz53y/7/fdzkegSQK77y4roKhhJkMEFAgzfPgKcjnCFAv/LyhMzt8pRizoIkezq2o1wtKVQTpWGWRqJcpiuML6IAW+8qcaZda/Q8O73D0DrUeQEv6o7QcTgBguKf4QINNnkrZFw2TmxhPJ5O9PnlnXUNlkhTIVNhMGpbazGxLcPR+v/HGq1L5n/+jfqsKQGZDHkZW0QmSwIwCotFDZRvmaciyMOk8eGbiPq/X7l9EOpkbKL+PPYsOlrgC8yNeJtVhQCk7ZYZh2aUWFgNRnqwrL/XxJLvdyntQrgFvFEFcw0uXVSK/KtwRgIrFioB81hz4KGSAs47hWAu3Y+VXjfwXwefLVFANWU26Dbv4ayM3NBXOoXBcO1T65vDLVy5meY+B48rkqQ2iZp6YMH2WuFwdyze/Hz65OVcNw1Uk1he367Yew5SsDFJhRyyJWaFfO5f4VmTNRcL4JMMNXFxxI/oO013KcEjqzYYpLbEbwqu67/VbzDQAlbLJRR1j5Aw61GmBg0hcAe0b/Ul3rPUi86WR1z703at8A0OJ0S79ggQ0tIzaZbHUJpPsGgME3VgMCZo1lkj6dqHb4d/zsmoZ1wVVoCgBjfjDAmxDYYGclIE70EyIZ3+2ldRCffb/OlRuiPuToAGRFTKQ2O3/Aa7o8WhrhDSSDlZB3Ro0FwNCO2LA2jH2AirRjYD48pziVce/c2/7T8OPRYkrQX+9es0VFR8tqFCMI9LshyrL54IKsN5ir7Uk8ep3qOw3RDS0t+tqipDenHCov/HQ1pLelZMmPNCyLwOtIJxpg2QYA0lGcCKtfbMpbBvDnYsJquhG1tuXHgbz7f/5WMN9lu7OneHjI6tcFjgWHk8+8FiMYu/nOk/WeAGDqFYQbUl4BYNCkRBEp9A0AFS8IIBOeezyFCREHC34AyLuBmE6+iG/2/aGZ/+JuACKQfN8Ani7uLKFys/axNL0pYBumxWo+/XSw1DcA5yMmzQoA2hfJNxvGwpGLKylMSU3QP+vbfeDx0o5CnQUmGd8mKh1peeLcaqxeFdH6J19FC74BENbzGl9GIHEJm1GXVmyg1XHMgDKykPH9UsrlVPKVGmKhZT4ZUQXM9W1Mc2a/IWrizMfHM+dC+vBHxfJuWA8yv7TdQiZ0dw5oKrvunKD3onxLg4lZlE1CiN5S5TjtOCf8clE2ez2v59nQlW8O2mo1zIwqDqm46tgPrK2c816AAQCBW4SEJD8W2QAAAABJRU5ErkJggg==
+      mediatype: image/png
+    name: Cockroach Labs
+  provisioningParameters:
+    cloudProvider:
+      displayName: Cloud provider
+      optionsLists:
+      - defaultOption:
+          displayValue: Amazon Web Services
+          value: AWS
+        options:
+        - displayValue: Amazon Web Services
+          value: AWS
+        - displayValue: Google Cloud Platform
+          value: GCP
+    dedicatedLocationLabel:
+      displayName: Select regions & nodes
+      helpText: Select the geographical region where you want the database instance
+        to run. Also, set the number of nodes you want running in this dedicated cluster.
+    hardwareLabel:
+      displayName: Hardware per node
+      helpText: Select the compute and storage requirements for this database instance.
+    machineType:
+      displayName: Compute
+      optionsLists:
+      - defaultOption:
+          displayValue: 2 vCPU, 8 GiB RAM
+          value: m5.large
+        dependencies:
+        - field: plan
+          value: DEDICATED
+        - field: cloudProvider
+          value: AWS
+        options:
+        - displayValue: 2 vCPU, 8 GiB RAM
+          value: m5.large
+        - displayValue: 4 vCPU, 16 GiB RAM
+          value: m5.xlarge
+        - displayValue: 8 vCPU, 32 GiB RAM
+          value: m5.2xlarge
+        - displayValue: 16 vCPU, 64 GiB RAM
+          value: m5.4xlarge
+        - displayValue: 32 vCPU, 128 GiB RAM
+          value: m5.8xlarge
+      - defaultOption:
+          displayValue: 2 vCPU, 7.5 GiB RAM
+          value: n1-standard-2
+        dependencies:
+        - field: plan
+          value: DEDICATED
+        - field: cloudProvider
+          value: GCP
+        options:
+        - displayValue: 2 vCPU, 7.5 GiB RAM
+          value: n1-standard-2
+        - displayValue: 4 vCPU, 15 GiB RAM
+          value: n1-standard-4
+        - displayValue: 8 vCPU, 30 GiB RAM
+          value: n1-standard-8
+        - displayValue: 16 vCPU, 60 GiB RAM
+          value: n1-standard-16
+        - displayValue: 32 vCPU, 120 GiB RAM
+          value: n1-standard-32
+    name:
+      displayName: Cluster name
+    nodes:
+      displayName: Nodes
+      optionsLists:
+      - defaultOption:
+          displayValue: "3"
+          value: "3"
+        dependencies:
+        - field: plan
+          value: DEDICATED
+        options:
+        - displayValue: "1"
+          value: "1"
+        - displayValue: "3"
+          value: "3"
+        - displayValue: "5"
+          value: "5"
+        - displayValue: "6"
+          value: "6"
+        - displayValue: "7"
+          value: "7"
+        - displayValue: "8"
+          value: "8"
+        - displayValue: "9"
+          value: "9"
+        - displayValue: "10"
+          value: "10"
+        - displayValue: "11"
+          value: "11"
+        - displayValue: "12"
+          value: "12"
+        - displayValue: "13"
+          value: "13"
+        - displayValue: "14"
+          value: "14"
+        - displayValue: "15"
+          value: "15"
+        - displayValue: "16"
+          value: "16"
+        - displayValue: "17"
+          value: "17"
+        - displayValue: "18"
+          value: "18"
+        - displayValue: "19"
+          value: "19"
+        - displayValue: "20"
+          value: "20"
+        - displayValue: "21"
+          value: "21"
+        - displayValue: "22"
+          value: "22"
+        - displayValue: "23"
+          value: "23"
+        - displayValue: "24"
+          value: "24"
+        - displayValue: "25"
+          value: "25"
+        - displayValue: "26"
+          value: "26"
+        - displayValue: "27"
+          value: "27"
+        - displayValue: "28"
+          value: "28"
+        - displayValue: "29"
+          value: "29"
+        - displayValue: "30"
+          value: "30"
+        - displayValue: "31"
+          value: "31"
+        - displayValue: "32"
+          value: "32"
+        - displayValue: "33"
+          value: "33"
+        - displayValue: "34"
+          value: "34"
+        - displayValue: "35"
+          value: "35"
+        - displayValue: "36"
+          value: "36"
+        - displayValue: "37"
+          value: "37"
+        - displayValue: "38"
+          value: "38"
+        - displayValue: "39"
+          value: "39"
+        - displayValue: "40"
+          value: "40"
+        - displayValue: "41"
+          value: "41"
+        - displayValue: "42"
+          value: "42"
+        - displayValue: "43"
+          value: "43"
+        - displayValue: "44"
+          value: "44"
+        - displayValue: "45"
+          value: "45"
+        - displayValue: "46"
+          value: "46"
+        - displayValue: "47"
+          value: "47"
+        - displayValue: "48"
+          value: "48"
+        - displayValue: "49"
+          value: "49"
+        - displayValue: "50"
+          value: "50"
+    plan:
+      displayName: Hosting plan
+      optionsLists:
+      - defaultOption:
+          displayValue: Serverless
+          value: SERVERLESS
+        options:
+        - displayValue: Free trial
+          value: FREETRIAL
+        - displayValue: Serverless
+          value: SERVERLESS
+        - displayValue: Dedicated
+          value: DEDICATED
+    planLabel:
+      displayName: Select a plan
+    regions:
+      displayName: Regions
+      optionsLists:
+      - defaultOption:
+          displayValue: N. Virginia (us-east-1)
+          value: us-east-1
+        dependencies:
+        - field: cloudProvider
+          value: AWS
+        - field: plan
+          value: SERVERLESS
+        options:
+        - displayValue: N. Virginia (us-east-1)
+          value: us-east-1
+        - displayValue: Oregon (us-west-2)
+          value: us-west-2
+        - displayValue: Ireland (eu-west-1)
+          value: eu-west-1
+        - displayValue: Frankfurt (eu-central-1)
+          value: eu-central-1
+        - displayValue: Mumbai (ap-south-1)
+          value: ap-south-1
+        - displayValue: Singapore (ap-southeast-1)
+          value: ap-southeast-1
+      - defaultOption:
+          displayValue: N. Virginia (us-east4)
+          value: us-east4
+        dependencies:
+        - field: cloudProvider
+          value: GCP
+        - field: plan
+          value: DEDICATED
+        options:
+        - displayValue: N. Virginia (us-east4)
+          value: us-east4
+        - displayValue: South Carolina (us-east1)
+          value: us-east1
+        - displayValue: Iowa (us-central1)
+          value: us-central1
+        - displayValue: Montréal (northamerica-northeast1)
+          value: northamerica-northeast1
+        - displayValue: Oregon (us-west1)
+          value: us-west1
+        - displayValue: California (us-west2)
+          value: us-west2
+        - displayValue: London (europe-west2)
+          value: europe-west2
+        - displayValue: St. Ghislain (europe-west1)
+          value: europe-west1
+        - displayValue: Eemshaven (europe-west4)
+          value: europe-west4
+        - displayValue: São Paulo (southamerica-east1)
+          value: southamerica-east1
+        - displayValue: Tokyo (asia-northeast1)
+          value: asia-northeast1
+        - displayValue: Changhua County (asia-east1)
+          value: asia-east1
+        - displayValue: Hong Kong (asia-east2)
+          value: asia-east2
+        - displayValue: Sydney (australia-southeast1)
+          value: australia-southeast1
+        - displayValue: Jurong West (asia-southeast1)
+          value: asia-southeast1
+      - defaultOption:
+          displayValue: South Carolina (us-east1)
+          value: us-east1
+        dependencies:
+        - field: cloudProvider
+          value: GCP
+        - field: plan
+          value: SERVERLESS
+        options:
+        - displayValue: South Carolina (us-east1)
+          value: us-east1
+        - displayValue: Iowa (us-central1)
+          value: us-central1
+        - displayValue: California (us-west2)
+          value: us-west2
+        - displayValue: St. Ghislain (europe-west1)
+          value: europe-west1
+        - displayValue: São Paulo (southamerica-east1)
+          value: southamerica-east1
+        - displayValue: Jurong West (asia-southeast1)
+          value: asia-southeast1
+      - defaultOption:
+          displayValue: Ohio (us-east-2)
+          value: us-east-2
+        dependencies:
+        - field: cloudProvider
+          value: AWS
+        - field: plan
+          value: DEDICATED
+        options:
+        - displayValue: Ohio (us-east-2)
+          value: us-east-2
+        - displayValue: N. Virginia (us-east-1)
+          value: us-east-1
+        - displayValue: Oregon (us-west-2)
+          value: us-west-2
+        - displayValue: Ireland (eu-west-1)
+          value: eu-west-1
+        - displayValue: London (eu-west-2)
+          value: eu-west-2
+        - displayValue: Paris (eu-west-3)
+          value: eu-west-3
+        - displayValue: Frankfurt (eu-central-1)
+          value: eu-central-1
+        - displayValue: São Paulo (sa-east-1)
+          value: sa-east-1
+        - displayValue: Tokyo (ap-northeast-1)
+          value: ap-northeast-1
+        - displayValue: Seoul (ap-northeast-2)
+          value: ap-northeast-2
+        - displayValue: Mumbai (ap-south-1)
+          value: ap-south-1
+        - displayValue: Sydney (ap-southeast-2)
+          value: ap-southeast-2
+        - displayValue: Singapore (ap-southeast-1)
+          value: ap-southeast-1
+    serverlessLocationLabel:
+      displayName: Select regions
+      helpText: Select the geographical region where you want the database instance
+        to run.
+    spendLimit:
+      defaultValue: "0"
+      displayName: Spend limit
+    spendLimitLabel:
+      displayName: Select regions & nodes
+      helpText: Set a spending limit on resources for this database instance. This
+        value is the maximum amount, in credits, that you can be charged for a month
+        of usage. Once the spending limit is met, cluster performance could be reduced
+        or become unavailable. A spending limit value of zero means no credit card
+        is required.
+    storageGib:
+      displayName: Storage
+      optionsLists:
+      - defaultOption:
+          displayValue: 15 GiB
+          value: "15"
+        dependencies:
+        - field: plan
+          value: DEDICATED
+        - field: cloudProvider
+          value: AWS
+        options:
+        - displayValue: 15 GiB
+          value: "15"
+        - displayValue: 35 GiB
+          value: "35"
+        - displayValue: 75 GiB
+          value: "75"
+        - displayValue: 150 GiB
+          value: "150"
+        - displayValue: 300 TiB
+          value: "300"
+        - displayValue: 600 TiB
+          value: "600"
+      - defaultOption:
+          displayValue: 15 GiB
+          value: "15"
+        dependencies:
+        - field: plan
+          value: DEDICATED
+        - field: cloudProvider
+          value: GCP
+        options:
+        - displayValue: 15 GiB
+          value: "15"
+        - displayValue: 35 GiB
+          value: "35"
+        - displayValue: 75 GiB
+          value: "75"
+        - displayValue: 150 GiB
+          value: "150"
+        - displayValue: 300 TiB
+          value: "300"
+        - displayValue: 600 TiB
+          value: "600"
+status:
+  conditions:
+  - lastTransitionTime: "2022-12-22T18:28:54Z"
+    message: ""
+    reason: Success
+    status: "True"
+    type: ProviderReady
