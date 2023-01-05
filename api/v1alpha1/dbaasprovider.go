@@ -333,11 +333,14 @@ type ProvisioningParameter struct {
 	// Additional info about the field
 	HelpText string `json:"helpText,omitempty"`
 
-	// Lists of options for the field. May have multiple option lists based on the dependecies.
+	// Lists of options for the field. May have multiple option lists based on the dependencies.
+	// If options lists are present, the field is displayed as a dropdown in the UX
 	OptionsLists []ProvisioningParameterOptions `json:"optionsLists,omitempty"`
 
-	// Default value for the field
-	DefaultValue string `json:"defaultValue,omitempty"`
+	// Lists of default values for the field. May have multiple default values based on the dependencies.
+	// If default values are present, the field is displayed as a text input field.
+	// If both OptionsLists and DefaultValues are present, DefaultValues will be ignored in the UX.
+	DefaultValues []ProvisioningParameterDefaultValue `json:"defaultValues,omitempty"`
 }
 
 // ProvisioningParameterOptions defines the list of options available for UX for a field based on the dependencies
@@ -353,4 +356,13 @@ type ProvisioningParameterOptions struct {
 
 	// Default option for this option list
 	DefaultOption Option `json:"defaultOption,omitempty"`
+}
+
+// ProvisioningParameterDefaultValue defines the default value for a field based on the dependencies
+type ProvisioningParameterDefaultValue struct {
+	// List of the dependent fields and their values
+	Dependencies []FieldDependency `json:"dependencies,omitempty"`
+
+	// Default value
+	DefaultValue string `json:"defaultValue,omitempty"`
 }

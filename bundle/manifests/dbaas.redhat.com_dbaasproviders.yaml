@@ -123,9 +123,52 @@ spec:
                 additionalProperties:
                   description: Information for a provisioning parameter
                   properties:
-                    defaultValue:
-                      description: Default value for the field
-                      type: string
+                    defaultValues:
+                      description: Lists of default values for the field. May have
+                        multiple default values based on the dependencies. If default
+                        values are present, the field is displayed as a text input
+                        field. If both OptionsLists and DefaultValues are present,
+                        DefaultValues will be ignored in the UX.
+                      items:
+                        description: ProvisioningParameterDefaultValue defines the
+                          default value for a field based on the dependencies
+                        properties:
+                          defaultValue:
+                            description: Default value
+                            type: string
+                          dependencies:
+                            description: List of the dependent fields and their values
+                            items:
+                              description: FieldDependency defines the name and value
+                                of a field used as a dependency
+                              properties:
+                                field:
+                                  description: Name of the field used as a dependency
+                                  enum:
+                                  - name
+                                  - plan
+                                  - cloudProvider
+                                  - regions
+                                  - availabilityZones
+                                  - nodes
+                                  - machineType
+                                  - storageGib
+                                  - spendLimit
+                                  - teamProject
+                                  - databaseType
+                                  - dedicatedLocationLabel
+                                  - serverlessLocationLabel
+                                  - hardwareLabel
+                                  - planLabel
+                                  - spendLimitLabel
+                                  type: string
+                                value:
+                                  description: Value of the field used as a dependency
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                      type: array
                     displayName:
                       description: A user-friendly name for this field.
                       type: string
@@ -134,7 +177,8 @@ spec:
                       type: string
                     optionsLists:
                       description: Lists of options for the field. May have multiple
-                        option lists based on the dependecies.
+                        option lists based on the dependencies. If options lists are
+                        present, the field is displayed as a dropdown in the UX
                       items:
                         description: 'ProvisioningParameterOptions defines the list
                           of options available for UX for a field based on the dependencies
