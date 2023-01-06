@@ -330,38 +330,25 @@ type ProvisioningParameter struct {
 	// A user-friendly name for this field.
 	DisplayName string `json:"displayName"`
 
-	// Additional info about the field
+	// Additional info about the field.
 	HelpText string `json:"helpText,omitempty"`
 
-	// Lists of options for the field. May have multiple option lists based on the dependencies.
-	// If options lists are present, the field is displayed as a dropdown in the UX
-	OptionsLists []ProvisioningParameterOptions `json:"optionsLists,omitempty"`
-
-	// Lists of default values for the field. May have multiple default values based on the dependencies.
-	// If default values are present, the field is displayed as a text input field.
-	// If both OptionsLists and DefaultValues are present, DefaultValues will be ignored in the UX.
-	DefaultValues []ProvisioningParameterDefaultValue `json:"defaultValues,omitempty"`
+	// Lists of additional data containing the options or default values for the field.
+	ConditionalData []ConditionalProvisioningParameterData `json:"conditionalData,omitempty"`
 }
 
-// ProvisioningParameterOptions defines the list of options available for UX for a field based on the dependencies
-// A single parameter can have multiple option lists depending on the dependent parameters.
-// For instance, there are 4 different lists for regions: one for dedicated cluster on GCP,
+// ConditionalProvisioningParameterData defines the list of options with the corresponding default value available
+// for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies
+// A provisioning parameter can have multiple option lists/default values depending on the dependent parameters.
+// For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP,
 // one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS.
-type ProvisioningParameterOptions struct {
+// If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+type ConditionalProvisioningParameterData struct {
 	// List of the dependent fields and their values
 	Dependencies []FieldDependency `json:"dependencies,omitempty"`
 
 	// Options displayed in the UX
 	Options []Option `json:"options,omitempty"`
-
-	// Default option for this option list
-	DefaultOption Option `json:"defaultOption,omitempty"`
-}
-
-// ProvisioningParameterDefaultValue defines the default value for a field based on the dependencies
-type ProvisioningParameterDefaultValue struct {
-	// List of the dependent fields and their values
-	Dependencies []FieldDependency `json:"dependencies,omitempty"`
 
 	// Default value
 	DefaultValue string `json:"defaultValue,omitempty"`
