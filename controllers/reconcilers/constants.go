@@ -16,8 +16,6 @@ const (
 	InstallNamespace = "openshift-operators"
 	// CatalogNamespace namespace for catalog sources
 	CatalogNamespace = "openshift-marketplace"
-	// ConsolePlugin49Tag tag for the console plugin in OpenShift 4.9
-	ConsolePlugin49Tag = "-4.9"
 
 	// DBaaSQuickStartVersion version for the quick start guide
 	DBaaSQuickStartVersion = "dbaas-quick-starts:0.4.0"
