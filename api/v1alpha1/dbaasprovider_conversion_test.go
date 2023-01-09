@@ -29,7 +29,7 @@ var _ = Context("DBaaSProvider Conversion", func() {
 		Specify("converts to and from the same object", func() {
 			src := DBaaSProvider{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      testName,
+					Name:      v1beta1.MongoDBAtlasRegistration,
 					Namespace: testNamespace,
 				},
 				Spec: DBaaSProviderSpec{
@@ -43,14 +43,24 @@ var _ = Context("DBaaSProvider Conversion", func() {
 					ExternalProvisionDescription: "test",
 					ExternalProvisionURL:         "test",
 					InstanceKind:                 "test",
-					InstanceParameterSpecs: []InstanceParameterSpec{
-						{
-							Name: "test",
-						},
-					},
-					InventoryKind: "test",
+					InventoryKind:                "test",
 					Provider: DatabaseProvider{
 						Name: "test",
+					},
+					InstanceParameterSpecs: []InstanceParameterSpec{
+						{
+							Name:        "clusterName",
+							DisplayName: "Cluster Name",
+							Type:        "string",
+							Required:    true,
+						},
+						{
+							Name:         "providerName",
+							DisplayName:  "Cloud Provider",
+							Type:         "string",
+							Required:     true,
+							DefaultValue: "AWS",
+						},
 					},
 				},
 				Status: DBaaSProviderStatus{},
@@ -58,7 +68,6 @@ var _ = Context("DBaaSProvider Conversion", func() {
 			intermediate := v1beta1.DBaaSProvider{}
 			dst := DBaaSProvider{}
 
-			//intermediate.Hub()
 			Expect(src.ConvertTo(&intermediate)).To(Succeed())
 			Expect(dst.ConvertFrom(&intermediate)).To(Succeed())
 			Expect(dst).To(Equal(src))

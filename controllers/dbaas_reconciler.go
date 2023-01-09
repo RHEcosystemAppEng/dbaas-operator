@@ -72,11 +72,11 @@ func (r *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, o
 	return nil
 }
 
-func (r *DBaaSReconciler) createProviderObject(object client.Object, providerObjectKind string) *unstructured.Unstructured {
+func (r *DBaaSReconciler) createProviderObject(object client.Object, groupVersion schema.GroupVersion, providerObjectKind string) *unstructured.Unstructured {
 	var providerObject unstructured.Unstructured
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   v1alpha1.GroupVersion.Group,
-		Version: v1alpha1.GroupVersion.Version,
+		Group:   groupVersion.Group,
+		Version: groupVersion.Version,
 		Kind:    providerObjectKind,
 	})
 	providerObject.SetNamespace(object.GetNamespace())
@@ -226,7 +226,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 	}
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", providerName)
 
-	providerObject := r.createProviderObject(DBaaSObject, providerObjectKindFn(provider))
+	providerObject := r.createProviderObject(DBaaSObject, provider.GetDBaaSAPIGroupVersion(), providerObjectKindFn(provider))
 	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn())); err != nil {
 		if errors.IsConflict(err) {
 			logger.V(1).Info("Provider object modified, retry syncing spec", "Provider Object", providerObject)

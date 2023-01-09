@@ -23,6 +23,22 @@ import (
 
 // notes on writing good spokes https://book.kubebuilder.io/multiversion-tutorial/conversion.html
 
+var nameMappings map[string]interface{} = map[string]interface{}{
+	v1beta1.CockroachDBCloudRegistration: map[string]v1beta1.ProvisioningParameterType{
+		"Name":     v1beta1.ProvisioningName,
+		"Provider": v1beta1.ProvisioningCloudProvider,
+		"TeamID":   v1beta1.ProvisioningTeamProject,
+	},
+	v1beta1.MongoDBAtlasRegistration: map[string]v1beta1.ProvisioningParameterType{
+		"clusterName":  v1beta1.ProvisioningName,
+		"providerName": v1beta1.ProvisioningCloudProvider,
+		"ProjectName":  v1beta1.ProvisioningTeamProject,
+	},
+	v1beta1.RdsRegistration: map[string]v1beta1.ProvisioningParameterType{
+		"Engine": v1beta1.ProvisioningDatabaseType,
+	},
+}
+
 // ConvertTo converts this DBaaSProvider to the Hub version (v1beta1).
 func (src *DBaaSProvider) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1beta1.DBaaSProvider)
@@ -39,9 +55,6 @@ func (src *DBaaSProvider) ConvertTo(dstRaw conversion.Hub) error {
 	dst.Spec.ExternalProvisionDescription = src.Spec.ExternalProvisionDescription
 	dst.Spec.ExternalProvisionURL = src.Spec.ExternalProvisionURL
 	dst.Spec.InstanceKind = src.Spec.InstanceKind
-	for i := range src.Spec.InstanceParameterSpecs {
-		dst.Spec.InstanceParameterSpecs = append(dst.Spec.InstanceParameterSpecs, v1beta1.InstanceParameterSpec(src.Spec.InstanceParameterSpecs[i]))
-	}
 	dst.Spec.InventoryKind = src.Spec.InventoryKind
 	dst.Spec.Provider = v1beta1.DatabaseProviderInfo{
 		Name:               src.Spec.Provider.Name,
@@ -49,9 +62,77 @@ func (src *DBaaSProvider) ConvertTo(dstRaw conversion.Hub) error {
 		DisplayDescription: src.Spec.Provider.DisplayDescription,
 		Icon:               v1beta1.ProviderIcon(src.Spec.Provider.Icon),
 	}
+	dst.Spec.ProvisioningParameters = map[v1beta1.ProvisioningParameterType]v1beta1.ProvisioningParameter{}
+	for _, v := range src.Spec.InstanceParameterSpecs {
+		name := convertNameTo(src.Name, v.Name)
+		if len(name) == 0 {
+			continue // this field is not supported in v1beta1
+		}
+		if name == v1beta1.ProvisioningCloudProvider {
+			var defaultValue string
+			if len(v.DefaultValue) > 0 {
+				defaultValue = v.DefaultValue
+			} else {
+				defaultValue = "AWS"
+			}
+			s := v1beta1.ProvisioningParameter{
+				DisplayName: v.DisplayName,
+				ConditionalData: []v1beta1.ConditionalProvisioningParameterData{
+					{
+						Dependencies: []v1beta1.FieldDependency{
+							{
+								Field: v1beta1.ProvisioningPlan,
+								Value: v1beta1.ProvisioningPlanFreeTrial,
+							},
+						},
+						Options: []v1beta1.Option{
+							{
+								Value:        defaultValue,
+								DisplayValue: defaultValue,
+							},
+						},
+						DefaultValue: defaultValue,
+					},
+				},
+			}
+			dst.Spec.ProvisioningParameters[name] = s
+		} else {
+			// Others are input fields
+			s := v1beta1.ProvisioningParameter{
+				DisplayName: v.DisplayName,
+				ConditionalData: []v1beta1.ConditionalProvisioningParameterData{
+					{
+						Dependencies: []v1beta1.FieldDependency{
+							{
+								Field: v1beta1.ProvisioningPlan,
+								Value: v1beta1.ProvisioningPlanFreeTrial,
+							},
+						},
+					},
+				},
+			}
+			dst.Spec.ProvisioningParameters[name] = s
+		}
+	}
+
+	//v1alpha1 only supports freetrial
+	dst.Spec.ProvisioningParameters[v1beta1.ProvisioningPlan] = v1beta1.ProvisioningParameter{
+		DisplayName: "Hosting plan",
+		ConditionalData: []v1beta1.ConditionalProvisioningParameterData{
+			{
+				Options: []v1beta1.Option{
+					{
+						Value:        v1beta1.ProvisioningPlanFreeTrial,
+						DisplayValue: "Free trial",
+					},
+				},
+				DefaultValue: v1beta1.ProvisioningPlanFreeTrial,
+			},
+		},
+	}
 
 	// Status
-	dst.Status = v1beta1.DBaaSProviderStatus(src.Status)
+	dst.Status = v1beta1.DBaaSProviderStatus{}
 
 	return nil
 }
@@ -72,9 +153,26 @@ func (dst *DBaaSProvider) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Spec.ExternalProvisionDescription = src.Spec.ExternalProvisionDescription
 	dst.Spec.ExternalProvisionURL = src.Spec.ExternalProvisionURL
 	dst.Spec.InstanceKind = src.Spec.InstanceKind
-	for i := range src.Spec.InstanceParameterSpecs {
-		dst.Spec.InstanceParameterSpecs = append(dst.Spec.InstanceParameterSpecs, InstanceParameterSpec(src.Spec.InstanceParameterSpecs[i]))
+	for k, v := range src.Spec.ProvisioningParameters {
+		var s InstanceParameterSpec
+		switch k {
+		case v1beta1.ProvisioningCloudProvider, v1beta1.ProvisioningName, v1beta1.ProvisioningDatabaseType, v1beta1.ProvisioningTeamProject:
+			var defaultValue string
+			if len(v.ConditionalData) > 0 {
+				defaultValue = v.ConditionalData[0].DefaultValue
+			}
+			name := convertNameFrom(src.Name, k)
+			s = InstanceParameterSpec{
+				Name:         name,
+				DisplayName:  v.DisplayName,
+				Required:     true,
+				Type:         "string",
+				DefaultValue: defaultValue,
+			}
+			dst.Spec.InstanceParameterSpecs = append(dst.Spec.InstanceParameterSpecs, s)
+		}
 	}
+
 	dst.Spec.InventoryKind = src.Spec.InventoryKind
 	dst.Spec.Provider = DatabaseProvider{
 		Name:               src.Spec.Provider.Name,
@@ -84,7 +182,29 @@ func (dst *DBaaSProvider) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status = DBaaSProviderStatus(src.Status)
+	dst.Status = DBaaSProviderStatus{}
 
 	return nil
+}
+
+func convertNameTo(providerName, name string) v1beta1.ProvisioningParameterType {
+	if m, ok := nameMappings[providerName]; ok {
+		m1 := m.(map[string]v1beta1.ProvisioningParameterType)
+		if nameOut, ok := m1[name]; ok {
+			return nameOut
+		}
+	}
+	return ""
+}
+
+func convertNameFrom(providerName string, name v1beta1.ProvisioningParameterType) string {
+	if m, ok := nameMappings[providerName]; ok {
+		m1 := m.(map[string]v1beta1.ProvisioningParameterType)
+		for k, v := range m1 {
+			if v == name {
+				return k
+			}
+		}
+	}
+	return ""
 }

@@ -32,7 +32,6 @@ import (
 )
 
 const (
-	rdsRegistration = "rds-registration"
 	providerNameKey = "spec.providerRef.name"
 )
 
@@ -96,7 +95,7 @@ func validateInventory(inv *DBaaSInventory, oldInv *DBaaSInventory) error {
 		return err
 	}
 	// Check RDS
-	if oldInv == nil && inv.Spec.ProviderRef.Name == rdsRegistration {
+	if oldInv == nil && inv.Spec.ProviderRef.Name == RdsRegistration {
 		if err := validateRDS(); err != nil {
 			return err
 		}
@@ -127,7 +126,7 @@ func validateInventoryMandatoryFields(inv *DBaaSInventory, secret *corev1.Secret
 
 func validateRDS() error {
 	rdsInventoryList := &DBaaSInventoryList{}
-	if err := inventoryWebhookAPIClient.List(context.TODO(), rdsInventoryList, client.MatchingFields{providerNameKey: rdsRegistration}); err != nil {
+	if err := inventoryWebhookAPIClient.List(context.TODO(), rdsInventoryList, client.MatchingFields{providerNameKey: RdsRegistration}); err != nil {
 		return err
 	}
 	if len(rdsInventoryList.Items) > 0 {

@@ -35,11 +35,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryRefName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+				v1beta1.ProvisioningName:          "test-instance",
+				v1beta1.ProvisioningCloudProvider: "aws",
+				v1beta1.ProvisioningRegions:       "test-region",
+				v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 			},
 		}
 		createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -79,11 +79,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+				v1beta1.ProvisioningName:          "test-instance",
+				v1beta1.ProvisioningCloudProvider: "aws",
+				v1beta1.ProvisioningRegions:       "test-region",
+				v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 			},
 		}
 		createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -117,7 +117,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -151,11 +151,11 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+				v1beta1.ProvisioningName:          "test-instance",
+				v1beta1.ProvisioningCloudProvider: "aws",
+				v1beta1.ProvisioningRegions:       "test-region",
+				v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 			},
 		}
 		otherNS := v1.Namespace{
@@ -195,7 +195,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -248,7 +248,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					},
 				},
 			}
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 			Context("after creating DBaaSInstance", func() {
 				instanceName := "test-instance"
@@ -257,11 +257,11 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+						v1beta1.ProvisioningName:          "test-instance",
+						v1beta1.ProvisioningCloudProvider: "aws",
+						v1beta1.ProvisioningRegions:       "test-region",
+						v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 					},
 				}
 				createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -274,7 +274,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -292,7 +292,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -301,14 +301,14 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+							v1beta1.ProvisioningName:          "updated-test-instance",
+							v1beta1.ProvisioningCloudProvider: "azure",
+							v1beta1.ProvisioningRegions:       "updated-test-region",
+							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 		})
@@ -376,11 +376,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+						v1beta1.ProvisioningName:          "test-instance",
+						v1beta1.ProvisioningCloudProvider: "aws",
+						v1beta1.ProvisioningRegions:       "test-region",
+						v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 					},
 				}
 				createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -393,7 +393,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -411,7 +411,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -420,19 +420,19 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+							v1beta1.ProvisioningName:          "updated-test-instance",
+							v1beta1.ProvisioningCloudProvider: "azure",
+							v1beta1.ProvisioningRegions:       "updated-test-region",
+							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -490,11 +490,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+						v1beta1.ProvisioningName:          "test-instance",
+						v1beta1.ProvisioningCloudProvider: "aws",
+						v1beta1.ProvisioningRegions:       "test-region",
+						v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 					},
 				}
 				createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -507,7 +507,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -525,7 +525,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -534,19 +534,19 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name:          "updated-test-instance",
-						CloudProvider: "azure",
-						CloudRegion:   "updated-test-region",
-						OtherInstanceParams: map[string]string{
-							"testParam": "updated-test-param",
+						ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+							v1beta1.ProvisioningName:          "updated-test-instance",
+							v1beta1.ProvisioningCloudProvider: "azure",
+							v1beta1.ProvisioningRegions:       "updated-test-region",
+							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -606,11 +606,11 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						Name:      inventoryRefName,
 						Namespace: testNamespace,
 					},
-					Name:          "test-instance",
-					CloudProvider: "aws",
-					CloudRegion:   "test-region",
-					OtherInstanceParams: map[string]string{
-						"testParam": "test-param",
+					ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+						v1beta1.ProvisioningName:          "test-instance",
+						v1beta1.ProvisioningCloudProvider: "aws",
+						v1beta1.ProvisioningRegions:       "test-region",
+						v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 					},
 				}
 				createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -627,7 +627,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})

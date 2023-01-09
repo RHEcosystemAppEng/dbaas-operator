@@ -70,17 +70,16 @@ var (
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
 	testProviderRDS = DBaaSProvider{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      rdsRegistration,
+			Name:      RdsRegistration,
 			Namespace: testNamespace,
 		},
 		Spec: DBaaSProviderSpec{
 			Provider: DatabaseProviderInfo{
-				Name: rdsRegistration,
+				Name: RdsRegistration,
 			},
 			InventoryKind:  testInventoryKindRDS,
 			ConnectionKind: testConnectionKindRDS,
@@ -120,7 +119,6 @@ var (
 			AllowsFreeTrial:              true,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []InstanceParameterSpec{},
 		},
 	}
 	testSecret = corev1.Secret{
@@ -374,7 +372,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			},
 			Spec: DBaaSOperatorInventorySpec{
 				ProviderRef: NamespacedName{
-					Name: rdsRegistration,
+					Name: RdsRegistration,
 				},
 				DBaaSInventorySpec: DBaaSInventorySpec{
 					CredentialsRef: &LocalObjectReference{
@@ -400,7 +398,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					},
 					Spec: DBaaSOperatorInventorySpec{
 						ProviderRef: NamespacedName{
-							Name: rdsRegistration,
+							Name: RdsRegistration,
 						},
 						DBaaSInventorySpec: DBaaSInventorySpec{
 							CredentialsRef: &LocalObjectReference{
@@ -421,7 +419,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					},
 					Spec: DBaaSOperatorInventorySpec{
 						ProviderRef: NamespacedName{
-							Name: rdsRegistration,
+							Name: RdsRegistration,
 						},
 						DBaaSInventorySpec: DBaaSInventorySpec{
 							CredentialsRef: &LocalObjectReference{

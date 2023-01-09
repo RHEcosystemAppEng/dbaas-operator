@@ -671,9 +671,9 @@ spec:
                 - name: CSV_VERSION_MONGODB_ATLAS
                   value: mongodb-atlas-kubernetes.v0.3.0
                 - name: RELATED_IMAGE_COCKROACHDB_CATALOG
-                  value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
+                  value: quay.io/jianrzha/ccapi-k8s-operator-catalog:v0.0.5-dev
                 - name: CSV_VERSION_COCKROACHDB
-                  value: ccapi-k8s-operator.v0.0.4
+                  value: ccapi-k8s-operator.v0.0.5-dev
                 - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
                   value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.2.0
                 - name: CSV_VERSION_RDS_PROVIDER
@@ -786,7 +786,7 @@ spec:
     name: crunchy-bridge-catalog
   - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
     name: mongodb-atlas-catalog
-  - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.4
+  - image: quay.io/jianrzha/ccapi-k8s-operator-catalog:v0.0.5-dev
     name: cockroachdb-catalog
   - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.2.0
     name: rds-provider-catalog

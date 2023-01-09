@@ -23,6 +23,7 @@ import (
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
@@ -112,7 +113,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -186,7 +187,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -221,11 +222,10 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				Name:      inventoryName,
 				Namespace: testNamespace,
 			},
-			Name:          "test-instance-to-create",
-			CloudProvider: "aws",
-			CloudRegion:   "test-region",
-			OtherInstanceParams: map[string]string{
-				"testParam": "test-param",
+			ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+				v1beta1.ProvisioningName:          "test-instance-to-create",
+				v1beta1.ProvisioningCloudProvider: "aws",
+				v1beta1.ProvisioningRegions:       "test-region",
 			},
 		}
 		createdDBaaSInstance := &v1beta1.DBaaSInstance{
@@ -275,7 +275,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -352,7 +352,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
 				It("should create a provider connection", func() {
-					assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec)()
+					assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec)()
 
 					By("checking if the Deployment is created")
 					deployment := &appv1.Deployment{
@@ -413,21 +413,23 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
 					It("should not allow setting instance ID", func() {
 						By("updating instanceID twice")
+						err := dRec.Get(ctx, types.NamespacedName{Name: createdDBaaSConnection.Name, Namespace: createdDBaaSConnection.Namespace}, createdDBaaSConnection)
+						Expect(err).ShouldNot(HaveOccurred())
 						createdDBaaSConnection.Spec.InstanceID = "updated-test-instanceID"
-						err := dRec.Update(ctx, createdDBaaSConnection)
+						err = dRec.Update(ctx, createdDBaaSConnection)
 						Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
 							"spec.instanceID: Invalid value: \"updated-test-instanceID\": instanceID is immutable"))
 					})
 				})
 			})
 
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})
@@ -480,7 +482,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 					},
 				},
 			}
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 
 			Context("after creating DBaaSInstance", func() {
@@ -495,7 +497,9 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 							Name:      inventoryRefName,
 							Namespace: testNamespace,
 						},
-						Name: instanceRefName,
+						ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+							v1beta1.ProvisioningName: instanceRefName,
+						},
 					},
 				}
 				lastTransitionTime := getLastTransitionTimeForTest()
@@ -512,7 +516,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 					},
 				}
 
-				BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInstance, metav1.ConditionTrue, testInstanceKind, instanceStatus))
+				BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, instanceStatus))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
 				Context("after creating DBaaSConnection", func() {
@@ -545,7 +549,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 							},
 							InstanceID: instanceID,
 						}
-						assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, expectedDBaaSConnectionSpec)()
+						assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, expectedDBaaSConnectionSpec)()
 
 						By("checking if the Deployment is created")
 						deployment := &appv1.Deployment{
@@ -606,7 +610,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 								Name: "testConnectionInfoRef",
 							},
 						}
-						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 					})
 				})
 			})
@@ -688,7 +692,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -707,14 +711,16 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
 					It("should not allow setting instance ID", func() {
 						By("updating instanceID twice")
+						err := dRec.Get(ctx, types.NamespacedName{Name: createdDBaaSConnection.Name, Namespace: createdDBaaSConnection.Namespace}, createdDBaaSConnection)
+						Expect(err).ShouldNot(HaveOccurred())
 						createdDBaaSConnection.Spec.InstanceID = "updated-test-instanceID"
-						err := dRec.Update(ctx, createdDBaaSConnection)
+						err = dRec.Update(ctx, createdDBaaSConnection)
 						Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
 							"spec.instanceID: Invalid value: \"updated-test-instanceID\": instanceID is immutable"))
 					})
@@ -722,7 +728,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -793,7 +799,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -812,14 +818,19 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
 					It("should not allow setting instance ID", func() {
 						By("updating instanceID twice")
+						err := dRec.Get(ctx, types.NamespacedName{
+							Name:      createdDBaaSConnection.Name,
+							Namespace: createdDBaaSConnection.Namespace},
+							createdDBaaSConnection)
+						Expect(err).ShouldNot(HaveOccurred())
 						createdDBaaSConnection.Spec.InstanceID = "updated-test-instanceID"
-						err := dRec.Update(ctx, createdDBaaSConnection)
+						err = dRec.Update(ctx, createdDBaaSConnection)
 						Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
 							"spec.instanceID: Invalid value: \"updated-test-instanceID\": instanceID is immutable"))
 					})
@@ -827,7 +838,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -917,7 +928,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -936,14 +947,19 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
 					It("should not allow setting instance ID", func() {
 						By("updating instanceID twice")
+						err := dRec.Get(ctx, types.NamespacedName{
+							Name:      createdDBaaSConnection.Name,
+							Namespace: createdDBaaSConnection.Namespace},
+							createdDBaaSConnection)
+						Expect(err).ShouldNot(HaveOccurred())
 						createdDBaaSConnection.Spec.InstanceID = "updated-test-instanceID"
-						err := dRec.Update(ctx, createdDBaaSConnection)
+						err = dRec.Update(ctx, createdDBaaSConnection)
 						Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
 							"spec.instanceID: Invalid value: \"updated-test-instanceID\": instanceID is immutable"))
 					})
@@ -951,7 +967,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -1027,7 +1043,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -1046,14 +1062,19 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
 					It("should not allow setting instance ID", func() {
 						By("updating instanceID twice")
+						err := dRec.Get(ctx, types.NamespacedName{
+							Name:      createdDBaaSConnection.Name,
+							Namespace: createdDBaaSConnection.Namespace},
+							createdDBaaSConnection)
+						Expect(err).ShouldNot(HaveOccurred())
 						createdDBaaSConnection.Spec.InstanceID = "updated-test-instanceID"
-						err := dRec.Update(ctx, createdDBaaSConnection)
+						err = dRec.Update(ctx, createdDBaaSConnection)
 						Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
 							"spec.instanceID: Invalid value: \"updated-test-instanceID\": instanceID is immutable"))
 					})
@@ -1061,7 +1082,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})
