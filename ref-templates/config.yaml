@@ -1,0 +1,10 @@
+processor:
+  ignoreTypes:
+    - "(DBaaSConnection|DBaaSInstance|DBaaSInventory|DBaaSPlatform|DBaaSPolicy|DBaaSProvider)List$"
+    - "(DBaaSConnection|DBaaSInstance|DBaaSInventory|DBaaSPlatform|DBaaSPolicy|DBaaSProvider)Status$"
+  ignoreFields:
+    - "status$"
+    - "TypeMeta$"
+
+render:
+  kubernetesVersion: 1.24
