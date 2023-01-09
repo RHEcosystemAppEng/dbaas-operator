@@ -54,17 +54,22 @@ func (dst *DBaaSConnection) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	dst.Spec.InventoryRef = NamespacedName(src.Spec.InventoryRef)
-	dst.Spec.InstanceID = src.Spec.InstanceID
-	if src.Spec.InstanceRef != nil {
-		dst.Spec.InstanceRef = &NamespacedName{
-			Name:      src.Spec.InstanceRef.Name,
-			Namespace: src.Spec.InstanceRef.Namespace,
-		}
-	}
+	dst.Spec.ConvertFrom(&src.Spec)
 
 	// Status
 	dst.Status = DBaaSConnectionStatus(src.Status)
 
 	return nil
+}
+
+// ConvertFrom converts the DBaaSConnectionSpec from the v1beta1 to this version.
+func (dst *DBaaSConnectionSpec) ConvertFrom(src *v1beta1.DBaaSConnectionSpec) {
+	dst.InventoryRef = NamespacedName(src.InventoryRef)
+	dst.InstanceID = src.InstanceID
+	if src.InstanceRef != nil {
+		dst.InstanceRef = &NamespacedName{
+			Name:      src.InstanceRef.Name,
+			Namespace: src.InstanceRef.Namespace,
+		}
+	}
 }

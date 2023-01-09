@@ -29,6 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
@@ -90,6 +91,19 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	} else if !provision {
 		return ctrl.Result{}, nil
 	} else {
+		provider, err := r.getDBaaSProvider(ctx, inventory.Spec.ProviderRef.Name)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		specV1alpha1 := &v1alpha1.DBaaSInstanceSpec{}
+		if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
+			// Convert instance.Spec to v1alpha1 format
+			err := specV1alpha1.ConvertFrom(&instance.Spec)
+			if err != nil {
+				logger.Error(err, "Failed to convert instance.Spec to v1alpha1 format")
+				return ctrl.Result{}, err
+			}
+		}
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&instance,
@@ -97,6 +111,9 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return provider.Spec.InstanceKind
 			},
 			func() interface{} {
+				if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
+					return specV1alpha1
+				}
 				return instance.Spec.DeepCopy()
 			},
 			func() interface{} {

@@ -17,7 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 )
 
@@ -29,11 +33,9 @@ func (src *DBaaSInstance) ConvertTo(dstRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	dst.Spec.CloudProvider = src.Spec.CloudProvider
-	dst.Spec.CloudRegion = src.Spec.CloudRegion
-	dst.Spec.InventoryRef = v1beta1.NamespacedName(src.Spec.InventoryRef)
-	dst.Spec.Name = src.Spec.Name
-	dst.Spec.OtherInstanceParams = src.Spec.OtherInstanceParams
+	if err := src.Spec.ConvertTo(&dst.Spec); err != nil {
+		return err
+	}
 
 	// Status
 	dst.Status.Conditions = src.Status.Conditions
@@ -52,11 +54,9 @@ func (dst *DBaaSInstance) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	dst.Spec.CloudProvider = src.Spec.CloudProvider
-	dst.Spec.CloudRegion = src.Spec.CloudRegion
-	dst.Spec.InventoryRef = NamespacedName(src.Spec.InventoryRef)
-	dst.Spec.Name = src.Spec.Name
-	dst.Spec.OtherInstanceParams = src.Spec.OtherInstanceParams
+	if err := dst.Spec.ConvertFrom(&src.Spec); err != nil {
+		return err
+	}
 
 	// Status
 	dst.Status.Conditions = src.Status.Conditions
@@ -64,5 +64,65 @@ func (dst *DBaaSInstance) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Status.InstanceInfo = src.Status.InstanceInfo
 	dst.Status.Phase = DBaasInstancePhase(src.Status.Phase)
 
+	return nil
+}
+
+// ConvertTo convert this DBaaSInstanceSpec to v1beta1.DBaaSInstanceSpec
+func (src *DBaaSInstanceSpec) ConvertTo(dst *v1beta1.DBaaSInstanceSpec) error {
+	dst.InventoryRef = v1beta1.NamespacedName(src.InventoryRef)
+	dst.ProvisioningParameters = map[v1beta1.ProvisioningParameterType]string{}
+	dst.ProvisioningParameters[v1beta1.ProvisioningName] = src.Name
+	dst.ProvisioningParameters[v1beta1.ProvisioningCloudProvider] = src.CloudProvider
+	dst.ProvisioningParameters[v1beta1.ProvisioningRegions] = src.CloudRegion
+	if v1beta1.WebhookAPIClient == nil {
+		return fmt.Errorf("webhook API client not set")
+	}
+	inventory := &DBaaSInventory{}
+	if err := v1beta1.WebhookAPIClient.Get(context.TODO(), types.NamespacedName{
+		Name:      src.InventoryRef.Name,
+		Namespace: src.InventoryRef.Namespace,
+	}, inventory); err != nil {
+		return err
+	}
+
+	for key, val := range src.OtherInstanceParams {
+		name := ConvertNameTo(inventory.Spec.ProviderRef.Name, key)
+		if len(name) == 0 {
+			continue
+		}
+		dst.ProvisioningParameters[name] = val
+	}
+	dst.ProvisioningParameters[v1beta1.ProvisioningPlan] = v1beta1.ProvisioningPlanFreeTrial
+	return nil
+}
+
+// ConvertFrom converts the DBaaSInstanceSpec from the v1beta1 to this version.
+func (dst *DBaaSInstanceSpec) ConvertFrom(src *v1beta1.DBaaSInstanceSpec) error {
+	dst.Name = src.ProvisioningParameters[v1beta1.ProvisioningName]
+	dst.CloudProvider = src.ProvisioningParameters[v1beta1.ProvisioningCloudProvider]
+	dst.CloudRegion = src.ProvisioningParameters[v1beta1.ProvisioningRegions]
+	dst.InventoryRef = NamespacedName(src.InventoryRef)
+	dst.OtherInstanceParams = map[string]string{}
+	inventory := &v1beta1.DBaaSInventory{}
+	if v1beta1.WebhookAPIClient == nil {
+		return fmt.Errorf("webhook API client not set")
+	}
+	if err := v1beta1.WebhookAPIClient.Get(context.TODO(), types.NamespacedName{
+		Name:      src.InventoryRef.Name,
+		Namespace: src.InventoryRef.Namespace,
+	}, inventory); err != nil {
+		return err
+	}
+	for key, val := range src.ProvisioningParameters {
+		name := ConvertNameFrom(inventory.Spec.ProviderRef.Name, key)
+		if len(name) == 0 {
+			continue
+		}
+		// Special tweaking for mongo atlas
+		if name == "ProjectName" {
+			name = "projectName"
+		}
+		dst.OtherInstanceParams[name] = val
+	}
 	return nil
 }

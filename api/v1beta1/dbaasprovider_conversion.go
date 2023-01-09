@@ -16,5 +16,12 @@ limitations under the License.
 
 package v1beta1
 
+const (
+	CockroachDBCloudRegistration = "cockroachdb-cloud-registration"
+	MongoDBAtlasRegistration     = "mongodb-atlas-registration"
+	CrunchyBridgeRegistration    = "crunchy-bridge-registration"
+	RdsRegistration              = "rds-registration"
+)
+
 // Hub marks this type as a conversion hub.
 func (*DBaaSProvider) Hub() {}

@@ -52,7 +52,6 @@ var _ = Describe("DBaaSProvider controller", func() {
 				AllowsFreeTrial:              false,
 				ExternalProvisionURL:         "",
 				ExternalProvisionDescription: "",
-				InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 			},
 		}
 
@@ -159,7 +158,6 @@ var _ = Describe("DBaaSProvider controller", func() {
 				AllowsFreeTrial:              false,
 				ExternalProvisionURL:         "",
 				ExternalProvisionDescription: "",
-				InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 			},
 		}
 
