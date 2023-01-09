@@ -67,17 +67,16 @@ var mongoProvider = &v1beta1.DBaaSProvider{
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
-		InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 	},
 }
 
 var crunchyProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "crunchy-bridge-registration",
+		Name: v1beta1.CockroachDBCloudRegistration,
 	},
 	Spec: v1beta1.DBaaSProviderSpec{
 		Provider: v1beta1.DatabaseProviderInfo{
-			Name: "crunchy-bridge-registration",
+			Name: v1beta1.CockroachDBCloudRegistration,
 		},
 		InventoryKind:                "CrunchyBridgeInventory",
 		ConnectionKind:               testConnectionKind,
@@ -86,7 +85,6 @@ var crunchyProvider = &v1beta1.DBaaSProvider{
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
-		InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 	},
 }
 
@@ -129,12 +127,12 @@ func assertResourceCreation(object client.Object) func() {
 	}
 }
 
-func assertResourceCreationWithProviderStatus(object client.Object, inventroyDBaaSStatus metav1.ConditionStatus, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
+func assertResourceCreationWithProviderStatus(object client.Object, groupVersion schema.GroupVersion, inventroyDBaaSStatus metav1.ConditionStatus, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		assertResourceCreation(object)()
 		err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object)
 		Expect(err).Should(Succeed())
-		assertDBaaSResourceProviderStatusUpdated(object, inventroyDBaaSStatus, providerResourceKind, DBaaSResourceSpec)()
+		assertDBaaSResourceProviderStatusUpdated(object, groupVersion, inventroyDBaaSStatus, providerResourceKind, DBaaSResourceSpec)()
 	}
 }
 func assertResourceDeletion(object client.Object) func() {
@@ -153,14 +151,14 @@ func assertResourceDeletion(object client.Object) func() {
 	}
 }
 
-func assertProviderResourceCreated(object client.Object, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
+func assertProviderResourceCreated(object client.Object, groupVersion schema.GroupVersion, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		By("checking a provider resource created")
 		objectKey := client.ObjectKeyFromObject(object)
 		providerResource := &unstructured.Unstructured{}
 		providerResource.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
+			Group:   groupVersion.Group,
+			Version: groupVersion.Version,
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
@@ -189,12 +187,23 @@ func assertProviderResourceCreated(object client.Object, providerResourceKind st
 			Expect(len(providerConnection.GetOwnerReferences())).Should(Equal(1))
 			Expect(providerConnection.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
 		case *v1beta1.DBaaSInstance:
-			providerInstance := &v1beta1.DBaaSProviderInstance{}
-			err := json.Unmarshal(bytes, providerInstance)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(&providerInstance.Spec).Should(Equal(DBaaSResourceSpec))
-			Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
-			Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			if groupVersion == v1beta1.GroupVersion {
+				providerInstance := &v1beta1.DBaaSProviderInstance{}
+				err := json.Unmarshal(bytes, providerInstance)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerInstance.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			} else {
+				providerInstance := &v1alpha1.DBaaSProviderInstance{}
+				err := json.Unmarshal(bytes, providerInstance)
+				Expect(err).NotTo(HaveOccurred())
+				spec := &v1beta1.DBaaSInstanceSpec{}
+				providerInstance.Spec.ConvertTo(spec)
+				Expect(spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			}
 		default:
 			_ = v.GetName() // to avoid syntax error
 			Fail("invalid test object")
@@ -233,7 +242,7 @@ func assertDBaaSResourceStatusUpdated(object client.Object, status metav1.Condit
 	}
 }
 
-func assertDBaaSResourceProviderStatusUpdated(object client.Object, resourceDBaaSStatus metav1.ConditionStatus, providerResourceKind string, providerResourceStatus interface{}) func() {
+func assertDBaaSResourceProviderStatusUpdated(object client.Object, groupVersion schema.GroupVersion, resourceDBaaSStatus metav1.ConditionStatus, providerResourceKind string, providerResourceStatus interface{}) func() {
 	return func() {
 		By("retrieving current DBaaS resource")
 		objectKey := client.ObjectKeyFromObject(object)
@@ -247,8 +256,8 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, resourceDBaa
 		By("getting the provider resource")
 		providerResource := &unstructured.Unstructured{}
 		providerResource.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
+			Group:   groupVersion.Group,
+			Version: groupVersion.Version,
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
@@ -382,6 +391,17 @@ func assertInventoryStatus(inv *v1beta1.DBaaSInventory, condType string, dbaasSt
 	}
 }
 
+func assertInventoryStatusV1alpha1(inv *v1alpha1.DBaaSInventory, condType string, dbaasStatus metav1.ConditionStatus, providerResourceStatus interface{}) func() {
+	return func() {
+		status := inv.Status.DeepCopy()
+		dbaasConds, providerConds := splitStatusConditions(status.Conditions, condType)
+		Expect(len(dbaasConds)).Should(Equal(1))
+		Expect(dbaasConds[0].Type).Should(Equal(condType))
+		Expect(dbaasConds[0].Status).Should(Equal(dbaasStatus))
+		status.Conditions = providerConds
+		Expect(status).Should(Equal(providerResourceStatus))
+	}
+}
 func assertConnectionStatus(conn *v1beta1.DBaaSConnection, condType string, providerResourceStatus interface{}) func() {
 	return func() {
 		assertConnectionDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
@@ -402,7 +422,16 @@ func assertInstanceStatus(conn *v1beta1.DBaaSInstance, condType string, provider
 	}
 }
 
-func assertProviderResourceSpecUpdated(object client.Object, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
+func assertInstanceStatusV1alpha1(conn *v1alpha1.DBaaSInstance, condType string, providerResourceStatus interface{}) func() {
+	return func() {
+		assertInstanceDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
+		status := conn.Status.DeepCopy()
+		_, providerConds := splitStatusConditions(status.Conditions, condType)
+		status.Conditions = providerConds
+		Expect(status).Should(Equal(providerResourceStatus))
+	}
+}
+func assertProviderResourceSpecUpdated(object client.Object, groupVersion schema.GroupVersion, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		By("updating the DBaaS resource spec")
 		objectKey := client.ObjectKeyFromObject(object)
@@ -434,8 +463,8 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 		By("checking the provider resource status updated")
 		providerResource := &unstructured.Unstructured{}
 		providerResource.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
+			Group:   groupVersion.Group,
+			Version: groupVersion.Version,
 			Kind:    providerResourceKind,
 		})
 		Eventually(func() bool {
@@ -443,7 +472,6 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 			if err != nil {
 				return false
 			}
-
 			bytes, err := providerResource.MarshalJSON()
 			Expect(err).NotTo(HaveOccurred())
 			switch v := object.(type) {
@@ -458,10 +486,19 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 				Expect(err).NotTo(HaveOccurred())
 				return reflect.DeepEqual(&providerConnection.Spec, DBaaSResourceSpec)
 			case *v1beta1.DBaaSInstance:
-				providerInstance := &v1beta1.DBaaSProviderInstance{}
+				if groupVersion == v1beta1.GroupVersion {
+					providerInstance := &v1beta1.DBaaSProviderInstance{}
+					err := json.Unmarshal(bytes, providerInstance)
+					Expect(err).NotTo(HaveOccurred())
+					return reflect.DeepEqual(&providerInstance.Spec, DBaaSResourceSpec)
+				}
+				providerInstance := &v1alpha1.DBaaSProviderInstance{}
 				err := json.Unmarshal(bytes, providerInstance)
 				Expect(err).NotTo(HaveOccurred())
-				return reflect.DeepEqual(&providerInstance.Spec, DBaaSResourceSpec)
+				spec := &v1beta1.DBaaSInstanceSpec{}
+				providerInstance.Spec.ConvertTo(spec)
+				return reflect.DeepEqual(spec, DBaaSResourceSpec)
+
 			default:
 				_ = v.GetName() // to avoid syntax error
 				Fail("invalid test object")

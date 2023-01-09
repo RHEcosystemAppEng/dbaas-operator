@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
@@ -120,6 +121,10 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			metricLabelErrCdValue = metrics.LabelErrorCdCannotReadInstance
 			return ctrl.Result{}, err
 		}
+		provider, err := r.getDBaaSProvider(ctx, inventory.Spec.ProviderRef.Name)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&connection,
@@ -127,7 +132,13 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return provider.Spec.ConnectionKind
 			},
 			func() interface{} {
-				return spec
+				if provider.GetDBaaSAPIGroupVersion() == v1beta1.GroupVersion {
+					return spec
+				}
+				providerSpec := &v1alpha1.DBaaSConnectionSpec{}
+				// Convert instance.Spec to v1alpha1 format
+				providerSpec.ConvertFrom(spec)
+				return providerSpec
 			},
 			func() interface{} {
 				return &v1beta1.DBaaSProviderConnection{}
@@ -257,7 +268,7 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 
 }
 
-func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1beta1.DBaaSConnectionSpec) (interface{}, error) {
+func (r *DBaaSConnectionReconciler) getConnectionSpec(ctx context.Context, spec *v1beta1.DBaaSConnectionSpec) (*v1beta1.DBaaSConnectionSpec, error) {
 	if len(spec.InstanceID) > 0 {
 		return spec, nil
 	}

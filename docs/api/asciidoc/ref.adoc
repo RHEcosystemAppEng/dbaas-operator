@@ -23,6 +23,25 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 
 
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata"]
+==== ConditionalProvisioningParameterData 
+
+ConditionalProvisioningParameterData defines the list of options with the corresponding default value available for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies A provisioning parameter can have multiple option lists/default values depending on the dependent parameters. For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP, one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS. If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter[$$ProvisioningParameter$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`dependencies`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency[$$FieldDependency$$] array__ | List of the dependent fields and their values
+| *`options`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option[$$Option$$] array__ | Options displayed in the UX
+| *`defaultValue`* __string__ | Default value
+|===
+
+
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-credentialfield"]
 ==== CredentialField 
 
@@ -133,10 +152,7 @@ Defines the desired state of a DBaaSInstance object.
 |===
 | Field | Description
 | *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
-| *`name`* __string__ | The name of this instance in the database service.
-| *`cloudProvider`* __string__ | Identifies the cloud-hosted database provider.
-| *`cloudRegion`* __string__ | Identifies the deployment region for the cloud-hosted database provider. For example, us-east-1.
-| *`otherInstanceParams`* __object (keys:string, values:string)__ | Any other provider-specific parameters related to the instance, such as provisioning.
+| *`provisioningParameters`* __object (keys:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$], values:string)__ | Parameters with values used for provisioning.
 |===
 
 
@@ -322,6 +338,7 @@ Defines the desired state of a DBaaSProvider object.
 |===
 | Field | Description
 | *`provider`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo[$$DatabaseProviderInfo$$]__ | Contains information about database provider and platform.
+| *`groupVersion`* __string__ | DBaaS API group version supported by the provider
 | *`inventoryKind`* __string__ | The name of the inventory custom resource definition (CRD) as defined by the database provider.
 | *`connectionKind`* __string__ | The name of the connection's custom resource definition (CRD) as defined by the provider.
 | *`instanceKind`* __string__ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning.
@@ -329,7 +346,7 @@ Defines the desired state of a DBaaSProvider object.
 | *`allowsFreeTrial`* __boolean__ | Indicates whether the provider offers free trials.
 | *`externalProvisionURL`* __string__ | The URL for provisioning instances by using the database provider's web portal.
 | *`externalProvisionDescription`* __string__ | Instructions on how to provision instances by using the database provider's web portal.
-| *`instanceParameterSpecs`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-instanceparameterspec[$$InstanceParameterSpec$$] array__ | Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+| *`provisioningParameters`* __object (keys:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$], values:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter[$$ProvisioningParameter$$])__ | Parameter specs used by UX for provisioning a database instance
 |===
 
 
@@ -353,27 +370,24 @@ Defines the information for a DBaaSProvider object.
 |===
 
 
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency"]
+==== FieldDependency 
 
-
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-instanceparameterspec"]
-==== InstanceParameterSpec 
-
-Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+FieldDependency defines the name and value of a field used as a dependency
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata[$$ConditionalProvisioningParameterData$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`name`* __string__ | The name for this field.
-| *`displayName`* __string__ | A user-friendly name for this parameter.
-| *`type`* __string__ | The type of field: string, maskedstring, integer, or boolean.
-| *`required`* __boolean__ | Define if this field is required or not.
-| *`defaultValue`* __string__ | Default value for this field.
+| *`field`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$]__ | Name of the field used as a dependency
+| *`value`* __string__ | Value of the field used as a dependency
 |===
+
+
 
 
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-localobjectreference"]
@@ -415,6 +429,24 @@ Defines the namespace and name of a k8s resource.
 
 
 
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option"]
+==== Option 
+
+Option defines the value and display value for an option in a dropdown, radio button or checkbox
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata[$$ConditionalProvisioningParameterData$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`value`* __string__ | Value of the option
+| *`displayValue`* __string__ | Corresponding display value
+|===
+
+
 
 
 
@@ -435,5 +467,38 @@ Follows the same field and naming formats as a comma-separated values (CSV) file
 | *`base64data`* __string__ | 
 | *`mediatype`* __string__ | 
 |===
+
+
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter"]
+==== ProvisioningParameter 
+
+Information for a provisioning parameter
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`displayName`* __string__ | A user-friendly name for this field.
+| *`helpText`* __string__ | Additional info about the field.
+| *`conditionalData`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata[$$ConditionalProvisioningParameterData$$] array__ | Lists of additional data containing the options or default values for the field.
+|===
+
+
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype"]
+==== ProvisioningParameterType (string) 
+
+
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstancespec[$$DBaaSInstanceSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency[$$FieldDependency$$]
+****
+
 
 

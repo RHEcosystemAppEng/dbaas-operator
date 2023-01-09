@@ -213,13 +213,6 @@ spec:
           spec:
             description: Defines the desired state of a DBaaSInstance object.
             properties:
-              cloudProvider:
-                description: Identifies the cloud-hosted database provider.
-                type: string
-              cloudRegion:
-                description: Identifies the deployment region for the cloud-hosted
-                  database provider. For example, us-east-1.
-                type: string
               inventoryRef:
                 description: A reference to the relevant DBaaSInventory custom resource
                   (CR).
@@ -234,18 +227,13 @@ spec:
                 required:
                 - name
                 type: object
-              name:
-                description: The name of this instance in the database service.
-                type: string
-              otherInstanceParams:
+              provisioningParameters:
                 additionalProperties:
                   type: string
-                description: Any other provider-specific parameters related to the
-                  instance, such as provisioning.
+                description: Parameters with values used for provisioning.
                 type: object
             required:
             - inventoryRef
-            - name
             type: object
           status:
             description: Defines the observed state of a DBaaSInstance.

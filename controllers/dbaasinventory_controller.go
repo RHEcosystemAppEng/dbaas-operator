@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -110,6 +111,11 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		metrics.SetInventoryMetrics(inventory, execution, event, metricLabelErrCdValue)
 	}()
 
+	provider, err := r.getDBaaSProvider(ctx, inventory.Spec.ProviderRef.Name)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	//
 	// Provider Inventory
 	//
@@ -120,7 +126,13 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return provider.Spec.InventoryKind
 		},
 		func() interface{} {
-			return inventory.Spec.DeepCopy()
+			if provider.GetDBaaSAPIGroupVersion() == v1beta1.GroupVersion {
+				return inventory.Spec.DeepCopy()
+			}
+			spec := &v1alpha1.DBaaSOperatorInventorySpec{}
+			// Convert inventory.Spec to v1alpha1 format
+			spec.ConvertFrom(&inventory.Spec)
+			return spec
 		},
 		func() interface{} {
 			return &v1beta1.DBaaSProviderInventory{}
