@@ -65,6 +65,172 @@ metadata:
         },
         {
           "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSPolicy",
+          "metadata": {
+            "name": "dbaaspolicy-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1alpha1",
+          "kind": "DBaaSProvider",
+          "metadata": {
+            "labels": {
+              "related-to": "dbaas-operator",
+              "type": "dbaas-provider-registration"
+            },
+            "name": "atlas-provider-registration"
+          },
+          "spec": {
+            "allowsFreeTrial": true,
+            "connectionKind": "MongoDBAtlasConnection",
+            "credentialFields": [
+              {
+                "displayName": "Organization ID",
+                "helpText": "You can find the Organization ID from the Organization Settings page on your MongoDB account home page.",
+                "key": "organizationId",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Public Key",
+                "helpText": "You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
+                "key": "publicApiKey",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Organization Private Key",
+                "helpText": "You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
+                "key": "privateApiKey",
+                "required": true,
+                "type": "maskedstring"
+              }
+            ],
+            "instanceKind": "MongoDBAtlasInstance",
+            "instanceParameterSpecs": [
+              {
+                "displayName": "Cluster Name",
+                "name": "clusterName",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "displayName": "Atlas Project Name",
+                "name": "ProjectName",
+                "required": true,
+                "type": "string"
+              },
+              {
+                "defaultValue": "Shared",
+                "displayName": "Cluster Type",
+                "name": "clusterType",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "defaultValue": "AWS",
+                "displayName": "Cloud Provider",
+                "name": "providerName",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "defaultValue": "US_EAST_1",
+                "displayName": "Cloud Region",
+                "name": "regionName",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "defaultValue": "M0",
+                "displayName": "Cluster Size Name",
+                "name": "instanceSizeName",
+                "required": false,
+                "type": "string"
+              }
+            ],
+            "inventoryKind": "MongoDBAtlasInventory",
+            "provider": {
+              "displayDescription": "Some nice description show to dev users in UX when selecting which provider from catalog.",
+              "displayName": "MongoDB Atlas",
+              "icon": {
+                "base64data": "\u003cbase64-encoded image data\u003e",
+                "mediatype": "image/png"
+              },
+              "name": "Red Hat DBaaS / MongoDB Atlas"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
+          "kind": "DBaaSConnection",
+          "metadata": {
+            "name": "dbaasconnection-sample"
+          },
+          "spec": {
+            "instanceID": "atlas-instance",
+            "inventoryRef": {
+              "name": "atlas-inventory",
+              "namespace": "openshift-dbaas-operator"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
+          "kind": "DBaaSInstance",
+          "metadata": {
+            "name": "dbaasinstance-sample"
+          },
+          "spec": {
+            "cloudProvider": "AWS",
+            "cloudRegion": "US_EAST_1",
+            "inventoryRef": {
+              "name": "atlas-inventory",
+              "namespace": "openshift-dbaas-operator"
+            },
+            "name": "my-cluster-free",
+            "otherInstanceParams": {
+              "instanceSizeName": "M0",
+              "projectName": "my-atlas-project-free"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
+          "kind": "DBaaSInventory",
+          "metadata": {
+            "name": "dbaasinventory-sample"
+          },
+          "spec": {
+            "credentialsRef": {
+              "name": "atlas-inventory-credentials"
+            },
+            "providerRef": {
+              "name": "mongodb-atlas-registration"
+            }
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
+          "kind": "DBaaSPlatform",
+          "metadata": {
+            "name": "dbaasplatform-sample"
+          },
+          "spec": {
+            "syncPeriod": 180
+          }
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
+          "kind": "DBaaSPolicy",
+          "metadata": {
+            "name": "dbaaspolicy-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "dbaas.redhat.com/v1beta1",
           "kind": "DBaaSProvider",
           "metadata": {
             "labels": {
@@ -172,15 +338,24 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - kind: DBaaSConnection
+      name: dbaasconnections.dbaas.redhat.com
+      version: v1alpha1
     - description: The schema for the DBaaSConnection API.
       displayName: DBaaSConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
+      version: v1beta1
+    - kind: DBaaSInstance
+      name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
     - description: The schema for the DBaaSInstance API.
       displayName: DBaaSInstance
       kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
+      version: v1beta1
+    - kind: DBaaSInventory
+      name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
     - description: The schema for the DBaaSInventory API. Inventory objects must be
         created in a valid namespace, determined by the existence of a DBaaSPolicy
@@ -188,11 +363,17 @@ spec:
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
+      version: v1beta1
+    - kind: DBaaSPlatform
+      name: dbaasplatforms.dbaas.redhat.com
       version: v1alpha1
     - description: The schema for the DBaaSPlatform API.
       displayName: DBaaSPlatform
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
+      version: v1beta1
+    - kind: DBaaSPolicy
+      name: dbaaspolicies.dbaas.redhat.com
       version: v1alpha1
     - description: Enables administrative capabilities within a namespace, and sets
         a default inventory policy. Policy defaults can be overridden on a per-inventory
@@ -200,12 +381,15 @@ spec:
       displayName: Provider Account Policy
       kind: DBaaSPolicy
       name: dbaaspolicies.dbaas.redhat.com
+      version: v1beta1
+    - kind: DBaaSProvider
+      name: dbaasproviders.dbaas.redhat.com
       version: v1alpha1
     - description: The schema for the DBaaSProvider API.
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
   description: |
     The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
     hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas, CrunchyData Bridge & CockroachCloud.
@@ -309,8 +493,10 @@ spec:
           - resourcequotas
           verbs:
           - create
+          - delete
           - get
           - list
+          - patch
           - update
           - watch
         - apiGroups:
@@ -469,7 +655,7 @@ spec:
                 - /manager
                 env:
                 - name: RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN
-                  value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
+                  value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
                 - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
                   value: dbaas-dynamic-plugin:0.3.0
                 - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
@@ -579,6 +765,8 @@ spec:
     type: AllNamespaces
   keywords:
   - dbaas
+  - rhoda
+  - database
   links:
   - name: GitHub
     url: https://github.com/RHEcosystemAppEng/dbaas-operator
@@ -590,7 +778,7 @@ spec:
     name: Red Hat
     url: https://www.redhat.com
   relatedImages:
-  - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.3.0
+  - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
     name: dbaas-dynamic-plugin
   - image: quay.io/rhobs/observability-operator-catalog:0.0.14
     name: observability-catalog
@@ -606,7 +794,23 @@ spec:
   version: 0.4.0
   webhookdefinitions:
   - admissionReviewVersions:
-    - v1
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
+    - dbaasconnections.dbaas.redhat.com
+    - dbaasinstances.dbaas.redhat.com
+    - dbaasinventories.dbaas.redhat.com
+    - dbaaspolicies.dbaas.redhat.com
+    - dbaasproviders.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaasconnectionsdbaasinstancesdbaasinventoriesdbaaspoliciesdbaasproviders.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1beta1
     containerPort: 443
     deploymentName: dbaas-operator-controller-manager
     failurePolicy: Fail
@@ -615,7 +819,7 @@ spec:
     - apiGroups:
       - dbaas.redhat.com
       apiVersions:
-      - v1alpha1
+      - v1beta1
       operations:
       - CREATE
       - UPDATE
@@ -624,9 +828,9 @@ spec:
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
+    webhookPath: /validate-dbaas-redhat-com-v1beta1-dbaasconnection
   - admissionReviewVersions:
-    - v1
+    - v1beta1
     containerPort: 443
     deploymentName: dbaas-operator-controller-manager
     failurePolicy: Fail
@@ -635,7 +839,7 @@ spec:
     - apiGroups:
       - dbaas.redhat.com
       apiVersions:
-      - v1alpha1
+      - v1beta1
       operations:
       - CREATE
       - UPDATE
@@ -644,9 +848,9 @@ spec:
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+    webhookPath: /validate-dbaas-redhat-com-v1beta1-dbaasinventory
   - admissionReviewVersions:
-    - v1
+    - v1beta1
     containerPort: 443
     deploymentName: dbaas-operator-controller-manager
     failurePolicy: Fail
@@ -655,7 +859,7 @@ spec:
     - apiGroups:
       - dbaas.redhat.com
       apiVersions:
-      - v1alpha1
+      - v1beta1
       operations:
       - CREATE
       - UPDATE
@@ -664,4 +868,4 @@ spec:
     sideEffects: None
     targetPort: 9443
     type: ValidatingAdmissionWebhook
-    webhookPath: /validate-dbaas-redhat-com-v1alpha1-dbaaspolicy
+    webhookPath: /validate-dbaas-redhat-com-v1beta1-dbaaspolicy

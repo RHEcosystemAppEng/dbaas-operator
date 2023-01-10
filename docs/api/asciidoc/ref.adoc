@@ -5,32 +5,32 @@
 == API Reference
 
 .Packages
-- xref:{anchor_prefix}-dbaas-redhat-com-v1alpha1[$$dbaas.redhat.com/v1alpha1$$]
+- xref:{anchor_prefix}-dbaas-redhat-com-v1beta1[$$dbaas.redhat.com/v1beta1$$]
 
 
-[id="{anchor_prefix}-dbaas-redhat-com-v1alpha1"]
-=== dbaas.redhat.com/v1alpha1
+[id="{anchor_prefix}-dbaas-redhat-com-v1beta1"]
+=== dbaas.redhat.com/v1beta1
 
-Package v1alpha1 contains API Schema definitions for the dbaas v1alpha1 API group
+Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 .Resource Types
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnection[$$DBaaSConnection$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstance[$$DBaaSInstance$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventory[$$DBaaSInventory$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasplatform[$$DBaaSPlatform$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicy[$$DBaaSPolicy$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasprovider[$$DBaaSProvider$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnection[$$DBaaSConnection$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstance[$$DBaaSInstance$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventory[$$DBaaSInventory$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatform[$$DBaaSPlatform$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicy[$$DBaaSPolicy$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasprovider[$$DBaaSProvider$$]
 
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-credentialfield"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-credentialfield"]
 ==== CredentialField 
 
 Defines the attributes.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -44,7 +44,7 @@ Defines the attributes.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnection"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnection"]
 ==== DBaaSConnection 
 
 The schema for the DBaaSConnection API.
@@ -54,35 +54,53 @@ The schema for the DBaaSConnection API.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSConnection`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnectionspec[$$DBaaSConnectionSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionspec[$$DBaaSConnectionSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnectionspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy"]
+==== DBaaSConnectionPolicy 
+
+DBaaSConnectionPolicy sets connection policy
+
+.Appears In:
+****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]
+****
+
+[cols="25a,75a", options="header"]
+|===
+| Field | Description
+| *`namespaces`* __string__ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Using an asterisk surrounded by single quotes ('*'), allows all namespaces. If not set in the policy or by an inventory object, connections are only allowed in the inventory's namespace.
+| *`nsSelector`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta[$$LabelSelector$$]__ | Use a label selector to determine the namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. A label selector is a label query over a set of resources. Results use a logical AND from matchExpressions and matchLabels queries. An empty label selector matches all objects. A null label selector matches no objects.
+|===
+
+
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionspec"]
 ==== DBaaSConnectionSpec 
 
 Defines the desired state of a DBaaSConnection object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnection[$$DBaaSConnection$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderconnection[$$DBaaSProviderConnection$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnection[$$DBaaSConnection$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderconnection[$$DBaaSProviderConnection$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
+| *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
 | *`instanceID`* __string__ | The ID of the instance to connect to, as seen in the status of the referenced DBaaSInventory.
-| *`instanceRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-namespacedname[$$NamespacedName$$]__ | A reference to the DBaaSInstance CR used, if the InstanceID is not specified.
+| *`instanceRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the DBaaSInstance CR used, if the InstanceID is not specified.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstance"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstance"]
 ==== DBaaSInstance 
 
 The schema for the DBaaSInstance API.
@@ -92,29 +110,29 @@ The schema for the DBaaSInstance API.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSInstance`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstancespec[$$DBaaSInstanceSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstancespec[$$DBaaSInstanceSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstancespec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstancespec"]
 ==== DBaaSInstanceSpec 
 
 Defines the desired state of a DBaaSInstance object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstance[$$DBaaSInstance$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderinstance[$$DBaaSProviderInstance$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstance[$$DBaaSInstance$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderinstance[$$DBaaSProviderInstance$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
+| *`inventoryRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to the relevant DBaaSInventory custom resource (CR).
 | *`name`* __string__ | The name of this instance in the database service.
 | *`cloudProvider`* __string__ | Identifies the cloud-hosted database provider.
 | *`cloudRegion`* __string__ | Identifies the deployment region for the cloud-hosted database provider. For example, us-east-1.
@@ -122,7 +140,7 @@ Defines the desired state of a DBaaSInstance object.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventory"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventory"]
 ==== DBaaSInventory 
 
 The schema for the DBaaSInventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
@@ -132,72 +150,71 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSInventory`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventorypolicy"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy"]
 ==== DBaaSInventoryPolicy 
 
 Sets the inventory policy.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicyspec[$$DBaaSPolicySpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
 | *`disableProvisions`* __boolean__ | Disables provisioning on inventory accounts.
-| *`connectionNamespaces`* __string__ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Each inventory can individually override this. Using an asterisk surrounded by single quotes ('*'), allows all namespaces. If not set in the policy or by an inventory object, connections are only allowed in the inventory's namespace.
-| *`connectionNsSelector`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta[$$LabelSelector$$]__ | Use a label selector to determine the namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Each inventory can individually override this. A label selector is a label query over a set of resources. Results use a logical AND from matchExpressions and matchLabels queries. An empty label selector matches all objects. A null label selector matches no objects.
+| *`connections`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy[$$DBaaSConnectionPolicy$$]__ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventoryspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec"]
 ==== DBaaSInventorySpec 
 
 DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderinventory[$$DBaaSProviderInventory$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderinventory[$$DBaaSProviderInventory$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`credentialsRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-localobjectreference[$$LocalObjectReference$$]__ | The secret containing the provider-specific connection credentials to use with the provider's API endpoint. The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key. The secret must exist within the same namespace as the inventory.
+| *`credentialsRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-localobjectreference[$$LocalObjectReference$$]__ | The secret containing the provider-specific connection credentials to use with the provider's API endpoint. The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key. The secret must exist within the same namespace as the inventory.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasoperatorinventoryspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec"]
 ==== DBaaSOperatorInventorySpec 
 
 This object defines the desired state of a DBaaSInventory object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventory[$$DBaaSInventory$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventory[$$DBaaSInventory$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`providerRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-namespacedname[$$NamespacedName$$]__ | A reference to a DBaaSProvider custom resource (CR).
-| *`DBaaSInventorySpec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventoryspec[$$DBaaSInventorySpec$$]__ | The properties that will be copied into the provider’s inventory.
-| *`DBaaSInventoryPolicy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | The policy for this inventory.
+| *`providerRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to a DBaaSProvider custom resource (CR).
+| *`DBaaSInventorySpec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec[$$DBaaSInventorySpec$$]__ | The properties that will be copied into the provider’s inventory.
+| *`policy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | The policy for this inventory.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasplatform"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatform"]
 ==== DBaaSPlatform 
 
 The schema for the DBaaSPlatform API.
@@ -207,22 +224,22 @@ The schema for the DBaaSPlatform API.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSPlatform`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasplatformspec[$$DBaaSPlatformSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatformspec[$$DBaaSPlatformSpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasplatformspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatformspec"]
 ==== DBaaSPlatformSpec 
 
 Defines the desired state of a DBaaSPlatform object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasplatform[$$DBaaSPlatform$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatform[$$DBaaSPlatform$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -232,7 +249,7 @@ Defines the desired state of a DBaaSPlatform object.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicy"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicy"]
 ==== DBaaSPolicy 
 
 Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
@@ -242,32 +259,32 @@ Enables administrative capabilities within a namespace, and sets a default inven
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSPolicy`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicyspec[$$DBaaSPolicySpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicyspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec"]
 ==== DBaaSPolicySpec 
 
 The specifications for a _DBaaSPolicy_ object. Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaaspolicy[$$DBaaSPolicy$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicy[$$DBaaSPolicy$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`DBaaSInventoryPolicy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | 
+| *`DBaaSInventoryPolicy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | 
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasprovider"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasprovider"]
 ==== DBaaSProvider 
 
 The schema for the DBaaSProvider API.
@@ -277,11 +294,11 @@ The schema for the DBaaSProvider API.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`apiVersion`* __string__ | `dbaas.redhat.com/v1alpha1`
+| *`apiVersion`* __string__ | `dbaas.redhat.com/v1beta1`
 | *`kind`* __string__ | `DBaaSProvider`
 | *`metadata`* __link:https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta[$$ObjectMeta$$]__ | Refer to Kubernetes API documentation for fields of `metadata`.
 
-| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderspec[$$DBaaSProviderSpec$$]__ | 
+| *`spec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]__ | 
 |===
 
 
@@ -291,39 +308,39 @@ The schema for the DBaaSProvider API.
 
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec"]
 ==== DBaaSProviderSpec 
 
 Defines the desired state of a DBaaSProvider object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasprovider[$$DBaaSProvider$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasprovider[$$DBaaSProvider$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`provider`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-databaseprovider[$$DatabaseProvider$$]__ | Contains information about database provider and platform.
+| *`provider`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo[$$DatabaseProviderInfo$$]__ | Contains information about database provider and platform.
 | *`inventoryKind`* __string__ | The name of the inventory custom resource definition (CRD) as defined by the database provider.
 | *`connectionKind`* __string__ | The name of the connection's custom resource definition (CRD) as defined by the provider.
 | *`instanceKind`* __string__ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning.
-| *`credentialFields`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-credentialfield[$$CredentialField$$] array__ | Indicates what information to collect from the user interface and how to display fields in a form.
+| *`credentialFields`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-credentialfield[$$CredentialField$$] array__ | Indicates what information to collect from the user interface and how to display fields in a form.
 | *`allowsFreeTrial`* __boolean__ | Indicates whether the provider offers free trials.
 | *`externalProvisionURL`* __string__ | The URL for provisioning instances by using the database provider's web portal.
 | *`externalProvisionDescription`* __string__ | Instructions on how to provision instances by using the database provider's web portal.
-| *`instanceParameterSpecs`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-instanceparameterspec[$$InstanceParameterSpec$$] array__ | Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+| *`instanceParameterSpecs`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-instanceparameterspec[$$InstanceParameterSpec$$] array__ | Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-databaseprovider"]
-==== DatabaseProvider 
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo"]
+==== DatabaseProviderInfo 
 
 Defines the information for a DBaaSProvider object.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -332,20 +349,20 @@ Defines the information for a DBaaSProvider object.
 | *`name`* __string__ | The name used to specify the service binding origin parameter. For example, 'Red Hat DBaaS / MongoDB Atlas'.
 | *`displayName`* __string__ | A user-friendly name for this database provider. For example, 'MongoDB Atlas'.
 | *`displayDescription`* __string__ | Indicates the description text shown for a database provider within the user interface. For example, the catalog tile description.
-| *`icon`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-providericon[$$ProviderIcon$$]__ | Indicates what icon to display on the catalog tile.
+| *`icon`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-providericon[$$ProviderIcon$$]__ | Indicates what icon to display on the catalog tile.
 |===
 
 
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-instanceparameterspec"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-instanceparameterspec"]
 ==== InstanceParameterSpec 
 
 Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasproviderspec[$$DBaaSProviderSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec[$$DBaaSProviderSpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -359,14 +376,14 @@ Indicates what parameters to collect from the user interface, and how to display
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-localobjectreference"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-localobjectreference"]
 ==== LocalObjectReference 
 
 Contains enough information to locate the referenced object inside the same namespace.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinventoryspec[$$DBaaSInventorySpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec[$$DBaaSInventorySpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -376,16 +393,16 @@ Contains enough information to locate the referenced object inside the same name
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-namespacedname"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname"]
 ==== NamespacedName 
 
 Defines the namespace and name of a k8s resource.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasconnectionspec[$$DBaaSConnectionSpec$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasinstancespec[$$DBaaSInstanceSpec$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionspec[$$DBaaSConnectionSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstancespec[$$DBaaSInstanceSpec$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -402,14 +419,14 @@ Defines the namespace and name of a k8s resource.
 
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-providericon"]
+[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-providericon"]
 ==== ProviderIcon 
 
 Follows the same field and naming formats as a comma-separated values (CSV) file.
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1alpha1-databaseprovider[$$DatabaseProvider$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo[$$DatabaseProviderInfo$$]
 ****
 
 [cols="25a,75a", options="header"]

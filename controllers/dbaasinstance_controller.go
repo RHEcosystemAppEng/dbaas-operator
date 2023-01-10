@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
@@ -48,9 +48,10 @@ type DBaaSInstanceReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
 func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+
 	execution := metrics.PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
-	var instance v1alpha1.DBaaSInstance
+	var instance v1beta1.DBaaSInstance
 	metricLabelErrCdValue := ""
 	event := ""
 
@@ -74,13 +75,13 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	if inventory, validNS, provision, err := r.checkInventory(ctx, instance.Spec.InventoryRef, &instance, func(reason string, message string) {
 		cond := metav1.Condition{
-			Type:    v1alpha1.DBaaSInstanceReadyType,
+			Type:    v1beta1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionFalse,
 			Reason:  reason,
 			Message: message,
 		}
 		apimeta.SetStatusCondition(&instance.Status.Conditions, cond)
-		instance.Status.Phase = v1alpha1.InstancePhaseError
+		instance.Status.Phase = v1beta1.InstancePhaseError
 	}, logger); err != nil {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorCheckingInstanceInventory
 		return ctrl.Result{}, err
@@ -92,23 +93,23 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		result, err := r.reconcileProviderResource(ctx,
 			inventory.Spec.ProviderRef.Name,
 			&instance,
-			func(provider *v1alpha1.DBaaSProvider) string {
+			func(provider *v1beta1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
 			},
 			func() interface{} {
 				return instance.Spec.DeepCopy()
 			},
 			func() interface{} {
-				return &v1alpha1.DBaaSProviderInstance{}
+				return &v1beta1.DBaaSProviderInstance{}
 			},
 			func(i interface{}) metav1.Condition {
-				providerInstance := i.(*v1alpha1.DBaaSProviderInstance)
+				providerInstance := i.(*v1beta1.DBaaSProviderInstance)
 				return mergeInstanceStatus(&instance, providerInstance)
 			},
 			func() *[]metav1.Condition {
 				return &instance.Status.Conditions
 			},
-			v1alpha1.DBaaSInstanceReadyType,
+			v1beta1.DBaaSInstanceReadyType,
 			logger,
 		)
 
@@ -122,8 +123,8 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInstanceReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSInstance{}).
-		Watches(&source.Kind{Type: &v1alpha1.DBaaSInstance{}}, &EventHandlerWithDelete{Controller: r}).
+		For(&v1beta1.DBaaSInstance{}).
+		Watches(&source.Kind{Type: &v1beta1.DBaaSInstance{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
@@ -131,26 +132,26 @@ func (r *DBaaSInstanceReconciler) SetupWithManager(mgr ctrl.Manager) (controller
 }
 
 // mergeInstanceStatus: merge the status from DBaaSProviderInstance into the current DBaaSInstance status
-func mergeInstanceStatus(instance *v1alpha1.DBaaSInstance, providerInst *v1alpha1.DBaaSProviderInstance) metav1.Condition {
+func mergeInstanceStatus(instance *v1beta1.DBaaSInstance, providerInst *v1beta1.DBaaSProviderInstance) metav1.Condition {
 	providerInst.Status.DeepCopyInto(&instance.Status)
 	if len(instance.Status.Phase) == 0 {
-		instance.Status.Phase = v1alpha1.InstancePhaseUnknown
+		instance.Status.Phase = v1beta1.InstancePhaseUnknown
 	}
 	// Update instance status condition (type: DBaaSInstanceReadyType) based on the provider status
-	specSync := apimeta.FindStatusCondition(providerInst.Status.Conditions, v1alpha1.DBaaSInstanceProviderSyncType)
+	specSync := apimeta.FindStatusCondition(providerInst.Status.Conditions, v1beta1.DBaaSInstanceProviderSyncType)
 	if specSync != nil && specSync.Status == metav1.ConditionTrue {
 		return metav1.Condition{
-			Type:    v1alpha1.DBaaSInstanceReadyType,
+			Type:    v1beta1.DBaaSInstanceReadyType,
 			Status:  metav1.ConditionTrue,
-			Reason:  v1alpha1.Ready,
-			Message: v1alpha1.MsgProviderCRStatusSyncDone,
+			Reason:  v1beta1.Ready,
+			Message: v1beta1.MsgProviderCRStatusSyncDone,
 		}
 	}
 	return metav1.Condition{
-		Type:    v1alpha1.DBaaSInstanceReadyType,
+		Type:    v1beta1.DBaaSInstanceReadyType,
 		Status:  metav1.ConditionFalse,
-		Reason:  v1alpha1.ProviderReconcileInprogress,
-		Message: v1alpha1.MsgProviderCRReconcileInProgress,
+		Reason:  v1beta1.ProviderReconcileInprogress,
+		Message: v1beta1.MsgProviderCRReconcileInProgress,
 	}
 }
 
@@ -161,7 +162,7 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSInstanceReconciler DeleteEvent")
 	log.Info("Delete event started")
 
-	instanceObj, ok := e.Object.(*v1alpha1.DBaaSInstance)
+	instanceObj, ok := e.Object.(*v1beta1.DBaaSInstance)
 	if !ok {
 		log.Error(nil, "Ignoring malformed Delete()", "Object", e.Object)
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingInstance
@@ -169,7 +170,7 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	}
 	log.Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
 
-	inventory := &v1alpha1.DBaaSInventory{}
+	inventory := &v1beta1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
 	defer func() {

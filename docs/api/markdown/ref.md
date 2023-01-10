@@ -1,12 +1,12 @@
 # API Reference
 
 ## Packages
-- [dbaas.redhat.com/v1alpha1](#dbaasredhatcomv1alpha1)
+- [dbaas.redhat.com/v1beta1](#dbaasredhatcomv1beta1)
 
 
-## dbaas.redhat.com/v1alpha1
+## dbaas.redhat.com/v1beta1
 
-Package v1alpha1 contains API Schema definitions for the dbaas v1alpha1 API group
+Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 ### Resource Types
 - [DBaaSConnection](#dbaasconnection)
@@ -46,10 +46,25 @@ The schema for the DBaaSConnection API.
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSConnection`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSConnectionSpec](#dbaasconnectionspec)_ |  |
+
+
+#### DBaaSConnectionPolicy
+
+
+
+DBaaSConnectionPolicy sets connection policy
+
+_Appears in:_
+- [DBaaSInventoryPolicy](#dbaasinventorypolicy)
+
+| Field | Description |
+| --- | --- |
+| `namespaces` _string_ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Using an asterisk surrounded by single quotes ('*'), allows all namespaces. If not set in the policy or by an inventory object, connections are only allowed in the inventory's namespace. |
+| `nsSelector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta)_ | Use a label selector to determine the namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. A label selector is a label query over a set of resources. Results use a logical AND from matchExpressions and matchLabels queries. An empty label selector matches all objects. A null label selector matches no objects. |
 
 
 #### DBaaSConnectionSpec
@@ -79,7 +94,7 @@ The schema for the DBaaSInstance API.
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSInstance`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSInstanceSpec](#dbaasinstancespec)_ |  |
@@ -114,7 +129,7 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSInventory`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)_ |  |
@@ -133,8 +148,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `disableProvisions` _boolean_ | Disables provisioning on inventory accounts. |
-| `connectionNamespaces` _string_ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Each inventory can individually override this. Using an asterisk surrounded by single quotes ('*'), allows all namespaces. If not set in the policy or by an inventory object, connections are only allowed in the inventory's namespace. |
-| `connectionNsSelector` _[LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta)_ | Use a label selector to determine the namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. Each inventory can individually override this. A label selector is a label query over a set of resources. Results use a logical AND from matchExpressions and matchLabels queries. An empty label selector matches all objects. A null label selector matches no objects. |
+| `connections` _[DBaaSConnectionPolicy](#dbaasconnectionpolicy)_ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. |
 
 
 #### DBaaSInventorySpec
@@ -165,7 +179,7 @@ _Appears in:_
 | --- | --- |
 | `providerRef` _[NamespacedName](#namespacedname)_ | A reference to a DBaaSProvider custom resource (CR). |
 | `DBaaSInventorySpec` _[DBaaSInventorySpec](#dbaasinventoryspec)_ | The properties that will be copied into the provider’s inventory. |
-| `DBaaSInventoryPolicy` _[DBaaSInventoryPolicy](#dbaasinventorypolicy)_ | The policy for this inventory. |
+| `policy` _[DBaaSInventoryPolicy](#dbaasinventorypolicy)_ | The policy for this inventory. |
 
 
 #### DBaaSPlatform
@@ -178,7 +192,7 @@ The schema for the DBaaSPlatform API.
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSPlatform`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSPlatformSpec](#dbaasplatformspec)_ |  |
@@ -208,7 +222,7 @@ Enables administrative capabilities within a namespace, and sets a default inven
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSPolicy`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSPolicySpec](#dbaaspolicyspec)_ |  |
@@ -238,7 +252,7 @@ The schema for the DBaaSProvider API.
 
 | Field | Description |
 | --- | --- |
-| `apiVersion` _string_ | `dbaas.redhat.com/v1alpha1`
+| `apiVersion` _string_ | `dbaas.redhat.com/v1beta1`
 | `kind` _string_ | `DBaaSProvider`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[DBaaSProviderSpec](#dbaasproviderspec)_ |  |
@@ -261,7 +275,7 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `provider` _[DatabaseProvider](#databaseprovider)_ | Contains information about database provider and platform. |
+| `provider` _[DatabaseProviderInfo](#databaseproviderinfo)_ | Contains information about database provider and platform. |
 | `inventoryKind` _string_ | The name of the inventory custom resource definition (CRD) as defined by the database provider. |
 | `connectionKind` _string_ | The name of the connection's custom resource definition (CRD) as defined by the provider. |
 | `instanceKind` _string_ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning. |
@@ -272,7 +286,7 @@ _Appears in:_
 | `instanceParameterSpecs` _[InstanceParameterSpec](#instanceparameterspec) array_ | Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance. |
 
 
-#### DatabaseProvider
+#### DatabaseProviderInfo
 
 
 
@@ -353,7 +367,7 @@ _Appears in:_
 Follows the same field and naming formats as a comma-separated values (CSV) file.
 
 _Appears in:_
-- [DatabaseProvider](#databaseprovider)
+- [DatabaseProviderInfo](#databaseproviderinfo)
 
 | Field | Description |
 | --- | --- |

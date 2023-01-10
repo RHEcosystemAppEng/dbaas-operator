@@ -22,36 +22,36 @@ spec:
       displayName: DBaaSConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
     - description: The schema for the DBaaSInstance API.
       displayName: DBaaSInstance
       kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
     - description: The schema for the DBaaSInventory API. Inventory objects must be
         created in a valid namespace, determined by the existence of a DBaaSPolicy
         object.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
     - description: The schema for the DBaaSPlatform API.
       displayName: DBaaSPlatform
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
     - description: Enables administrative capabilities within a namespace, and sets
         a default inventory policy. Policy defaults can be overridden on a per-inventory
         basis.
       displayName: Provider Account Policy
       kind: DBaaSPolicy
       name: dbaaspolicies.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
     - description: The schema for the DBaaSProvider API.
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
-      version: v1alpha1
+      version: v1beta1
   description: |
     The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
     hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas, CrunchyData Bridge & CockroachCloud.
@@ -87,6 +87,8 @@ spec:
     type: AllNamespaces
   keywords:
   - dbaas
+  - rhoda
+  - database
   links:
   - name: GitHub
     url: https://github.com/RHEcosystemAppEng/dbaas-operator

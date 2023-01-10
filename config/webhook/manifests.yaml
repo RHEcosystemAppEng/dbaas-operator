@@ -7,19 +7,19 @@ metadata:
   name: validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
-  - v1
+  - v1beta1
   clientConfig:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-dbaas-redhat-com-v1alpha1-dbaasconnection
+      path: /validate-dbaas-redhat-com-v1beta1-dbaasconnection
   failurePolicy: Fail
   name: vdbaasconnection.kb.io
   rules:
   - apiGroups:
     - dbaas.redhat.com
     apiVersions:
-    - v1alpha1
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -27,19 +27,19 @@ webhooks:
     - dbaasconnections
   sideEffects: None
 - admissionReviewVersions:
-  - v1
+  - v1beta1
   clientConfig:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-dbaas-redhat-com-v1alpha1-dbaasinventory
+      path: /validate-dbaas-redhat-com-v1beta1-dbaasinventory
   failurePolicy: Fail
   name: vdbaasinventory.kb.io
   rules:
   - apiGroups:
     - dbaas.redhat.com
     apiVersions:
-    - v1alpha1
+    - v1beta1
     operations:
     - CREATE
     - UPDATE
@@ -47,19 +47,19 @@ webhooks:
     - dbaasinventories
   sideEffects: None
 - admissionReviewVersions:
-  - v1
+  - v1beta1
   clientConfig:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-dbaas-redhat-com-v1alpha1-dbaaspolicy
+      path: /validate-dbaas-redhat-com-v1beta1-dbaaspolicy
   failurePolicy: Fail
   name: vdbaaspolicy.kb.io
   rules:
   - apiGroups:
     - dbaas.redhat.com
     apiVersions:
-    - v1alpha1
+    - v1beta1
     operations:
     - CREATE
     - UPDATE

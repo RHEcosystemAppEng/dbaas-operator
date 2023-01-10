@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 var _ = Describe("DBaaSPlatform controller", func() {
@@ -12,14 +12,14 @@ var _ = Describe("DBaaSPlatform controller", func() {
 
 		By("creating platform cr with syncPeriod")
 		syncPeriod := 180
-		cr := &dbaasv1alpha1.DBaaSPlatform{
+		cr := &dbaasv1beta1.DBaaSPlatform{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dbaas-platform",
 				Namespace: testNamespace,
 				Labels:    map[string]string{"managed-by": "dbaas-operator"},
 			},
 
-			Spec: dbaasv1alpha1.DBaaSPlatformSpec{
+			Spec: dbaasv1beta1.DBaaSPlatformSpec{
 
 				SyncPeriod: &syncPeriod,
 			},
@@ -29,14 +29,14 @@ var _ = Describe("DBaaSPlatform controller", func() {
 
 		By("creating platform cr with empty/nil syncPeriod ")
 
-		cr = &dbaasv1alpha1.DBaaSPlatform{
+		cr = &dbaasv1beta1.DBaaSPlatform{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dbaas-platform",
 				Namespace: testNamespace,
 				Labels:    map[string]string{"managed-by": "dbaas-operator"},
 			},
 
-			Spec: dbaasv1alpha1.DBaaSPlatformSpec{
+			Spec: dbaasv1beta1.DBaaSPlatformSpec{
 
 				SyncPeriod: nil,
 			},

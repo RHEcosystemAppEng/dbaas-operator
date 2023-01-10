@@ -37,7 +37,6 @@ type DBaaSOperatorInventorySpec struct {
 
 // The schema for the DBaaSInventory API.
 // Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
-//+operator-sdk:csv:customresourcedefinitions:displayName="Provider Account"
 type DBaaSInventory struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

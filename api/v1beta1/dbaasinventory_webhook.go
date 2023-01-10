@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	"context"
@@ -57,7 +57,7 @@ func (r *DBaaSInventory) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1alpha1-dbaasinventory,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasinventories,verbs=create;update,versions=v1alpha1,name=vdbaasinventory.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1beta1-dbaasinventory,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasinventories,verbs=create;update,versions=v1beta1,name=vdbaasinventory.kb.io,admissionReviewVersions=v1beta1
 
 var _ webhook.Validator = &DBaaSInventory{}
 
@@ -102,9 +102,11 @@ func validateInventory(inv *DBaaSInventory, oldInv *DBaaSInventory) error {
 		}
 	}
 	// Check ns selector
-	if inv.Spec.ConnectionNsSelector != nil {
-		if _, err := metav1.LabelSelectorAsSelector(inv.Spec.ConnectionNsSelector); err != nil {
-			return err
+	if inv.Spec.Policy != nil {
+		if inv.Spec.Policy.Connections.NsSelector != nil {
+			if _, err := metav1.LabelSelectorAsSelector(inv.Spec.Policy.Connections.NsSelector); err != nil {
+				return err
+			}
 		}
 	}
 	return validateInventoryMandatoryFields(inv, secret, provider)

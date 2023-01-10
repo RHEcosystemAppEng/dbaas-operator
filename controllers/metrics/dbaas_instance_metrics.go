@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -42,11 +42,11 @@ var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 }, []string{MetricLabelProvider, MetricLabelAccountName, metricLabelInstanceName, MetricLabelNameSpace})
 
 // setInstanceStatusMetrics set the metrics based on instance status
-func setInstanceStatusMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
+func setInstanceStatusMetrics(provider string, account string, instance dbaasv1beta1.DBaaSInstance) {
 	for _, cond := range instance.Status.Conditions {
-		if cond.Type == dbaasv1alpha1.DBaaSInstanceReadyType {
+		if cond.Type == dbaasv1beta1.DBaaSInstanceReadyType {
 			DBaaSInstanceStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace})
-			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
+			if cond.Reason == dbaasv1beta1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
 			} else {
 				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
@@ -57,12 +57,12 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1a
 }
 
 // setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
-func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1alpha1.DBaaSInstance, execution Execution, event string) {
+func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string) {
 	log := ctrl.Log.WithName("DBaaSInstance Request Duration for event: " + event)
 	switch event {
 	case LabelEventValueCreate:
 		for _, cond := range instance.Status.Conditions {
-			if cond.Type == dbaasv1alpha1.DBaaSInstanceProviderSyncType {
+			if cond.Type == dbaasv1beta1.DBaaSInstanceProviderSyncType {
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(instance.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(instance.Spec.InventoryRef.Name, instance.Name, instance.Namespace, LabelResourceValueInstance, event, duration.Seconds())
@@ -83,25 +83,25 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 }
 
 // setInstancePhaseMetrics set the metrics for instance phase
-func setInstancePhaseMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance) {
+func setInstancePhaseMetrics(provider string, account string, instance dbaasv1beta1.DBaaSInstance) {
 	var phase float64
 
 	switch instance.Status.Phase {
-	case dbaasv1alpha1.InstancePhasePending:
+	case dbaasv1beta1.InstancePhasePending:
 		phase = -1
-	case dbaasv1alpha1.InstancePhaseCreating:
+	case dbaasv1beta1.InstancePhaseCreating:
 		phase = 0
-	case dbaasv1alpha1.InstancePhaseReady:
+	case dbaasv1beta1.InstancePhaseReady:
 		phase = 1
-	case dbaasv1alpha1.InstancePhaseUnknown:
+	case dbaasv1beta1.InstancePhaseUnknown:
 		phase = 2
-	case dbaasv1alpha1.InstancePhaseFailed:
+	case dbaasv1beta1.InstancePhaseFailed:
 		phase = 3
-	case dbaasv1alpha1.InstancePhaseError:
+	case dbaasv1beta1.InstancePhaseError:
 		phase = 4
-	case dbaasv1alpha1.InstancePhaseDeleting:
+	case dbaasv1beta1.InstancePhaseDeleting:
 		phase = 5
-	case dbaasv1alpha1.InstancePhaseDeleted:
+	case dbaasv1beta1.InstancePhaseDeleted:
 		phase = 6
 	}
 
@@ -114,7 +114,7 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1al
 }
 
 // SetInstanceMetrics set the metrics for an instance
-func SetInstanceMetrics(provider string, account string, instance dbaasv1alpha1.DBaaSInstance, execution Execution, event string, errCd string) {
+func SetInstanceMetrics(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string, errCd string) {
 	log := ctrl.Log.WithName("Setting DBaaSInstance Metrics")
 	log.Info("provider - " + provider + " account - " + account + " namespace - " + instance.Namespace + " event - " + event + " errCd - " + errCd)
 	setInstanceStatusMetrics(provider, account, instance)

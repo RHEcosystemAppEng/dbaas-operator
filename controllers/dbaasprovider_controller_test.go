@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 var _ = Describe("DBaaSProvider controller", func() {
@@ -35,23 +36,23 @@ var _ = Describe("DBaaSProvider controller", func() {
 		createdConnectionKind := "DBaaSCreateConnection"
 		createdInstanceKind := "DBaaSCreateInstance"
 
-		provider := &v1alpha1.DBaaSProvider{
+		provider := &v1beta1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-create-update-provider",
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSProviderSpec{
-				Provider: v1alpha1.DatabaseProvider{
+			Spec: v1beta1.DBaaSProviderSpec{
+				Provider: v1beta1.DatabaseProviderInfo{
 					Name: "test-create-update-provider",
 				},
 				InventoryKind:                createdInventoryKind,
 				ConnectionKind:               createdConnectionKind,
 				InstanceKind:                 createdInstanceKind,
-				CredentialFields:             []v1alpha1.CredentialField{},
+				CredentialFields:             []v1beta1.CredentialField{},
 				AllowsFreeTrial:              false,
 				ExternalProvisionURL:         "",
 				ExternalProvisionDescription: "",
-				InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+				InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 			},
 		}
 
@@ -61,21 +62,21 @@ var _ = Describe("DBaaSProvider controller", func() {
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    createdInventoryKind,
 		})
-		iOwner := &v1alpha1.DBaaSInventory{}
+		iOwner := &v1beta1.DBaaSInventory{}
 		cSrc := &unstructured.Unstructured{}
 		cSrc.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    createdConnectionKind,
 		})
-		cOwner := &v1alpha1.DBaaSConnection{}
+		cOwner := &v1beta1.DBaaSConnection{}
 		inSrc := &unstructured.Unstructured{}
 		inSrc.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    createdInstanceKind,
 		})
-		inOwner := &v1alpha1.DBaaSInstance{}
+		inOwner := &v1beta1.DBaaSInstance{}
 
 		BeforeEach(func() { assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner) })
 		BeforeEach(assertResourceCreation(provider))
@@ -111,7 +112,7 @@ var _ = Describe("DBaaSProvider controller", func() {
 			assertWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner)
 			assertNotWatched(uiSrc, iOwner, ucSrc, cOwner, uinSrc, inOwner)
 
-			updatedProvider := &v1alpha1.DBaaSProvider{
+			updatedProvider := &v1beta1.DBaaSProvider{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test-create-update-provider",
 					Namespace: testNamespace,
@@ -124,11 +125,11 @@ var _ = Describe("DBaaSProvider controller", func() {
 			updatedProvider.Spec.ConnectionKind = updatedConnectionKind
 			updatedProvider.Spec.InstanceKind = updatedInstanceKind
 			Expect(dRec.Update(ctx, updatedProvider)).Should(Succeed())
-			Eventually(func() v1alpha1.DBaaSProviderSpec {
-				pProvider := &v1alpha1.DBaaSProvider{}
+			Eventually(func() v1beta1.DBaaSProviderSpec {
+				pProvider := &v1beta1.DBaaSProvider{}
 				err := dRec.Get(ctx, client.ObjectKeyFromObject(updatedProvider), pProvider)
 				if err != nil {
-					return v1alpha1.DBaaSProviderSpec{}
+					return v1beta1.DBaaSProviderSpec{}
 				}
 				return pProvider.Spec
 			}, timeout).Should(Equal(updatedProvider.Spec))
@@ -142,23 +143,23 @@ var _ = Describe("DBaaSProvider controller", func() {
 		deletedConnectionKind := "DBaaSDeleteConnection"
 		deletedInstanceKind := "DBaaSDeleteInstance"
 
-		provider := &v1alpha1.DBaaSProvider{
+		provider := &v1beta1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-delete-provider",
 				Namespace: testNamespace,
 			},
-			Spec: v1alpha1.DBaaSProviderSpec{
-				Provider: v1alpha1.DatabaseProvider{
+			Spec: v1beta1.DBaaSProviderSpec{
+				Provider: v1beta1.DatabaseProviderInfo{
 					Name: "test-delete-provider",
 				},
 				InventoryKind:                deletedInventoryKind,
 				ConnectionKind:               deletedConnectionKind,
 				InstanceKind:                 deletedInstanceKind,
-				CredentialFields:             []v1alpha1.CredentialField{},
+				CredentialFields:             []v1beta1.CredentialField{},
 				AllowsFreeTrial:              false,
 				ExternalProvisionURL:         "",
 				ExternalProvisionDescription: "",
-				InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+				InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 			},
 		}
 
@@ -168,21 +169,21 @@ var _ = Describe("DBaaSProvider controller", func() {
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    deletedInventoryKind,
 		})
-		iOwner := &v1alpha1.DBaaSInventory{}
+		iOwner := &v1beta1.DBaaSInventory{}
 		cSrc := &unstructured.Unstructured{}
 		cSrc.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    deletedConnectionKind,
 		})
-		cOwner := &v1alpha1.DBaaSConnection{}
+		cOwner := &v1beta1.DBaaSConnection{}
 		inSrc := &unstructured.Unstructured{}
 		inSrc.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   v1alpha1.GroupVersion.Group,
 			Version: v1alpha1.GroupVersion.Version,
 			Kind:    deletedInstanceKind,
 		})
-		inOwner := &v1alpha1.DBaaSInstance{}
+		inOwner := &v1beta1.DBaaSInstance{}
 
 		BeforeEach(func() { assertNotWatched(iSrc, iOwner, cSrc, cOwner, inSrc, inOwner) })
 		BeforeEach(assertResourceCreation(provider))

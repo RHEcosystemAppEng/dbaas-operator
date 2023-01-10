@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	embeddedconfigs "github.com/RHEcosystemAppEng/dbaas-operator/config"
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
@@ -74,15 +74,15 @@ const (
 )
 
 // InstallationPlatforms return the list of platforms
-var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig{
-	dbaasv1alpha1.DBaaSDynamicPluginInstallation: {
+var InstallationPlatforms = map[dbaasv1beta1.PlatformName]dbaasv1beta1.PlatformConfig{
+	dbaasv1beta1.DBaaSDynamicPluginInstallation: {
 		Name:        dbaasDynamicPluginName,
 		CSV:         fetchEnvValue(dbaasDynamicPluginVersion),
 		Image:       fetchEnvValue(dbaasDynamicPluginImg),
 		DisplayName: dbaasDynamicPluginDisplayName,
-		Type:        dbaasv1alpha1.TypeConsolePlugin,
+		Type:        dbaasv1beta1.TypeConsolePlugin,
 	},
-	dbaasv1alpha1.CrunchyBridgeInstallation: {
+	dbaasv1beta1.CrunchyBridgeInstallation: {
 		Name:           crunchyBridgeName,
 		CSV:            fetchEnvValue(crunchyBridgeCSV),
 		DeploymentName: crunchyBridgeDeployment,
@@ -90,9 +90,9 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    crunchyBridgePkg,
 		Channel:        crunchyBridgeChannel,
 		DisplayName:    crunchyBridgeDisplayName,
-		Type:           dbaasv1alpha1.TypeOperator,
+		Type:           dbaasv1beta1.TypeOperator,
 	},
-	dbaasv1alpha1.MongoDBAtlasInstallation: {
+	dbaasv1beta1.MongoDBAtlasInstallation: {
 		Name:           mongoDBAtlasName,
 		CSV:            fetchEnvValue(mongoDBAtlasCSV),
 		DeploymentName: mongoDBAtlasDeployment,
@@ -100,9 +100,9 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    mongoDBAtlasPkg,
 		Channel:        mongoDBAtlasChannel,
 		DisplayName:    mongoDBAtlasDisplayName,
-		Type:           dbaasv1alpha1.TypeOperator,
+		Type:           dbaasv1beta1.TypeOperator,
 	},
-	dbaasv1alpha1.CockroachDBInstallation: {
+	dbaasv1beta1.CockroachDBInstallation: {
 		Name:           cockroachDBName,
 		CSV:            fetchEnvValue(cockroachDBCSV),
 		DeploymentName: cockroachDBDeployment,
@@ -110,13 +110,13 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    cockroachDBPkg,
 		Channel:        cockroachDBChannel,
 		DisplayName:    cockroachDBDisplayName,
-		Type:           dbaasv1alpha1.TypeOperator,
+		Type:           dbaasv1beta1.TypeOperator,
 	},
-	dbaasv1alpha1.DBaaSQuickStartInstallation: {
-		Type: dbaasv1alpha1.TypeQuickStart,
+	dbaasv1beta1.DBaaSQuickStartInstallation: {
+		Type: dbaasv1beta1.TypeQuickStart,
 		CSV:  DBaaSQuickStartVersion,
 	},
-	dbaasv1alpha1.RDSProviderInstallation: {
+	dbaasv1beta1.RDSProviderInstallation: {
 		Name:           rdsProviderName,
 		CSV:            fetchEnvValue(rdsProviderCSV),
 		DeploymentName: rdsProviderDeployment,
@@ -124,9 +124,9 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    rdsProviderPkg,
 		Channel:        rdsProviderChannel,
 		DisplayName:    rdsProviderDisplayName,
-		Type:           dbaasv1alpha1.TypeOperator,
+		Type:           dbaasv1beta1.TypeOperator,
 	},
-	dbaasv1alpha1.ObservabilityInstallation: {
+	dbaasv1beta1.ObservabilityInstallation: {
 		Name:           ObservabilityName,
 		CSV:            fetchEnvValue(observabilityCSV),
 		DeploymentName: observabilityDeployment,
@@ -134,13 +134,13 @@ var InstallationPlatforms = map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.Platfo
 		PackageName:    observabilityPkg,
 		Channel:        observabilityChannel,
 		DisplayName:    observabilityDisplayName,
-		Type:           dbaasv1alpha1.TypeOperator,
+		Type:           dbaasv1beta1.TypeOperator,
 	},
 }
 
 // GetObservabilityConfig return observatorium configuration
-func GetObservabilityConfig() dbaasv1alpha1.ObservabilityConfig {
-	return dbaasv1alpha1.ObservabilityConfig{
+func GetObservabilityConfig() dbaasv1beta1.ObservabilityConfig {
+	return dbaasv1beta1.ObservabilityConfig{
 		AuthType:        os.Getenv("RHOBS_AUTH_TYPE"),
 		RemoteWritesURL: os.Getenv("RHOBS_API_URL"),
 		RHSSOTokenURL:   os.Getenv("RH_SSO_TOKEN_ENDPOINT"),

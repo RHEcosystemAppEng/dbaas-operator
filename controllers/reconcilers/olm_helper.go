@@ -3,10 +3,9 @@ package reconcilers
 import (
 	"context"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
-
-	alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,7 +15,7 @@ import (
 )
 
 // CheckOwnerReferenceSet check if the owner reference has been set for DBaaSPlatform CR
-func CheckOwnerReferenceSet(cr *alpha1.DBaaSPlatform, csv *v1alpha1.ClusterServiceVersion, scheme *runtime.Scheme) (bool, error) {
+func CheckOwnerReferenceSet(cr *v1beta1.DBaaSPlatform, csv *v1alpha1.ClusterServiceVersion, scheme *runtime.Scheme) (bool, error) {
 	gvk, err := apiutil.GVKForObject(cr, scheme)
 	if err != nil {
 		return false, err
