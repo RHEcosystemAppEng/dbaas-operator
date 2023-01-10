@@ -29,6 +29,8 @@ Reqs:
 - `make build`
 - `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
 
+## [API Reference](docs/api/markdown/ref.md)
+
 ## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.

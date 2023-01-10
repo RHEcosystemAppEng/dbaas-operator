@@ -12,14 +12,16 @@ ifeq ($(DEV),true)
   VERSION := $(VERSION)-$(shell git rev-parse --short HEAD)
 endif
 
+LOCALDIR ?= $(shell pwd)
 ## Location to install dependencies to
-LOCALBIN ?= $(shell pwd)/bin
+LOCALBIN ?= $(LOCALDIR)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 ## Tool Binaries
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+CRD_REF_GEN ?= $(LOCALBIN)/crd-ref-docs
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
@@ -132,6 +134,7 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 install-tools:
 	go install golang.org/x/tools/cmd/goimports@v0.1.11
 	go install github.com/mgechev/revive@v1.2.1
+	go install github.com/elastic/crd-ref-docs@v0.0.8
 
 fmt: install-tools
 	goimports -w .
@@ -231,6 +234,16 @@ controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessar
 $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
+.PHONY: crd-ref-docs
+crd-ref-docs: $(CRD_REF_GEN) ## Download crd-ref-docs locally if necessary.
+$(CRD_REF_GEN): $(LOCALBIN)
+	test -s $(LOCALBIN)/crd-ref-docs || GOBIN=$(LOCALBIN) go install github.com/elastic/crd-ref-docs@v0.0.8
+
+.PHONY: generate-ref
+generate-ref: generate fmt crd-ref-docs
+	$(CRD_REF_GEN) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api --renderer=asciidoctor --templates-dir=$(LOCALDIR)/ref-templates/asciidoctor --output-path=$(LOCALDIR)/docs/api/asciidoc/ref.adoc
+	$(CRD_REF_GEN) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api --renderer=markdown --templates-dir=$(LOCALDIR)/ref-templates/markdown --output-path=$(LOCALDIR)/docs/api/markdown/ref.md
+
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
@@ -251,7 +264,7 @@ rm -rf $$TMP_DIR ;\
 endef
 
 .PHONY: sdk-manifests
-sdk-manifests: manifests generate fmt kustomize sdk ## Generate bundle manifests and metadata.
+sdk-manifests: manifests generate-ref kustomize sdk ## Generate bundle manifests and metadata.
 	$(SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 
