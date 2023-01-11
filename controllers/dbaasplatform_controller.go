@@ -18,7 +18,10 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
@@ -34,6 +37,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -194,9 +198,73 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// envVar set for all operators
+	operatorNameEnvVar, found := os.LookupEnv("OPERATOR_CONDITION_NAME")
+	if !found {
+		err := fmt.Errorf("OPERATOR_CONDITION_NAME must be set")
+		return err
+	}
+	r.operatorNameVersion = operatorNameEnvVar
+	// Creates a new managed install CR if it is not available
+	kubeConfig := mgr.GetConfig()
+	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
+		Scheme: mgr.GetScheme(),
+	})
+	if _, err := r.createPlatformCR(context.Background(), client); err != nil {
+		return err
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.DBaaSPlatform{}).
 		Complete(r)
+}
+
+func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverClient k8sclient.Client) (*v1beta1.DBaaSPlatform, error) {
+	namespace := r.InstallNamespace
+	dbaaSPlatformList := &v1beta1.DBaaSPlatformList{}
+	listOpts := []k8sclient.ListOption{
+		k8sclient.InNamespace(namespace),
+	}
+	err := serverClient.List(ctx, dbaaSPlatformList, listOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("could not get a list of dbaas platform intallation CR: %w", err)
+	}
+
+	var cr *v1beta1.DBaaSPlatform
+	syncPeriod := 180
+	if len(dbaaSPlatformList.Items) == 0 {
+
+		cr = &v1beta1.DBaaSPlatform{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dbaas-platform",
+				Namespace: strings.TrimSpace(namespace),
+				Labels:    map[string]string{"managed-by": "dbaas-operator"},
+			},
+
+			Spec: v1beta1.DBaaSPlatformSpec{
+
+				SyncPeriod: &syncPeriod,
+			},
+		}
+
+		owner, err := reconcilers.GetDBaaSOperatorCSV(ctx, namespace, r.operatorNameVersion, serverClient)
+		if err != nil {
+			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
+		}
+		err = ctrl.SetControllerReference(owner, cr, r.Scheme)
+		if err != nil {
+			return nil, fmt.Errorf("could not create dbaas platform intallation CR: %w", err)
+		}
+
+		err = serverClient.Create(ctx, cr)
+		if err != nil {
+			return nil, fmt.Errorf("could not create  CR in %s namespace: %w", namespace, err)
+		}
+	} else if len(dbaaSPlatformList.Items) == 1 {
+		cr = &dbaaSPlatformList.Items[0]
+	} else {
+		return nil, fmt.Errorf("too many DBaaSPlafrom resources found. Expecting 1, found %d DBaaSPlatform resources in %s namespace", len(dbaaSPlatformList.Items), namespace)
+	}
+	return cr, nil
 }
 
 func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig v1beta1.PlatformConfig) reconcilers.PlatformReconciler {
