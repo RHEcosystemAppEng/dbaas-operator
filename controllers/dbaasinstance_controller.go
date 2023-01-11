@@ -95,13 +95,13 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			func(provider *v1beta1.DBaaSProvider) string {
 				return provider.Spec.InstanceKind
 			},
-			func() interface{} {
+			func(provider *v1beta1.DBaaSProvider) interface{} {
 				return instance.Spec.DeepCopy()
 			},
-			func() interface{} {
+			func(provider *v1beta1.DBaaSProvider) interface{} {
 				return &v1beta1.DBaaSProviderInstance{}
 			},
-			func(i interface{}) metav1.Condition {
+			func(i interface{}, provider *v1beta1.DBaaSProvider) metav1.Condition {
 				providerInstance := i.(*v1beta1.DBaaSProviderInstance)
 				return mergeInstanceStatus(&instance, providerInstance)
 			},

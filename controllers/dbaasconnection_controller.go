@@ -33,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
@@ -124,13 +125,39 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			func(provider *v1beta1.DBaaSProvider) string {
 				return provider.Spec.ConnectionKind
 			},
-			func() interface{} {
+			func(provider *v1beta1.DBaaSProvider) interface{} {
+				if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+					connectionV1beta1 := &v1beta1.DBaaSConnection{}
+					connectionV1beta1.Spec = *spec.(*v1beta1.DBaaSConnectionSpec)
+					connectionV1beta1.Status = connection.Status
+
+					connectionV1alpha1 := &v1alpha1.DBaaSConnection{}
+					_ = connectionV1alpha1.ConvertFrom(connectionV1beta1)
+					return connectionV1alpha1.Spec.DeepCopy()
+				}
 				return spec
 			},
-			func() interface{} {
+			func(provider *v1beta1.DBaaSProvider) interface{} {
+				if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+					return &v1alpha1.DBaaSProviderConnection{}
+				}
 				return &v1beta1.DBaaSProviderConnection{}
 			},
-			func(i interface{}) metav1.Condition {
+			func(i interface{}, provider *v1beta1.DBaaSProvider) metav1.Condition {
+				if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+					providerConnV1alpha1 := i.(*v1alpha1.DBaaSProviderConnection)
+					connectionV1alpha1 := &v1alpha1.DBaaSConnection{}
+					connectionV1alpha1.Spec = providerConnV1alpha1.Spec
+					connectionV1alpha1.Status = providerConnV1alpha1.Status
+
+					connectionV1beta1 := &v1beta1.DBaaSConnection{}
+					_ = connectionV1alpha1.ConvertTo(connectionV1beta1)
+					providerConnV1beta1 := &v1beta1.DBaaSProviderConnection{}
+					providerConnV1beta1.Spec = connectionV1beta1.Spec
+					providerConnV1beta1.Status = connectionV1beta1.Status
+
+					return mergeConnectionStatus(&connection, providerConnV1beta1)
+				}
 				providerConn := i.(*v1beta1.DBaaSProviderConnection)
 				return mergeConnectionStatus(&connection, providerConn)
 			},

@@ -343,7 +343,7 @@ var _ = Describe("Check inventory", func() {
 			},
 			Spec: v1beta1.DBaaSOperatorInventorySpec{
 				ProviderRef: v1beta1.NamespacedName{
-					Name: "crunchy-bridge-registration",
+					Name: "crunchy-bridge",
 				},
 				DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
 					CredentialsRef: &v1beta1.LocalObjectReference{
@@ -561,13 +561,13 @@ var _ = Describe("Reconcile Provider Resource", func() {
 					func(provider *v1beta1.DBaaSProvider) string {
 						return provider.Spec.InventoryKind
 					},
-					func() interface{} {
+					func(provider *v1beta1.DBaaSProvider) interface{} {
 						return createdDBaaSInventory.Spec.DeepCopy()
 					},
-					func() interface{} {
+					func(provider *v1beta1.DBaaSProvider) interface{} {
 						return &v1beta1.DBaaSProviderInventory{}
 					},
-					func(i interface{}) metav1.Condition {
+					func(i interface{}, provider *v1beta1.DBaaSProvider) metav1.Condition {
 						providerInventory := i.(*v1beta1.DBaaSProviderInventory)
 						return mergeInventoryStatus(createdDBaaSInventory, providerInventory)
 					},

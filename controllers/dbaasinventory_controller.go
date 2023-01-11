@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
@@ -119,13 +120,36 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		func(provider *v1beta1.DBaaSProvider) string {
 			return provider.Spec.InventoryKind
 		},
-		func() interface{} {
+		func(provider *v1beta1.DBaaSProvider) interface{} {
+			if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+				inventoryV1alpha1 := &v1alpha1.DBaaSInventory{}
+				_ = inventoryV1alpha1.ConvertFrom(&inventory)
+				return inventoryV1alpha1.Spec.DeepCopy()
+			}
 			return inventory.Spec.DeepCopy()
 		},
-		func() interface{} {
+		func(provider *v1beta1.DBaaSProvider) interface{} {
+			if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+				return &v1alpha1.DBaaSProviderInventory{}
+			}
 			return &v1beta1.DBaaSProviderInventory{}
 		},
-		func(i interface{}) metav1.Condition {
+		func(i interface{}, provider *v1beta1.DBaaSProvider) metav1.Condition {
+			if provider.Name == "mongodb-atlas-registration" || provider.Name == "crunchy-bridge-registration" {
+				providerInvV1alpha1 := i.(*v1alpha1.DBaaSProviderInventory)
+				inventoryV1alpha1 := &v1alpha1.DBaaSInventory{}
+				inventoryV1alpha1.Spec.ProviderRef = v1alpha1.NamespacedName(inventory.Spec.ProviderRef)
+				inventoryV1alpha1.Spec.DBaaSInventorySpec = providerInvV1alpha1.Spec
+				inventoryV1alpha1.Status = providerInvV1alpha1.Status
+
+				inventoryV1beta1 := &v1beta1.DBaaSInventory{}
+				_ = inventoryV1alpha1.ConvertTo(inventoryV1beta1)
+				providerInvV1beta1 := &v1beta1.DBaaSProviderInventory{}
+				providerInvV1beta1.Spec = inventoryV1beta1.Spec.DBaaSInventorySpec
+				providerInvV1beta1.Status = inventoryV1beta1.Status
+
+				return mergeInventoryStatus(&inventory, providerInvV1beta1)
+			}
 			providerInv := i.(*v1beta1.DBaaSProviderInventory)
 			return mergeInventoryStatus(&inventory, providerInv)
 		},

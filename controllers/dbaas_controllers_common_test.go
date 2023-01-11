@@ -73,11 +73,11 @@ var mongoProvider = &v1beta1.DBaaSProvider{
 
 var crunchyProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "crunchy-bridge-registration",
+		Name: "crunchy-bridge",
 	},
 	Spec: v1beta1.DBaaSProviderSpec{
 		Provider: v1beta1.DatabaseProviderInfo{
-			Name: "crunchy-bridge-registration",
+			Name: "crunchy-bridge",
 		},
 		InventoryKind:                "CrunchyBridgeInventory",
 		ConnectionKind:               testConnectionKind,

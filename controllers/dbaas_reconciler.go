@@ -177,8 +177,8 @@ func canProvision(inventory *v1beta1.DBaaSInventory, activePolicy *v1beta1.DBaaS
 }
 
 func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, providerName string, DBaaSObject client.Object,
-	providerObjectKindFn func(*v1beta1.DBaaSProvider) string, DBaaSObjectSpecFn func() interface{},
-	providerObjectFn func() interface{}, DBaaSObjectSyncStatusFn func(interface{}) metav1.Condition,
+	providerObjectKindFn func(*v1beta1.DBaaSProvider) string, DBaaSObjectSpecFn func(*v1beta1.DBaaSProvider) interface{},
+	providerObjectFn func(provider *v1beta1.DBaaSProvider) interface{}, DBaaSObjectSyncStatusFn func(interface{}, *v1beta1.DBaaSProvider) metav1.Condition,
 	DBaaSObjectConditionsFn func() *[]metav1.Condition, DBaaSObjectReadyType string,
 	logger logr.Logger) (result ctrl.Result, recErr error) {
 
@@ -226,7 +226,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 	logger.Info("Found DBaaS Provider", "DBaaS Provider", providerName)
 
 	providerObject := r.createProviderObject(DBaaSObject, providerObjectKindFn(provider))
-	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn())); err != nil {
+	if res, err := controllerutil.CreateOrUpdate(ctx, r.Client, providerObject, r.providerObjectMutateFn(DBaaSObject, providerObject, DBaaSObjectSpecFn(provider))); err != nil {
 		if errors.IsConflict(err) {
 			logger.V(1).Info("Provider object modified, retry syncing spec", "Provider Object", providerObject)
 			result = ctrl.Result{Requeue: true}
@@ -240,7 +240,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 		logger.Info("Provider resource reconciled", "Provider Object", providerObject, "result", res)
 	}
 
-	DBaaSProviderObject := providerObjectFn()
+	DBaaSProviderObject := providerObjectFn(provider)
 	if err := r.parseProviderObject(providerObject, DBaaSProviderObject); err != nil {
 		logger.Error(err, "Error parsing the Provider object", "Provider Object", providerObject)
 		*condition = metav1.Condition{Type: DBaaSObjectReadyType, Status: metav1.ConditionFalse, Reason: v1beta1.ProviderParsingError, Message: err.Error()}
@@ -248,7 +248,7 @@ func (r *DBaaSReconciler) reconcileProviderResource(ctx context.Context, provide
 		return
 	}
 
-	*condition = DBaaSObjectSyncStatusFn(DBaaSProviderObject)
+	*condition = DBaaSObjectSyncStatusFn(DBaaSProviderObject, provider)
 	return
 }
 
