@@ -3,6 +3,7 @@ module github.com/RHEcosystemAppEng/dbaas-operator
 go 1.17
 
 require (
+	github.com/RHsyseng/operator-utils v1.4.9
 	github.com/go-logr/logr v1.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
@@ -12,6 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rhobs/observability-operator v0.0.13
 	go.uber.org/zap v1.19.1
+	golang.org/x/mod v0.5.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
@@ -34,6 +36,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/zapr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.0.0 // indirect

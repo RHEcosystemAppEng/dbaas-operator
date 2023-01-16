@@ -26,11 +26,13 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
+	"golang.org/x/mod/semver"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 
 	"github.com/go-logr/logr"
@@ -75,6 +77,7 @@ type DBaaSPlatformReconciler struct {
 	Log                 logr.Logger
 	installComplete     bool
 	operatorNameVersion string
+	OcpVersion          string
 }
 
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*,verbs=get;list;watch;create;update;patch;delete
@@ -277,6 +280,9 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv
 	case dbaasv1alpha1.TypeOperator:
 		return providersinstallation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeConsolePlugin:
+		if r.OcpVersion != "" && semver.Compare(r.OcpVersion, "v4.9") <= 0 {
+			platformConfig.Image += reconcilers.ConsolePlugin49Tag
+		}
 		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case dbaasv1alpha1.TypeQuickStart:
 		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
@@ -354,7 +360,7 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSPlatformReconciler DeleteEvent")
 	log.Info("Delete event started")
 
-	platformObj, ok := e.Object.(*dbaasv1alpha1.DBaaSPlatform)
+	platformObj, ok := e.Object.(*v1alpha1.DBaaSPlatform)
 	if !ok {
 		log.Info("Error getting DBaaSPlatform object during delete")
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPlatform
