@@ -31,9 +31,13 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 	"github.com/go-logr/logr"
+	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -90,6 +94,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
+//+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=validatingwebhookconfigurations,verbs=get;list;watch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -114,6 +120,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		// error fetching DBaaSPlatform instance, requeue and try again
 		logger.Error(err, "Error in Get of DBaaSPlatform CR")
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorFetchingDBaaSProviderResources
+		return ctrl.Result{}, err
+	}
+
+	// OCPBUGS-4991 - temporary fix until https://github.com/operator-framework/operator-lifecycle-manager/pull/2912 makes it to a release
+	if err = r.fixConversionWebhooks(ctx); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -230,18 +241,15 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 	}
 
 	var cr *v1beta1.DBaaSPlatform
-	syncPeriod := 180
 	if len(dbaaSPlatformList.Items) == 0 {
-
+		syncPeriod := 180
 		cr = &v1beta1.DBaaSPlatform{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dbaas-platform",
 				Namespace: strings.TrimSpace(namespace),
 				Labels:    map[string]string{"managed-by": "dbaas-operator"},
 			},
-
 			Spec: v1beta1.DBaaSPlatformSpec{
-
 				SyncPeriod: &syncPeriod,
 			},
 		}
@@ -360,5 +368,50 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 	log.Info("Calling metrics for deleting of DBaaSProvider")
 	metrics.SetPlatformMetrics(*platformObj, platformObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
+	return nil
+}
+
+func (r *DBaaSPlatformReconciler) checkConversionWebhookHealth(ctx context.Context, webhooks []v1alpha1.WebhookDescription) (bool, error) {
+	for _, webhook := range webhooks {
+		for _, crdName := range webhook.ConversionCRDs {
+			crd := &apiextensionsv1.CustomResourceDefinition{}
+			if err := r.Get(ctx, types.NamespacedName{Name: crdName}, crd); err != nil {
+				return false, err
+			}
+			if crd.Spec.Conversion == nil || crd.Spec.Conversion.Strategy != "Webhook" ||
+				crd.Spec.Conversion.Webhook == nil || crd.Spec.Conversion.Webhook.ClientConfig == nil ||
+				crd.Spec.Conversion.Webhook.ClientConfig.CABundle == nil {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
+}
+
+func (r *DBaaSPlatformReconciler) fixConversionWebhooks(ctx context.Context) error {
+	owner, err := reconcilers.GetDBaaSOperatorCSV(ctx, r.InstallNamespace, r.operatorNameVersion, r.Client)
+	if err != nil {
+		return err
+	}
+	if owner.Status.Phase == v1alpha1.CSVPhaseSucceeded || owner.Status.Phase == v1alpha1.CSVPhaseInstalling {
+		ok, err := r.checkConversionWebhookHealth(ctx, owner.Spec.WebhookDefinitions)
+		if err != nil {
+			return err
+		}
+		labelSelector := k8sclient.MatchingLabels{"olm.owner": r.operatorNameVersion}
+		if !ok {
+			vwebhooks := &admissionregistrationv1.ValidatingWebhookConfigurationList{}
+			if err = r.List(ctx, vwebhooks, labelSelector); err != nil {
+				return err
+			}
+			for i := range vwebhooks.Items {
+				if vwebhooks.Items[i].CreationTimestamp.Before(owner.Status.LastUpdateTime) {
+					if err = r.Client.Delete(ctx, &vwebhooks.Items[i]); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
