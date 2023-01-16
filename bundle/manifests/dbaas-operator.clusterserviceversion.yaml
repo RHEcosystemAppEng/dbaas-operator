@@ -422,6 +422,23 @@ spec:
           - get
           - patch
         - apiGroups:
+          - admissionregistration.k8s.io
+          resources:
+          - validatingwebhookconfigurations
+          verbs:
+          - delete
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - apiextensions.k8s.io
+          resources:
+          - customresourcedefinitions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - apps
           resources:
           - daemonsets
