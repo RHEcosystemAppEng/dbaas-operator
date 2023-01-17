@@ -163,7 +163,7 @@ _Appears in:_
 | --- | --- |
 | `providerRef` _[NamespacedName](#namespacedname)_ | A reference to a DBaaSProvider custom resource (CR). |
 | `DBaaSInventorySpec` _[DBaaSInventorySpec](#dbaasinventoryspec)_ | The properties that will be copied into the provider’s inventory. |
-| `policy` _[DBaaSPolicySpec](#dbaaspolicyspec)_ | The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace. |
+| `policy` _[DBaaSPolicySpec](#dbaaspolicyspec)_ | The policy for this inventory. Per inventory, completely overrides any other DBaaSPolicy settings in this namespace. |
 
 
 #### DBaaSPlatform

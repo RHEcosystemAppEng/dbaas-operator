@@ -28,7 +28,7 @@ type DBaaSOperatorInventorySpec struct {
 	// The properties that will be copied into the provider’s inventory.
 	DBaaSInventorySpec `json:",inline"`
 
-	// The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace.
+	// The policy for this inventory. Per inventory, completely overrides any other DBaaSPolicy settings in this namespace.
 	Policy *DBaaSPolicySpec `json:"policy,omitempty"`
 }
 

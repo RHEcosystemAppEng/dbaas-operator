@@ -273,8 +273,8 @@ spec:
                 - name
                 type: object
               policy:
-                description: The policy for this inventory. Completely overrides any
-                  existing DBaaSPolicy settings in this namespace.
+                description: The policy for this inventory. Per inventory, completely
+                  overrides any other DBaaSPolicy settings in this namespace.
                 properties:
                   connections:
                     description: Namespaces where DBaaSConnection and DBaaSInstance
