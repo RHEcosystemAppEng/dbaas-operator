@@ -125,7 +125,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	// OCPBUGS-4991 - temporary fix until https://github.com/operator-framework/operator-lifecycle-manager/pull/2912 makes it to a release
 	if err = r.fixConversionWebhooks(ctx); err != nil {
-		return ctrl.Result{}, err
+		logger.Error(err, "Error related to conversion webhook setup")
 	}
 
 	if cr.DeletionTimestamp != nil {
