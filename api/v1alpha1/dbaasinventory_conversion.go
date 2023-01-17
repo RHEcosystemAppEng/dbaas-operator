@@ -61,7 +61,6 @@ func setPolicyObj(dst *v1beta1.DBaaSInventory) {
 	if dst.Spec.Policy == nil {
 		dst.Spec.Policy = &v1beta1.DBaaSPolicySpec{}
 	}
-	setDBaaSConnectionPolicy(dst.Spec.Policy)
 }
 
 // ConvertFrom converts from the Hub version (v1beta1) to this version.
