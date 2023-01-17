@@ -191,7 +191,7 @@ This object defines the desired state of a DBaaSInventory object.
 | Field | Description
 | *`providerRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to a DBaaSProvider custom resource (CR).
 | *`DBaaSInventorySpec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec[$$DBaaSInventorySpec$$]__ | The properties that will be copied into the provider’s inventory.
-| *`policy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]__ | The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace. This change may break v1alpha1 inventories where only `disableProvisions` was set, but the broader DBaaSPolicy allowed certain namespaces.
+| *`policy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]__ | The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace.
 |===
 
 
