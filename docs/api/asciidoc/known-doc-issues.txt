@@ -1,0 +1,10 @@
+Known documentation issues as of 1/17/2023.
+
+ref.adoc - line 91 : This xref link is broken.
+  xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderconnection[$$DBaaSProviderConnection$$]
+
+ref.adoc - line 129 : This xref link is broken.
+  xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderinstance[$$DBaaSProviderInstance$$]
+
+ref.adoc - line 188 : This xref link is broken.
+  xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderinventory[$$DBaaSProviderInventory$$]
