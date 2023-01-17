@@ -30,10 +30,6 @@ type DBaaSPolicySpec struct {
 	Connections *DBaaSConnectionPolicy `json:"connections,omitempty"`
 }
 
-// Sets the inventory policy.
-type DBaaSInventoryPolicy struct {
-}
-
 // DBaaSConnectionPolicy sets connection policy
 type DBaaSConnectionPolicy struct {
 	// Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.

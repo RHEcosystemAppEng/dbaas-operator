@@ -135,8 +135,6 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 | `spec` _[DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)_ |  |
 
 
-
-
 #### DBaaSInventorySpec
 
 

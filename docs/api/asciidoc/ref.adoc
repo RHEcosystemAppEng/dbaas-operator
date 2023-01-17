@@ -158,8 +158,6 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 |===
 
 
-
-
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec"]
 ==== DBaaSInventorySpec 
 
