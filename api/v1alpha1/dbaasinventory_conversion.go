@@ -34,10 +34,12 @@ func (src *DBaaSInventory) ConvertTo(dstRaw conversion.Hub) error {
 	dst.Spec.CredentialsRef = (*v1beta1.LocalObjectReference)(src.Spec.CredentialsRef)
 	if src.Spec.ConnectionNamespaces != nil {
 		setPolicyObj(dst)
+		setDBaaSConnectionPolicy(dst.Spec.Policy)
 		dst.Spec.Policy.Connections.Namespaces = src.Spec.ConnectionNamespaces
 	}
 	if src.Spec.ConnectionNsSelector != nil {
 		setPolicyObj(dst)
+		setDBaaSConnectionPolicy(dst.Spec.Policy)
 		dst.Spec.Policy.Connections.NsSelector = src.Spec.ConnectionNsSelector
 	}
 	if src.Spec.DisableProvisions != nil {
@@ -57,8 +59,9 @@ func (src *DBaaSInventory) ConvertTo(dstRaw conversion.Hub) error {
 
 func setPolicyObj(dst *v1beta1.DBaaSInventory) {
 	if dst.Spec.Policy == nil {
-		dst.Spec.Policy = &v1beta1.DBaaSInventoryPolicy{}
+		dst.Spec.Policy = &v1beta1.DBaaSPolicySpec{}
 	}
+	setDBaaSConnectionPolicy(dst.Spec.Policy)
 }
 
 // ConvertFrom converts from the Hub version (v1beta1) to this version.

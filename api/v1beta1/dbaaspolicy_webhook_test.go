@@ -39,11 +39,9 @@ var _ = Describe("DBaaSPolicy Webhook", func() {
 				policy := testDBaaSPolicy.DeepCopy()
 				policy.SetResourceVersion("")
 				policy.Spec = DBaaSPolicySpec{
-					DBaaSInventoryPolicy: DBaaSInventoryPolicy{
-						Connections: DBaaSConnectionPolicy{
-							NsSelector: &metav1.LabelSelector{
-								MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}},
-							},
+					Connections: &DBaaSConnectionPolicy{
+						NsSelector: &metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}},
 						},
 					},
 				}
@@ -65,11 +63,9 @@ var _ = Describe("DBaaSPolicy Webhook", func() {
 					policy := testDBaaSPolicy.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(policy), policy)).Should(Succeed())
 					policy.Spec = DBaaSPolicySpec{
-						DBaaSInventoryPolicy: DBaaSInventoryPolicy{
-							Connections: DBaaSConnectionPolicy{
-								NsSelector: &metav1.LabelSelector{
-									MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In", Values: []string{"blah"}}},
-								},
+						Connections: &DBaaSConnectionPolicy{
+							NsSelector: &metav1.LabelSelector{
+								MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In", Values: []string{"blah"}}},
 							},
 						},
 					}

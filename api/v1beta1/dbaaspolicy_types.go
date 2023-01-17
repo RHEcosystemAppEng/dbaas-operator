@@ -24,15 +24,14 @@ import (
 // Enables administrative capabilities within a namespace, and sets a default inventory policy.
 // Policy defaults can be overridden on a per-inventory basis.
 type DBaaSPolicySpec struct {
-	DBaaSInventoryPolicy `json:",inline"`
+	// Disables provisioning on inventory accounts.
+	DisableProvisions *bool `json:"disableProvisions,omitempty"`
+	// Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
+	Connections *DBaaSConnectionPolicy `json:"connections,omitempty"`
 }
 
 // Sets the inventory policy.
 type DBaaSInventoryPolicy struct {
-	// Disables provisioning on inventory accounts.
-	DisableProvisions *bool `json:"disableProvisions,omitempty"`
-	// Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
-	Connections DBaaSConnectionPolicy `json:"connections,omitempty"`
 }
 
 // DBaaSConnectionPolicy sets connection policy

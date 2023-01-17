@@ -59,7 +59,7 @@ The schema for the DBaaSConnection API.
 DBaaSConnectionPolicy sets connection policy
 
 _Appears in:_
-- [DBaaSInventoryPolicy](#dbaasinventorypolicy)
+- [DBaaSPolicySpec](#dbaaspolicyspec)
 
 | Field | Description |
 | --- | --- |
@@ -135,20 +135,6 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 | `spec` _[DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)_ |  |
 
 
-#### DBaaSInventoryPolicy
-
-
-
-Sets the inventory policy.
-
-_Appears in:_
-- [DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)
-- [DBaaSPolicySpec](#dbaaspolicyspec)
-
-| Field | Description |
-| --- | --- |
-| `disableProvisions` _boolean_ | Disables provisioning on inventory accounts. |
-| `connections` _[DBaaSConnectionPolicy](#dbaasconnectionpolicy)_ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. |
 
 
 #### DBaaSInventorySpec
@@ -179,7 +165,7 @@ _Appears in:_
 | --- | --- |
 | `providerRef` _[NamespacedName](#namespacedname)_ | A reference to a DBaaSProvider custom resource (CR). |
 | `DBaaSInventorySpec` _[DBaaSInventorySpec](#dbaasinventoryspec)_ | The properties that will be copied into the provider’s inventory. |
-| `policy` _[DBaaSInventoryPolicy](#dbaasinventorypolicy)_ | The policy for this inventory. |
+| `policy` _[DBaaSPolicySpec](#dbaaspolicyspec)_ | The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace. This change may break v1alpha1 inventories where only `disableProvisions` was set, but the broader DBaaSPolicy allowed certain namespaces. |
 
 
 #### DBaaSPlatform
@@ -235,11 +221,13 @@ Enables administrative capabilities within a namespace, and sets a default inven
 The specifications for a _DBaaSPolicy_ object. Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
 
 _Appears in:_
+- [DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)
 - [DBaaSPolicy](#dbaaspolicy)
 
 | Field | Description |
 | --- | --- |
-| `DBaaSInventoryPolicy` _[DBaaSInventoryPolicy](#dbaasinventorypolicy)_ |  |
+| `disableProvisions` _boolean_ | Disables provisioning on inventory accounts. |
+| `connections` _[DBaaSConnectionPolicy](#dbaasconnectionpolicy)_ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories. |
 
 
 #### DBaaSProvider

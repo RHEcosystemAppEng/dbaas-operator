@@ -32,12 +32,15 @@ func (src *DBaaSPolicy) ConvertTo(dstRaw conversion.Hub) error {
 
 	// Spec
 	if src.Spec.ConnectionNamespaces != nil {
+		setDBaaSConnectionPolicy(&dst.Spec)
 		dst.Spec.Connections.Namespaces = src.Spec.ConnectionNamespaces
 	}
 	if src.Spec.ConnectionNsSelector != nil {
+		setDBaaSConnectionPolicy(&dst.Spec)
 		dst.Spec.Connections.NsSelector = src.Spec.ConnectionNsSelector
 	}
 	if src.Spec.DisableProvisions != nil {
+		setDBaaSConnectionPolicy(&dst.Spec)
 		dst.Spec.DisableProvisions = src.Spec.DisableProvisions
 	}
 
@@ -55,10 +58,10 @@ func (dst *DBaaSPolicy) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	if src.Spec.Connections.Namespaces != nil {
+	if src.Spec.Connections != nil && src.Spec.Connections.Namespaces != nil {
 		dst.Spec.ConnectionNamespaces = src.Spec.Connections.Namespaces
 	}
-	if src.Spec.Connections.NsSelector != nil {
+	if src.Spec.Connections != nil && src.Spec.Connections.NsSelector != nil {
 		dst.Spec.ConnectionNsSelector = src.Spec.Connections.NsSelector
 	}
 	if src.Spec.DisableProvisions != nil {
@@ -69,4 +72,10 @@ func (dst *DBaaSPolicy) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Status = DBaaSPolicyStatus(src.Status)
 
 	return nil
+}
+
+func setDBaaSConnectionPolicy(policySpec *v1beta1.DBaaSPolicySpec) {
+	if policySpec.Connections == nil {
+		policySpec.Connections = &v1beta1.DBaaSConnectionPolicy{}
+	}
 }

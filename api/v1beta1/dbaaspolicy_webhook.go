@@ -58,7 +58,7 @@ func (r *DBaaSPolicy) ValidateDelete() error {
 
 func validatePolicy(policy *DBaaSPolicy) error {
 	// Check ns selector
-	if policy.Spec.Connections.NsSelector != nil {
+	if policy.Spec.Connections != nil && policy.Spec.Connections.NsSelector != nil {
 		if _, err := metav1.LabelSelectorAsSelector(policy.Spec.Connections.NsSelector); err != nil {
 			return err
 		}

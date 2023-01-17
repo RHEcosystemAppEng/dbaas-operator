@@ -215,8 +215,8 @@ var (
 					Name: testSecretName,
 				},
 			},
-			Policy: &DBaaSInventoryPolicy{
-				Connections: DBaaSConnectionPolicy{
+			Policy: &DBaaSPolicySpec{
+				Connections: &DBaaSConnectionPolicy{
 					NsSelector: &metav1.LabelSelector{
 						MatchExpressions: []metav1.LabelSelectorRequirement{
 							{Key: "test", Operator: "DoesNotExist"},

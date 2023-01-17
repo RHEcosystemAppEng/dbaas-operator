@@ -137,8 +137,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				ProviderRef: v1beta1.NamespacedName{
 					Name: testProviderName,
 				},
-				Policy: &v1beta1.DBaaSInventoryPolicy{
-					Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"valid-ns", "random"}},
+				Policy: &v1beta1.DBaaSPolicySpec{
+					Connections: &v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"valid-ns", "random"}},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
@@ -211,8 +211,8 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 				ProviderRef: v1beta1.NamespacedName{
 					Name: testProviderName,
 				},
-				Policy: &v1beta1.DBaaSInventoryPolicy{
-					Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"valid-ns", "random"}},
+				Policy: &v1beta1.DBaaSPolicySpec{
+					Connections: &v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"valid-ns", "random"}},
 				},
 				DBaaSInventorySpec: *DBaaSInventorySpec,
 			},
@@ -638,8 +638,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					Policy: &v1beta1.DBaaSInventoryPolicy{
-						Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{otherNS.Name}},
+					Policy: &v1beta1.DBaaSPolicySpec{
+						Connections: &v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{otherNS.Name}},
 					},
 					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
 						CredentialsRef: &v1beta1.LocalObjectReference{
@@ -743,8 +743,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					Policy: &v1beta1.DBaaSInventoryPolicy{
-						Connections: v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"*"}},
+					Policy: &v1beta1.DBaaSPolicySpec{
+						Connections: &v1beta1.DBaaSConnectionPolicy{Namespaces: &[]string{"*"}},
 					},
 					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
 						CredentialsRef: &v1beta1.LocalObjectReference{
@@ -850,8 +850,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					Policy: &v1beta1.DBaaSInventoryPolicy{
-						Connections: v1beta1.DBaaSConnectionPolicy{NsSelector: &metav1.LabelSelector{
+					Policy: &v1beta1.DBaaSPolicySpec{
+						Connections: &v1beta1.DBaaSConnectionPolicy{NsSelector: &metav1.LabelSelector{
 							MatchExpressions: []metav1.LabelSelectorRequirement{
 								{
 									Key:      "testlabel",
@@ -974,8 +974,8 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 					ProviderRef: v1beta1.NamespacedName{
 						Name: testProviderName,
 					},
-					Policy: &v1beta1.DBaaSInventoryPolicy{
-						Connections: v1beta1.DBaaSConnectionPolicy{NsSelector: &metav1.LabelSelector{
+					Policy: &v1beta1.DBaaSPolicySpec{
+						Connections: &v1beta1.DBaaSConnectionPolicy{NsSelector: &metav1.LabelSelector{
 							MatchLabels: labels,
 						},
 						},

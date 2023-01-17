@@ -69,7 +69,7 @@ DBaaSConnectionPolicy sets connection policy
 
 .Appears In:
 ****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]
 ****
 
 [cols="25a,75a", options="header"]
@@ -158,23 +158,6 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 |===
 
 
-[id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy"]
-==== DBaaSInventoryPolicy 
-
-Sets the inventory policy.
-
-.Appears In:
-****
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
-- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]
-****
-
-[cols="25a,75a", options="header"]
-|===
-| Field | Description
-| *`disableProvisions`* __boolean__ | Disables provisioning on inventory accounts.
-| *`connections`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy[$$DBaaSConnectionPolicy$$]__ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
-|===
 
 
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec"]
@@ -210,7 +193,7 @@ This object defines the desired state of a DBaaSInventory object.
 | Field | Description
 | *`providerRef`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname[$$NamespacedName$$]__ | A reference to a DBaaSProvider custom resource (CR).
 | *`DBaaSInventorySpec`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec[$$DBaaSInventorySpec$$]__ | The properties that will be copied into the provider’s inventory.
-| *`policy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | The policy for this inventory.
+| *`policy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec[$$DBaaSPolicySpec$$]__ | The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace. This change may break v1alpha1 inventories where only `disableProvisions` was set, but the broader DBaaSPolicy allowed certain namespaces.
 |===
 
 
@@ -274,13 +257,15 @@ The specifications for a _DBaaSPolicy_ object. Enables administrative capabiliti
 
 .Appears In:
 ****
+- xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec[$$DBaaSOperatorInventorySpec$$]
 - xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicy[$$DBaaSPolicy$$]
 ****
 
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`DBaaSInventoryPolicy`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy[$$DBaaSInventoryPolicy$$]__ | 
+| *`disableProvisions`* __boolean__ | Disables provisioning on inventory accounts.
+| *`connections`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy[$$DBaaSConnectionPolicy$$]__ | Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
 |===
 
 

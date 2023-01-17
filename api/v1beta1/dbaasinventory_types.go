@@ -28,8 +28,9 @@ type DBaaSOperatorInventorySpec struct {
 	// The properties that will be copied into the provider’s inventory.
 	DBaaSInventorySpec `json:",inline"`
 
-	// The policy for this inventory.
-	Policy *DBaaSInventoryPolicy `json:"policy,omitempty"`
+	// The policy for this inventory. Completely overrides any existing DBaaSPolicy settings in this namespace.
+	// This change may break v1alpha1 inventories where only `disableProvisions` was set, but the broader DBaaSPolicy allowed certain namespaces.
+	Policy *DBaaSPolicySpec `json:"policy,omitempty"`
 }
 
 //+kubebuilder:storageversion
