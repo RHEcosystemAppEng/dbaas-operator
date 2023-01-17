@@ -73,8 +73,10 @@ func (dst *DBaaSInventory) ConvertFrom(srcRaw conversion.Hub) error {
 	// Spec
 	dst.Spec.CredentialsRef = (*LocalObjectReference)(src.Spec.CredentialsRef)
 	if src.Spec.Policy != nil {
-		dst.Spec.ConnectionNamespaces = src.Spec.Policy.Connections.Namespaces
-		dst.Spec.ConnectionNsSelector = src.Spec.Policy.Connections.NsSelector
+		if src.Spec.Policy.Connections != nil {
+			dst.Spec.ConnectionNamespaces = src.Spec.Policy.Connections.Namespaces
+			dst.Spec.ConnectionNsSelector = src.Spec.Policy.Connections.NsSelector
+		}
 		dst.Spec.DisableProvisions = src.Spec.Policy.DisableProvisions
 	}
 	dst.Spec.ProviderRef = NamespacedName(src.Spec.ProviderRef)

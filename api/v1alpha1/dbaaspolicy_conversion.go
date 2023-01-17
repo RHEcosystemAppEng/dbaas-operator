@@ -58,11 +58,13 @@ func (dst *DBaaSPolicy) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	if src.Spec.Connections != nil && src.Spec.Connections.Namespaces != nil {
-		dst.Spec.ConnectionNamespaces = src.Spec.Connections.Namespaces
-	}
-	if src.Spec.Connections != nil && src.Spec.Connections.NsSelector != nil {
-		dst.Spec.ConnectionNsSelector = src.Spec.Connections.NsSelector
+	if src.Spec.Connections != nil {
+		if src.Spec.Connections.Namespaces != nil {
+			dst.Spec.ConnectionNamespaces = src.Spec.Connections.Namespaces
+		}
+		if src.Spec.Connections.NsSelector != nil {
+			dst.Spec.ConnectionNsSelector = src.Spec.Connections.NsSelector
+		}
 	}
 	if src.Spec.DisableProvisions != nil {
 		dst.Spec.DisableProvisions = src.Spec.DisableProvisions
