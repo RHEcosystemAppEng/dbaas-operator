@@ -120,14 +120,16 @@ func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace str
 	var validNamespaces []string
 	var validNsSelector *metav1.LabelSelector
 	if inventory.Spec.Policy != nil {
-		if inventory.Spec.Policy.Connections.Namespaces != nil {
-			validNamespaces = *inventory.Spec.Policy.Connections.Namespaces
-		}
-		if inventory.Spec.Policy.Connections.NsSelector != nil {
-			validNsSelector = inventory.Spec.Policy.Connections.NsSelector
+		if inventory.Spec.Policy.Connections != nil {
+			if inventory.Spec.Policy.Connections.Namespaces != nil {
+				validNamespaces = *inventory.Spec.Policy.Connections.Namespaces
+			}
+			if inventory.Spec.Policy.Connections.NsSelector != nil {
+				validNsSelector = inventory.Spec.Policy.Connections.NsSelector
+			}
 		}
 	} else {
-		if activePolicy != nil {
+		if activePolicy != nil && activePolicy.Spec.Connections != nil {
 			if activePolicy.Spec.Connections.Namespaces != nil {
 				validNamespaces = *activePolicy.Spec.Connections.Namespaces
 			}
