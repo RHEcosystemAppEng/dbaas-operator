@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -29,6 +28,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/operator-framework/api/pkg/lib/version"
+	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	rhobsv1 "github.com/rhobs/obo-prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,12 +45,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/yaml"
-
-	"github.com/operator-framework/api/pkg/lib/version"
-	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
-
-	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
@@ -90,6 +88,8 @@ var _ = BeforeSuite(func() {
 	err = rbacv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = operatorframework.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = rhobsv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("bootstrapping test environment")
@@ -212,7 +212,7 @@ var _ = AfterSuite(func() {
 })
 
 func createCSV(k8sManager manager.Manager) {
-	yamlFile, err := ioutil.ReadFile("../bundle/manifests/dbaas-operator.clusterserviceversion.yaml")
+	yamlFile, err := os.ReadFile("../bundle/manifests/dbaas-operator.clusterserviceversion.yaml")
 	Expect(err).ToNot(HaveOccurred())
 	jsonConversion, err := yaml.YAMLToJSON(yamlFile)
 	Expect(err).ToNot(HaveOccurred())

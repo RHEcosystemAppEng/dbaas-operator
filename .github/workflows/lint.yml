@@ -18,7 +18,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.18.x
       - name: Install goimports
         run: go install golang.org/x/tools/cmd/goimports@v0.1.11
       - name: Checkout code
@@ -30,6 +30,6 @@ jobs:
           config: ./config.toml
           path: ./...
       - name: Install Gosec Security Scanner
-        run: curl -sfL https://raw.githubusercontent.com/securego/gosec/v2.8.1/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
+        run: curl -sfL https://raw.githubusercontent.com/securego/gosec/v2.12.0/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.12.0
       - name: Run Gosec Security Scanner
         run: gosec ./...

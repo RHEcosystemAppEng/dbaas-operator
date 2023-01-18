@@ -1,8 +1,6 @@
 package embeddedconfigs
 
-import (
-	_ "embed"
-)
+import _ "embed"
 
 // EnvImages image data from the embedded yaml file
 //
