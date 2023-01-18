@@ -46,6 +46,7 @@ const (
 	TypeQuickStart PlatformType = iota
 	TypeConsolePlugin
 	TypeOperator
+	TypeObservability
 )
 
 // Platform status values.
