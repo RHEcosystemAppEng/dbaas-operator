@@ -27,9 +27,6 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/observability"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
-
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
