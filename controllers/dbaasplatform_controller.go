@@ -135,7 +135,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	defer func() {
-		metrics.SetPlatformMetrics(*cr, cr.ClusterName, execution, event, metricLabelErrCdValue)
+		metrics.SetPlatformMetrics(*cr, cr.Name, execution, event, metricLabelErrCdValue)
 	}()
 
 	var finished = true

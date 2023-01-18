@@ -22,8 +22,8 @@ Observability Operator |[Observability Operator](https://github.com/rhobs/observ
 Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
 
 Reqs:
- - go v1.17
- - operator-sdk v1.20.1
+ - go v1.18
+ - operator-sdk v1.22.2
 
 **if you are using podman instead of docker set CONTAINER_ENGINE as podman** `export CONTAINER_ENGINE=podman`
 - `make build`
@@ -106,8 +106,8 @@ See the document :  [Observability Operator configuration](docs/observability-op
 ## Appendix
 
 ### Go Installation
-* If the go installation version on your dev machine is different from the one required e.g. go1.17, visit the [go.dev/dl](go.dev/dl)
-* Download the installer package for the needed version e.g. go1.17.13 and follow official go installation instructions
+* If the go installation version on your dev machine is different from the one required e.g. go1.18, visit the [go.dev/dl](go.dev/dl)
+* Download the installer package for the needed version e.g. go1.18.x and follow official go installation instructions
 * Verify the go installation is successful
 
 ### Registration on MongoDB Atlas

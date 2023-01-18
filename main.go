@@ -31,6 +31,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 
+	rhobsv1 "github.com/rhobs/obo-prometheus-operator/pkg/apis/monitoring/v1"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -80,6 +81,7 @@ func init() {
 	utilruntime.Must(msoapi.AddToScheme(scheme))
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
 	utilruntime.Must(admissionregistrationv1.AddToScheme(scheme))
+	utilruntime.Must(rhobsv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
