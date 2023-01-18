@@ -564,6 +564,7 @@ spec:
           - monitoring.rhobs
           resources:
           - monitoringstacks
+          - servicemonitors
           verbs:
           - create
           - delete
