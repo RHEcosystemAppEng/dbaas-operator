@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -20,13 +20,13 @@ const (
 )
 
 // SetPolicyMetrics set the Metrics for policy
-func SetPolicyMetrics(policy dbaasv1alpha1.DBaaSPolicy, execution Execution, event string, errCd string) {
+func SetPolicyMetrics(policy dbaasv1beta1.DBaaSPolicy, execution Execution, event string, errCd string) {
 	setPolicyRequestDurationSeconds(policy, event, execution)
 	UpdateErrorsTotal(policy.Name, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, errCd)
 }
 
 // setPolicyRequestDurationSeconds set the Metrics for policy request duration in seconds
-func setPolicyRequestDurationSeconds(policy dbaasv1alpha1.DBaaSPolicy, event string, execution Execution) {
+func setPolicyRequestDurationSeconds(policy dbaasv1beta1.DBaaSPolicy, event string, execution Execution) {
 	log := ctrl.Log.WithName("Policy Request Duration for event: " + event)
 	switch event {
 

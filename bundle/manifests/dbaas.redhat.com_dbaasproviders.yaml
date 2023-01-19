@@ -6,6 +6,17 @@ metadata:
   creationTimestamp: null
   name: dbaasproviders.dbaas.redhat.com
 spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: dbaas-operator-webhook-service
+          namespace: openshift-dbaas-operator
+          path: /convert
+      conversionReviewVersions:
+      - v1alpha1
+      - v1beta1
   group: dbaas.redhat.com
   names:
     kind: DBaaSProvider
@@ -15,6 +26,162 @@ spec:
   scope: Cluster
   versions:
   - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: The schema for the DBaaSProvider API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Defines the desired state of a DBaaSProvider object.
+            properties:
+              allowsFreeTrial:
+                description: Indicates whether the provider offers free trials.
+                type: boolean
+              connectionKind:
+                description: The name of the connection's custom resource definition
+                  (CRD) as defined by the provider.
+                type: string
+              credentialFields:
+                description: Indicates what information to collect from the user interface
+                  and how to display fields in a form.
+                items:
+                  description: Defines the attributes.
+                  properties:
+                    displayName:
+                      description: A user-friendly name for this field.
+                      type: string
+                    helpText:
+                      description: Additional information about the field.
+                      type: string
+                    key:
+                      description: The name for this field.
+                      type: string
+                    required:
+                      description: Defines if the field is required or not.
+                      type: boolean
+                    type:
+                      description: 'The type of field: string, maskedstring, integer,
+                        or boolean.'
+                      type: string
+                  required:
+                  - displayName
+                  - key
+                  - required
+                  - type
+                  type: object
+                type: array
+              externalProvisionDescription:
+                description: Instructions on how to provision instances by using the
+                  database provider's web portal.
+                type: string
+              externalProvisionURL:
+                description: The URL for provisioning instances by using the database
+                  provider's web portal.
+                type: string
+              instanceKind:
+                description: The name of the instance's custom resource definition
+                  (CRD) as defined by the provider for provisioning.
+                type: string
+              instanceParameterSpecs:
+                description: Indicates what parameters to collect from the user interface,
+                  and how to display those fields in a form to provision a database
+                  instance.
+                items:
+                  description: Indicates what parameters to collect from the user
+                    interface, and how to display those fields in a form to provision
+                    a database instance.
+                  properties:
+                    defaultValue:
+                      description: Default value for this field.
+                      type: string
+                    displayName:
+                      description: A user-friendly name for this parameter.
+                      type: string
+                    name:
+                      description: The name for this field.
+                      type: string
+                    required:
+                      description: Define if this field is required or not.
+                      type: boolean
+                    type:
+                      description: 'The type of field: string, maskedstring, integer,
+                        or boolean.'
+                      type: string
+                  required:
+                  - displayName
+                  - name
+                  - required
+                  - type
+                  type: object
+                type: array
+              inventoryKind:
+                description: The name of the inventory custom resource definition
+                  (CRD) as defined by the database provider.
+                type: string
+              provider:
+                description: Contains information about database provider and platform.
+                properties:
+                  displayDescription:
+                    description: Indicates the description text shown for a database
+                      provider within the user interface. For example, the catalog
+                      tile description.
+                    type: string
+                  displayName:
+                    description: A user-friendly name for this database provider.
+                      For example, 'MongoDB Atlas'.
+                    type: string
+                  icon:
+                    description: Indicates what icon to display on the catalog tile.
+                    properties:
+                      base64data:
+                        type: string
+                      mediatype:
+                        type: string
+                    required:
+                    - base64data
+                    - mediatype
+                    type: object
+                  name:
+                    description: The name used to specify the service binding origin
+                      parameter. For example, 'Red Hat DBaaS / MongoDB Atlas'.
+                    type: string
+                required:
+                - displayDescription
+                - displayName
+                - icon
+                - name
+                type: object
+            required:
+            - allowsFreeTrial
+            - connectionKind
+            - credentialFields
+            - externalProvisionDescription
+            - externalProvisionURL
+            - instanceKind
+            - instanceParameterSpecs
+            - inventoryKind
+            - provider
+            type: object
+          status:
+            description: Defines the observed state of a DBaaSProvider object.
+            type: object
+        type: object
+    served: true
+    storage: false
+    subresources:
+      status: {}
+  - name: v1beta1
     schema:
       openAPIV3Schema:
         description: The schema for the DBaaSProvider API.

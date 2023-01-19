@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -49,7 +49,7 @@ var (
 			Namespace: testNamespace,
 		},
 		Spec: DBaaSProviderSpec{
-			Provider: DatabaseProvider{
+			Provider: DatabaseProviderInfo{
 				Name: testProviderName,
 			},
 			InventoryKind:  testInventoryKind,
@@ -79,7 +79,7 @@ var (
 			Namespace: testNamespace,
 		},
 		Spec: DBaaSProviderSpec{
-			Provider: DatabaseProvider{
+			Provider: DatabaseProviderInfo{
 				Name: rdsRegistration,
 			},
 			InventoryKind:  testInventoryKindRDS,
@@ -215,10 +215,12 @@ var (
 					Name: testSecretName,
 				},
 			},
-			DBaaSInventoryPolicy: DBaaSInventoryPolicy{
-				ConnectionNsSelector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						{Key: "test", Operator: "DoesNotExist"},
+			Policy: &DBaaSInventoryPolicy{
+				Connections: DBaaSConnectionPolicy{
+					NsSelector: &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{Key: "test", Operator: "DoesNotExist"},
+						},
 					},
 				},
 			},
@@ -291,7 +293,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			AfterEach(assertResourceDeletion(&testSecret2))
 			It("missing required values field", func() {
 				inv := testDBaaSInventory.DeepCopy()
-				inv.Spec.ConnectionNsSelector = &metav1.LabelSelector{
+				inv.Spec.Policy.Connections.NsSelector = &metav1.LabelSelector{
 					MatchExpressions: []metav1.LabelSelectorRequirement{
 						{Key: "test", Operator: "In"},
 					},
@@ -301,7 +303,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 			})
 			It("missing required credential fields", func() {
 				err := k8sClient.Create(ctx, &testDBaaSInventory)
-				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
+				Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1beta1.LocalObjectReference{Name:\"testsecret\"}: credentialsRef is invalid: field1 is required in secret testsecret"))
 			})
 		})
 	Context("update",
@@ -318,7 +320,7 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 				It("Update CR should succeed", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
-					inv.Spec.ConnectionNsSelector.MatchExpressions = nil
+					inv.Spec.Policy.Connections.NsSelector.MatchExpressions = nil
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
 					Expect(err).Should(BeNil())
@@ -332,12 +334,12 @@ var _ = Describe("DBaaSInventory Webhook", func() {
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
 					inv.Spec.CredentialsRef.Name = testSecretNameUpdate
 					err := k8sClient.Update(ctx, inv)
-					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1alpha1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
+					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: spec.credentialsRef: Invalid value: v1beta1.LocalObjectReference{Name:\"testsecretupdate\"}: credentialsRef is invalid: field1 is required in secret testsecretupdate"))
 				})
 				It("update fails with missing required values field", func() {
 					inv := testDBaaSInventory.DeepCopy()
 					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
-					inv.Spec.ConnectionNsSelector.MatchExpressions = []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}}
+					inv.Spec.Policy.Connections.NsSelector.MatchExpressions = []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}}
 					err := k8sClient.Update(ctx, inv)
 					Expect(err).Should(MatchError("admission webhook \"vdbaasinventory.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
 				})

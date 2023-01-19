@@ -42,6 +42,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
 const (
@@ -51,41 +52,41 @@ const (
 	testInstanceKind   = "MongoDBAtlasInstance"
 )
 
-var mongoProvider = &v1alpha1.DBaaSProvider{
+var mongoProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: testProviderName,
 	},
-	Spec: v1alpha1.DBaaSProviderSpec{
-		Provider: v1alpha1.DatabaseProvider{
+	Spec: v1beta1.DBaaSProviderSpec{
+		Provider: v1beta1.DatabaseProviderInfo{
 			Name: testProviderName,
 		},
 		InventoryKind:                testInventoryKind,
 		ConnectionKind:               testConnectionKind,
 		InstanceKind:                 testInstanceKind,
-		CredentialFields:             []v1alpha1.CredentialField{},
+		CredentialFields:             []v1beta1.CredentialField{},
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
-		InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+		InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 	},
 }
 
-var crunchyProvider = &v1alpha1.DBaaSProvider{
+var crunchyProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "crunchy-bridge-registration",
 	},
-	Spec: v1alpha1.DBaaSProviderSpec{
-		Provider: v1alpha1.DatabaseProvider{
+	Spec: v1beta1.DBaaSProviderSpec{
+		Provider: v1beta1.DatabaseProviderInfo{
 			Name: "crunchy-bridge-registration",
 		},
 		InventoryKind:                "CrunchyBridgeInventory",
 		ConnectionKind:               testConnectionKind,
 		InstanceKind:                 testInstanceKind,
-		CredentialFields:             []v1alpha1.CredentialField{},
+		CredentialFields:             []v1beta1.CredentialField{},
 		AllowsFreeTrial:              false,
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
-		InstanceParameterSpecs:       []v1alpha1.InstanceParameterSpec{},
+		InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 	},
 }
 
@@ -173,22 +174,22 @@ func assertProviderResourceCreated(object client.Object, providerResourceKind st
 		bytes, err := providerResource.MarshalJSON()
 		Expect(err).NotTo(HaveOccurred())
 		switch v := object.(type) {
-		case *v1alpha1.DBaaSInventory:
-			providerInventory := &v1alpha1.DBaaSProviderInventory{}
+		case *v1beta1.DBaaSInventory:
+			providerInventory := &v1beta1.DBaaSProviderInventory{}
 			err := json.Unmarshal(bytes, providerInventory)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(&providerInventory.Spec).Should(Equal(DBaaSResourceSpec))
 			Expect(len(providerInventory.GetOwnerReferences())).Should(Equal(1))
 			Expect(providerInventory.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
-		case *v1alpha1.DBaaSConnection:
-			providerConnection := &v1alpha1.DBaaSProviderConnection{}
+		case *v1beta1.DBaaSConnection:
+			providerConnection := &v1beta1.DBaaSProviderConnection{}
 			err := json.Unmarshal(bytes, providerConnection)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(&providerConnection.Spec).Should(Equal(DBaaSResourceSpec))
 			Expect(len(providerConnection.GetOwnerReferences())).Should(Equal(1))
 			Expect(providerConnection.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
-		case *v1alpha1.DBaaSInstance:
-			providerInstance := &v1alpha1.DBaaSProviderInstance{}
+		case *v1beta1.DBaaSInstance:
+			providerInstance := &v1beta1.DBaaSProviderInstance{}
 			err := json.Unmarshal(bytes, providerInstance)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(&providerInstance.Spec).Should(Equal(DBaaSResourceSpec))
@@ -212,17 +213,17 @@ func assertDBaaSResourceStatusUpdated(object client.Object, status metav1.Condit
 				return false, err
 			}
 			switch v := object.(type) {
-			case *v1alpha1.DBaaSInventory:
-				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+			case *v1beta1.DBaaSInventory:
+				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSInventoryReadyType)
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
-			case *v1alpha1.DBaaSConnection:
-				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSConnectionReadyType)
+			case *v1beta1.DBaaSConnection:
+				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSConnectionReadyType)
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
-			case *v1alpha1.DBaaSInstance:
-				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInstanceReadyType)
+			case *v1beta1.DBaaSInstance:
+				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSInstanceReadyType)
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
-			case *v1alpha1.DBaaSPolicy:
-				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSPolicyReadyType)
+			case *v1beta1.DBaaSPolicy:
+				dbaasConds, _ := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSPolicyReadyType)
 				return len(dbaasConds) > 0 && dbaasConds[0].Status == status && dbaasConds[0].Reason == reason, nil
 			default:
 				Fail("invalid test object")
@@ -278,16 +279,16 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, resourceDBaa
 				return -1, err
 			}
 			switch v := object.(type) {
-			case *v1alpha1.DBaaSInventory:
-				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+			case *v1beta1.DBaaSInventory:
+				_, conds := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSInventoryReadyType)
 				return len(conds), nil
-			case *v1alpha1.DBaaSConnection:
+			case *v1beta1.DBaaSConnection:
 				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, resourceDBaaSStatus)()
-				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSConnectionReadyType)
+				_, conds := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSConnectionReadyType)
 				return len(conds), nil
-			case *v1alpha1.DBaaSInstance:
+			case *v1beta1.DBaaSInstance:
 				assertInventoryDBaaSStatus(v.Spec.InventoryRef.Name, v.Spec.InventoryRef.Namespace, resourceDBaaSStatus)()
-				_, conds := splitStatusConditions(v.Status.Conditions, v1alpha1.DBaaSInstanceReadyType)
+				_, conds := splitStatusConditions(v.Status.Conditions, v1beta1.DBaaSInstanceReadyType)
 				return len(conds), nil
 			default:
 				Fail("invalid test object")
@@ -295,12 +296,12 @@ func assertDBaaSResourceProviderStatusUpdated(object client.Object, resourceDBaa
 			}
 		}, timeout).Should(Equal(1))
 		switch v := object.(type) {
-		case *v1alpha1.DBaaSInventory:
-			assertInventoryStatus(v, v1alpha1.DBaaSInventoryReadyType, resourceDBaaSStatus, providerResourceStatus)()
-		case *v1alpha1.DBaaSConnection:
-			assertConnectionStatus(v, v1alpha1.DBaaSConnectionReadyType, providerResourceStatus)()
-		case *v1alpha1.DBaaSInstance:
-			assertInstanceStatus(v, v1alpha1.DBaaSInstanceReadyType, providerResourceStatus)()
+		case *v1beta1.DBaaSInventory:
+			assertInventoryStatus(v, v1beta1.DBaaSInventoryReadyType, resourceDBaaSStatus, providerResourceStatus)()
+		case *v1beta1.DBaaSConnection:
+			assertConnectionStatus(v, v1beta1.DBaaSConnectionReadyType, providerResourceStatus)()
+		case *v1beta1.DBaaSInstance:
+			assertInstanceStatus(v, v1beta1.DBaaSInstanceReadyType, providerResourceStatus)()
 		default:
 			Fail("invalid test object")
 		}
@@ -320,13 +321,13 @@ func splitStatusConditions(conds []metav1.Condition, condType string) (dbaasCond
 
 func assertInventoryDBaaSStatus(name, namespace string, dbaasStatus metav1.ConditionStatus) func() {
 	return func() {
-		updatedInv := &v1alpha1.DBaaSInventory{}
+		updatedInv := &v1beta1.DBaaSInventory{}
 		Eventually(func() (int, error) {
 			err := dRec.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, updatedInv)
 			if err != nil {
 				return -1, err
 			}
-			cond := apimeta.FindStatusCondition(updatedInv.Status.Conditions, v1alpha1.DBaaSInventoryReadyType)
+			cond := apimeta.FindStatusCondition(updatedInv.Status.Conditions, v1beta1.DBaaSInventoryReadyType)
 			if cond != nil && cond.Status == dbaasStatus {
 				return 0, nil
 			}
@@ -337,13 +338,13 @@ func assertInventoryDBaaSStatus(name, namespace string, dbaasStatus metav1.Condi
 
 func assertConnectionDBaaSStatus(name, namespace string, dbaasStatus metav1.ConditionStatus) func() {
 	return func() {
-		updatedConn := &v1alpha1.DBaaSConnection{}
+		updatedConn := &v1beta1.DBaaSConnection{}
 		Eventually(func() (int, error) {
 			err := dRec.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, updatedConn)
 			if err != nil {
 				return -1, err
 			}
-			cond := apimeta.FindStatusCondition(updatedConn.Status.Conditions, v1alpha1.DBaaSConnectionReadyType)
+			cond := apimeta.FindStatusCondition(updatedConn.Status.Conditions, v1beta1.DBaaSConnectionReadyType)
 			if cond != nil && cond.Status == dbaasStatus {
 				return 0, nil
 			}
@@ -354,13 +355,13 @@ func assertConnectionDBaaSStatus(name, namespace string, dbaasStatus metav1.Cond
 
 func assertInstanceDBaaSStatus(name, namespace string, dbaasStatus metav1.ConditionStatus) func() {
 	return func() {
-		updatedConn := &v1alpha1.DBaaSInstance{}
+		updatedConn := &v1beta1.DBaaSInstance{}
 		Eventually(func() (int, error) {
 			err := dRec.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, updatedConn)
 			if err != nil {
 				return -1, err
 			}
-			cond := apimeta.FindStatusCondition(updatedConn.Status.Conditions, v1alpha1.DBaaSInstanceReadyType)
+			cond := apimeta.FindStatusCondition(updatedConn.Status.Conditions, v1beta1.DBaaSInstanceReadyType)
 			if cond != nil && cond.Status == dbaasStatus {
 				return 0, nil
 			}
@@ -369,7 +370,7 @@ func assertInstanceDBaaSStatus(name, namespace string, dbaasStatus metav1.Condit
 	}
 }
 
-func assertInventoryStatus(inv *v1alpha1.DBaaSInventory, condType string, dbaasStatus metav1.ConditionStatus, providerResourceStatus interface{}) func() {
+func assertInventoryStatus(inv *v1beta1.DBaaSInventory, condType string, dbaasStatus metav1.ConditionStatus, providerResourceStatus interface{}) func() {
 	return func() {
 		status := inv.Status.DeepCopy()
 		dbaasConds, providerConds := splitStatusConditions(status.Conditions, condType)
@@ -381,7 +382,7 @@ func assertInventoryStatus(inv *v1alpha1.DBaaSInventory, condType string, dbaasS
 	}
 }
 
-func assertConnectionStatus(conn *v1alpha1.DBaaSConnection, condType string, providerResourceStatus interface{}) func() {
+func assertConnectionStatus(conn *v1beta1.DBaaSConnection, condType string, providerResourceStatus interface{}) func() {
 	return func() {
 		assertConnectionDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
 		status := conn.Status.DeepCopy()
@@ -391,7 +392,7 @@ func assertConnectionStatus(conn *v1alpha1.DBaaSConnection, condType string, pro
 	}
 }
 
-func assertInstanceStatus(conn *v1alpha1.DBaaSInstance, condType string, providerResourceStatus interface{}) func() {
+func assertInstanceStatus(conn *v1beta1.DBaaSInstance, condType string, providerResourceStatus interface{}) func() {
 	return func() {
 		assertInstanceDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
 		status := conn.Status.DeepCopy()
@@ -410,12 +411,12 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 			Expect(err).NotTo(HaveOccurred())
 
 			switch v := object.(type) {
-			case *v1alpha1.DBaaSInventory:
-				v.Spec.DBaaSInventorySpec = *DBaaSResourceSpec.(*v1alpha1.DBaaSInventorySpec)
-			case *v1alpha1.DBaaSConnection:
-				v.Spec = *DBaaSResourceSpec.(*v1alpha1.DBaaSConnectionSpec)
-			case *v1alpha1.DBaaSInstance:
-				v.Spec = *DBaaSResourceSpec.(*v1alpha1.DBaaSInstanceSpec)
+			case *v1beta1.DBaaSInventory:
+				v.Spec.DBaaSInventorySpec = *DBaaSResourceSpec.(*v1beta1.DBaaSInventorySpec)
+			case *v1beta1.DBaaSConnection:
+				v.Spec = *DBaaSResourceSpec.(*v1beta1.DBaaSConnectionSpec)
+			case *v1beta1.DBaaSInstance:
+				v.Spec = *DBaaSResourceSpec.(*v1beta1.DBaaSInstanceSpec)
 			default:
 				Fail("invalid test object")
 			}
@@ -446,18 +447,18 @@ func assertProviderResourceSpecUpdated(object client.Object, providerResourceKin
 			bytes, err := providerResource.MarshalJSON()
 			Expect(err).NotTo(HaveOccurred())
 			switch v := object.(type) {
-			case *v1alpha1.DBaaSInventory:
-				providerInventory := &v1alpha1.DBaaSProviderInventory{}
+			case *v1beta1.DBaaSInventory:
+				providerInventory := &v1beta1.DBaaSProviderInventory{}
 				err := json.Unmarshal(bytes, providerInventory)
 				Expect(err).NotTo(HaveOccurred())
 				return reflect.DeepEqual(&providerInventory.Spec, DBaaSResourceSpec)
-			case *v1alpha1.DBaaSConnection:
-				providerConnection := &v1alpha1.DBaaSProviderConnection{}
+			case *v1beta1.DBaaSConnection:
+				providerConnection := &v1beta1.DBaaSProviderConnection{}
 				err := json.Unmarshal(bytes, providerConnection)
 				Expect(err).NotTo(HaveOccurred())
 				return reflect.DeepEqual(&providerConnection.Spec, DBaaSResourceSpec)
-			case *v1alpha1.DBaaSInstance:
-				providerInstance := &v1alpha1.DBaaSProviderInstance{}
+			case *v1beta1.DBaaSInstance:
+				providerInstance := &v1beta1.DBaaSProviderInstance{}
 				err := json.Unmarshal(bytes, providerInstance)
 				Expect(err).NotTo(HaveOccurred())
 				return reflect.DeepEqual(&providerInstance.Spec, DBaaSResourceSpec)

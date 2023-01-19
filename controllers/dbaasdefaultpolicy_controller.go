@@ -17,7 +17,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,6 +80,7 @@ func (r *DBaaSDefaultPolicyReconciler) ignoreOtherDeployments() predicate.Predic
 // create a default Policy if one doesn't exist
 func (r *DBaaSDefaultPolicyReconciler) createDefaultPolicy(ctx context.Context) (ctrl.Result, error) {
 	logger := ctrl.LoggerFrom(ctx)
+
 	defaultPolicy := getDefaultPolicy(r.InstallNamespace)
 
 	// get list of DBaaSPolicies for install/default namespace
@@ -91,7 +92,7 @@ func (r *DBaaSDefaultPolicyReconciler) createDefaultPolicy(ctx context.Context) 
 
 	// if no default policy exists, create one
 	if len(policyList.Items) == 0 {
-		if err := r.Get(ctx, client.ObjectKeyFromObject(&defaultPolicy), &v1alpha1.DBaaSPolicy{}); err != nil {
+		if err := r.Get(ctx, client.ObjectKeyFromObject(&defaultPolicy), &v1beta1.DBaaSPolicy{}); err != nil {
 			// proceed only if default policy not found
 			if errors.IsNotFound(err) {
 				logger.Info("resource not found", "Name", defaultPolicy.Name)
@@ -110,18 +111,20 @@ func (r *DBaaSDefaultPolicyReconciler) createDefaultPolicy(ctx context.Context) 
 	return ctrl.Result{}, nil
 }
 
-func getDefaultPolicy(inventoryNamespace string) v1alpha1.DBaaSPolicy {
-	policy := v1alpha1.DBaaSPolicy{
+func getDefaultPolicy(inventoryNamespace string) v1beta1.DBaaSPolicy {
+	policy := v1beta1.DBaaSPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "cluster",
 			Namespace: inventoryNamespace,
 		},
-		Spec: v1alpha1.DBaaSPolicySpec{
-			DBaaSInventoryPolicy: v1alpha1.DBaaSInventoryPolicy{
-				ConnectionNamespaces: &[]string{"*"},
+		Spec: v1beta1.DBaaSPolicySpec{
+			DBaaSInventoryPolicy: v1beta1.DBaaSInventoryPolicy{
+				Connections: v1beta1.DBaaSConnectionPolicy{
+					Namespaces: &[]string{"*"},
+				},
 			},
 		},
 	}
-	policy.SetGroupVersionKind(v1alpha1.GroupVersion.WithKind("DBaaSPolicy"))
+	policy.SetGroupVersionKind(v1beta1.GroupVersion.WithKind("DBaaSPolicy"))
 	return policy
 }

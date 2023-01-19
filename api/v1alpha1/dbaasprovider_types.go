@@ -29,7 +29,6 @@ type DBaaSProviderStatus struct {
 //+kubebuilder:resource:scope=Cluster
 
 // The schema for the DBaaSProvider API.
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSProvider"
 type DBaaSProvider struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

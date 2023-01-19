@@ -19,7 +19,7 @@ package controllers
 import (
 	"context"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,7 +49,7 @@ type DBaaSInventoryReconciler struct {
 func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	execution := metrics.PlatformInstallStart()
 	logger := ctrl.LoggerFrom(ctx)
-	var inventory v1alpha1.DBaaSInventory
+	var inventory v1beta1.DBaaSInventory
 	metricLabelErrCdValue := ""
 	event := ""
 
@@ -81,10 +81,10 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if activePolicy == nil {
 		logger.Info("No DBaaSPolicy found for the target namespace", "Namespace", req.Namespace)
 		cond := metav1.Condition{
-			Type:    v1alpha1.DBaaSInventoryReadyType,
+			Type:    v1beta1.DBaaSInventoryReadyType,
 			Status:  metav1.ConditionFalse,
-			Reason:  v1alpha1.DBaaSPolicyNotFound,
-			Message: v1alpha1.MsgPolicyNotFound,
+			Reason:  v1beta1.DBaaSPolicyNotFound,
+			Message: v1beta1.MsgPolicyNotFound,
 		}
 		apimeta.SetStatusCondition(&inventory.Status.Conditions, cond)
 		if err := r.Client.Status().Update(ctx, &inventory); err != nil {
@@ -116,23 +116,23 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return r.reconcileProviderResource(ctx,
 		inventory.Spec.ProviderRef.Name,
 		&inventory,
-		func(provider *v1alpha1.DBaaSProvider) string {
+		func(provider *v1beta1.DBaaSProvider) string {
 			return provider.Spec.InventoryKind
 		},
 		func() interface{} {
 			return inventory.Spec.DeepCopy()
 		},
 		func() interface{} {
-			return &v1alpha1.DBaaSProviderInventory{}
+			return &v1beta1.DBaaSProviderInventory{}
 		},
 		func(i interface{}) metav1.Condition {
-			providerInv := i.(*v1alpha1.DBaaSProviderInventory)
+			providerInv := i.(*v1beta1.DBaaSProviderInventory)
 			return mergeInventoryStatus(&inventory, providerInv)
 		},
 		func() *[]metav1.Condition {
 			return &inventory.Status.Conditions
 		},
-		v1alpha1.DBaaSInventoryReadyType,
+		v1beta1.DBaaSInventoryReadyType,
 		logger,
 	)
 }
@@ -140,8 +140,8 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 // SetupWithManager sets up the controller with the Manager.
 func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controller.Controller, error) {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.DBaaSInventory{}).
-		Watches(&source.Kind{Type: &v1alpha1.DBaaSInventory{}}, &EventHandlerWithDelete{Controller: r}).
+		For(&v1beta1.DBaaSInventory{}).
+		Watches(&source.Kind{Type: &v1beta1.DBaaSInventory{}}, &EventHandlerWithDelete{Controller: r}).
 		WithOptions(
 			controller.Options{MaxConcurrentReconciles: 2},
 		).
@@ -149,23 +149,23 @@ func (r *DBaaSInventoryReconciler) SetupWithManager(mgr ctrl.Manager) (controlle
 }
 
 // mergeInventoryStatus: merge the status from DBaaSProviderInventory into the current DBaaSInventory status
-func mergeInventoryStatus(inv *v1alpha1.DBaaSInventory, providerInv *v1alpha1.DBaaSProviderInventory) metav1.Condition {
+func mergeInventoryStatus(inv *v1beta1.DBaaSInventory, providerInv *v1beta1.DBaaSProviderInventory) metav1.Condition {
 	providerInv.Status.DeepCopyInto(&inv.Status)
 	// Update inventory status condition (type: DBaaSInventoryReadyType) based on the provider status
-	specSync := apimeta.FindStatusCondition(providerInv.Status.Conditions, v1alpha1.DBaaSInventoryProviderSyncType)
+	specSync := apimeta.FindStatusCondition(providerInv.Status.Conditions, v1beta1.DBaaSInventoryProviderSyncType)
 	if specSync != nil && specSync.Status == metav1.ConditionTrue {
 		return metav1.Condition{
-			Type:    v1alpha1.DBaaSInventoryReadyType,
+			Type:    v1beta1.DBaaSInventoryReadyType,
 			Status:  metav1.ConditionTrue,
-			Reason:  v1alpha1.Ready,
-			Message: v1alpha1.MsgProviderCRStatusSyncDone,
+			Reason:  v1beta1.Ready,
+			Message: v1beta1.MsgProviderCRStatusSyncDone,
 		}
 	}
 	return metav1.Condition{
-		Type:    v1alpha1.DBaaSInventoryReadyType,
+		Type:    v1beta1.DBaaSInventoryReadyType,
 		Status:  metav1.ConditionFalse,
-		Reason:  v1alpha1.ProviderReconcileInprogress,
-		Message: v1alpha1.MsgProviderCRReconcileInProgress,
+		Reason:  v1beta1.ProviderReconcileInprogress,
+		Message: v1beta1.MsgProviderCRReconcileInProgress,
 	}
 }
 
@@ -175,7 +175,7 @@ func (r *DBaaSInventoryReconciler) Delete(e event.DeleteEvent) error {
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSInventoryReconciler DeleteEvent")
 
-	inventory, ok := e.Object.(*v1alpha1.DBaaSInventory)
+	inventory, ok := e.Object.(*v1beta1.DBaaSInventory)
 
 	if !ok {
 		log.Info("Error getting inventory object during delete")

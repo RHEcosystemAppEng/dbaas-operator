@@ -1,0 +1,9 @@
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSInventory
+metadata:
+  name: dbaasinventory-sample
+spec:
+  providerRef:
+    name: mongodb-atlas-registration
+  credentialsRef:
+    name: atlas-inventory-credentials

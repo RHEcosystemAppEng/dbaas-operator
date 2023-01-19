@@ -1,0 +1,6 @@
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSPlatform
+metadata:
+  name: dbaasplatform-sample
+spec:
+  syncPeriod: 180

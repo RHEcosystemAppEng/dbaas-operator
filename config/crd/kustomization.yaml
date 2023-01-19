@@ -15,11 +15,12 @@ patchesStrategicMerge:
 
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
-#- patches/webhook_in_dbaasconnections.yaml
-#- patches/webhook_in_dbaasinventories.yaml
-#- patches/webhook_in_dbaasproviders.yaml
+- patches/webhook_in_dbaasconnections.yaml
+- patches/webhook_in_dbaasinventories.yaml
+- patches/webhook_in_dbaasproviders.yaml
+- patches/webhook_in_dbaasinstances.yaml
+- patches/webhook_in_dbaaspolicies.yaml
 #- patches/webhook_in_dbaasplatforms.yaml
-#- patches/webhook_in_dbaasinstances.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
@@ -27,8 +28,9 @@ patchesStrategicMerge:
 #- patches/cainjection_in_dbaasconnections.yaml
 #- patches/cainjection_in_dbaasinventories.yaml
 #- patches/cainjection_in_dbaasproviders.yaml
-#- patches/cainjection_in_dbaasplatforms.yaml
 #- patches/cainjection_in_dbaasinstances.yaml
+#- patches/cainjection_in_dbaaspolicies.yaml
+#- patches/cainjection_in_dbaasplatforms.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.

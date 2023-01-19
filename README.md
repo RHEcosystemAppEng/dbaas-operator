@@ -32,7 +32,7 @@ Reqs:
 ## [API Reference](docs/api/markdown/ref.md)
 
 ## Running the Operator (requires OCP 4.10 or higher)
-**NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.9 or higher.
+**NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.10 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
 **Deploy via OLM on cluster:**
@@ -60,7 +60,7 @@ See the document :  [Observability Operator configuration](docs/observability-op
 ## Using the Operator
 
 **Prerequisites:**
-- An instance of OpenShift Container Platform (OCP) 4.9 or higher
+- An instance of OpenShift Container Platform (OCP) 4.10 or higher
 - A database instance created using either the MongoDB Atlas or Crunchy Data Bridge cloud database provider.
 
 **Creating a DBaaSInventory:**

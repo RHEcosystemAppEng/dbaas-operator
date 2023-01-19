@@ -24,18 +24,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
-
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/quickstartinstallation"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 	"github.com/go-logr/logr"
+	"github.com/operator-framework/api/pkg/operators/v1alpha1"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/types"
 
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -92,6 +94,8 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
+//+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
+//+kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=validatingwebhookconfigurations,verbs=get;list;watch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -104,7 +108,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	metricLabelErrCdValue := ""
 	event := ""
 
-	cr := &dbaasv1alpha1.DBaaSPlatform{}
+	cr := &v1beta1.DBaaSPlatform{}
 	err := r.Get(ctx, req.NamespacedName, cr)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -119,6 +123,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
+	// OCPBUGS-4991 - temporary fix until https://github.com/operator-framework/operator-lifecycle-manager/pull/2912 makes it to a release
+	if err = r.fixConversionWebhooks(ctx); err != nil {
+		logger.Error(err, "Error related to conversion webhook setup")
+	}
+
 	if cr.DeletionTimestamp != nil {
 		event = metrics.LabelEventValueDelete
 	} else {
@@ -131,7 +140,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	var finished = true
 
-	var platforms map[dbaasv1alpha1.PlatformsName]dbaasv1alpha1.PlatformConfig
+	var platforms map[v1beta1.PlatformName]v1beta1.PlatformConfig
 
 	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
 	if err != nil {
@@ -148,12 +157,12 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	nextStatus := cr.Status.DeepCopy()
-	nextPlatformStatus := dbaasv1alpha1.PlatformStatus{}
+	nextPlatformStatus := v1beta1.PlatformStatus{}
 	for platform, platformConfig := range platforms {
 		nextPlatformStatus.PlatformName = platform
 		reconciler := r.getReconcilerForPlatform(platformConfig)
 		if reconciler != nil {
-			var status dbaasv1alpha1.PlatformsInstlnStatus
+			var status v1beta1.PlatformInstlnStatus
 			var err error
 
 			if cr.DeletionTimestamp == nil {
@@ -174,14 +183,14 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			setStatusPlatform(&nextStatus.PlatformsStatus, nextPlatformStatus)
 
 			// If a platform is not complete, do not continue with the next
-			if status != dbaasv1alpha1.ResultSuccess {
+			if status != v1beta1.ResultSuccess {
 				if cr.DeletionTimestamp == nil {
 					metrics.PlatformStackInstallationMetric(cr, r.operatorNameVersion, execution)
 					logger.Info("DBaaS platform stack install in progress", "working platform", platform)
-					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionFalse, dbaasv1alpha1.InstallationInprogress, "DBaaS platform stack install in progress")
+					setStatusCondition(&nextStatus.Conditions, v1beta1.DBaaSPlatformReadyType, metav1.ConditionFalse, v1beta1.InstallationInprogress, "DBaaS platform stack install in progress")
 				} else {
 					logger.Info("DBaaS platform stack cleanup in progress", "working platform", platform)
-					setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionUnknown, dbaasv1alpha1.InstallationCleanup, "DBaaS platform stack cleanup in progress")
+					setStatusCondition(&nextStatus.Conditions, v1beta1.DBaaSPlatformReadyType, metav1.ConditionUnknown, v1beta1.InstallationCleanup, "DBaaS platform stack cleanup in progress")
 				}
 				finished = false
 				break
@@ -190,7 +199,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	if cr.DeletionTimestamp == nil && finished && !r.installComplete {
 		r.installComplete = true
-		setStatusCondition(&nextStatus.Conditions, dbaasv1alpha1.DBaaSPlatformReadyType, metav1.ConditionTrue, dbaasv1alpha1.Ready, "DBaaS platform stack installation complete")
+		setStatusCondition(&nextStatus.Conditions, v1beta1.DBaaSPlatformReadyType, metav1.ConditionTrue, v1beta1.Ready, "DBaaS platform stack installation complete")
 		metrics.PlatformStackInstallationMetric(cr, r.operatorNameVersion, execution)
 		logger.Info("DBaaS platform stack installation complete")
 	}
@@ -212,19 +221,17 @@ func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
 		Scheme: mgr.GetScheme(),
 	})
-	_, err := r.createPlatformCR(context.Background(), client)
-	if err != nil {
+	if _, err := r.createPlatformCR(context.Background(), client); err != nil {
 		return err
 	}
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&dbaasv1alpha1.DBaaSPlatform{}).
+		For(&v1beta1.DBaaSPlatform{}).
 		Complete(r)
 }
 
-func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverClient k8sclient.Client) (*dbaasv1alpha1.DBaaSPlatform, error) {
-
+func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverClient k8sclient.Client) (*v1beta1.DBaaSPlatform, error) {
 	namespace := r.InstallNamespace
-	dbaaSPlatformList := &dbaasv1alpha1.DBaaSPlatformList{}
+	dbaaSPlatformList := &v1beta1.DBaaSPlatformList{}
 	listOpts := []k8sclient.ListOption{
 		k8sclient.InNamespace(namespace),
 	}
@@ -233,19 +240,16 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 		return nil, fmt.Errorf("could not get a list of dbaas platform intallation CR: %w", err)
 	}
 
-	var cr *dbaasv1alpha1.DBaaSPlatform
-	syncPeriod := 180
+	var cr *v1beta1.DBaaSPlatform
 	if len(dbaaSPlatformList.Items) == 0 {
-
-		cr = &dbaasv1alpha1.DBaaSPlatform{
+		syncPeriod := 180
+		cr = &v1beta1.DBaaSPlatform{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dbaas-platform",
 				Namespace: strings.TrimSpace(namespace),
 				Labels:    map[string]string{"managed-by": "dbaas-operator"},
 			},
-
-			Spec: dbaasv1alpha1.DBaaSPlatformSpec{
-
+			Spec: v1beta1.DBaaSPlatformSpec{
 				SyncPeriod: &syncPeriod,
 			},
 		}
@@ -269,23 +273,22 @@ func (r *DBaaSPlatformReconciler) createPlatformCR(ctx context.Context, serverCl
 		return nil, fmt.Errorf("too many DBaaSPlafrom resources found. Expecting 1, found %d DBaaSPlatform resources in %s namespace", len(dbaaSPlatformList.Items), namespace)
 	}
 	return cr, nil
-
 }
 
-func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig dbaasv1alpha1.PlatformConfig) reconcilers.PlatformReconciler {
+func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig v1beta1.PlatformConfig) reconcilers.PlatformReconciler {
 	switch platformConfig.Type {
-	case dbaasv1alpha1.TypeOperator:
+	case v1beta1.TypeOperator:
 		return providersinstallation.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.TypeConsolePlugin:
+	case v1beta1.TypeConsolePlugin:
 		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
-	case dbaasv1alpha1.TypeQuickStart:
+	case v1beta1.TypeQuickStart:
 		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil
 }
 
-func (r *DBaaSPlatformReconciler) updateStatus(cr *dbaasv1alpha1.DBaaSPlatform, nextStatus *dbaasv1alpha1.DBaaSPlatformStatus) (ctrl.Result, error) {
+func (r *DBaaSPlatformReconciler) updateStatus(cr *v1beta1.DBaaSPlatform, nextStatus *v1beta1.DBaaSPlatformStatus) (ctrl.Result, error) {
 	if !reflect.DeepEqual(&cr.Status, nextStatus) {
 		nextStatus.DeepCopyInto(&cr.Status)
 		err := r.Client.Status().Update(context.Background(), cr)
@@ -304,7 +307,7 @@ func (r *DBaaSPlatformReconciler) updateStatus(cr *dbaasv1alpha1.DBaaSPlatform, 
 }
 
 // setStatusPlatform set the new status for installation of platforms
-func setStatusPlatform(PlatformsStatus *[]dbaasv1alpha1.PlatformStatus, newPlatformStatus dbaasv1alpha1.PlatformStatus) {
+func setStatusPlatform(PlatformsStatus *[]v1beta1.PlatformStatus, newPlatformStatus v1beta1.PlatformStatus) {
 	if PlatformsStatus == nil {
 		return
 	}
@@ -323,7 +326,7 @@ func setStatusPlatform(PlatformsStatus *[]dbaasv1alpha1.PlatformStatus, newPlatf
 }
 
 // FindStatusPlatform finds the platformName in platforms status.
-func FindStatusPlatform(platformsStatus []dbaasv1alpha1.PlatformStatus, platformName dbaasv1alpha1.PlatformsName) *dbaasv1alpha1.PlatformStatus {
+func FindStatusPlatform(platformsStatus []v1beta1.PlatformStatus, platformName v1beta1.PlatformName) *v1beta1.PlatformStatus {
 	for i := range platformsStatus {
 		if platformsStatus[i].PlatformName == platformName {
 			return &platformsStatus[i]
@@ -354,7 +357,7 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 	log := ctrl.Log.WithName("DBaaSPlatformReconciler DeleteEvent")
 	log.Info("Delete event started")
 
-	platformObj, ok := e.Object.(*dbaasv1alpha1.DBaaSPlatform)
+	platformObj, ok := e.Object.(*v1beta1.DBaaSPlatform)
 	if !ok {
 		log.Info("Error getting DBaaSPlatform object during delete")
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPlatform
@@ -365,5 +368,50 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 	log.Info("Calling metrics for deleting of DBaaSProvider")
 	metrics.SetPlatformMetrics(*platformObj, platformObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
+	return nil
+}
+
+func (r *DBaaSPlatformReconciler) checkConversionWebhookHealth(ctx context.Context, webhooks []v1alpha1.WebhookDescription) (bool, error) {
+	for _, webhook := range webhooks {
+		for _, crdName := range webhook.ConversionCRDs {
+			crd := &apiextensionsv1.CustomResourceDefinition{}
+			if err := r.Get(ctx, types.NamespacedName{Name: crdName}, crd); err != nil {
+				return false, err
+			}
+			if crd.Spec.Conversion == nil || crd.Spec.Conversion.Strategy != "Webhook" ||
+				crd.Spec.Conversion.Webhook == nil || crd.Spec.Conversion.Webhook.ClientConfig == nil ||
+				crd.Spec.Conversion.Webhook.ClientConfig.CABundle == nil {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
+}
+
+func (r *DBaaSPlatformReconciler) fixConversionWebhooks(ctx context.Context) error {
+	owner, err := reconcilers.GetDBaaSOperatorCSV(ctx, r.InstallNamespace, r.operatorNameVersion, r.Client)
+	if err != nil {
+		return err
+	}
+	if owner.Status.Phase == v1alpha1.CSVPhaseSucceeded || owner.Status.Phase == v1alpha1.CSVPhaseInstalling {
+		ok, err := r.checkConversionWebhookHealth(ctx, owner.Spec.WebhookDefinitions)
+		if err != nil {
+			return err
+		}
+		labelSelector := k8sclient.MatchingLabels{"olm.owner": r.operatorNameVersion}
+		if !ok {
+			vwebhooks := &admissionregistrationv1.ValidatingWebhookConfigurationList{}
+			if err = r.List(ctx, vwebhooks, labelSelector); err != nil {
+				return err
+			}
+			for i := range vwebhooks.Items {
+				if vwebhooks.Items[i].CreationTimestamp.Before(owner.Status.LastUpdateTime) {
+					if err = r.Client.Delete(ctx, &vwebhooks.Items[i]); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
 	return nil
 }

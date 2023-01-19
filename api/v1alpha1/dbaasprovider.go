@@ -21,49 +21,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Constants for DBaaS condition types, reasons, messages and type labels.
-const (
-	// DBaaS condition types:
-	DBaaSInventoryReadyType         string = "InventoryReady"
-	DBaaSInventoryProviderSyncType  string = "SpecSynced"
-	DBaaSConnectionReadyType        string = "ConnectionReady"
-	DBaaSConnectionProviderSyncType string = "ReadyForBinding"
-	DBaaSInstanceReadyType          string = "InstanceReady"
-	DBaaSInstanceProviderSyncType   string = "ProvisionReady"
-	DBaaSPolicyReadyType            string = "PolicyReady"
-	DBaaSPlatformReadyType          string = "PlatformReady"
-
-	// DBaaS condition reasons:
-	Ready                          string = "Ready"
-	DBaaSPolicyNotFound            string = "DBaaSPolicyNotFound"
-	DBaaSPolicyNotReady            string = "DBaaSPolicyNotReady"
-	DBaaSProviderNotFound          string = "DBaaSProviderNotFound"
-	DBaaSInventoryNotFound         string = "DBaaSInventoryNotFound"
-	DBaaSInventoryNotReady         string = "DBaaSInventoryNotReady"
-	DBaaSInventoryNotProvisionable string = "DBaaSInventoryNotProvisionable"
-	DBaaSInvalidNamespace          string = "InvalidNamespace"
-	DBaaSInstanceNotAvailable      string = "DBaaSInstanceNotAvailable"
-	ProviderReconcileInprogress    string = "ProviderReconcileInprogress"
-	ProviderReconcileError         string = "ProviderReconcileError"
-	ProviderParsingError           string = "ProviderParsingError"
-	InstallationInprogress         string = "InstallationInprogress"
-	InstallationCleanup            string = "InstallationCleanup"
-
-	// DBaaS condition messages
-	MsgProviderCRStatusSyncDone      string = "Provider Custom Resource status sync completed"
-	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
-	MsgInventoryNotReady             string = "Inventory discovery not done"
-	MsgInventoryNotProvisionable     string = "Inventory provisioning not allowed"
-	MsgPolicyNotFound                string = "Failed to find an active Policy"
-	MsgPolicyReady                   string = "Policy is active"
-	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
-	MsgPolicyNotReady                string = "Another active Policy already exists"
-
-	TypeLabelValue    = "credentials"
-	TypeLabelKey      = "db-operator/type"
-	TypeLabelKeyMongo = "atlas.mongodb.com/type"
-)
-
 // Defines the phases for instance provisioning.
 type DBaasInstancePhase string
 

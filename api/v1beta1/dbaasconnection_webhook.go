@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	"reflect"
@@ -36,7 +36,7 @@ func (r *DBaaSConnection) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1alpha1-dbaasconnection,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasconnections,verbs=create;update,versions=v1alpha1,name=vdbaasconnection.kb.io,admissionReviewVersions=v1
+//+kubebuilder:webhook:path=/validate-dbaas-redhat-com-v1beta1-dbaasconnection,mutating=false,failurePolicy=fail,sideEffects=None,groups=dbaas.redhat.com,resources=dbaasconnections,verbs=create;update,versions=v1beta1,name=vdbaasconnection.kb.io,admissionReviewVersions=v1beta1
 
 var _ webhook.Validator = &DBaaSConnection{}
 

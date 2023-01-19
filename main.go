@@ -31,8 +31,10 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	coreosv1 "github.com/operator-framework/api/pkg/operators/v1"
 
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -46,6 +48,7 @@ import (
 	msoapi "github.com/rhobs/observability-operator/pkg/apis/monitoring/v1alpha1"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers"
 	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	//+kubebuilder:scaffold:imports
@@ -66,6 +69,7 @@ func init() {
 	customMetrics.Registry.MustRegister(metrics.DBaaSRequestsErrorsCounter)
 
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	utilruntime.Must(v1beta1.AddToScheme(scheme))
 	utilruntime.Must(operatorframework.AddToScheme(scheme))
 	utilruntime.Must(coreosv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1alpha1.Install(scheme))
@@ -74,7 +78,8 @@ func init() {
 	utilruntime.Must(rbacv1.AddToScheme(scheme))
 	utilruntime.Must(consolev1.AddToScheme(scheme))
 	utilruntime.Must(msoapi.AddToScheme(scheme))
-
+	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
+	utilruntime.Must(admissionregistrationv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -170,16 +175,24 @@ func main() {
 	//We'll just make sure to set `ENABLE_WEBHOOKS=false` when we run locally.
 
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err = (&v1alpha1.DBaaSConnection{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&v1beta1.DBaaSConnection{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSConnection")
 			os.Exit(1)
 		}
-		if err = (&v1alpha1.DBaaSInventory{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&v1beta1.DBaaSInventory{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInventory")
 			os.Exit(1)
 		}
-		if err = (&v1alpha1.DBaaSPolicy{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&v1beta1.DBaaSPolicy{}).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSPolicy")
+			os.Exit(1)
+		}
+		if err = (&v1beta1.DBaaSInstance{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSInstance")
+			os.Exit(1)
+		}
+		if err = (&v1beta1.DBaaSProvider{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DBaaSProvider")
 			os.Exit(1)
 		}
 	}

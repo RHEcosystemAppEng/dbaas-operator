@@ -25,8 +25,6 @@ metadata:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  labels:
-    operators.coreos.com/dbaas-operator.openshift-dbaas-operator: ""
   name: addon-dbaas-operator
   namespace: redhat-dbaas-operator
 spec:
@@ -43,3 +41,5 @@ spec:
         value: dex
       - name: RHOBS_API_URL
         value: https://observatorium-observatorium.apps/api/metrics/v1/test2/api/v1/receive
+  startingCSV: dbaas-operator.v0.3.0
+#  startingCSV: dbaas-operator.v0.4.0

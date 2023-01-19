@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -22,9 +22,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var inventoryName = "test-inventory"
@@ -96,7 +95,7 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 					spec.InventoryRef.Name = "updated-inventory"
 				},
 				"admission webhook \"vdbaasconnection.kb.io\" denied the request: "+
-					"spec.inventoryRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"updated-inventory\"}: "+
+					"spec.inventoryRef: Invalid value: v1beta1.NamespacedName{Namespace:\"default\", Name:\"updated-inventory\"}: "+
 					"inventoryRef is immutable"),
 			Entry("not allow updating instanceRef",
 				func(spec *DBaaSConnectionSpec) {
@@ -106,7 +105,7 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 					}
 				},
 				"admission webhook \"vdbaasconnection.kb.io\" denied the request: "+
-					"spec.instanceRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"updated-instance\"}: "+
+					"spec.instanceRef: Invalid value: v1beta1.NamespacedName{Namespace:\"default\", Name:\"updated-instance\"}: "+
 					"instanceRef is immutable"),
 		)
 	})
@@ -265,7 +264,7 @@ var _ = Describe("DBaaSConnection Webhook", func() {
 			}
 			err := k8sClient.Update(ctx, testDBaaSConnectionNoInstanceRef)
 			Expect(err).Should(MatchError("admission webhook \"vdbaasconnection.kb.io\" denied the request: " +
-				"spec.instanceRef: Invalid value: v1alpha1.NamespacedName{Namespace:\"default\", Name:\"test-instance\"}: " +
+				"spec.instanceRef: Invalid value: v1beta1.NamespacedName{Namespace:\"default\", Name:\"test-instance\"}: " +
 				"instanceRef is immutable"))
 		})
 	})

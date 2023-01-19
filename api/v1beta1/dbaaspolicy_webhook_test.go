@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1beta1
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -36,16 +36,18 @@ var _ = Describe("DBaaSPolicy Webhook", func() {
 	Context("creation fails",
 		func() {
 			It("missing required values field", func() {
-				inv := testDBaaSPolicy.DeepCopy()
-				inv.SetResourceVersion("")
-				inv.Spec = DBaaSPolicySpec{
+				policy := testDBaaSPolicy.DeepCopy()
+				policy.SetResourceVersion("")
+				policy.Spec = DBaaSPolicySpec{
 					DBaaSInventoryPolicy: DBaaSInventoryPolicy{
-						ConnectionNsSelector: &metav1.LabelSelector{
-							MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}},
+						Connections: DBaaSConnectionPolicy{
+							NsSelector: &metav1.LabelSelector{
+								MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}},
+							},
 						},
 					},
 				}
-				err := k8sClient.Create(ctx, inv)
+				err := k8sClient.Create(ctx, policy)
 				Expect(err).Should(MatchError("admission webhook \"vdbaaspolicy.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
 			})
 		})
@@ -60,25 +62,27 @@ var _ = Describe("DBaaSPolicy Webhook", func() {
 		func() {
 			Context("nominal", func() {
 				It("Update CR should succeed", func() {
-					inv := testDBaaSPolicy.DeepCopy()
-					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
-					inv.Spec = DBaaSPolicySpec{
+					policy := testDBaaSPolicy.DeepCopy()
+					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(policy), policy)).Should(Succeed())
+					policy.Spec = DBaaSPolicySpec{
 						DBaaSInventoryPolicy: DBaaSInventoryPolicy{
-							ConnectionNsSelector: &metav1.LabelSelector{
-								MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In", Values: []string{"blah"}}},
+							Connections: DBaaSConnectionPolicy{
+								NsSelector: &metav1.LabelSelector{
+									MatchExpressions: []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In", Values: []string{"blah"}}},
+								},
 							},
 						},
 					}
-					err := k8sClient.Update(ctx, inv)
+					err := k8sClient.Update(ctx, policy)
 					Expect(err).Should(BeNil())
 				})
 			})
 			Context("update fails", func() {
 				It("update fails with missing required values field", func() {
-					inv := testDBaaSPolicy.DeepCopy()
-					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(inv), inv)).Should(Succeed())
-					inv.Spec.ConnectionNsSelector.MatchExpressions = []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}}
-					err := k8sClient.Update(ctx, inv)
+					policy := testDBaaSPolicy.DeepCopy()
+					Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(policy), policy)).Should(Succeed())
+					policy.Spec.Connections.NsSelector.MatchExpressions = []metav1.LabelSelectorRequirement{{Key: "test", Operator: "In"}}
+					err := k8sClient.Update(ctx, policy)
 					Expect(err).Should(MatchError("admission webhook \"vdbaaspolicy.kb.io\" denied the request: values: Invalid value: []string(nil): for 'in', 'notin' operators, values set can't be empty"))
 				})
 			})

@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	dbaasv1alpha1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
+	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -33,18 +33,18 @@ var DBaaSInventoryStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 }, []string{MetricLabelProvider, MetricLabelName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason})
 
 // SetInventoryMetrics set the Metrics for inventory
-func SetInventoryMetrics(inventory dbaasv1alpha1.DBaaSInventory, execution Execution, event string, errCd string) {
+func SetInventoryMetrics(inventory dbaasv1beta1.DBaaSInventory, execution Execution, event string, errCd string) {
 	setInventoryStatusMetrics(inventory)
 	setInventoryRequestDurationSeconds(inventory, event, execution)
 	UpdateErrorsTotal(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, LabelResourceValueInventory, event, errCd)
 }
 
 // setInventoryStatusMetrics set the Metrics for inventory status
-func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
+func setInventoryStatusMetrics(inventory dbaasv1beta1.DBaaSInventory) {
 	for _, cond := range inventory.Status.Conditions {
-		if cond.Type == dbaasv1alpha1.DBaaSInventoryReadyType {
+		if cond.Type == dbaasv1beta1.DBaaSInventoryReadyType {
 			DBaaSInventoryStatusGauge.DeletePartialMatch(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace})
-			if cond.Reason == dbaasv1alpha1.Ready && cond.Status == metav1.ConditionTrue {
+			if cond.Reason == dbaasv1beta1.Ready && cond.Status == metav1.ConditionTrue {
 				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
 			} else {
 				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
@@ -55,13 +55,13 @@ func setInventoryStatusMetrics(inventory dbaasv1alpha1.DBaaSInventory) {
 }
 
 // setInventoryRequestDurationSeconds set the Metrics for inventory request duration in seconds
-func setInventoryRequestDurationSeconds(inventory dbaasv1alpha1.DBaaSInventory, event string, execution Execution) {
+func setInventoryRequestDurationSeconds(inventory dbaasv1beta1.DBaaSInventory, event string, execution Execution) {
 	log := ctrl.Log.WithName("Inventory Request Duration for event: " + event)
 	switch event {
 
 	case LabelEventValueCreate:
 		for _, cond := range inventory.Status.Conditions {
-			if cond.Type == dbaasv1alpha1.DBaaSInventoryProviderSyncType {
+			if cond.Type == dbaasv1beta1.DBaaSInventoryProviderSyncType {
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(inventory.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, LabelResourceValueInventory, event, duration.Seconds())

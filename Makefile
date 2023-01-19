@@ -21,7 +21,7 @@ $(LOCALBIN):
 ## Tool Binaries
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-CRD_REF_GEN ?= $(LOCALBIN)/crd-ref-docs
+CRD_REF_DOCS ?= $(LOCALBIN)/crd-ref-docs
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
@@ -235,14 +235,14 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 .PHONY: crd-ref-docs
-crd-ref-docs: $(CRD_REF_GEN) ## Download crd-ref-docs locally if necessary.
-$(CRD_REF_GEN): $(LOCALBIN)
+crd-ref-docs: $(CRD_REF_DOCS) ## Download crd-ref-docs locally if necessary.
+$(CRD_REF_DOCS): $(LOCALBIN)
 	test -s $(LOCALBIN)/crd-ref-docs || GOBIN=$(LOCALBIN) go install github.com/elastic/crd-ref-docs@v0.0.8
 
 .PHONY: generate-ref
 generate-ref: generate fmt crd-ref-docs
-	$(CRD_REF_GEN) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api --renderer=asciidoctor --templates-dir=$(LOCALDIR)/ref-templates/asciidoctor --output-path=$(LOCALDIR)/docs/api/asciidoc/ref.adoc
-	$(CRD_REF_GEN) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api --renderer=markdown --templates-dir=$(LOCALDIR)/ref-templates/markdown --output-path=$(LOCALDIR)/docs/api/markdown/ref.md
+	$(CRD_REF_DOCS) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api/v1beta1 --renderer=asciidoctor --templates-dir=$(LOCALDIR)/ref-templates/asciidoctor --output-path=$(LOCALDIR)/docs/api/asciidoc/ref.adoc
+	$(CRD_REF_DOCS) --log-level=WARN --config=$(LOCALDIR)/ref-templates/config.yaml --source-path=$(LOCALDIR)/api/v1beta1 --renderer=markdown --templates-dir=$(LOCALDIR)/ref-templates/markdown --output-path=$(LOCALDIR)/docs/api/markdown/ref.md
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.

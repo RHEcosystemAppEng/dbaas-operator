@@ -102,7 +102,6 @@ type PlatformStatus struct {
 //+kubebuilder:subresource:status
 
 // The schema for the DBaaSPlatform API.
-//+operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 type DBaaSPlatform struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
