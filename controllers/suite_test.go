@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -33,6 +32,7 @@ import (
 
 	"github.com/operator-framework/api/pkg/lib/version"
 	operatorframework "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	rhobsv1 "github.com/rhobs/obo-prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -88,6 +88,8 @@ var _ = BeforeSuite(func() {
 	err = rbacv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = operatorframework.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = rhobsv1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	By("bootstrapping test environment")
@@ -210,7 +212,7 @@ var _ = AfterSuite(func() {
 })
 
 func createCSV(k8sManager manager.Manager) {
-	yamlFile, err := ioutil.ReadFile("../bundle/manifests/dbaas-operator.clusterserviceversion.yaml")
+	yamlFile, err := os.ReadFile("../bundle/manifests/dbaas-operator.clusterserviceversion.yaml")
 	Expect(err).ToNot(HaveOccurred())
 	jsonConversion, err := yaml.YAMLToJSON(yamlFile)
 	Expect(err).ToNot(HaveOccurred())

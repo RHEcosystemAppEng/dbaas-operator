@@ -150,7 +150,8 @@ func GetObservabilityConfig() dbaasv1beta1.ObservabilityConfig {
 }
 
 // fetchEnvValue returns the value of a set variable. if env var not set, returns the
-// 		default value from an embedded yaml file.
+//
+//	default value from an embedded yaml file.
 func fetchEnvValue(envVar string) (imageValue string) {
 	imageValue, found := os.LookupEnv(envVar)
 	if !found {
