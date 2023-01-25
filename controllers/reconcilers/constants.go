@@ -64,7 +64,7 @@ const (
 
 	//ObservabilityName platform name for observability
 	ObservabilityName = "observability"
-	//DisplayName for Observability Operator
+	//ObservabilityDisplayName constants for observability
 	ObservabilityDisplayName = "Observability Operator"
 )
 
@@ -122,8 +122,9 @@ var InstallationPlatforms = map[dbaasv1beta1.PlatformName]dbaasv1beta1.PlatformC
 		Type:           dbaasv1beta1.TypeOperator,
 	},
 	dbaasv1beta1.ObservabilityInstallation: {
-		Name: ObservabilityName,
-		Type: dbaasv1beta1.TypeObservability,
+		Name:        ObservabilityName,
+		DisplayName: ObservabilityDisplayName,
+		Type:        dbaasv1beta1.TypeObservability,
 	},
 }
 
