@@ -658,10 +658,6 @@ spec:
                   value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
                 - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
                   value: dbaas-dynamic-plugin:0.3.0
-                - name: RELATED_IMAGE_OBSERVABILITY_CATALOG
-                  value: quay.io/rhobs/observability-operator-catalog:0.0.14
-                - name: CSV_VERSION_OBSERVABILITY
-                  value: observability-operator.v0.0.14
                 - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
                   value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
                 - name: CSV_VERSION_CRUNCHY_BRIDGE
@@ -798,8 +794,6 @@ spec:
   relatedImages:
   - image: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
     name: dbaas-dynamic-plugin
-  - image: quay.io/rhobs/observability-operator-catalog:0.0.14
-    name: observability-catalog
   - image: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
     name: crunchy-bridge-catalog
   - image: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0

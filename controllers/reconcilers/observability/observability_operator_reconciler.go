@@ -3,7 +3,6 @@ package observability
 import (
 	"context"
 	"fmt"
-
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -60,9 +59,15 @@ func NewReconciler(client k8sclient.Client, scheme *runtime.Scheme, logger logr.
 // Reconcile create the CR for Observability Operator
 func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 
+	// clean the observability operator if installed by RHODA in previous version.
+	status, err := r.cleanObsOldSubscripition(ctx, cr)
+	if status != v1beta1.ResultSuccess {
+		return status, err
+	}
+
 	subscription := reconcilers.GetSubscription("openshift-observability-operator", "observability-operator")
-	err := r.client.Get(ctx, k8sclient.ObjectKeyFromObject(subscription), subscription)
-	if err != nil {
+	err = r.client.Get(ctx, k8sclient.ObjectKeyFromObject(subscription), subscription)
+	if err != nil && !errors.IsNotFound(err) {
 		return v1beta1.ResultFailed, err
 	}
 	if errors.IsNotFound(err) {
@@ -70,7 +75,7 @@ func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (
 	}
 
 	// create observability CR.
-	status, err := r.createObservabilityMonitoringStackCR(ctx, cr)
+	status, err = r.createObservabilityMonitoringStackCR(ctx, cr)
 	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
@@ -99,6 +104,23 @@ func (r *reconciler) Cleanup(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1
 
 	return v1beta1.ResultSuccess, nil
 
+}
+
+func (r *reconciler) cleanObsOldSubscripition(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
+
+	subscription := reconcilers.GetSubscription(cr.Namespace, r.config.Name+"-subscription")
+	err := r.client.Delete(ctx, subscription)
+	if err != nil && !errors.IsNotFound(err) {
+		return v1beta1.ResultFailed, err
+	}
+
+	csv := reconcilers.GetClusterServiceVersion(cr.Namespace, "observability-operator.v0.0.13")
+	err = r.client.Delete(ctx, csv)
+	if err != nil && !errors.IsNotFound(err) {
+		return v1beta1.ResultFailed, err
+	}
+
+	return v1beta1.ResultSuccess, nil
 }
 
 func (r *reconciler) createObservabilityMonitoringStackCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
