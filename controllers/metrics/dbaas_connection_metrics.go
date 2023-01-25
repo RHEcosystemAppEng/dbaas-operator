@@ -69,7 +69,7 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 			if cond.Type == dbaasv1beta1.DBaaSConnectionProviderSyncType {
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(connection.CreationTimestamp.Time.UTC())
-					UpdateRequestsDurationHistogram(connection.Spec.InventoryRef.Name, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
+					UpdateRequestsDurationHistogram(provider, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
 					log.Info("Set the request duration for create event")
 				}
 			}
@@ -81,7 +81,7 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 		}
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
-		UpdateRequestsDurationHistogram(connection.Spec.InventoryRef.Name, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
+		UpdateRequestsDurationHistogram(provider, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
 		log.Info("Set the request duration for delete event")
 	}
 }

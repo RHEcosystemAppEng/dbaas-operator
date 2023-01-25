@@ -72,7 +72,7 @@ func setPlatformRequestDurationSeconds(platform dbaasv1beta1.DBaaSPlatform, acco
 	switch event {
 	case LabelEventValueCreate:
 		duration := time.Now().UTC().Sub(platform.CreationTimestamp.Time.UTC())
-		UpdateRequestsDurationHistogram(platform.Name, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
+		UpdateRequestsDurationHistogram(LabelValueNone, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
 	case LabelEventValueDelete:
 		deletionTimestamp := execution.begin.UTC()
 		if platform.DeletionTimestamp != nil {
@@ -80,12 +80,12 @@ func setPlatformRequestDurationSeconds(platform dbaasv1beta1.DBaaSPlatform, acco
 		}
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
-		UpdateRequestsDurationHistogram(platform.Name, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
+		UpdateRequestsDurationHistogram(LabelValueNone, account, platform.Namespace, LabelResourceValuePlatform, event, duration.Seconds())
 	}
 }
 
 // SetPlatformMetrics set the metrics for a platform
 func SetPlatformMetrics(platform dbaasv1beta1.DBaaSPlatform, account string, execution Execution, event string, errCd string) {
 	setPlatformRequestDurationSeconds(platform, account, execution, event)
-	UpdateErrorsTotal(platform.Name, account, platform.Namespace, LabelResourceValuePlatform, event, errCd)
+	UpdateErrorsTotal(LabelValueNone, account, platform.Namespace, LabelResourceValuePlatform, event, errCd)
 }

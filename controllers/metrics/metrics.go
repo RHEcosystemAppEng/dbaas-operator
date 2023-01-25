@@ -33,6 +33,9 @@ const (
 	LabelEventValueCreate = "create"
 	LabelEventValueDelete = "delete"
 
+	// Lavel value none
+	LabelValueNone = "none"
+
 	// Error Code label values
 	LabelErrorCdValueResourceNotFound     = "resource_not_found"
 	LabelErrorCdValueUnableToListPolicies = "unable_to_list_policies"

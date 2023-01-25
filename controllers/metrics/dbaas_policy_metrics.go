@@ -22,7 +22,7 @@ const (
 // SetPolicyMetrics set the Metrics for policy
 func SetPolicyMetrics(policy dbaasv1beta1.DBaaSPolicy, execution Execution, event string, errCd string) {
 	setPolicyRequestDurationSeconds(policy, event, execution)
-	UpdateErrorsTotal(policy.Name, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, errCd)
+	UpdateErrorsTotal(LabelValueNone, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, errCd)
 }
 
 // setPolicyRequestDurationSeconds set the Metrics for policy request duration in seconds
@@ -32,7 +32,7 @@ func setPolicyRequestDurationSeconds(policy dbaasv1beta1.DBaaSPolicy, event stri
 
 	case LabelEventValueCreate:
 		duration := time.Now().UTC().Sub(policy.CreationTimestamp.Time.UTC())
-		UpdateRequestsDurationHistogram(policy.Name, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
+		UpdateRequestsDurationHistogram(LabelValueNone, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
 		log.Info("Set the request duration for create event")
 
 	case LabelEventValueDelete:
@@ -42,7 +42,7 @@ func setPolicyRequestDurationSeconds(policy dbaasv1beta1.DBaaSPolicy, event stri
 		}
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
-		UpdateRequestsDurationHistogram(policy.Name, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
+		UpdateRequestsDurationHistogram(LabelValueNone, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
 		log.Info("Set the request duration for delete event")
 	}
 }
