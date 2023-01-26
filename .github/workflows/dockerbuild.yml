@@ -13,10 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Image build
+    - name: Image builds
       uses: redhat-actions/buildah-build@v2
       with:
         image: dbaas-operator
         platforms: linux/amd64
         containerfiles: |
           ./Dockerfile
+          ./bundle.Dockerfile
+          ./wrapper.Dockerfile
