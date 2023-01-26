@@ -64,12 +64,12 @@ var _ = Describe("Create provider object", func() {
 				Namespace: "test-namespace",
 			},
 		}
-		result := dRec.createProviderObject(object, "test-kind")
+		result := dRec.createProviderObject(object, v1beta1.GroupVersion, "test-kind")
 
 		expected := &unstructured.Unstructured{}
 		expected.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   v1alpha1.GroupVersion.Group,
-			Version: v1alpha1.GroupVersion.Version,
+			Group:   v1beta1.GroupVersion.Group,
+			Version: v1beta1.GroupVersion.Version,
 			Kind:    "test-kind",
 		})
 		expected.SetNamespace("test-namespace")
@@ -94,7 +94,6 @@ var _ = Describe("Get DBaaSProvider", func() {
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",
 			ExternalProvisionDescription: "",
-			InstanceParameterSpecs:       []v1beta1.InstanceParameterSpec{},
 		},
 	}
 	BeforeEach(assertResourceCreation(provider))
@@ -342,7 +341,7 @@ var _ = Describe("Check inventory", func() {
 			},
 			Spec: v1beta1.DBaaSOperatorInventorySpec{
 				ProviderRef: v1beta1.NamespacedName{
-					Name: "crunchy-bridge-registration",
+					Name: v1beta1.CockroachDBCloudRegistration,
 				},
 				DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
 					CredentialsRef: &v1beta1.LocalObjectReference{
@@ -371,8 +370,8 @@ var _ = Describe("Check inventory", func() {
 				},
 			},
 		}
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory2, metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory2, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory2))
 

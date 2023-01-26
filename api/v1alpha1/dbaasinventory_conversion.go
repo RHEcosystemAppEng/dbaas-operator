@@ -69,13 +69,7 @@ func (dst *DBaaSInventory) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.ObjectMeta = src.ObjectMeta
 
 	// Spec
-	dst.Spec.CredentialsRef = (*LocalObjectReference)(src.Spec.CredentialsRef)
-	if src.Spec.Policy != nil {
-		dst.Spec.ConnectionNamespaces = src.Spec.Policy.Connections.Namespaces
-		dst.Spec.ConnectionNsSelector = src.Spec.Policy.Connections.NsSelector
-		dst.Spec.DisableProvisions = src.Spec.Policy.DisableProvisions
-	}
-	dst.Spec.ProviderRef = NamespacedName(src.Spec.ProviderRef)
+	dst.Spec.ConvertFrom(&src.Spec)
 
 	// Status
 	dst.Status.Conditions = src.Status.Conditions
@@ -84,4 +78,15 @@ func (dst *DBaaSInventory) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 
 	return nil
+}
+
+// ConvertFrom converts the DBaaSInventorySpec from the v1beta1 to this version.
+func (dst *DBaaSOperatorInventorySpec) ConvertFrom(src *v1beta1.DBaaSOperatorInventorySpec) {
+	dst.CredentialsRef = (*LocalObjectReference)(src.CredentialsRef)
+	if src.Policy != nil {
+		dst.ConnectionNamespaces = src.Policy.Connections.Namespaces
+		dst.ConnectionNsSelector = src.Policy.Connections.NsSelector
+		dst.DisableProvisions = src.Policy.DisableProvisions
+	}
+	dst.ProviderRef = NamespacedName(src.ProviderRef)
 }

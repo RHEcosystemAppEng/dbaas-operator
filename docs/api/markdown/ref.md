@@ -18,6 +18,22 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 
 
+#### ConditionalProvisioningParameterData
+
+
+
+ConditionalProvisioningParameterData defines the list of options with the corresponding default value available for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies A provisioning parameter can have multiple option lists/default values depending on the dependent parameters. For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP, one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS. If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+
+_Appears in:_
+- [ProvisioningParameter](#provisioningparameter)
+
+| Field | Description |
+| --- | --- |
+| `dependencies` _[FieldDependency](#fielddependency) array_ | List of the dependent fields and their values |
+| `options` _[Option](#option) array_ | Options displayed in the UX |
+| `defaultValue` _string_ | Default value |
+
+
 #### CredentialField
 
 
@@ -113,10 +129,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `inventoryRef` _[NamespacedName](#namespacedname)_ | A reference to the relevant DBaaSInventory custom resource (CR). |
-| `name` _string_ | The name of this instance in the database service. |
-| `cloudProvider` _string_ | Identifies the cloud-hosted database provider. |
-| `cloudRegion` _string_ | Identifies the deployment region for the cloud-hosted database provider. For example, us-east-1. |
-| `otherInstanceParams` _object (keys:string, values:string)_ | Any other provider-specific parameters related to the instance, such as provisioning. |
+| `provisioningParameters` _object (keys:[ProvisioningParameterType](#provisioningparametertype), values:string)_ | Parameters with values used for provisioning. |
 
 
 #### DBaaSInventory
@@ -276,6 +289,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `provider` _[DatabaseProviderInfo](#databaseproviderinfo)_ | Contains information about database provider and platform. |
+| `groupVersion` _string_ | DBaaS API group version supported by the provider |
 | `inventoryKind` _string_ | The name of the inventory custom resource definition (CRD) as defined by the database provider. |
 | `connectionKind` _string_ | The name of the connection's custom resource definition (CRD) as defined by the provider. |
 | `instanceKind` _string_ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning. |
@@ -283,7 +297,7 @@ _Appears in:_
 | `allowsFreeTrial` _boolean_ | Indicates whether the provider offers free trials. |
 | `externalProvisionURL` _string_ | The URL for provisioning instances by using the database provider's web portal. |
 | `externalProvisionDescription` _string_ | Instructions on how to provision instances by using the database provider's web portal. |
-| `instanceParameterSpecs` _[InstanceParameterSpec](#instanceparameterspec) array_ | Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance. |
+| `provisioningParameters` _object (keys:[ProvisioningParameterType](#provisioningparametertype), values:[ProvisioningParameter](#provisioningparameter))_ | Parameter specs used by UX for provisioning a database instance |
 
 
 #### DatabaseProviderInfo
@@ -303,24 +317,21 @@ _Appears in:_
 | `icon` _[ProviderIcon](#providericon)_ | Indicates what icon to display on the catalog tile. |
 
 
-
-
-#### InstanceParameterSpec
+#### FieldDependency
 
 
 
-Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+FieldDependency defines the name and value of a field used as a dependency
 
 _Appears in:_
-- [DBaaSProviderSpec](#dbaasproviderspec)
+- [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
 
 | Field | Description |
 | --- | --- |
-| `name` _string_ | The name for this field. |
-| `displayName` _string_ | A user-friendly name for this parameter. |
-| `type` _string_ | The type of field: string, maskedstring, integer, or boolean. |
-| `required` _boolean_ | Define if this field is required or not. |
-| `defaultValue` _string_ | Default value for this field. |
+| `field` _[ProvisioningParameterType](#provisioningparametertype)_ | Name of the field used as a dependency |
+| `value` _string_ | Value of the field used as a dependency |
+
+
 
 
 #### LocalObjectReference
@@ -356,6 +367,21 @@ _Appears in:_
 
 
 
+#### Option
+
+
+
+Option defines the value and display value for an option in a dropdown, radio button or checkbox
+
+_Appears in:_
+- [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
+
+| Field | Description |
+| --- | --- |
+| `value` _string_ | Value of the option |
+| `displayValue` _string_ | Corresponding display value |
+
+
 
 
 
@@ -373,5 +399,34 @@ _Appears in:_
 | --- | --- |
 | `base64data` _string_ |  |
 | `mediatype` _string_ |  |
+
+
+#### ProvisioningParameter
+
+
+
+Information for a provisioning parameter
+
+_Appears in:_
+- [DBaaSProviderSpec](#dbaasproviderspec)
+
+| Field | Description |
+| --- | --- |
+| `displayName` _string_ | A user-friendly name for this field. |
+| `helpText` _string_ | Additional info about the field. |
+| `conditionalData` _[ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata) array_ | Lists of additional data containing the options or default values for the field. |
+
+
+#### ProvisioningParameterType
+
+_Underlying type:_ `string`
+
+
+
+_Appears in:_
+- [DBaaSInstanceSpec](#dbaasinstancespec)
+- [DBaaSProviderSpec](#dbaasproviderspec)
+- [FieldDependency](#fielddependency)
+
 
 
