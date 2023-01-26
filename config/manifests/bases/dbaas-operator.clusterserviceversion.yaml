@@ -11,7 +11,7 @@ metadata:
     operatorframework.io/suggested-namespace: openshift-dbaas-operator
     operators.operatorframework.io/internal-objects: '["dbaasconnections.dbaas.redhat.com","dbaasproviders.dbaas.redhat.com","dbaasplatforms.dbaas.redhat.com","dbaasinstances.dbaas.redhat.com"]'
     repository: https://github.com/RHEcosystemAppEng/dbaas-operator
-    support: dbaas-alpha-support@redhat.com
+    support: rhoda-requests@redhat.com
   name: dbaas-operator.v0.0.0
   namespace: placeholder
 spec:
@@ -65,7 +65,7 @@ spec:
 
     ## Feedback & Support
 
-    Please contact us at [dbaas-alpha-support@redhat.com](mailto:dbaas-alpha-support@redhat.com)
+    Please contact us at [rhoda-requests@redhat.com](mailto:rhoda-requests@redhat.com)
 
     For more information on how to use our service, please refer to our [Quick Starts](quickstart?keyword=database).
   displayName: OpenShift Database Access Operator
