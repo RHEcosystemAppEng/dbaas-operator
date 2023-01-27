@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
-	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 )
 
 // DBaaSProviderReconciler reconciles a DBaaSProvider object

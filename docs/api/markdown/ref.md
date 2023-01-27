@@ -96,8 +96,9 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `inventoryRef` _[NamespacedName](#namespacedname)_ | A reference to the relevant DBaaSInventory custom resource (CR). |
-| `instanceID` _string_ | The ID of the instance to connect to, as seen in the status of the referenced DBaaSInventory. |
-| `instanceRef` _[NamespacedName](#namespacedname)_ | A reference to the DBaaSInstance CR used, if the InstanceID is not specified. |
+| `databaseServiceID` _string_ | The ID of the database service to connect to, as seen in the status of the referenced DBaaSInventory. |
+| `databaseServiceRef` _[NamespacedName](#namespacedname)_ | A reference to the database service CR used, if the DatabaseServiceID is not specified. |
+| `databaseServiceType` _[DatabaseServiceType](#databaseservicetype)_ | The type of the database service to connect to, as seen in the status of the referenced DBaaSInventory. |
 
 
 #### DBaaSInstance
@@ -315,6 +316,20 @@ _Appears in:_
 | `displayName` _string_ | A user-friendly name for this database provider. For example, 'MongoDB Atlas'. |
 | `displayDescription` _string_ | Indicates the description text shown for a database provider within the user interface. For example, the catalog tile description. |
 | `icon` _[ProviderIcon](#providericon)_ | Indicates what icon to display on the catalog tile. |
+
+
+
+
+#### DatabaseServiceType
+
+_Underlying type:_ `string`
+
+Defines the type of the supported database service.
+
+_Appears in:_
+- [DBaaSConnectionSpec](#dbaasconnectionspec)
+- [DatabaseService](#databaseservice)
+
 
 
 #### FieldDependency

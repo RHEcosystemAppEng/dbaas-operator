@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,26 +59,33 @@ func (r *DBaaSConnection) ValidateDelete() error {
 }
 
 func (r *DBaaSConnection) validateCreateDBaaSConnectionSpec() error {
-	if len(r.Spec.InstanceID) > 0 && r.Spec.InstanceRef != nil && len(r.Spec.InstanceRef.Name) > 0 {
-		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "both instanceID and instanceRef are specified")
+	if len(r.Spec.DatabaseServiceID) > 0 && r.Spec.DatabaseServiceRef != nil && len(r.Spec.DatabaseServiceRef.Name) > 0 {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceID"), r.Spec.DatabaseServiceID, "both databaseServiceID and databaseServiceRef are specified")
 	}
-	if len(r.Spec.InstanceID) == 0 && (r.Spec.InstanceRef == nil || len(r.Spec.InstanceRef.Name) == 0) {
-		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "either instanceID or instanceRef must be specified")
+	if len(r.Spec.DatabaseServiceID) == 0 && (r.Spec.DatabaseServiceRef == nil || len(r.Spec.DatabaseServiceRef.Name) == 0) {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceID"), r.Spec.DatabaseServiceID, "either databaseServiceID or databaseServiceRef must be specified")
+	}
+	if r.Spec.DatabaseServiceRef != nil && r.Spec.DatabaseServiceType != nil {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceRef"), r.Spec.DatabaseServiceRef, "when using databaseServiceRef, databaseServiceType must not be specified")
 	}
 	return nil
 }
 
 func (r *DBaaSConnection) validateUpdateDBaaSConnectionSpec(old *DBaaSConnection) error {
-	if r.Spec.InstanceID != old.Spec.InstanceID {
-		return field.Invalid(field.NewPath("spec").Child("instanceID"), r.Spec.InstanceID, "instanceID is immutable")
+	if r.Spec.DatabaseServiceID != old.Spec.DatabaseServiceID {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceID"), r.Spec.DatabaseServiceID, "databaseServiceID is immutable")
 	}
 
 	if !reflect.DeepEqual(r.Spec.InventoryRef, old.Spec.InventoryRef) {
 		return field.Invalid(field.NewPath("spec").Child("inventoryRef"), r.Spec.InventoryRef, "inventoryRef is immutable")
 	}
 
-	if !reflect.DeepEqual(r.Spec.InstanceRef, old.Spec.InstanceRef) {
-		return field.Invalid(field.NewPath("spec").Child("instanceRef"), r.Spec.InstanceRef, "instanceRef is immutable")
+	if !reflect.DeepEqual(r.Spec.DatabaseServiceRef, old.Spec.DatabaseServiceRef) {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceRef"), r.Spec.DatabaseServiceRef, "databaseServiceRef is immutable")
+	}
+
+	if !reflect.DeepEqual(r.Spec.DatabaseServiceType, old.Spec.DatabaseServiceType) {
+		return field.Invalid(field.NewPath("spec").Child("databaseServiceType"), r.Spec.DatabaseServiceType, "databaseServiceType is immutable")
 	}
 
 	return nil

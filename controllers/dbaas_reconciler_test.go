@@ -25,6 +25,7 @@ import (
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -122,7 +123,7 @@ var _ = Describe("Parse provider object", func() {
 			Name:      "test-inventory",
 			Namespace: "test-namespace",
 		},
-		InstanceID: "test-instance-id",
+		DatabaseServiceID: "test-instance-id",
 	}
 	uConnection := &unstructured.Unstructured{}
 	uConnection.SetUnstructuredContent(make(map[string]interface{}, 1))
@@ -164,7 +165,7 @@ var _ = Describe("Provider object MutateFn", func() {
 				Name:      "test-inventory",
 				Namespace: "test-namespace",
 			},
-			InstanceID: "test-instance-id",
+			DatabaseServiceID: "test-instance-id",
 		}
 		fn := dRec.providerObjectMutateFn(object, providerObject, connectionSpec)
 		err := fn()
@@ -352,11 +353,11 @@ var _ = Describe("Check inventory", func() {
 		}
 		lastTransitionTime := getLastTransitionTimeForTest()
 		providerInventoryStatus := &v1beta1.DBaaSInventoryStatus{
-			Instances: []v1beta1.Instance{
+			DatabaseServices: []v1beta1.DatabaseService{
 				{
-					InstanceID: "testInstanceID",
-					Name:       "testInstance",
-					InstanceInfo: map[string]string{
+					ServiceID:   "testInstanceID",
+					ServiceName: "testInstance",
+					ServiceInfo: map[string]string{
 						"testInstanceInfo": "testInstanceInfo",
 					},
 				},
@@ -383,7 +384,7 @@ var _ = Describe("Check inventory", func() {
 					Name:      inventoryName,
 					Namespace: testNamespace,
 				},
-				InstanceID: instanceID,
+				DatabaseServiceID: instanceID,
 			}
 			createdDBaaSConnection := &v1beta1.DBaaSConnection{
 				ObjectMeta: metav1.ObjectMeta{
@@ -487,7 +488,7 @@ var _ = Describe("Check inventory", func() {
 					Name:      inventoryName,
 					Namespace: testNamespace,
 				},
-				InstanceID: instanceID,
+				DatabaseServiceID: instanceID,
 			}
 			createdDBaaSConnection := &v1beta1.DBaaSConnection{
 				ObjectMeta: metav1.ObjectMeta{
