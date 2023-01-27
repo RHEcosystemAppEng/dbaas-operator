@@ -93,7 +93,7 @@ const (
 // Defines the phases for instance provisioning.
 type DBaasInstancePhase string
 
-// Defines the type of the supported database service.
+// Defines the supported database service types.
 type DatabaseServiceType string
 
 // Constants for the instance phases.
@@ -115,7 +115,7 @@ type DBaaSProviderSpec struct {
 	Provider DatabaseProviderInfo `json:"provider"`
 
 	// +kubebuilder:default=dbaas.redhat.com/v1alpha1
-	// DBaaS API group version supported by the provider
+	// The DBaaS API group version supported by the provider.
 	GroupVersion string `json:"groupVersion"`
 
 	// The name of the inventory custom resource definition (CRD) as defined by the database provider.
@@ -139,11 +139,11 @@ type DBaaSProviderSpec struct {
 	// Instructions on how to provision instances by using the database provider's web portal.
 	ExternalProvisionDescription string `json:"externalProvisionDescription"`
 
-	// Parameter specs used by UX for provisioning a database instance
+	// Parameter specifications used by the user interface (UI) for provisioning a database instance.
 	ProvisioningParameters map[ProvisioningParameterType]ProvisioningParameter `json:"provisioningParameters,omitempty"`
 }
 
-// DBaaSProviderStatus defines the observed state of DBaaSProvider
+// Defines the observed state of DBaaSProvider object.
 type DBaaSProviderStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
@@ -172,7 +172,7 @@ type ProviderIcon struct {
 	MediaType string `json:"mediatype"`
 }
 
-// Defines the attributes.
+// Defines the CredentialField object attributes.
 type CredentialField struct {
 	// The name for this field.
 	Key string `json:"key"`
@@ -190,7 +190,7 @@ type CredentialField struct {
 	HelpText string `json:"helpText,omitempty"`
 }
 
-// DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
+// Defines the inventory specifications for the provider's operators.
 type DBaaSInventorySpec struct {
 	// The secret containing the provider-specific connection credentials to use with the provider's API endpoint.
 	// The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key.
@@ -335,50 +335,48 @@ type DBaaSProviderInstance struct {
 	Status DBaaSInstanceStatus `json:"status,omitempty"`
 }
 
-// Option defines the value and display value for an option in a dropdown, radio button or checkbox
+// Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 type Option struct {
-	// Value of the option
+	// Value of the option.
 	Value string `json:"value,omitempty"`
 
-	// Corresponding display value
+	// Corresponding display value.
 	DisplayValue string `json:"displayValue,omitempty"`
 }
 
-// FieldDependency defines the name and value of a field used as a dependency
+// Defines the name and value of a dependency field.
 type FieldDependency struct {
 	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;databaseType;dedicatedLocationLabel;serverlessLocationLabel;hardwareLabel;planLabel;spendLimitLabel
-	// Name of the field used as a dependency
+	// Name of the dependency field.
 	Field ProvisioningParameterType `json:"field,omitempty"`
 
-	// Value of the field used as a dependency
+	// Value of the dependency field.
 	Value string `json:"value,omitempty"`
 }
 
-// Information for a provisioning parameter
+// Information for a ProvisioningParameter object.
 type ProvisioningParameter struct {
 	// A user-friendly name for this field.
 	DisplayName string `json:"displayName"`
 
-	// Additional info about the field.
+	// Additional information about the field.
 	HelpText string `json:"helpText,omitempty"`
 
 	// Lists of additional data containing the options or default values for the field.
 	ConditionalData []ConditionalProvisioningParameterData `json:"conditionalData,omitempty"`
 }
 
-// ConditionalProvisioningParameterData defines the list of options with the corresponding default value available
-// for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies
-// A provisioning parameter can have multiple option lists/default values depending on the dependent parameters.
-// For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP,
-// one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS.
-// If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+// A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies.
+// A provisioning parameter can have many options lists and default values, depending on the dependency parameters.
+// If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input.
+// For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
 type ConditionalProvisioningParameterData struct {
-	// List of the dependent fields and their values
+	// List of the dependent fields and values.
 	Dependencies []FieldDependency `json:"dependencies,omitempty"`
 
-	// Options displayed in the UX
+	// Options displayed in the UI.
 	Options []Option `json:"options,omitempty"`
 
-	// Default value
+	// Set a default value.
 	DefaultValue string `json:"defaultValue,omitempty"`
 }

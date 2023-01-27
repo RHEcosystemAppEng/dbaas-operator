@@ -26,7 +26,7 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata"]
 ==== ConditionalProvisioningParameterData 
 
-ConditionalProvisioningParameterData defines the list of options with the corresponding default value available for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies A provisioning parameter can have multiple option lists/default values depending on the dependent parameters. For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP, one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS. If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
 
 .Appears In:
 ****
@@ -36,16 +36,16 @@ ConditionalProvisioningParameterData defines the list of options with the corres
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`dependencies`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency[$$FieldDependency$$] array__ | List of the dependent fields and their values
-| *`options`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option[$$Option$$] array__ | Options displayed in the UX
-| *`defaultValue`* __string__ | Default value
+| *`dependencies`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency[$$FieldDependency$$] array__ | List of the dependent fields and values.
+| *`options`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option[$$Option$$] array__ | Options displayed in the UI.
+| *`defaultValue`* __string__ | Set a default value.
 |===
 
 
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-credentialfield"]
 ==== CredentialField 
 
-Defines the attributes.
+Defines the CredentialField object attributes.
 
 .Appears In:
 ****
@@ -84,7 +84,7 @@ The schema for the DBaaSConnection API.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy"]
 ==== DBaaSConnectionPolicy 
 
-DBaaSConnectionPolicy sets connection policy
+The DBaaSConnectionPolicy object sets a connection policy.
 
 .Appears In:
 ****
@@ -197,7 +197,7 @@ Sets the inventory policy.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec"]
 ==== DBaaSInventorySpec 
 
-DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
+Defines the inventory specifications for the provider's operators.
 
 .Appears In:
 ****
@@ -262,7 +262,7 @@ Defines the desired state of a DBaaSPlatform object.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`syncPeriod`* __integer__ | The SyncPeriod set The minimum interval at which the provider operator controllers reconcile, the default value is 180 minutes.
+| *`syncPeriod`* __integer__ | Sets the minimum interval, which the provider's operator controllers reconcile. The default value is 180 minutes.
 |===
 
 
@@ -287,7 +287,7 @@ Enables administrative capabilities within a namespace, and sets a default inven
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec"]
 ==== DBaaSPolicySpec 
 
-The specifications for a _DBaaSPolicy_ object. Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
+The specifications for a DBaaSPolicy object.
 
 .Appears In:
 ****
@@ -339,7 +339,7 @@ Defines the desired state of a DBaaSProvider object.
 |===
 | Field | Description
 | *`provider`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo[$$DatabaseProviderInfo$$]__ | Contains information about database provider and platform.
-| *`groupVersion`* __string__ | DBaaS API group version supported by the provider
+| *`groupVersion`* __string__ | The DBaaS API group version supported by the provider.
 | *`inventoryKind`* __string__ | The name of the inventory custom resource definition (CRD) as defined by the database provider.
 | *`connectionKind`* __string__ | The name of the connection's custom resource definition (CRD) as defined by the provider.
 | *`instanceKind`* __string__ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning.
@@ -347,7 +347,7 @@ Defines the desired state of a DBaaSProvider object.
 | *`allowsFreeTrial`* __boolean__ | Indicates whether the provider offers free trials.
 | *`externalProvisionURL`* __string__ | The URL for provisioning instances by using the database provider's web portal.
 | *`externalProvisionDescription`* __string__ | Instructions on how to provision instances by using the database provider's web portal.
-| *`provisioningParameters`* __object (keys:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$], values:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter[$$ProvisioningParameter$$])__ | Parameter specs used by UX for provisioning a database instance
+| *`provisioningParameters`* __object (keys:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$], values:xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter[$$ProvisioningParameter$$])__ | Parameter specifications used by the user interface (UI) for provisioning a database instance.
 |===
 
 
@@ -376,7 +376,7 @@ Defines the information for a DBaaSProvider object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseservicetype"]
 ==== DatabaseServiceType (string) 
 
-Defines the type of the supported database service.
+Defines the supported database service types.
 
 .Appears In:
 ****
@@ -389,7 +389,7 @@ Defines the type of the supported database service.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency"]
 ==== FieldDependency 
 
-FieldDependency defines the name and value of a field used as a dependency
+Defines the name and value of a dependency field.
 
 .Appears In:
 ****
@@ -399,8 +399,8 @@ FieldDependency defines the name and value of a field used as a dependency
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`field`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$]__ | Name of the field used as a dependency
-| *`value`* __string__ | Value of the field used as a dependency
+| *`field`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype[$$ProvisioningParameterType$$]__ | Name of the dependency field.
+| *`value`* __string__ | Value of the dependency field.
 |===
 
 
@@ -448,7 +448,7 @@ Defines the namespace and name of a k8s resource.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option"]
 ==== Option 
 
-Option defines the value and display value for an option in a dropdown, radio button or checkbox
+Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 
 .Appears In:
 ****
@@ -458,8 +458,8 @@ Option defines the value and display value for an option in a dropdown, radio bu
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`value`* __string__ | Value of the option
-| *`displayValue`* __string__ | Corresponding display value
+| *`value`* __string__ | Value of the option.
+| *`displayValue`* __string__ | Corresponding display value.
 |===
 
 
@@ -488,7 +488,7 @@ Follows the same field and naming formats as a comma-separated values (CSV) file
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter"]
 ==== ProvisioningParameter 
 
-Information for a provisioning parameter
+Information for a ProvisioningParameter object.
 
 .Appears In:
 ****
@@ -499,7 +499,7 @@ Information for a provisioning parameter
 |===
 | Field | Description
 | *`displayName`* __string__ | A user-friendly name for this field.
-| *`helpText`* __string__ | Additional info about the field.
+| *`helpText`* __string__ | Additional information about the field.
 | *`conditionalData`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata[$$ConditionalProvisioningParameterData$$] array__ | Lists of additional data containing the options or default values for the field.
 |===
 

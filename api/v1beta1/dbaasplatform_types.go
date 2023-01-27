@@ -81,7 +81,7 @@ type ObservabilityConfig struct {
 type DBaaSPlatformSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=1440
-	// The SyncPeriod set The minimum interval at which the provider operator controllers reconcile, the default value is 180 minutes.
+	// Sets the minimum interval, which the provider's operator controllers reconcile. The default value is 180 minutes.
 	SyncPeriod *int `json:"syncPeriod,omitempty"`
 }
 
