@@ -165,6 +165,9 @@ func (r *reconciler) reconcileCatalogSource(ctx context.Context) (v1beta1.Platfo
 			SourceType:  v1alpha1.SourceTypeGrpc,
 			Image:       r.config.Image,
 			DisplayName: r.config.DisplayName,
+			GrpcPodConfig: &v1alpha1.GrpcPodConfig{
+				SecurityContextConfig: v1alpha1.Legacy,
+			},
 		}
 		return nil
 	})

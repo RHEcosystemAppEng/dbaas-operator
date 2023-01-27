@@ -7,7 +7,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.20.1
 	github.com/openshift/api v0.0.0-20210910062324-a41d3573a3ba
-	github.com/operator-framework/api v0.10.5
+	github.com/operator-framework/api v0.17.3
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rhobs/obo-prometheus-operator/pkg/apis/monitoring v0.61.1-rhobs1
 	github.com/rhobs/observability-operator v0.0.20
