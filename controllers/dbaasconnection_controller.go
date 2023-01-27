@@ -191,7 +191,7 @@ func (r *DBaaSConnectionReconciler) deploymentMutateFn(connection *v1beta1.DBaaS
 		deployment.ObjectMeta.Annotations["owner.namespace"] = connection.Namespace
 
 		deployment.Spec = appv1.DeploymentSpec{
-			Replicas: pointer.Int32Ptr(0),
+			Replicas: pointer.Int32(0),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"name": "bind-deploy",

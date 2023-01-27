@@ -26,9 +26,9 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
 OPM_VERSION ?= v1.26.2
-OPERATOR_SDK_VERSION ?= v1.20.1
+OPERATOR_SDK_VERSION ?= v1.22.2
 CONTROLLER_TOOLS_VERSION ?= v0.4.1
-ENVTEST_K8S_VERSION ?= 1.24.2
+ENVTEST_K8S_VERSION ?= 1.25.0
 
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
 #
@@ -134,7 +134,6 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 install-tools:
 	go install golang.org/x/tools/cmd/goimports@v0.1.11
 	go install github.com/mgechev/revive@v1.2.1
-	go install github.com/elastic/crd-ref-docs@v0.0.8
 
 fmt: install-tools
 	goimports -w .
@@ -247,7 +246,7 @@ generate-ref: generate fmt crd-ref-docs
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+	test -s $(LOCALBIN)/kustomize || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))

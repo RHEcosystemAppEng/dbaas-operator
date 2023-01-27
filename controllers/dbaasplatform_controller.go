@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/observability"
+
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
@@ -90,7 +92,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=console.openshift.io,resources=consoleplugins;consolequickstarts,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operator.openshift.io,resources=consoles,verbs=get;list;update;watch
-//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks,verbs=get;list;create;update;watch;delete
+//+kubebuilder:rbac:groups=monitoring.rhobs,resources=monitoringstacks;servicemonitors,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=infrastructures,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
@@ -135,7 +137,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	defer func() {
-		metrics.SetPlatformMetrics(*cr, cr.ClusterName, execution, event, metricLabelErrCdValue)
+		metrics.SetPlatformMetrics(*cr, cr.Name, execution, event, metricLabelErrCdValue)
 	}()
 
 	var finished = true
@@ -283,6 +285,8 @@ func (r *DBaaSPlatformReconciler) getReconcilerForPlatform(platformConfig v1beta
 		return consoleplugin.NewReconciler(r.Client, r.Scheme, r.Log, platformConfig)
 	case v1beta1.TypeQuickStart:
 		return quickstartinstallation.NewReconciler(r.Client, r.Scheme, r.Log)
+	case v1beta1.TypeObservability:
+		return observability.NewReconciler(r.Client, r.Scheme, r.Log)
 	}
 
 	return nil

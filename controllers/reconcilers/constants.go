@@ -64,13 +64,8 @@ const (
 
 	//ObservabilityName platform name for observability
 	ObservabilityName = "observability"
-	//other constants for observability
-	observabilityCatalogImg  = "RELATED_IMAGE_OBSERVABILITY_CATALOG"
-	observabilityCSV         = "CSV_VERSION_OBSERVABILITY"
-	observabilityDisplayName = "observability Operator"
-	observabilityDeployment  = "observability-operator"
-	observabilityPkg         = "observability-operator"
-	observabilityChannel     = "stable"
+	//ObservabilityDisplayName constants for observability
+	ObservabilityDisplayName = "Observability Operator"
 )
 
 // InstallationPlatforms return the list of platforms
@@ -127,14 +122,9 @@ var InstallationPlatforms = map[dbaasv1beta1.PlatformName]dbaasv1beta1.PlatformC
 		Type:           dbaasv1beta1.TypeOperator,
 	},
 	dbaasv1beta1.ObservabilityInstallation: {
-		Name:           ObservabilityName,
-		CSV:            fetchEnvValue(observabilityCSV),
-		DeploymentName: observabilityDeployment,
-		Image:          fetchEnvValue(observabilityCatalogImg),
-		PackageName:    observabilityPkg,
-		Channel:        observabilityChannel,
-		DisplayName:    observabilityDisplayName,
-		Type:           dbaasv1beta1.TypeOperator,
+		Name:        ObservabilityName,
+		DisplayName: ObservabilityDisplayName,
+		Type:        dbaasv1beta1.TypeObservability,
 	},
 }
 
