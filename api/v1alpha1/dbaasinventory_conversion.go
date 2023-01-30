@@ -49,16 +49,15 @@ func (src *DBaaSInventory) ConvertTo(dstRaw conversion.Hub) error {
 
 	// Status
 	dst.Status.Conditions = src.Status.Conditions
-	if src.Status.Instances != nil {
-		var services []v1beta1.DatabaseService
-		for _, instance := range src.Status.Instances {
-			services = append(services, v1beta1.DatabaseService{
-				ServiceID:   instance.InstanceID,
-				ServiceName: instance.Name,
-				ServiceInfo: instance.InstanceInfo,
-			})
+	for i := range src.Status.Instances {
+		if dst.Status.DatabaseServices == nil {
+			dst.Status.DatabaseServices = []v1beta1.DatabaseService{}
 		}
-		dst.Status.DatabaseServices = services
+		dst.Status.DatabaseServices = append(dst.Status.DatabaseServices, v1beta1.DatabaseService{
+			ServiceID:   src.Status.Instances[i].InstanceID,
+			ServiceName: src.Status.Instances[i].Name,
+			ServiceInfo: src.Status.Instances[i].InstanceInfo,
+		})
 	}
 
 	return nil
@@ -82,16 +81,15 @@ func (dst *DBaaSInventory) ConvertFrom(srcRaw conversion.Hub) error {
 
 	// Status
 	dst.Status.Conditions = src.Status.Conditions
-	if src.Status.DatabaseServices != nil {
-		var instances []Instance
-		for _, service := range src.Status.DatabaseServices {
-			instances = append(instances, Instance{
-				InstanceID:   service.ServiceID,
-				Name:         service.ServiceName,
-				InstanceInfo: service.ServiceInfo,
-			})
+	for i := range src.Status.DatabaseServices {
+		if dst.Status.Instances == nil {
+			dst.Status.Instances = []Instance{}
 		}
-		dst.Status.Instances = instances
+		dst.Status.Instances = append(dst.Status.Instances, Instance{
+			InstanceID:   src.Status.DatabaseServices[i].ServiceID,
+			Name:         src.Status.DatabaseServices[i].ServiceName,
+			InstanceInfo: src.Status.DatabaseServices[i].ServiceInfo,
+		})
 	}
 
 	return nil
