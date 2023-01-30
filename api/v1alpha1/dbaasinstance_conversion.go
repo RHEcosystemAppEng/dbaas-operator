@@ -124,5 +124,9 @@ func (dst *DBaaSInstanceSpec) ConvertFrom(src *v1beta1.DBaaSInstanceSpec) error 
 		}
 		dst.OtherInstanceParams[name] = val
 	}
+	// Special tweaking for crunchy bridge
+	if inventory.Spec.ProviderRef.Name == v1beta1.CrunchyBridgeRegistration {
+		dst.CloudRegion = "us-east-1"
+	}
 	return nil
 }
