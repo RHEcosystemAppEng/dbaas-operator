@@ -5,13 +5,14 @@ on:
     branches:
     - main
     - release-0.4.0-dev
+    - dbServices
 
 env:
-  IMAGE_TAG_BASE: quay.io/ecosystem-appeng/dbaas-operator-dev
+  IMAGE_TAG_BASE: quay.io/tchughesiv/dbaas-operator-dev
 
 jobs:
   push:
-    if: github.repository == 'RHEcosystemAppEng/dbaas-operator'
+    if: github.repository == 'tchughesiv/dbaas-operator'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
