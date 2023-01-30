@@ -27,7 +27,8 @@ var ProviderFieldsMap map[string]interface{} = map[string]interface{}{
 	v1beta1.CrunchyBridgeRegistration: map[string]v1beta1.ProvisioningParameterType{
 		"Name":     v1beta1.ProvisioningName,
 		"Provider": v1beta1.ProvisioningCloudProvider,
-		"TeamID":   v1beta1.ProvisioningTeamProject,
+		// commenting TeamID parameter as it's not required for trial
+		//"TeamID":   v1beta1.ProvisioningTeamProject,
 	},
 	v1beta1.MongoDBAtlasRegistration: map[string]v1beta1.ProvisioningParameterType{
 		"clusterName":  v1beta1.ProvisioningName,
