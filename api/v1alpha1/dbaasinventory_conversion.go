@@ -48,18 +48,7 @@ func (src *DBaaSInventory) ConvertTo(dstRaw conversion.Hub) error {
 	dst.Spec.ProviderRef = v1beta1.NamespacedName(src.Spec.ProviderRef)
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	if src.Status.Instances != nil {
-		var services []v1beta1.DatabaseService
-		for _, instance := range src.Status.Instances {
-			services = append(services, v1beta1.DatabaseService{
-				ServiceID:   instance.InstanceID,
-				ServiceName: instance.Name,
-				ServiceInfo: instance.InstanceInfo,
-			})
-		}
-		dst.Status.DatabaseServices = services
-	}
+	src.Status.ConvertTo(&dst.Status)
 
 	return nil
 }
@@ -81,18 +70,7 @@ func (dst *DBaaSInventory) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Spec.ConvertFrom(&src.Spec)
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	if src.Status.DatabaseServices != nil {
-		var instances []Instance
-		for _, service := range src.Status.DatabaseServices {
-			instances = append(instances, Instance{
-				InstanceID:   service.ServiceID,
-				Name:         service.ServiceName,
-				InstanceInfo: service.ServiceInfo,
-			})
-		}
-		dst.Status.Instances = instances
-	}
+	dst.Status.ConvertFrom(&src.Status)
 
 	return nil
 }
@@ -106,4 +84,34 @@ func (dst *DBaaSOperatorInventorySpec) ConvertFrom(src *v1beta1.DBaaSOperatorInv
 		dst.DisableProvisions = src.Policy.DisableProvisions
 	}
 	dst.ProviderRef = NamespacedName(src.ProviderRef)
+}
+
+func (src *DBaaSInventoryStatus) ConvertTo(dst *v1beta1.DBaaSInventoryStatus) {
+	dst.Conditions = src.Conditions
+	if src.Instances != nil {
+		var services []v1beta1.DatabaseService
+		for _, instance := range src.Instances {
+			services = append(services, v1beta1.DatabaseService{
+				ServiceID:   instance.InstanceID,
+				ServiceName: instance.Name,
+				ServiceInfo: instance.InstanceInfo,
+			})
+		}
+		dst.DatabaseServices = services
+	}
+}
+
+func (dst *DBaaSInventoryStatus) ConvertFrom(src *v1beta1.DBaaSInventoryStatus) {
+	dst.Conditions = src.Conditions
+	if src.DatabaseServices != nil {
+		var instances []Instance
+		for _, service := range src.DatabaseServices {
+			instances = append(instances, Instance{
+				InstanceID:   service.ServiceID,
+				Name:         service.ServiceName,
+				InstanceInfo: service.ServiceInfo,
+			})
+		}
+		dst.Instances = instances
+	}
 }

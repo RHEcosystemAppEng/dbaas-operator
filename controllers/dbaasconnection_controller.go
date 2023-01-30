@@ -130,18 +130,26 @@ func (r *DBaaSConnectionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 				return provider.Spec.ConnectionKind
 			},
 			func() interface{} {
-				if provider.GetDBaaSAPIGroupVersion() == v1beta1.GroupVersion {
-					return spec
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					providerSpec := &v1alpha1.DBaaSConnectionSpec{}
+					providerSpec.ConvertFrom(spec)
+					return providerSpec
 				}
-				providerSpec := &v1alpha1.DBaaSConnectionSpec{}
-				// Convert instance.Spec to v1alpha1 format
-				providerSpec.ConvertFrom(spec)
-				return providerSpec
+				return spec
 			},
 			func() interface{} {
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					return &v1alpha1.DBaaSProviderConnection{}
+				}
 				return &v1beta1.DBaaSProviderConnection{}
 			},
 			func(i interface{}) metav1.Condition {
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					providerConnV1alpha1 := i.(*v1alpha1.DBaaSProviderConnection)
+					providerConnV1beta1 := &v1beta1.DBaaSProviderConnection{}
+					providerConnV1alpha1.Status.ConvertTo(&providerConnV1beta1.Status)
+					return mergeConnectionStatus(&connection, providerConnV1beta1)
+				}
 				providerConn := i.(*v1beta1.DBaaSProviderConnection)
 				return mergeConnectionStatus(&connection, providerConn)
 			},

@@ -21,7 +21,7 @@ spec:
     - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: The schema for the DBaaSInstance API.
+          description: MongoDBAtlasInstance is the Schema for the mongodbatlasinstances API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -189,7 +189,7 @@ spec:
     - name: v1beta1
       schema:
         openAPIV3Schema:
-          description: The schema for the DBaaSInstance API.
+          description: MongoDBAtlasInstance is the Schema for the mongodbatlasinstances API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation

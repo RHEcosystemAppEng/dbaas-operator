@@ -72,21 +72,23 @@ func (r *DBaaSProviderReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		event = metrics.LabelEventValueCreate
 	}
 
-	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1beta1.DBaaSInventory{}, provider.Spec.InventoryKind); err != nil {
+	groupVersion := provider.GetDBaaSAPIGroupVersion()
+
+	if err := r.watchDBaaSProviderObject(r.InventoryCtrl, &v1beta1.DBaaSInventory{}, provider.Spec.InventoryKind, &groupVersion); err != nil {
 		logger.Error(err, "Error watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingInventoryCR
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Inventory CR", "Kind", provider.Spec.InventoryKind)
 
-	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1beta1.DBaaSConnection{}, provider.Spec.ConnectionKind); err != nil {
+	if err := r.watchDBaaSProviderObject(r.ConnectionCtrl, &v1beta1.DBaaSConnection{}, provider.Spec.ConnectionKind, &groupVersion); err != nil {
 		logger.Error(err, "Error watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingConnectionCR
 		return ctrl.Result{}, err
 	}
 	logger.Info("Watching Provider Connection CR", "Kind", provider.Spec.ConnectionKind)
 
-	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1beta1.DBaaSInstance{}, provider.Spec.InstanceKind); err != nil {
+	if err := r.watchDBaaSProviderObject(r.InstanceCtrl, &v1beta1.DBaaSInstance{}, provider.Spec.InstanceKind, &groupVersion); err != nil {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorWatchingInstanceCR
 		logger.Error(err, "Error watching Provider Instance CR", "Kind", provider.Spec.InstanceKind)
 		return ctrl.Result{}, err

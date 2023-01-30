@@ -4,21 +4,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: dbaasdeleteinventories.dbaas.redhat.com
+  name: rdsinstances.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSDeleteInventory
-    listKind: DBaaSDeleteInventoryList
-    plural: dbaasdeleteinventories
-    singular: dbaasdeleteinventory
+    kind: RDSInstance
+    listKind: RDSInstanceList
+    plural: rdsinstances
+    singular: rdsinstance
   scope: Namespaced
   versions:
-    - name: v1beta1
+    - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: DBaaSDeleteInventory is the Schema for the dbaasdeleteinventories
-            API
+          description: RDSInstance is the Schema for the rdsinstances API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -33,42 +32,54 @@ spec:
             metadata:
               type: object
             spec:
-              description: DBaaSInventorySpec defines the Inventory Spec to be used
-                by provider operators
+              description: DBaaSInstanceSpec defines the desired state of DBaaSInstance
               properties:
-                credentialsRef:
-                  description: The secret containing the provider-specific connection
-                    credentials to use with the provider's API endpoint. The format
-                    specifies the secret in the provider’s operator for its DBaaSProvider
-                    custom resource (CR), such as the CredentialFields key. The secret
-                    must exist within the same namespace as the inventory.
+                cloudProvider:
+                  description: Identifies the desired cloud infrastructure provider
+                  type: string
+                cloudRegion:
+                  description: Identifies the requested deployment region within the
+                    cloud provider (e.g. us-east-1)
+                  type: string
+                inventoryRef:
+                  description: A reference to the relevant DBaaSInventory CR
                   properties:
                     name:
-                      description: Name of the referent.
+                      description: The name for object of known type
+                      type: string
+                    namespace:
+                      description: The namespace where object of known type is stored
                       type: string
                   required:
                     - name
                   type: object
+                name:
+                  description: The name of this instance in the database service
+                  type: string
+                otherInstanceParams:
+                  additionalProperties:
+                    type: string
+                  description: Any other provider-specific parameters related to the
+                    instance provisioning
+                  type: object
               required:
-                - credentialsRef
+                - inventoryRef
+                - name
               type: object
             status:
-              description: Defines the inventory status that the provider's operator
-                uses.
+              description: DBaaSInstanceStatus defines the observed state of DBaaSInstance
               properties:
                 conditions:
                   items:
                     description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    \n \ttype FooStatus struct{ \t    // Represents the observations
-                    of a foo's current state. \t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\" \t    //
-                    +patchMergeKey=type \t    // +patchStrategy=merge \t    // +listType=map
-                    \t    // +listMapKey=type \t    Conditions []metav1.Condition
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` \n \t    // other fields
-                    \t}"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                     properties:
                       lastTransitionTime:
                         description: lastTransitionTime is the last time the condition
@@ -126,33 +137,37 @@ spec:
                       - type
                     type: object
                   type: array
-                databaseServices:
-                  description: A list of database services returned from querying the
-                    database provider.
-                  items:
-                    description: Defines the information of a database service.
-                    properties:
-                      serviceID:
-                        description: A provider-specific identifier for the database
-                          service. It can contain one or more pieces of information
-                          used by the provider's operator to identify the database service.
-                        type: string
-                      serviceInfo:
-                        additionalProperties:
-                          type: string
-                        description: Any other provider-specific information related
-                          to this service.
-                        type: object
-                      serviceName:
-                        description: The name of the database service.
-                        type: string
-                      serviceType:
-                        description: The type of the database service.
-                        type: string
-                    required:
-                      - serviceID
-                    type: object
-                  type: array
+                instanceID:
+                  description: The ID of the instance,
+                  type: string
+                instanceInfo:
+                  additionalProperties:
+                    type: string
+                  description: Any other provider-specific information related to this
+                    instance
+                  type: object
+                phase:
+                  default: Unknown
+                  description: Represents the cluster provisioning phase Unknown - unknown
+                    cluster provisioning status Pending - provisioning not yet started
+                    Creating - provisioning in progress Updating - cluster updating
+                    in progress Deleting - cluster deletion in progress Deleted - cluster
+                    has been deleted Ready - cluster provisioning complete Error - cluster
+                    provisioning with error Failed - cluster provisioning failed
+                  enum:
+                    - Unknown
+                    - Pending
+                    - Creating
+                    - Updating
+                    - Deleting
+                    - Deleted
+                    - Ready
+                    - Error
+                    - Failed
+                  type: string
+              required:
+                - instanceID
+                - phase
               type: object
           type: object
       served: true

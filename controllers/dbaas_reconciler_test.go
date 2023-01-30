@@ -192,7 +192,7 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 		owner := &v1beta1.DBaaSInventory{}
 		spyController := newSpyController(nil)
 
-		err := dRec.watchDBaaSProviderObject(spyController, owner, "test-kind")
+		err := dRec.watchDBaaSProviderObject(spyController, owner, "test-kind", &v1alpha1.GroupVersion)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(func() bool {
 			return spyController.watched(&watchable{
@@ -201,6 +201,48 @@ var _ = Describe("Watch DBaaS provider Object", func() {
 			})
 		}, timeout).Should(BeTrue())
 	})
+})
+
+var _ = Describe("Get Provider Spec Status Version", func() {
+	DescribeTable("it should return the expected groupversion",
+		func(provider *v1beta1.DBaaSProvider, groupVersion *schema.GroupVersion) {
+			gv := dRec.getProviderSpecStatusVersion(provider)
+			Expect(gv.String()).Should(Equal(groupVersion.String()))
+		},
+
+		Entry("mongo provider", mongoProvider, &v1beta1.GroupVersion),
+		Entry("crunchy provider", crunchyProvider, &v1beta1.GroupVersion),
+		Entry("rds provider", &v1beta1.DBaaSProvider{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: RDS_PROVIDER,
+			},
+			Spec: v1beta1.DBaaSProviderSpec{
+				GroupVersion: v1alpha1.GroupVersion.String(),
+			},
+		}, &v1beta1.GroupVersion),
+		Entry("v1alpha1 provider", &v1beta1.DBaaSProvider{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-provider-1",
+			},
+			Spec: v1beta1.DBaaSProviderSpec{
+				GroupVersion: v1alpha1.GroupVersion.String(),
+			},
+		}, &v1alpha1.GroupVersion),
+		Entry("v1beta1 provider", &v1beta1.DBaaSProvider{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-provider-2",
+			},
+			Spec: v1beta1.DBaaSProviderSpec{
+				GroupVersion: v1beta1.GroupVersion.String(),
+			},
+		}, &v1beta1.GroupVersion),
+		Entry("no version provider", &v1beta1.DBaaSProvider{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-provider-3",
+			},
+			Spec: v1beta1.DBaaSProviderSpec{},
+		}, &v1alpha1.GroupVersion),
+	)
 })
 
 var _ = Describe("list policies by inventory namespace", func() {

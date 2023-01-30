@@ -126,18 +126,26 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return provider.Spec.InventoryKind
 		},
 		func() interface{} {
-			if provider.GetDBaaSAPIGroupVersion() == v1beta1.GroupVersion {
-				return inventory.Spec.DeepCopy()
+			if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+				spec := &v1alpha1.DBaaSOperatorInventorySpec{}
+				spec.ConvertFrom(&inventory.Spec)
+				return spec
 			}
-			spec := &v1alpha1.DBaaSOperatorInventorySpec{}
-			// Convert inventory.Spec to v1alpha1 format
-			spec.ConvertFrom(&inventory.Spec)
-			return spec
+			return inventory.Spec.DeepCopy()
 		},
 		func() interface{} {
+			if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+				return &v1alpha1.DBaaSProviderInventory{}
+			}
 			return &v1beta1.DBaaSProviderInventory{}
 		},
 		func(i interface{}) metav1.Condition {
+			if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+				providerInvV1alpha1 := i.(*v1alpha1.DBaaSProviderInventory)
+				providerInvV1beta1 := &v1beta1.DBaaSProviderInventory{}
+				providerInvV1alpha1.Status.ConvertTo(&providerInvV1beta1.Status)
+				return mergeInventoryStatus(&inventory, providerInvV1beta1)
+			}
 			providerInv := i.(*v1beta1.DBaaSProviderInventory)
 			return mergeInventoryStatus(&inventory, providerInv)
 		},

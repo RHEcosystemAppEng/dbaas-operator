@@ -42,7 +42,7 @@ func (src *DBaaSConnection) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status = v1beta1.DBaaSConnectionStatus(src.Status)
+	src.Status.ConvertTo(&dst.Status)
 
 	return nil
 }
@@ -58,7 +58,7 @@ func (dst *DBaaSConnection) ConvertFrom(srcRaw conversion.Hub) error {
 	dst.Spec.ConvertFrom(&src.Spec)
 
 	// Status
-	dst.Status = DBaaSConnectionStatus(src.Status)
+	dst.Status.ConvertFrom(&src.Status)
 
 	return nil
 }
@@ -73,4 +73,16 @@ func (dst *DBaaSConnectionSpec) ConvertFrom(src *v1beta1.DBaaSConnectionSpec) {
 			Namespace: src.DatabaseServiceRef.Namespace,
 		}
 	}
+}
+
+func (src *DBaaSConnectionStatus) ConvertTo(dst *v1beta1.DBaaSConnectionStatus) {
+	dst.Conditions = src.Conditions
+	dst.CredentialsRef = src.CredentialsRef
+	dst.ConnectionInfoRef = src.ConnectionInfoRef
+}
+
+func (dst *DBaaSConnectionStatus) ConvertFrom(src *v1beta1.DBaaSConnectionStatus) {
+	dst.Conditions = src.Conditions
+	dst.CredentialsRef = src.CredentialsRef
+	dst.ConnectionInfoRef = src.ConnectionInfoRef
 }

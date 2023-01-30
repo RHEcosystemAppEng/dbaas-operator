@@ -4,21 +4,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: dbaasdeleteinventories.dbaas.redhat.com
+  name: rdsconnections.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSDeleteInventory
-    listKind: DBaaSDeleteInventoryList
-    plural: dbaasdeleteinventories
-    singular: dbaasdeleteinventory
+    kind: RDSConnection
+    listKind: RDSConnectionList
+    plural: rdsconnections
+    singular: rdsconnection
   scope: Namespaced
   versions:
-    - name: v1beta1
+    - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: DBaaSDeleteInventory is the Schema for the dbaasdeleteinventories
-            API
+          description: RDSConnection is the Schema for the rdsconnections API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -33,42 +32,42 @@ spec:
             metadata:
               type: object
             spec:
-              description: DBaaSInventorySpec defines the Inventory Spec to be used
-                by provider operators
+              description: DBaaSConnectionSpec defines the desired state of DBaaSConnection
               properties:
-                credentialsRef:
-                  description: The secret containing the provider-specific connection
-                    credentials to use with the provider's API endpoint. The format
-                    specifies the secret in the provider’s operator for its DBaaSProvider
-                    custom resource (CR), such as the CredentialFields key. The secret
-                    must exist within the same namespace as the inventory.
+                instanceID:
+                  description: The ID of the instance to connect to, as seen in the
+                    Status of the referenced DBaaSInventory
+                  type: string
+                inventoryRef:
+                  description: A reference to the relevant DBaaSInventory CR
                   properties:
                     name:
-                      description: Name of the referent.
+                      description: The name for object of known type
+                      type: string
+                    namespace:
+                      description: The namespace where object of known type is stored
                       type: string
                   required:
                     - name
                   type: object
               required:
-                - credentialsRef
+                - instanceID
+                - inventoryRef
               type: object
             status:
-              description: Defines the inventory status that the provider's operator
-                uses.
+              description: DBaaSConnectionStatus defines the observed state of DBaaSConnection
               properties:
                 conditions:
                   items:
                     description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    \n \ttype FooStatus struct{ \t    // Represents the observations
-                    of a foo's current state. \t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\" \t    //
-                    +patchMergeKey=type \t    // +patchStrategy=merge \t    // +listType=map
-                    \t    // +listMapKey=type \t    Conditions []metav1.Condition
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` \n \t    // other fields
-                    \t}"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                     properties:
                       lastTransitionTime:
                         description: lastTransitionTime is the last time the condition
@@ -126,33 +125,24 @@ spec:
                       - type
                     type: object
                   type: array
-                databaseServices:
-                  description: A list of database services returned from querying the
-                    database provider.
-                  items:
-                    description: Defines the information of a database service.
-                    properties:
-                      serviceID:
-                        description: A provider-specific identifier for the database
-                          service. It can contain one or more pieces of information
-                          used by the provider's operator to identify the database service.
-                        type: string
-                      serviceInfo:
-                        additionalProperties:
-                          type: string
-                        description: Any other provider-specific information related
-                          to this service.
-                        type: object
-                      serviceName:
-                        description: The name of the database service.
-                        type: string
-                      serviceType:
-                        description: The type of the database service.
-                        type: string
-                    required:
-                      - serviceID
-                    type: object
-                  type: array
+                connectionInfoRef:
+                  description: A ConfigMap holding non-sensitive information needed
+                    for connecting to the DB instance
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                credentialsRef:
+                  description: Secret holding the credentials needed for accessing the
+                    DB instance
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
               type: object
           type: object
       served: true

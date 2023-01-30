@@ -34,6 +34,8 @@ var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 )
 
+const RDS_PROVIDER string = "rds-registration"
+
 // DBaaSReconciler defines common methods used by other reconcilers
 type DBaaSReconciler struct {
 	client.Client
@@ -49,11 +51,11 @@ func (r *DBaaSReconciler) getDBaaSProvider(ctx context.Context, providerName str
 	return provider, nil
 }
 
-func (r *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, object runtime.Object, providerObjectKind string) error {
+func (r *DBaaSReconciler) watchDBaaSProviderObject(ctrl controller.Controller, object runtime.Object, providerObjectKind string, providerGroupVersion *schema.GroupVersion) error {
 	providerObject := unstructured.Unstructured{}
 	providerObject.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   v1alpha1.GroupVersion.Group,
-		Version: v1alpha1.GroupVersion.Version,
+		Group:   providerGroupVersion.Group,
+		Version: providerGroupVersion.Version,
 		Kind:    providerObjectKind,
 	})
 	err := ctrl.Watch(
@@ -311,6 +313,14 @@ func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1bet
 	}
 
 	return
+}
+
+func (r *DBaaSReconciler) getProviderSpecStatusVersion(provider *v1beta1.DBaaSProvider) *schema.GroupVersion {
+	if provider.GetDBaaSAPIGroupVersion().String() == v1alpha1.GroupVersion.String() &&
+		provider.Name != RDS_PROVIDER {
+		return &v1alpha1.GroupVersion
+	}
+	return &v1beta1.GroupVersion
 }
 
 func (r *DBaaSReconciler) checkCredsRefLabel(ctx context.Context, inventory v1beta1.DBaaSInventory) error {
