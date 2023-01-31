@@ -22,23 +22,23 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 
 
-ConditionalProvisioningParameterData defines the list of options with the corresponding default value available for a dropdown field, or the list of default values for an input text field in the UX based on the dependencies A provisioning parameter can have multiple option lists/default values depending on the dependent parameters. For instance, there are 4 different option lists for regions: one for dedicated cluster on GCP, one for dedicated on AWS, one for serverless on GCP, and one for serverless on AWS. If options lists are present, the field is displayed as a dropdown in the UX. Otherwise it is displayed as an input text.
+A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
 
 _Appears in:_
 - [ProvisioningParameter](#provisioningparameter)
 
 | Field | Description |
 | --- | --- |
-| `dependencies` _[FieldDependency](#fielddependency) array_ | List of the dependent fields and their values |
-| `options` _[Option](#option) array_ | Options displayed in the UX |
-| `defaultValue` _string_ | Default value |
+| `dependencies` _[FieldDependency](#fielddependency) array_ | List of the dependent fields and values. |
+| `options` _[Option](#option) array_ | Options displayed in the UI. |
+| `defaultValue` _string_ | Set a default value. |
 
 
 #### CredentialField
 
 
 
-Defines the attributes.
+Defines the CredentialField object attributes.
 
 _Appears in:_
 - [DBaaSProviderSpec](#dbaasproviderspec)
@@ -72,7 +72,7 @@ The schema for the DBaaSConnection API.
 
 
 
-DBaaSConnectionPolicy sets connection policy
+The DBaaSConnectionPolicy object sets a connection policy.
 
 _Appears in:_
 - [DBaaSInventoryPolicy](#dbaasinventorypolicy)
@@ -169,7 +169,7 @@ _Appears in:_
 
 
 
-DBaaSInventorySpec defines the Inventory Spec to be used by provider operators
+Defines the inventory specifications for the provider's operators.
 
 _Appears in:_
 - [DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)
@@ -223,7 +223,7 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `syncPeriod` _integer_ | The SyncPeriod set The minimum interval at which the provider operator controllers reconcile, the default value is 180 minutes. |
+| `syncPeriod` _integer_ | Sets the minimum interval, which the provider's operator controllers reconcile. The default value is 180 minutes. |
 
 
 #### DBaaSPolicy
@@ -246,7 +246,7 @@ Enables administrative capabilities within a namespace, and sets a default inven
 
 
 
-The specifications for a _DBaaSPolicy_ object. Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
+The specifications for a DBaaSPolicy object.
 
 _Appears in:_
 - [DBaaSPolicy](#dbaaspolicy)
@@ -290,7 +290,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `provider` _[DatabaseProviderInfo](#databaseproviderinfo)_ | Contains information about database provider and platform. |
-| `groupVersion` _string_ | DBaaS API group version supported by the provider |
+| `groupVersion` _string_ | The DBaaS API group version supported by the provider. |
 | `inventoryKind` _string_ | The name of the inventory custom resource definition (CRD) as defined by the database provider. |
 | `connectionKind` _string_ | The name of the connection's custom resource definition (CRD) as defined by the provider. |
 | `instanceKind` _string_ | The name of the instance's custom resource definition (CRD) as defined by the provider for provisioning. |
@@ -298,7 +298,7 @@ _Appears in:_
 | `allowsFreeTrial` _boolean_ | Indicates whether the provider offers free trials. |
 | `externalProvisionURL` _string_ | The URL for provisioning instances by using the database provider's web portal. |
 | `externalProvisionDescription` _string_ | Instructions on how to provision instances by using the database provider's web portal. |
-| `provisioningParameters` _object (keys:[ProvisioningParameterType](#provisioningparametertype), values:[ProvisioningParameter](#provisioningparameter))_ | Parameter specs used by UX for provisioning a database instance |
+| `provisioningParameters` _object (keys:[ProvisioningParameterType](#provisioningparametertype), values:[ProvisioningParameter](#provisioningparameter))_ | Parameter specifications used by the user interface (UI) for provisioning a database instance. |
 
 
 #### DatabaseProviderInfo
@@ -324,7 +324,7 @@ _Appears in:_
 
 _Underlying type:_ `string`
 
-Defines the type of the supported database service.
+Defines the supported database service types.
 
 _Appears in:_
 - [DBaaSConnectionSpec](#dbaasconnectionspec)
@@ -336,15 +336,15 @@ _Appears in:_
 
 
 
-FieldDependency defines the name and value of a field used as a dependency
+Defines the name and value of a dependency field.
 
 _Appears in:_
 - [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
 
 | Field | Description |
 | --- | --- |
-| `field` _[ProvisioningParameterType](#provisioningparametertype)_ | Name of the field used as a dependency |
-| `value` _string_ | Value of the field used as a dependency |
+| `field` _[ProvisioningParameterType](#provisioningparametertype)_ | Name of the dependency field. |
+| `value` _string_ | Value of the dependency field. |
 
 
 
@@ -386,15 +386,15 @@ _Appears in:_
 
 
 
-Option defines the value and display value for an option in a dropdown, radio button or checkbox
+Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 
 _Appears in:_
 - [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
 
 | Field | Description |
 | --- | --- |
-| `value` _string_ | Value of the option |
-| `displayValue` _string_ | Corresponding display value |
+| `value` _string_ | Value of the option. |
+| `displayValue` _string_ | Corresponding display value. |
 
 
 
@@ -420,7 +420,7 @@ _Appears in:_
 
 
 
-Information for a provisioning parameter
+Information for a ProvisioningParameter object.
 
 _Appears in:_
 - [DBaaSProviderSpec](#dbaasproviderspec)
@@ -428,7 +428,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `displayName` _string_ | A user-friendly name for this field. |
-| `helpText` _string_ | Additional info about the field. |
+| `helpText` _string_ | Additional information about the field. |
 | `conditionalData` _[ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata) array_ | Lists of additional data containing the options or default values for the field. |
 
 

@@ -212,7 +212,7 @@ spec:
                 description: Indicates what information to collect from the user interface
                   and how to display fields in a form.
                 items:
-                  description: Defines the attributes.
+                  description: Defines the CredentialField object attributes.
                   properties:
                     displayName:
                       description: A user-friendly name for this field.
@@ -247,7 +247,7 @@ spec:
                 type: string
               groupVersion:
                 default: dbaas.redhat.com/v1alpha1
-                description: DBaaS API group version supported by the provider
+                description: The DBaaS API group version supported by the provider.
                 type: string
               instanceKind:
                 description: The name of the instance's custom resource definition
@@ -292,35 +292,36 @@ spec:
                 type: object
               provisioningParameters:
                 additionalProperties:
-                  description: Information for a provisioning parameter
+                  description: Information for a ProvisioningParameter object.
                   properties:
                     conditionalData:
                       description: Lists of additional data containing the options
                         or default values for the field.
                       items:
-                        description: 'ConditionalProvisioningParameterData defines
-                          the list of options with the corresponding default value
-                          available for a dropdown field, or the list of default values
-                          for an input text field in the UX based on the dependencies
-                          A provisioning parameter can have multiple option lists/default
-                          values depending on the dependent parameters. For instance,
-                          there are 4 different option lists for regions: one for
-                          dedicated cluster on GCP, one for dedicated on AWS, one
-                          for serverless on GCP, and one for serverless on AWS. If
-                          options lists are present, the field is displayed as a dropdown
-                          in the UX. Otherwise it is displayed as an input text.'
+                        description: 'A list of available options with default values
+                          for a dropdown menu, or a list of default values entered
+                          by the user within the user interface (UI) based on the
+                          dependencies. A provisioning parameter can have many options
+                          lists and default values, depending on the dependency parameters.
+                          If options lists are present, the field displays a dropdown
+                          menu in the UI, otherwise it displays an empty field for
+                          user input. For example, you can have four different options
+                          lists for different regions: one for dedicated clusters
+                          on Google Cloud Platform (GCP), one for dedicated clusters
+                          on Amazon Web Services (AWS), one for serverless on GCP,
+                          and one for serverless on AWS.'
                         properties:
                           defaultValue:
-                            description: Default value
+                            description: Set a default value.
                             type: string
                           dependencies:
-                            description: List of the dependent fields and their values
+                            description: List of the dependent fields and values.
                             items:
-                              description: FieldDependency defines the name and value
-                                of a field used as a dependency
+                              description: Defines the name and value of a dependency
+                                field.
                               properties:
                                 field:
-                                  description: Name of the field used as a dependency
+                                  description: Name of the dependency field.
                                   enum:
                                   - name
                                   - plan
@@ -340,21 +341,21 @@ spec:
                                   - spendLimitLabel
                                   type: string
                                 value:
-                                  description: Value of the field used as a dependency
+                                  description: Value of the dependency field.
                                   type: string
                               type: object
                             type: array
                           options:
-                            description: Options displayed in the UX
+                            description: Options displayed in the UI.
                             items:
-                              description: Option defines the value and display value
-                                for an option in a dropdown, radio button or checkbox
+                              description: Defines the value and display value for
+                                an option in a dropdown menu, radio button, or checkbox.
                               properties:
                                 displayValue:
-                                  description: Corresponding display value
+                                  description: Corresponding display value.
                                   type: string
                                 value:
-                                  description: Value of the option
+                                  description: Value of the option.
                                   type: string
                               type: object
                             type: array
@@ -364,13 +365,13 @@ spec:
                       description: A user-friendly name for this field.
                       type: string
                     helpText:
-                      description: Additional info about the field.
+                      description: Additional information about the field.
                       type: string
                   required:
                   - displayName
                   type: object
-                description: Parameter specs used by UX for provisioning a database
-                  instance
+                description: Parameter specifications used by the user interface (UI)
+                  for provisioning a database instance.
                 type: object
             required:
             - allowsFreeTrial
@@ -384,7 +385,7 @@ spec:
             - provider
             type: object
           status:
-            description: DBaaSProviderStatus defines the observed state of DBaaSProvider
+            description: Defines the observed state of DBaaSProvider object.
             properties:
               conditions:
                 items:

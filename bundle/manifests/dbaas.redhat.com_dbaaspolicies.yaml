@@ -226,9 +226,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: The specifications for a _DBaaSPolicy_ object. Enables administrative
-              capabilities within a namespace, and sets a default inventory policy.
-              Policy defaults can be overridden on a per-inventory basis.
+            description: The specifications for a DBaaSPolicy object.
             properties:
               connections:
                 description: Namespaces where DBaaSConnection and DBaaSInstance objects

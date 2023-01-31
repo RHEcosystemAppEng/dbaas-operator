@@ -163,9 +163,8 @@ spec:
             description: Defines the desired state of a DBaaSPlatform object.
             properties:
               syncPeriod:
-                description: The SyncPeriod set The minimum interval at which the
-                  provider operator controllers reconcile, the default value is 180
-                  minutes.
+                description: Sets the minimum interval, which the provider's operator
+                  controllers reconcile. The default value is 180 minutes.
                 maximum: 1440
                 minimum: 1
                 type: integer

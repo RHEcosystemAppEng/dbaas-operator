@@ -20,9 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// The specifications for a _DBaaSPolicy_ object.
-// Enables administrative capabilities within a namespace, and sets a default inventory policy.
-// Policy defaults can be overridden on a per-inventory basis.
+// The specifications for a DBaaSPolicy object.
 type DBaaSPolicySpec struct {
 	DBaaSInventoryPolicy `json:",inline"`
 }
@@ -35,7 +33,7 @@ type DBaaSInventoryPolicy struct {
 	Connections DBaaSConnectionPolicy `json:"connections,omitempty"`
 }
 
-// DBaaSConnectionPolicy sets connection policy
+// The DBaaSConnectionPolicy object sets a connection policy.
 type DBaaSConnectionPolicy struct {
 	// Namespaces where DBaaSConnection and DBaaSInstance objects are only allowed to reference a policy's inventories.
 	// Using an asterisk surrounded by single quotes ('*'), allows all namespaces.
@@ -74,7 +72,7 @@ type DBaaSPolicy struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of DBaaSPolicies.
+// Contains a list of DBaaSPolicy objects.
 type DBaaSPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
