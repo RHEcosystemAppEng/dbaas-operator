@@ -46,10 +46,14 @@ import (
 )
 
 const (
-	testProviderName   = "mongodb-atlas"
-	testInventoryKind  = "MongoDBAtlasInventory"
-	testConnectionKind = "MongoDBAtlasConnection"
-	testInstanceKind   = "MongoDBAtlasInstance"
+	testProviderName           = "mongodb-atlas"
+	testInventoryKind          = "MongoDBAtlasInventory"
+	testConnectionKind         = "MongoDBAtlasConnection"
+	testInstanceKind           = "MongoDBAtlasInstance"
+	testProviderV1alpha1Name   = "rds-v1alpha1"
+	testInventoryV1alpha1Kind  = "RDSInventory"
+	testConnectionV1alpha1Kind = "RDSConnection"
+	testInstanceV1alpha1Kind   = "RDSInstance"
 )
 
 var mongoProvider = &v1beta1.DBaaSProvider{
@@ -68,6 +72,25 @@ var mongoProvider = &v1beta1.DBaaSProvider{
 		ExternalProvisionURL:         "",
 		ExternalProvisionDescription: "",
 		GroupVersion:                 v1beta1.GroupVersion.String(),
+	},
+}
+
+var rdsProviderV1alpha1 = &v1beta1.DBaaSProvider{
+	ObjectMeta: metav1.ObjectMeta{
+		Name: testProviderV1alpha1Name,
+	},
+	Spec: v1beta1.DBaaSProviderSpec{
+		Provider: v1beta1.DatabaseProviderInfo{
+			Name: testProviderV1alpha1Name,
+		},
+		InventoryKind:                testInventoryV1alpha1Kind,
+		ConnectionKind:               testConnectionV1alpha1Kind,
+		InstanceKind:                 testInstanceV1alpha1Kind,
+		CredentialFields:             []v1beta1.CredentialField{},
+		AllowsFreeTrial:              false,
+		ExternalProvisionURL:         "",
+		ExternalProvisionDescription: "",
+		GroupVersion:                 v1alpha1.GroupVersion.String(),
 	},
 }
 
@@ -175,19 +198,43 @@ func assertProviderResourceCreated(object client.Object, groupVersion schema.Gro
 		Expect(err).NotTo(HaveOccurred())
 		switch v := object.(type) {
 		case *v1beta1.DBaaSInventory:
-			providerInventory := &v1beta1.DBaaSProviderInventory{}
-			err := json.Unmarshal(bytes, providerInventory)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(&providerInventory.Spec).Should(Equal(DBaaSResourceSpec))
-			Expect(len(providerInventory.GetOwnerReferences())).Should(Equal(1))
-			Expect(providerInventory.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			switch DBaaSResourceSpec.(type) {
+			case *v1alpha1.DBaaSInventorySpec:
+				providerInventory := &v1alpha1.DBaaSProviderInventory{}
+				err := json.Unmarshal(bytes, providerInventory)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerInventory.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerInventory.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerInventory.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			case *v1beta1.DBaaSInventorySpec:
+				providerInventory := &v1beta1.DBaaSProviderInventory{}
+				err := json.Unmarshal(bytes, providerInventory)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerInventory.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerInventory.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerInventory.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			default:
+				Fail("invalid test object")
+			}
 		case *v1beta1.DBaaSConnection:
-			providerConnection := &v1beta1.DBaaSProviderConnection{}
-			err := json.Unmarshal(bytes, providerConnection)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(&providerConnection.Spec).Should(Equal(DBaaSResourceSpec))
-			Expect(len(providerConnection.GetOwnerReferences())).Should(Equal(1))
-			Expect(providerConnection.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			switch DBaaSResourceSpec.(type) {
+			case *v1alpha1.DBaaSConnectionSpec:
+				providerConnection := &v1alpha1.DBaaSProviderConnection{}
+				err := json.Unmarshal(bytes, providerConnection)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerConnection.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerConnection.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerConnection.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			case *v1beta1.DBaaSConnectionSpec:
+				providerConnection := &v1beta1.DBaaSProviderConnection{}
+				err := json.Unmarshal(bytes, providerConnection)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerConnection.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerConnection.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerConnection.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			default:
+				Fail("invalid test object")
+			}
 		case *v1beta1.DBaaSInstance:
 			if groupVersion == v1beta1.GroupVersion {
 				providerInstance := &v1beta1.DBaaSProviderInstance{}
@@ -389,7 +436,18 @@ func assertInventoryStatus(inv *v1beta1.DBaaSInventory, condType string, dbaasSt
 		Expect(dbaasConds[0].Type).Should(Equal(condType))
 		Expect(dbaasConds[0].Status).Should(Equal(dbaasStatus))
 		status.Conditions = providerConds
-		Expect(status).Should(Equal(providerResourceStatus))
+		var providerStatus interface{}
+		switch providerResourceStatus.(type) {
+		case *v1alpha1.DBaaSInventoryStatus:
+			pStatus := &v1alpha1.DBaaSInventoryStatus{}
+			pStatus.ConvertFrom(status)
+			providerStatus = pStatus
+		case *v1beta1.DBaaSInventoryStatus:
+			providerStatus = status
+		default:
+			Fail("invalid test object")
+		}
+		Expect(providerStatus).Should(Equal(providerResourceStatus))
 	}
 }
 
@@ -410,7 +468,18 @@ func assertConnectionStatus(conn *v1beta1.DBaaSConnection, condType string, prov
 		status := conn.Status.DeepCopy()
 		_, providerConds := splitStatusConditions(status.Conditions, condType)
 		status.Conditions = providerConds
-		Expect(status).Should(Equal(providerResourceStatus))
+		var providerStatus interface{}
+		switch providerResourceStatus.(type) {
+		case *v1alpha1.DBaaSConnectionStatus:
+			pStatus := &v1alpha1.DBaaSConnectionStatus{}
+			pStatus.ConvertFrom(status)
+			providerStatus = pStatus
+		case *v1beta1.DBaaSConnectionStatus:
+			providerStatus = status
+		default:
+			Fail("invalid test object")
+		}
+		Expect(providerStatus).Should(Equal(providerResourceStatus))
 	}
 }
 

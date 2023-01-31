@@ -24,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
@@ -179,6 +180,79 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					Expect(labels).Should(Not(BeNil()))
 					Expect(labels[v1beta1.TypeLabelKeyMongo]).Should(Equal(v1beta1.TypeLabelValue))
 				})
+			})
+		})
+	})
+})
+
+var _ = Describe("DBaaSInventory controller for v1alpha1 provider - nominal", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+	BeforeEach(assertResourceCreationIfNotExists(rdsProviderV1alpha1))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
+
+	Describe("reconcile", func() {
+		Context("after creating DBaaSInventory", func() {
+			inventoryName := "test-inventory-v1alpha1"
+			DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
+				CredentialsRef: &v1beta1.LocalObjectReference{
+					Name: testSecret.Name,
+				},
+			}
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryName,
+					Namespace: testNamespace,
+				},
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
+						Name: testProviderV1alpha1Name,
+					},
+					DBaaSInventorySpec: *DBaaSInventorySpec,
+				},
+			}
+			DBaaSInventorySpecV1alpha1 := &v1alpha1.DBaaSInventorySpec{
+				CredentialsRef: &v1alpha1.LocalObjectReference{
+					Name: testSecret.Name,
+				},
+			}
+
+			BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+			BeforeEach(assertResourceCreation(createdDBaaSInventory))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
+			It("should create a provider inventory", assertProviderResourceCreated(createdDBaaSInventory, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), testInventoryV1alpha1Kind, DBaaSInventorySpecV1alpha1))
+
+			Context("when updating provider inventory status", func() {
+				lastTransitionTime := getLastTransitionTimeForTest()
+				status := &v1alpha1.DBaaSInventoryStatus{
+					Instances: []v1alpha1.Instance{
+						{
+							InstanceID: "testInstanceID",
+							Name:       "testInstance",
+							InstanceInfo: map[string]string{
+								"testInstanceInfo": "testInstanceInfo",
+							},
+						},
+						{
+							InstanceID: "testClusterID",
+							Name:       "testCluster",
+							InstanceInfo: map[string]string{
+								"testClusterInfo": "testClusterInfo",
+							},
+						},
+					},
+					Conditions: []metav1.Condition{
+						{
+							Type:               "SpecSynced",
+							Status:             metav1.ConditionTrue,
+							Reason:             "SyncOK",
+							LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+						},
+					},
+				}
+				BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+				It("should update DBaaSInventory status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInventory, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryV1alpha1Kind, status))
 			})
 		})
 	})

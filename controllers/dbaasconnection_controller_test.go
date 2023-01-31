@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
@@ -1142,3 +1143,107 @@ func assertUpdateFailsWithError(conn *v1beta1.DBaaSConnection, instanceID, errMs
 		}, timeout).Should(BeTrue())
 	}
 }
+
+var _ = Describe("DBaaSConnection controller for v1alpha1 provider - nominal", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+	BeforeEach(assertResourceCreationIfNotExists(rdsProviderV1alpha1))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
+
+	Describe("reconcile", func() {
+		Context("after creating DBaaSInventory", func() {
+			inventoryRefName := "test-inventory-ref-v1alpha1"
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryRefName,
+					Namespace: testNamespace,
+				},
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
+						Name: testProviderV1alpha1Name,
+					},
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+					},
+				},
+			}
+			lastTransitionTime := getLastTransitionTimeForTest()
+			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+				Instances: []v1alpha1.Instance{
+					{
+						InstanceID: "testInstanceID",
+						Name:       "testInstance",
+						InstanceInfo: map[string]string{
+							"testInstanceInfo": "testInstanceInfo",
+						},
+					},
+				},
+				Conditions: []metav1.Condition{
+					{
+						Type:               "SpecSynced",
+						Status:             metav1.ConditionTrue,
+						Reason:             "SyncOK",
+						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+					},
+				},
+			}
+
+			Context("after creating DBaaSConnection", func() {
+				connectionName := "test-connection-1-v1alpha1"
+				instanceID := "test-instanceID"
+				DBaaSConnectionSpec := &v1beta1.DBaaSConnectionSpec{
+					InventoryRef: v1beta1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					DatabaseServiceID: instanceID,
+				}
+				createdDBaaSConnection := &v1beta1.DBaaSConnection{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      connectionName,
+						Namespace: testNamespace,
+					},
+					Spec: *DBaaSConnectionSpec,
+				}
+				DBaaSConnectionSpecV1alpha1 := &v1alpha1.DBaaSConnectionSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					InstanceID: instanceID,
+				}
+
+				BeforeEach(assertResourceCreation(createdDBaaSConnection))
+				AfterEach(assertResourceDeletion(createdDBaaSConnection))
+
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), testConnectionV1alpha1Kind, DBaaSConnectionSpecV1alpha1))
+
+				Context("when updating provider connection status", func() {
+					lastTransitionTime := getLastTransitionTimeForTest()
+					status := &v1alpha1.DBaaSConnectionStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:               "ReadyForBinding",
+								Status:             metav1.ConditionTrue,
+								Reason:             "SyncOK",
+								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+							},
+						},
+						CredentialsRef: &v1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+						ConnectionInfoRef: &v1.LocalObjectReference{
+							Name: "testConnectionInfoRef",
+						},
+					}
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionV1alpha1Kind, status))
+				})
+			})
+
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryV1alpha1Kind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		})
+	})
+})

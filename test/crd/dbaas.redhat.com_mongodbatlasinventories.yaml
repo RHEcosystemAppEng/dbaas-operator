@@ -21,9 +21,8 @@ spec:
     - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: The schema for the DBaaSInventory API. Inventory objects must
-            be created in a valid namespace, determined by the existence of a DBaaSPolicy
-            object.
+          description: MongoDBAtlasInventory is the Schema for the mongodbatlasinventories
+            API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -38,69 +37,9 @@ spec:
             metadata:
               type: object
             spec:
-              description: This object defines the desired state of a DBaaSInventory
-                object.
+              description: DBaaSInventorySpec defines the Inventory Spec to be used
+                by provider operators
               properties:
-                connectionNamespaces:
-                  description: Namespaces where DBaaSConnection and DBaaSInstance objects
-                    are only allowed to reference a policy's inventories. Each inventory
-                    can individually override this. Using an asterisk surrounded by
-                    single quotes ('*'), allows all namespaces. If not set in the policy
-                    or by an inventory object, connections are only allowed in the inventory's
-                    namespace.
-                  items:
-                    type: string
-                  type: array
-                connectionNsSelector:
-                  description: Use a label selector to determine the namespaces where
-                    DBaaSConnection and DBaaSInstance objects are only allowed to reference
-                    a policy's inventories. Each inventory can individually override
-                    this. A label selector is a label query over a set of resources.
-                    Results use a logical AND from matchExpressions and matchLabels
-                    queries. An empty label selector matches all objects. A null label
-                    selector matches no objects.
-                  properties:
-                    matchExpressions:
-                      description: matchExpressions is a list of label selector requirements.
-                        The requirements are ANDed.
-                      items:
-                        description: A label selector requirement is a selector that
-                          contains values, a key, and an operator that relates the key
-                          and values.
-                        properties:
-                          key:
-                            description: key is the label key that the selector applies
-                              to.
-                            type: string
-                          operator:
-                            description: operator represents a key's relationship to
-                              a set of values. Valid operators are In, NotIn, Exists
-                              and DoesNotExist.
-                            type: string
-                          values:
-                            description: values is an array of string values. If the
-                              operator is In or NotIn, the values array must be non-empty.
-                              If the operator is Exists or DoesNotExist, the values
-                              array must be empty. This array is replaced during a strategic
-                              merge patch.
-                            items:
-                              type: string
-                            type: array
-                        required:
-                          - key
-                          - operator
-                        type: object
-                      type: array
-                    matchLabels:
-                      additionalProperties:
-                        type: string
-                      description: matchLabels is a map of {key,value} pairs. A single
-                        {key,value} in the matchLabels map is equivalent to an element
-                        of matchExpressions, whose key field is "key", the operator
-                        is "In", and the values array contains only "value". The requirements
-                        are ANDed.
-                      type: object
-                  type: object
                 credentialsRef:
                   description: The secret containing the provider-specific connection
                     credentials to use with the provider's API endpoint. The format
@@ -114,25 +53,8 @@ spec:
                   required:
                     - name
                   type: object
-                disableProvisions:
-                  description: Disables provisioning on inventory accounts.
-                  type: boolean
-                providerRef:
-                  description: A reference to a DBaaSProvider custom resource (CR).
-                  properties:
-                    name:
-                      description: The name for object of a known type.
-                      type: string
-                    namespace:
-                      description: The namespace where an object of a known type is
-                        stored.
-                      type: string
-                  required:
-                    - name
-                  type: object
               required:
                 - credentialsRef
-                - providerRef
               type: object
             status:
               description: Defines the inventory status that the provider's operator
@@ -242,9 +164,8 @@ spec:
     - name: v1beta1
       schema:
         openAPIV3Schema:
-          description: The schema for the DBaaSInventory API. Inventory objects must
-            be created in a valid namespace, determined by the existence of a DBaaSPolicy
-            object.
+          description: MongoDBAtlasInventory is the Schema for the mongodbatlasinventories
+            API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -259,8 +180,8 @@ spec:
             metadata:
               type: object
             spec:
-              description: This object defines the desired state of a DBaaSInventory
-                object.
+              description: DBaaSInventorySpec defines the Inventory Spec to be used
+                by provider operators
               properties:
                 credentialsRef:
                   description: The secret containing the provider-specific connection
@@ -275,95 +196,8 @@ spec:
                   required:
                     - name
                   type: object
-                policy:
-                  description: The policy for this inventory.
-                  properties:
-                    connections:
-                      description: Namespaces where DBaaSConnection and DBaaSInstance
-                        objects are only allowed to reference a policy's inventories.
-                      properties:
-                        namespaces:
-                          description: Namespaces where DBaaSConnection and DBaaSInstance
-                            objects are only allowed to reference a policy's inventories.
-                            Using an asterisk surrounded by single quotes ('*'), allows
-                            all namespaces. If not set in the policy or by an inventory
-                            object, connections are only allowed in the inventory's
-                            namespace.
-                          items:
-                            type: string
-                          type: array
-                        nsSelector:
-                          description: Use a label selector to determine the namespaces
-                            where DBaaSConnection and DBaaSInstance objects are only
-                            allowed to reference a policy's inventories. A label selector
-                            is a label query over a set of resources. Results use a
-                            logical AND from matchExpressions and matchLabels queries.
-                            An empty label selector matches all objects. A null label
-                            selector matches no objects.
-                          properties:
-                            matchExpressions:
-                              description: matchExpressions is a list of label selector
-                                requirements. The requirements are ANDed.
-                              items:
-                                description: A label selector requirement is a selector
-                                  that contains values, a key, and an operator that
-                                  relates the key and values.
-                                properties:
-                                  key:
-                                    description: key is the label key that the selector
-                                      applies to.
-                                    type: string
-                                  operator:
-                                    description: operator represents a key's relationship
-                                      to a set of values. Valid operators are In, NotIn,
-                                      Exists and DoesNotExist.
-                                    type: string
-                                  values:
-                                    description: values is an array of string values.
-                                      If the operator is In or NotIn, the values array
-                                      must be non-empty. If the operator is Exists or
-                                      DoesNotExist, the values array must be empty.
-                                      This array is replaced during a strategic merge
-                                      patch.
-                                    items:
-                                      type: string
-                                    type: array
-                                required:
-                                  - key
-                                  - operator
-                                type: object
-                              type: array
-                            matchLabels:
-                              additionalProperties:
-                                type: string
-                              description: matchLabels is a map of {key,value} pairs.
-                                A single {key,value} in the matchLabels map is equivalent
-                                to an element of matchExpressions, whose key field is
-                                "key", the operator is "In", and the values array contains
-                                only "value". The requirements are ANDed.
-                              type: object
-                          type: object
-                      type: object
-                    disableProvisions:
-                      description: Disables provisioning on inventory accounts.
-                      type: boolean
-                  type: object
-                providerRef:
-                  description: A reference to a DBaaSProvider custom resource (CR).
-                  properties:
-                    name:
-                      description: The name for object of a known type.
-                      type: string
-                    namespace:
-                      description: The namespace where an object of a known type is
-                        stored.
-                      type: string
-                  required:
-                    - name
-                  type: object
               required:
                 - credentialsRef
-                - providerRef
               type: object
             status:
               description: Defines the inventory status that the provider's operator

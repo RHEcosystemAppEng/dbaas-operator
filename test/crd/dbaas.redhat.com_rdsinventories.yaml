@@ -4,21 +4,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: dbaasdeleteinventories.dbaas.redhat.com
+  name: rdsinventories.dbaas.redhat.com
 spec:
   group: dbaas.redhat.com
   names:
-    kind: DBaaSDeleteInventory
-    listKind: DBaaSDeleteInventoryList
-    plural: dbaasdeleteinventories
-    singular: dbaasdeleteinventory
+    kind: RDSInventory
+    listKind: RDSInventoryList
+    plural: rdsinventories
+    singular: rdsinventory
   scope: Namespaced
   versions:
-    - name: v1beta1
+    - name: v1alpha1
       schema:
         openAPIV3Schema:
-          description: DBaaSDeleteInventory is the Schema for the dbaasdeleteinventories
-            API
+          description: RDSInventory is the Schema for the rdsinventories API
           properties:
             apiVersion:
               description: 'APIVersion defines the versioned schema of this representation
@@ -37,11 +36,11 @@ spec:
                 by provider operators
               properties:
                 credentialsRef:
-                  description: The secret containing the provider-specific connection
-                    credentials to use with the provider's API endpoint. The format
-                    specifies the secret in the provider’s operator for its DBaaSProvider
-                    custom resource (CR), such as the CredentialFields key. The secret
-                    must exist within the same namespace as the inventory.
+                  description: The Secret containing the provider-specific connection
+                    credentials to use with its API endpoint. The format of the Secret
+                    is specified in the provider’s operator in its DBaaSProvider CR
+                    (CredentialFields key). The Secret must exist within the same namespace
+                    as the Inventory.
                   properties:
                     name:
                       description: Name of the referent.
@@ -53,22 +52,20 @@ spec:
                 - credentialsRef
               type: object
             status:
-              description: Defines the inventory status that the provider's operator
-                uses.
+              description: DBaaSInventoryStatus defines the Inventory status to be used
+                by provider operators
               properties:
                 conditions:
                   items:
                     description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    \n \ttype FooStatus struct{ \t    // Represents the observations
-                    of a foo's current state. \t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\" \t    //
-                    +patchMergeKey=type \t    // +patchStrategy=merge \t    // +listType=map
-                    \t    // +listMapKey=type \t    Conditions []metav1.Condition
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` \n \t    // other fields
-                    \t}"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                     properties:
                       lastTransitionTime:
                         description: lastTransitionTime is the last time the condition
@@ -126,31 +123,28 @@ spec:
                       - type
                     type: object
                   type: array
-                databaseServices:
-                  description: A list of database services returned from querying the
-                    database provider.
+                instances:
+                  description: A list of instances returned from querying the DB provider
                   items:
-                    description: Defines the information of a database service.
+                    description: Instance defines the information of a database instance
                     properties:
-                      serviceID:
-                        description: A provider-specific identifier for the database
-                          service. It can contain one or more pieces of information
-                          used by the provider's operator to identify the database service.
+                      instanceID:
+                        description: A provider-specific identifier for this instance
+                          in the database service. It may contain one or more pieces
+                          of information used by the provider operator to identify the
+                          instance on the database service.
                         type: string
-                      serviceInfo:
+                      instanceInfo:
                         additionalProperties:
                           type: string
                         description: Any other provider-specific information related
-                          to this service.
+                          to this instance
                         type: object
-                      serviceName:
-                        description: The name of the database service.
-                        type: string
-                      serviceType:
-                        description: The type of the database service.
+                      name:
+                        description: The name of this instance in the database service
                         type: string
                     required:
-                      - serviceID
+                      - instanceID
                     type: object
                   type: array
               type: object
