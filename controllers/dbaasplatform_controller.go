@@ -27,6 +27,7 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/observability"
 
+	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/consoleplugin"
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/reconcilers/providersinstallation"
@@ -34,14 +35,14 @@ import (
 	"github.com/RHEcosystemAppEng/dbaas-operator/controllers/util"
 	"github.com/go-logr/logr"
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
-	apimeta "k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/types"
 
-	metrics "github.com/RHEcosystemAppEng/dbaas-operator/controllers/metrics"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -98,6 +99,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
 //+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=validatingwebhookconfigurations,verbs=get;list;watch;delete
+//+kubebuilder:rbac:groups="",resources=secrets;configmaps,verbs=get;create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -223,6 +225,9 @@ func (r *DBaaSPlatformReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	client, _ := k8sclient.New(kubeConfig, k8sclient.Options{
 		Scheme: mgr.GetScheme(),
 	})
+	if err := r.prepareRDSController(context.Background(), client); err != nil {
+		return err
+	}
 	if _, err := r.createPlatformCR(context.Background(), client); err != nil {
 		return err
 	}
@@ -417,5 +422,54 @@ func (r *DBaaSPlatformReconciler) fixConversionWebhooks(ctx context.Context) err
 			}
 		}
 	}
+	return nil
+}
+
+// Temporary solution to the rds-controller upgrade issue, will revert in the next release
+func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli k8sclient.Client) error {
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-user-secrets", //#nosec G101
+			Namespace: r.DBaaSReconciler.InstallNamespace,
+		},
+	}
+	if err := cli.Get(ctx, k8sclient.ObjectKeyFromObject(secret), secret); err != nil {
+		if apierrors.IsNotFound(err) {
+			secret.Data = map[string][]byte{
+				"AWS_ACCESS_KEY_ID":     []byte("dummy"),
+				"AWS_SECRET_ACCESS_KEY": []byte("dummy"), //#nosec G101
+			}
+			if err := cli.Create(ctx, secret); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-user-config",
+			Namespace: r.DBaaSReconciler.InstallNamespace,
+		},
+	}
+	if err := cli.Get(ctx, k8sclient.ObjectKeyFromObject(cm), cm); err != nil {
+		if apierrors.IsNotFound(err) {
+			cm.Data = map[string]string{
+				"AWS_REGION":                     "dummy",
+				"AWS_ENDPOINT_URL":               "",
+				"ACK_ENABLE_DEVELOPMENT_LOGGING": "false",
+				"ACK_WATCH_NAMESPACE":            "",
+				"ACK_LOG_LEVEL":                  "info",
+				"ACK_RESOURCE_TAGS":              "rhoda",
+			}
+			if err := cli.Create(ctx, cm); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
 	return nil
 }

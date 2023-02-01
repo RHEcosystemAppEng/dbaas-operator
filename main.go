@@ -124,6 +124,7 @@ func main() {
 		ClientDisableCacheFor: []client.Object{
 			&operatorframework.ClusterServiceVersion{},
 			&corev1.Secret{},
+			&corev1.ConfigMap{},
 		},
 	})
 	if err != nil {

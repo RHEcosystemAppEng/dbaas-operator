@@ -116,6 +116,7 @@ var _ = BeforeSuite(func() {
 		ClientDisableCacheFor: []client.Object{
 			&operatorframework.ClusterServiceVersion{},
 			&corev1.Secret{},
+			&corev1.ConfigMap{},
 		},
 	})
 	Expect(err).NotTo(HaveOccurred())

@@ -418,6 +418,14 @@ spec:
         - apiGroups:
           - ""
           resources:
+          - configmaps
+          - secrets
+          verbs:
+          - create
+          - get
+        - apiGroups:
+          - ""
+          resources:
           - secrets
           verbs:
           - get
