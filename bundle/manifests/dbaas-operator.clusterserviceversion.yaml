@@ -836,12 +836,56 @@ spec:
     containerPort: 443
     conversionCRDs:
     - dbaasconnections.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaasconnections.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
     - dbaasinstances.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaasinstances.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
     - dbaasinventories.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaasinventories.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
     - dbaaspolicies.dbaas.redhat.com
+    deploymentName: dbaas-operator-controller-manager
+    generateName: cdbaaspolicies.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1alpha1
+    - v1beta1
+    containerPort: 443
+    conversionCRDs:
     - dbaasproviders.dbaas.redhat.com
     deploymentName: dbaas-operator-controller-manager
-    generateName: cdbaasconnectionsdbaasinstancesdbaasinventoriesdbaaspoliciesdbaasproviders.kb.io
+    generateName: cdbaasproviders.kb.io
     sideEffects: None
     targetPort: 9443
     type: ConversionWebhook
