@@ -99,7 +99,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
 //+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=validatingwebhookconfigurations,verbs=get;list;watch;delete
-//+kubebuilder:rbac:groups="",resources=secrets;configmaps,verbs=get;list;watch;create
+//+kubebuilder:rbac:groups="",resources=secrets;configmaps,verbs=get;create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

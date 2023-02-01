@@ -423,8 +423,6 @@ spec:
           verbs:
           - create
           - get
-          - list
-          - watch
         - apiGroups:
           - ""
           resources:
