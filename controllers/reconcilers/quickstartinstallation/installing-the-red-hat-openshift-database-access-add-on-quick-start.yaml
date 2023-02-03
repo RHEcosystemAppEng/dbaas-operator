@@ -4,11 +4,11 @@ metadata:
   name: installing-the-red-hat-openshift-database-access-add-on
   generation: 1
   annotations:
-    categories: 'Database management'
-    order: 1
+    categories: "Database management"
+    order: "1"
   labels:
-    service-category/data-services: true
-    product/rhoda: true
+    service-category/data-services: "true"
+    product/rhoda: "true"
 spec:
   displayName: Installing the Red Hat OpenShift Database Access add-on
   appName: Red Hat OpenShift Database Access
@@ -33,10 +33,10 @@ spec:
         5. After the installation process completes, an alert message tells you the status of the installation.
            If successful, an alert message asks you refresh the OpenShift web console to the latest version.
            After the web console refresh, you have a new **Data Services** category on the navigational menu.
-           If a failure, a message displays an installation error to help you investigate the problem.
+           If failure occurs, a message displays an installation error to help you investigate the problem.
       summary:
-        success: A alert message appears confirming you have successfully installed the add-on, and you have a new **Data Services** category on the navigational menu.
+        success: An alert message appears asking you to refresh the OpenShift web console to the latest version.
         failed: A alert message appears with the installation error to help you investigate the problem.
-  conclusion: Congratulations on successfully installing the OpenShift Database Access add-on! You can now import cloud-hosted database provider accounts, create database instances, and create service bindings between applications and databases.
+  conclusion: Congratulations on successfully installing the OpenShift Database Access add-on! You can now import your cloud-hosted database provider accounts, create database instances, and create service bindings between applications and databases.
   nextQuickStart:
     - accessing-the-database-access-menu-for-configuring-and-monitoring

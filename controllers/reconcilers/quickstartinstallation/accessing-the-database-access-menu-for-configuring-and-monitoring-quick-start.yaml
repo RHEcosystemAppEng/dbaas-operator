@@ -4,11 +4,11 @@ metadata:
   name: accessing-the-database-access-menu-for-configuring-and-monitoring
   generation: 1
   annotations:
-    categories: 'Database management'
-    order: 2
+    categories: "Database management"
+    order: "2"
   labels:
-    service-category/data-services: true
-    product/rhoda: true
+    service-category/data-services: "true"
+    product/rhoda: "true"
 spec:
   displayName: Accessing the Database Access menu for configuring and monitoring
   appName: Red Hat OpenShift Database Access
@@ -18,7 +18,7 @@ spec:
   description: 'Access the Database Access menu to configure the OpenShift Database Access service.'
   prerequisites: ["Installation of the RHODA add-on.", "Access to the OpenShift console.", "A service account with either the [MongoDB Atlas](https://www.mongodb.com/atlas/database), or [Crunchy Data Bridge](https://www.crunchydata.com), or [CockroachDB](https://www.cockroachlabs.com), or [Amazon RDS](https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email) cloud-hosted database provider."]
   introduction: |-
-    You can access the Red Hat OpenShift Database Access (RHODA) managed service from the OpenShift console navigation menu where you can select the correct project namespace for importing a cloud-database provider account.
+    You can access the OpenShift Database Access managed service from the OpenShift console navigation menu where you can select the correct project namespace for importing a cloud-database provider account.
   tasks:
     - title: Accessing the database access menu for configuring and monitoring
       description: |-
@@ -28,11 +28,11 @@ spec:
            **NOTE** : You might need to scroll down the navigation menu.
         3. Click the **Project** dropdown menu, and enable the **Show default projects** toggle switch.
         4. Type **dbaas** in the search field.
-        5. Select **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace.
+        5. Select the **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace.
         6. On the database inventory page, click the **Configure** menu to import cloud-hosted database provider accounts.
            You can also monitor your database environments from the database inventory page, and create new database instances.
            
-           **NOTE** : The database inventory page might be empty. You must import at least one cloud-hosted database provider account.
+           **NOTE** : The database inventory page might be empty. You must import at least one cloud-hosted database provider account to populate the database inventory page.
       summary:
         success: Landing on the database inventory page.
         failed: Make note of any error messages, and try these steps again.
