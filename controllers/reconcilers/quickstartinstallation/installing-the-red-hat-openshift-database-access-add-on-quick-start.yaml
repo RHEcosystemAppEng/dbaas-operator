@@ -5,7 +5,6 @@ metadata:
   generation: 1
   annotations:
     categories: "Database management"
-    order: "1"
   labels:
     service-category/data-services: "true"
     product/rhoda: "true"
