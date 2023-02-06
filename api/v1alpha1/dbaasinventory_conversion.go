@@ -86,6 +86,7 @@ func (dst *DBaaSOperatorInventorySpec) ConvertFrom(src *v1beta1.DBaaSOperatorInv
 	dst.ProviderRef = NamespacedName(src.ProviderRef)
 }
 
+// ConvertTo convert this DBaaSInventoryStatus to v1beta1.DBaaSInventoryStatus
 func (src *DBaaSInventoryStatus) ConvertTo(dst *v1beta1.DBaaSInventoryStatus) {
 	dst.Conditions = src.Conditions
 	if src.Instances != nil {
@@ -101,6 +102,7 @@ func (src *DBaaSInventoryStatus) ConvertTo(dst *v1beta1.DBaaSInventoryStatus) {
 	}
 }
 
+// ConvertFrom converts the DBaaSInventoryStatus from the v1beta1 to this version.
 func (dst *DBaaSInventoryStatus) ConvertFrom(src *v1beta1.DBaaSInventoryStatus) {
 	dst.Conditions = src.Conditions
 	if src.DatabaseServices != nil {

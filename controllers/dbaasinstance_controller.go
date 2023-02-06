@@ -110,17 +110,28 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return provider.Spec.InstanceKind
 			},
 			func() interface{} {
-				if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
-					return specV1alpha1
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					spec := &v1alpha1.DBaaSInstanceSpec{}
+					_ = spec.ConvertFrom(&instance.Spec)
+					return spec
 				}
 				return instance.Spec.DeepCopy()
 			},
 			func() interface{} {
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					return &v1alpha1.DBaaSProviderInstance{}
+				}
 				return &v1beta1.DBaaSProviderInstance{}
 			},
 			func(i interface{}) metav1.Condition {
-				providerInstance := i.(*v1beta1.DBaaSProviderInstance)
-				return mergeInstanceStatus(&instance, providerInstance)
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					providerInsV1alpha1 := i.(*v1alpha1.DBaaSProviderInstance)
+					providerInsV1beta1 := &v1beta1.DBaaSProviderInstance{}
+					providerInsV1alpha1.Status.ConvertTo(&providerInsV1beta1.Status)
+					return mergeInstanceStatus(&instance, providerInsV1beta1)
+				}
+				providerIns := i.(*v1beta1.DBaaSProviderInstance)
+				return mergeInstanceStatus(&instance, providerIns)
 			},
 			func() *[]metav1.Condition {
 				return &instance.Status.Conditions

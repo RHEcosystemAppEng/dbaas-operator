@@ -130,3 +130,19 @@ func (dst *DBaaSInstanceSpec) ConvertFrom(src *v1beta1.DBaaSInstanceSpec) error 
 	}
 	return nil
 }
+
+// ConvertTo convert this DBaaSInstanceStatus to v1beta1.DBaaSInstanceStatus
+func (src *DBaaSInstanceStatus) ConvertTo(dst *v1beta1.DBaaSInstanceStatus) {
+	dst.Conditions = src.Conditions
+	dst.InstanceID = src.InstanceID
+	dst.InstanceInfo = src.InstanceInfo
+	dst.Phase = v1beta1.DBaasInstancePhase(src.Phase)
+}
+
+// ConvertFrom converts the DBaaSInstanceStatus from the v1beta1 to this version.
+func (dst *DBaaSInstanceStatus) ConvertFrom(src *v1beta1.DBaaSInstanceStatus) {
+	dst.Conditions = src.Conditions
+	dst.InstanceID = src.InstanceID
+	dst.InstanceInfo = src.InstanceInfo
+	dst.Phase = DBaasInstancePhase(src.Phase)
+}
