@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"github.com/RHEcosystemAppEng/dbaas-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 
 	v1 "k8s.io/api/core/v1"
@@ -629,6 +630,115 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
 			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+		})
+	})
+})
+
+var _ = Describe("DBaaSInstance controller - nominal", func() {
+	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
+	BeforeEach(assertResourceCreationIfNotExists(rdsProviderV1alpha1))
+	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
+	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
+
+	Describe("reconcile", func() {
+		Context("after creating DBaaSInventory", func() {
+			inventoryRefName := "test-inventory-instance-ref-v1alpha1"
+			createdDBaaSInventory := &v1beta1.DBaaSInventory{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      inventoryRefName,
+					Namespace: testNamespace,
+				},
+				Spec: v1beta1.DBaaSOperatorInventorySpec{
+					ProviderRef: v1beta1.NamespacedName{
+						Name: testProviderV1alpha1Name,
+					},
+					DBaaSInventorySpec: v1beta1.DBaaSInventorySpec{
+						CredentialsRef: &v1beta1.LocalObjectReference{
+							Name: testSecret.Name,
+						},
+					},
+				},
+			}
+			lastTransitionTime := getLastTransitionTimeForTest()
+			providerInventoryStatus := &v1alpha1.DBaaSInventoryStatus{
+				Instances: []v1alpha1.Instance{
+					{
+						InstanceID: "testInstanceID",
+						Name:       "testInstance",
+						InstanceInfo: map[string]string{
+							"testInstanceInfo": "testInstanceInfo",
+						},
+					},
+				},
+				Conditions: []metav1.Condition{
+					{
+						Type:               "SpecSynced",
+						Status:             metav1.ConditionTrue,
+						Reason:             "SyncOK",
+						LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+					},
+				},
+			}
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryV1alpha1Kind, providerInventoryStatus))
+			AfterEach(assertResourceDeletion(createdDBaaSInventory))
+
+			Context("after creating DBaaSInstance", func() {
+				instanceName := "test-instance-v1alpha1"
+				DBaaSInstanceSpec := &v1beta1.DBaaSInstanceSpec{
+					InventoryRef: v1beta1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					ProvisioningParameters: map[v1beta1.ProvisioningParameterType]string{
+						v1beta1.ProvisioningName:          "test-instance",
+						v1beta1.ProvisioningCloudProvider: "aws",
+						v1beta1.ProvisioningRegions:       "test-region",
+						v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
+					},
+				}
+				createdDBaaSInstance := &v1beta1.DBaaSInstance{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      instanceName,
+						Namespace: testNamespace,
+					},
+					Spec: *DBaaSInstanceSpec,
+				}
+				BeforeEach(assertResourceCreation(createdDBaaSInstance))
+				AfterEach(assertResourceDeletion(createdDBaaSInstance))
+
+				DBaaSInstanceSpecV1alpha1 := &v1alpha1.DBaaSInstanceSpec{
+					InventoryRef: v1alpha1.NamespacedName{
+						Name:      inventoryRefName,
+						Namespace: testNamespace,
+					},
+					Name:                "test-instance",
+					CloudProvider:       "aws",
+					CloudRegion:         "test-region",
+					OtherInstanceParams: nil,
+				}
+
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), testInstanceV1alpha1Kind, DBaaSInstanceSpecV1alpha1))
+
+				Context("when updating provider instance status", func() {
+					lastTransitionTime := getLastTransitionTimeForTest()
+					status := &v1alpha1.DBaaSInstanceStatus{
+						Conditions: []metav1.Condition{
+							{
+								Type:               v1beta1.DBaaSInstanceProviderSyncType,
+								Status:             metav1.ConditionTrue,
+								Reason:             "SyncOK",
+								LastTransitionTime: metav1.Time{Time: lastTransitionTime},
+							},
+						},
+						InstanceID: "test-instance",
+						InstanceInfo: map[string]string{
+							"instanceInfo": "test-instance-info",
+						},
+						Phase: v1alpha1.InstancePhaseReady,
+					}
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, rdsProviderV1alpha1.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceV1alpha1Kind, status))
+				})
+			})
 		})
 	})
 })

@@ -236,22 +236,23 @@ func assertProviderResourceCreated(object client.Object, groupVersion schema.Gro
 				Fail("invalid test object")
 			}
 		case *v1beta1.DBaaSInstance:
-			if groupVersion == v1beta1.GroupVersion {
+			switch DBaaSResourceSpec.(type) {
+			case *v1alpha1.DBaaSInstanceSpec:
+				providerInstance := &v1alpha1.DBaaSProviderInstance{}
+				err := json.Unmarshal(bytes, providerInstance)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(&providerInstance.Spec).Should(Equal(DBaaSResourceSpec))
+				Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
+				Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			case *v1beta1.DBaaSInstanceSpec:
 				providerInstance := &v1beta1.DBaaSProviderInstance{}
 				err := json.Unmarshal(bytes, providerInstance)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(&providerInstance.Spec).Should(Equal(DBaaSResourceSpec))
 				Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
 				Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
-			} else {
-				providerInstance := &v1alpha1.DBaaSProviderInstance{}
-				err := json.Unmarshal(bytes, providerInstance)
-				Expect(err).NotTo(HaveOccurred())
-				spec := &v1beta1.DBaaSInstanceSpec{}
-				providerInstance.Spec.ConvertTo(spec)
-				Expect(spec).Should(Equal(DBaaSResourceSpec))
-				Expect(len(providerInstance.GetOwnerReferences())).Should(Equal(1))
-				Expect(providerInstance.GetOwnerReferences()[0].Name).Should(Equal(object.GetName()))
+			default:
+				Fail("invalid test object")
 			}
 		default:
 			_ = v.GetName() // to avoid syntax error
@@ -489,7 +490,18 @@ func assertInstanceStatus(conn *v1beta1.DBaaSInstance, condType string, provider
 		status := conn.Status.DeepCopy()
 		_, providerConds := splitStatusConditions(status.Conditions, condType)
 		status.Conditions = providerConds
-		Expect(status).Should(Equal(providerResourceStatus))
+		var providerStatus interface{}
+		switch providerResourceStatus.(type) {
+		case *v1alpha1.DBaaSInstanceStatus:
+			pStatus := &v1alpha1.DBaaSInstanceStatus{}
+			pStatus.ConvertFrom(status)
+			providerStatus = pStatus
+		case *v1beta1.DBaaSInstanceStatus:
+			providerStatus = status
+		default:
+			Fail("invalid test object")
+		}
+		Expect(providerStatus).Should(Equal(providerResourceStatus))
 	}
 }
 

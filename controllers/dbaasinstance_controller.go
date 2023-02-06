@@ -95,7 +95,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, err
 		}
 		specV1alpha1 := &v1alpha1.DBaaSInstanceSpec{}
-		if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
+		if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
 			// Convert instance.Spec to v1alpha1 format
 			err := specV1alpha1.ConvertFrom(&instance.Spec)
 			if err != nil {
@@ -110,17 +110,30 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				return provider.Spec.InstanceKind
 			},
 			func() interface{} {
-				if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
-					return specV1alpha1
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					spec := &v1alpha1.DBaaSInstanceSpec{}
+					if err = spec.ConvertFrom(&instance.Spec); err != nil {
+						logger.Error(err, "Failed to convert the Inventory spec to v1alpha1 provider object spec")
+					}
+					return spec
 				}
 				return instance.Spec.DeepCopy()
 			},
 			func() interface{} {
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					return &v1alpha1.DBaaSProviderInstance{}
+				}
 				return &v1beta1.DBaaSProviderInstance{}
 			},
 			func(i interface{}) metav1.Condition {
-				providerInstance := i.(*v1beta1.DBaaSProviderInstance)
-				return mergeInstanceStatus(&instance, providerInstance)
+				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
+					providerInsV1alpha1 := i.(*v1alpha1.DBaaSProviderInstance)
+					providerInsV1beta1 := &v1beta1.DBaaSProviderInstance{}
+					providerInsV1alpha1.Status.ConvertTo(&providerInsV1beta1.Status)
+					return mergeInstanceStatus(&instance, providerInsV1beta1)
+				}
+				providerIns := i.(*v1beta1.DBaaSProviderInstance)
+				return mergeInstanceStatus(&instance, providerIns)
 			},
 			func() *[]metav1.Condition {
 				return &instance.Status.Conditions

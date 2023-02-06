@@ -75,12 +75,14 @@ func (dst *DBaaSConnectionSpec) ConvertFrom(src *v1beta1.DBaaSConnectionSpec) {
 	}
 }
 
+// ConvertTo convert this DBaaSConnectionStatus to v1beta1.DBaaSConnectionStatus
 func (src *DBaaSConnectionStatus) ConvertTo(dst *v1beta1.DBaaSConnectionStatus) {
 	dst.Conditions = src.Conditions
 	dst.CredentialsRef = src.CredentialsRef
 	dst.ConnectionInfoRef = src.ConnectionInfoRef
 }
 
+// ConvertFrom converts the DBaaSConnectionStatus from the v1beta1 to this version.
 func (dst *DBaaSConnectionStatus) ConvertFrom(src *v1beta1.DBaaSConnectionStatus) {
 	dst.Conditions = src.Conditions
 	dst.CredentialsRef = src.CredentialsRef

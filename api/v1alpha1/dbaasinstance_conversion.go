@@ -38,10 +38,7 @@ func (src *DBaaSInstance) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	dst.Status.InstanceID = src.Status.InstanceID
-	dst.Status.InstanceInfo = src.Status.InstanceInfo
-	dst.Status.Phase = v1beta1.DBaasInstancePhase(src.Status.Phase)
+	src.Status.ConvertTo(&dst.Status)
 
 	return nil
 }
@@ -59,10 +56,7 @@ func (dst *DBaaSInstance) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	dst.Status.InstanceID = src.Status.InstanceID
-	dst.Status.InstanceInfo = src.Status.InstanceInfo
-	dst.Status.Phase = DBaasInstancePhase(src.Status.Phase)
+	dst.Status.ConvertFrom(&src.Status)
 
 	return nil
 }
@@ -129,4 +123,20 @@ func (dst *DBaaSInstanceSpec) ConvertFrom(src *v1beta1.DBaaSInstanceSpec) error 
 		dst.CloudRegion = "us-east-1"
 	}
 	return nil
+}
+
+// ConvertTo convert this DBaaSInstanceStatus to v1beta1.DBaaSInstanceStatus
+func (src *DBaaSInstanceStatus) ConvertTo(dst *v1beta1.DBaaSInstanceStatus) {
+	dst.Conditions = src.Conditions
+	dst.InstanceID = src.InstanceID
+	dst.InstanceInfo = src.InstanceInfo
+	dst.Phase = v1beta1.DBaasInstancePhase(src.Phase)
+}
+
+// ConvertFrom converts the DBaaSInstanceStatus from the v1beta1 to this version.
+func (dst *DBaaSInstanceStatus) ConvertFrom(src *v1beta1.DBaaSInstanceStatus) {
+	dst.Conditions = src.Conditions
+	dst.InstanceID = src.InstanceID
+	dst.InstanceInfo = src.InstanceInfo
+	dst.Phase = DBaasInstancePhase(src.Phase)
 }
