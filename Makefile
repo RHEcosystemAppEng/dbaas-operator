@@ -29,6 +29,7 @@ OPM_VERSION ?= v1.26.2
 OPERATOR_SDK_VERSION ?= v1.22.2
 CONTROLLER_TOOLS_VERSION ?= v0.4.1
 ENVTEST_K8S_VERSION ?= 1.25.0
+KUSTOMIZE_BRANCH_VERSION ?= v4@v4.5.7
 
 # OLD_BUNDLE_VERSIONS defines the comma separated list of versions of old bundles to add to the index.
 #
@@ -246,7 +247,7 @@ generate-ref: generate fmt crd-ref-docs
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
-	test -s $(LOCALBIN)/kustomize || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
+	test -s $(LOCALBIN)/kustomize || GOBIN=$(LOCALBIN) go install sigs.k8s.io/kustomize/kustomize/$(KUSTOMIZE_BRANCH_VERSION)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
