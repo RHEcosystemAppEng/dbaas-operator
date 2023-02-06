@@ -38,10 +38,7 @@ func (src *DBaaSInstance) ConvertTo(dstRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	dst.Status.InstanceID = src.Status.InstanceID
-	dst.Status.InstanceInfo = src.Status.InstanceInfo
-	dst.Status.Phase = v1beta1.DBaasInstancePhase(src.Status.Phase)
+	src.Status.ConvertTo(&dst.Status)
 
 	return nil
 }
@@ -59,10 +56,7 @@ func (dst *DBaaSInstance) ConvertFrom(srcRaw conversion.Hub) error {
 	}
 
 	// Status
-	dst.Status.Conditions = src.Status.Conditions
-	dst.Status.InstanceID = src.Status.InstanceID
-	dst.Status.InstanceInfo = src.Status.InstanceInfo
-	dst.Status.Phase = DBaasInstancePhase(src.Status.Phase)
+	dst.Status.ConvertFrom(&src.Status)
 
 	return nil
 }

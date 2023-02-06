@@ -95,7 +95,7 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, err
 		}
 		specV1alpha1 := &v1alpha1.DBaaSInstanceSpec{}
-		if provider.GetDBaaSAPIGroupVersion() == v1alpha1.GroupVersion {
+		if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
 			// Convert instance.Spec to v1alpha1 format
 			err := specV1alpha1.ConvertFrom(&instance.Spec)
 			if err != nil {
@@ -112,7 +112,9 @@ func (r *DBaaSInstanceReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			func() interface{} {
 				if r.getProviderSpecStatusVersion(provider).String() == v1alpha1.GroupVersion.String() {
 					spec := &v1alpha1.DBaaSInstanceSpec{}
-					_ = spec.ConvertFrom(&instance.Spec)
+					if err = spec.ConvertFrom(&instance.Spec); err != nil {
+						logger.Error(err, "Failed to convert the Inventory spec to v1alpha1 provider object spec")
+					}
 					return spec
 				}
 				return instance.Spec.DeepCopy()
