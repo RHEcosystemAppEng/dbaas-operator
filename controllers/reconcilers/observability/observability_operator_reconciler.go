@@ -227,6 +227,7 @@ func getDefaultServiceMonitor(namespace string) *rhobsv1.ServiceMonitor {
 				{
 					Interval: rhobsv1.Duration(ServiceMonitorPeriod),
 					Path:     "/metrics",
+					Port:     "metrics",
 					Scheme:   "http",
 				}},
 			Selector: metav1.LabelSelector{
