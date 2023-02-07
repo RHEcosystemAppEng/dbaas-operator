@@ -4,11 +4,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
+	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 )
 
 var _ = Describe("DBaaSPlatform controller", func() {
@@ -73,6 +77,119 @@ var _ = Describe("DBaaSPlatform controller", func() {
 					return false
 				}
 				return true
+			}, timeout).Should(BeTrue())
+		})
+	})
+
+	Describe("delete deployment for rds-controller v0.1.3 upgrade", func() {
+		csv := &v1alpha1.ClusterServiceVersion{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "ack-rds-controller.v0.1.3",
+				Namespace: testNamespace,
+			},
+			Spec: v1alpha1.ClusterServiceVersionSpec{
+				DisplayName: "AWS Controllers for Kubernetes - Amazon RDS",
+				InstallStrategy: v1alpha1.NamedInstallStrategy{
+					StrategyName: "deployment",
+					StrategySpec: v1alpha1.StrategyDetailsDeployment{
+						DeploymentSpecs: []v1alpha1.StrategyDeploymentSpec{
+							{
+								Name: "ack-rds-controller",
+								Spec: appsv1.DeploymentSpec{
+									Replicas: pointer.Int32(1),
+									Selector: &metav1.LabelSelector{
+										MatchLabels: map[string]string{
+											"app.kubernetes.io/name": "ack-rds-controller",
+										},
+									},
+									Template: v1.PodTemplateSpec{
+										ObjectMeta: metav1.ObjectMeta{
+											Labels: map[string]string{
+												"app.kubernetes.io/name": "ack-rds-controller",
+											},
+										},
+										Spec: v1.PodSpec{
+											Containers: []v1.Container{
+												{
+													Name:            "controller",
+													Image:           "quay.io/ecosystem-appeng/busybox",
+													ImagePullPolicy: v1.PullIfNotPresent,
+													Command:         []string{"sh", "-c", "echo The app is running! && sleep 3600"},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(csv))
+		AfterEach(assertResourceDeletion(csv))
+
+		rdsDeployment := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "ack-rds-controller",
+				Namespace: testNamespace,
+			},
+			Spec: appsv1.DeploymentSpec{
+				Replicas: pointer.Int32(1),
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"name": "ack-rds-controller",
+					},
+				},
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"name": "ack-rds-controller",
+						},
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
+							{
+								Name:            "ack-rds-controller",
+								Image:           "quay.io/ecosystem-appeng/busybox",
+								ImagePullPolicy: v1.PullIfNotPresent,
+								Command:         []string{"sh", "-c", "echo The app is running! && sleep 3600"},
+							},
+						},
+					},
+				},
+			},
+		}
+		BeforeEach(assertResourceCreation(rdsDeployment))
+		AfterEach(assertResourceDeletionIfNotExists(rdsDeployment))
+
+		It("should delete the deployment for the csv error", func() {
+			By("making the csv in failed status")
+			Eventually(func() bool {
+				if err := dRec.Get(ctx, client.ObjectKeyFromObject(csv), csv); err != nil {
+					return false
+				}
+
+				csv.Status.Phase = v1alpha1.CSVPhaseFailed
+				csv.Status.Reason = v1alpha1.CSVReasonComponentFailed
+				csv.Status.Message = "install strategy failed: Deployment.apps \"ack-rds-controller\" is invalid: spec.selector: " +
+					"Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"app.kubernetes.io/name\":\"ack-rds-controller\"}, " +
+					"MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable"
+
+				if err := dRec.Status().Update(ctx, csv); err != nil {
+					return false
+				}
+				return true
+			}, timeout).Should(BeTrue())
+
+			By("checking if the deployment is deleted")
+			Eventually(func() bool {
+				if err := dRec.Get(ctx, client.ObjectKeyFromObject(rdsDeployment), rdsDeployment); err != nil {
+					if errors.IsNotFound(err) {
+						return true
+					}
+				}
+				return false
 			}, timeout).Should(BeTrue())
 		})
 	})

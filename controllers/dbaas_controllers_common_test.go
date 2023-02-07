@@ -176,6 +176,27 @@ func assertResourceDeletion(object client.Object) func() {
 	}
 }
 
+func assertResourceDeletionIfNotExists(object client.Object) func() {
+	return func() {
+		By("checking the resource exists")
+		var del = true
+		Eventually(func() bool {
+			if err := dRec.Get(ctx, client.ObjectKeyFromObject(object), object); err != nil {
+				if errors.IsNotFound(err) {
+					del = false
+					return true
+				}
+				return false
+			}
+			return true
+		}, timeout).Should(BeTrue())
+
+		if del {
+			assertResourceDeletion(object)()
+		}
+	}
+}
+
 func assertProviderResourceCreated(object client.Object, groupVersion schema.GroupVersion, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		By("checking a provider resource created")
