@@ -37,6 +37,7 @@ import (
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -130,6 +131,11 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	// OCPBUGS-4991 - temporary fix until https://github.com/operator-framework/operator-lifecycle-manager/pull/2912 makes it to a release
 	if err = r.fixConversionWebhooks(ctx); err != nil {
 		logger.Error(err, "Error related to conversion webhook setup")
+	}
+
+	// temporary fix for ack-rds-controller v0.1.3 upgrade issue
+	if err = r.fixRDSControllerUpgrade(ctx); err != nil {
+		logger.Error(err, "Error related to ack-rds-controller v0.1.3 upgrade")
 	}
 
 	if cr.DeletionTimestamp != nil {
@@ -471,5 +477,38 @@ func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli 
 		}
 	}
 
+	return nil
+}
+
+// Temporary solution to the rds-controller v0.1.3 upgrade issue
+func (r *DBaaSPlatformReconciler) fixRDSControllerUpgrade(ctx context.Context) error {
+	csv := &v1alpha1.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-controller.v0.1.3",
+			Namespace: r.DBaaSReconciler.InstallNamespace,
+		},
+	}
+	if err := r.Client.Get(ctx, k8sclient.ObjectKeyFromObject(csv), csv); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	if csv.Status.Phase == v1alpha1.CSVPhaseFailed && csv.Status.Reason == v1alpha1.CSVReasonComponentFailed &&
+		csv.Status.Message == "install strategy failed: Deployment.apps \"ack-rds-controller\" is invalid: spec.selector: "+
+			"Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"app.kubernetes.io/name\":\"ack-rds-controller\"}, "+
+			"MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable" {
+		ackDeployment := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "ack-rds-controller",
+				Namespace: r.DBaaSReconciler.InstallNamespace,
+			},
+		}
+		if err := r.Client.Delete(ctx, ackDeployment); err != nil {
+			return err
+		}
+		log.FromContext(ctx).Info("Applied fix to the failed RDS controller v0.1.3 installation")
+	}
 	return nil
 }
