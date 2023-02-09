@@ -33,7 +33,7 @@ const (
 var DBaaSInstanceStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstanceStatusReady,
 	Help: "The status of DBaaS instance, values ( ready=1, error / not ready=0 )",
-}, []string{MetricLabelProvider, MetricLabelAccountName, metricLabelInstanceName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason})
+}, []string{MetricLabelProvider, MetricLabelAccountName, metricLabelInstanceName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason, MetricLabelCreationTimestamp})
 
 // DBaaSInstancePhaseGauge defines a gauge for DBaaSInstancePhase
 var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -47,9 +47,9 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1b
 		if cond.Type == dbaasv1beta1.DBaaSInstanceReadyType {
 			DBaaSInstanceStatusGauge.DeletePartialMatch(prometheus.Labels{metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace})
 			if cond.Reason == dbaasv1beta1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
+				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Set(1)
 			} else {
-				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
+				DBaaSInstanceStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, metricLabelInstanceName: instance.GetName(), MetricLabelNameSpace: instance.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: instance.CreationTimestamp.String()}).Set(0)
 			}
 			break
 		}

@@ -34,7 +34,7 @@ const (
 var DBaaSConnectionStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: MetricNameConnectionStatusReady,
 	Help: "The status of DBaaS connections, values ( ready=1, error / not ready=0 )",
-}, []string{MetricLabelProvider, MetricLabelAccountName, MetricLabelInstanceID, MetricLabelConnectionName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason})
+}, []string{MetricLabelProvider, MetricLabelAccountName, MetricLabelInstanceID, MetricLabelConnectionName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason, MetricLabelCreationTimestamp})
 
 // SetConnectionMetrics set the Metrics for a connection
 func SetConnectionMetrics(provider string, account string, connection dbaasv1beta1.DBaaSConnection, execution Execution, event string, errCd string) {
@@ -51,9 +51,9 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 		if cond.Type == dbaasv1beta1.DBaaSConnectionReadyType {
 			DBaaSConnectionStatusGauge.DeletePartialMatch(prometheus.Labels{MetricLabelName: connection.Name, MetricLabelNameSpace: connection.Namespace})
 			if cond.Reason == dbaasv1beta1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.DatabaseServiceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.DatabaseServiceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(1)
 			} else {
-				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.DatabaseServiceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
+				DBaaSConnectionStatusGauge.With(prometheus.Labels{MetricLabelProvider: provider, MetricLabelAccountName: account, MetricLabelInstanceID: connection.Spec.DatabaseServiceID, MetricLabelConnectionName: connection.GetName(), MetricLabelNameSpace: connection.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: connection.CreationTimestamp.String()}).Set(0)
 			}
 			break
 		}
