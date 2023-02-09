@@ -161,7 +161,7 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		logger.Error(err, "Error in getting of openshift platform Type")
 	}
-	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType))
+	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType), cr.CreationTimestamp.String())
 	if cr.DeletionTimestamp == nil {
 		platforms = reconcilers.InstallationPlatforms
 	}

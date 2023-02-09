@@ -30,7 +30,7 @@ const (
 var DBaaSInventoryStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: MetricNameInventoryStatusReady,
 	Help: "The status of DBaaS Provider Account, values ( ready=1, error / not ready=0 )",
-}, []string{MetricLabelProvider, MetricLabelName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason})
+}, []string{MetricLabelProvider, MetricLabelName, MetricLabelNameSpace, MetricLabelStatus, MetricLabelReason, MetricLabelCreationTimestamp})
 
 // SetInventoryMetrics set the Metrics for inventory
 func SetInventoryMetrics(inventory dbaasv1beta1.DBaaSInventory, execution Execution, event string, errCd string) {
@@ -45,9 +45,9 @@ func setInventoryStatusMetrics(inventory dbaasv1beta1.DBaaSInventory) {
 		if cond.Type == dbaasv1beta1.DBaaSInventoryReadyType {
 			DBaaSInventoryStatusGauge.DeletePartialMatch(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace})
 			if cond.Reason == dbaasv1beta1.Ready && cond.Status == metav1.ConditionTrue {
-				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(1)
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Set(1)
 			} else {
-				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason}).Set(0)
+				DBaaSInventoryStatusGauge.With(prometheus.Labels{MetricLabelProvider: inventory.Spec.ProviderRef.Name, MetricLabelName: inventory.Name, MetricLabelNameSpace: inventory.Namespace, MetricLabelStatus: string(cond.Status), MetricLabelReason: cond.Reason, MetricLabelCreationTimestamp: inventory.CreationTimestamp.String()}).Set(0)
 			}
 			break
 		}

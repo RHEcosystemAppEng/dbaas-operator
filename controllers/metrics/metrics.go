@@ -62,7 +62,7 @@ var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.Hist
 var DBaasOperatorVersionInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: MetricNameOperatorVersion,
 	Help: "The current version of DBaaS Operator installed in the cluster",
-}, []string{MetricLabelVersion, MetricLabelConsoleULR, MetricLabelPlatformName})
+}, []string{MetricLabelVersion, MetricLabelConsoleULR, MetricLabelPlatformName, MetricLabelCreationTimestamp})
 
 // DBaaSRequestsDurationHistogram DBaaS Requests Duration Histogram for all DBaaS Resources
 var DBaaSRequestsDurationHistogram = prometheus.NewHistogramVec(
@@ -93,8 +93,8 @@ func PlatformInstallStart() Execution {
 }
 
 // SetOpenShiftInstallationInfoMetric set the Metrics for openshift info
-func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL string, platformType string) {
-	DBaasOperatorVersionInfo.With(prometheus.Labels{MetricLabelVersion: operatorVersion, MetricLabelConsoleULR: consoleURL, MetricLabelPlatformName: platformType}).Set(1)
+func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL string, platformType string, creationTime string) {
+	DBaasOperatorVersionInfo.With(prometheus.Labels{MetricLabelVersion: operatorVersion, MetricLabelConsoleULR: consoleURL, MetricLabelPlatformName: platformType, MetricLabelCreationTimestamp: creationTime}).Set(1)
 }
 
 // UpdateRequestsDurationHistogram Utility function to update request duration histogram
