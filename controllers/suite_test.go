@@ -33,10 +33,15 @@ import (
 	rhobsv1 "github.com/rhobs/obo-prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -124,7 +129,6 @@ var _ = BeforeSuite(func() {
 		ClientDisableCacheFor: []client.Object{
 			&operatorframework.ClusterServiceVersion{},
 			&corev1.Secret{},
-			&corev1.ConfigMap{},
 		},
 	},
 	)
@@ -189,12 +193,16 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
+	mockRDSController(k8sManager)
+
 	createCSV(k8sManager)
 	err = (&DBaaSPlatformReconciler{
 		DBaaSReconciler: dRec,
 		Log:             ctrl.Log.WithName("controllers").WithName("DBaaSPlatform"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
+
+	checkRDSController(k8sManager)
 
 	go func() {
 		defer GinkgoRecover()
@@ -241,4 +249,122 @@ func createCSV(k8sManager manager.Manager) {
 	Expect(err).ToNot(HaveOccurred())
 	err = serverClient.Create(ctx, csv)
 	Expect(err).ToNot(HaveOccurred())
+}
+
+func mockRDSController(k8sManager manager.Manager) {
+	serverClient, err := client.New(
+		k8sManager.GetConfig(),
+		client.Options{
+			Scheme: k8sManager.GetScheme(),
+		},
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	csv := &operatorframework.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-controller.v0.1.0",
+			Namespace: testNamespace,
+		},
+		Spec: operatorframework.ClusterServiceVersionSpec{
+			DisplayName: "AWS Controllers for Kubernetes - Amazon RDS",
+			CustomResourceDefinitions: operatorframework.CustomResourceDefinitions{
+				Owned: []operatorframework.CRDDescription{
+					{
+						Name:    "dbinstances.rds.services.k8s.aws",
+						Kind:    "DBInstance",
+						Version: "v1alpha1",
+					},
+					{
+						Name:    "dbclusters.rds.services.k8s.aws",
+						Kind:    "DBCluster",
+						Version: "v1alpha1",
+					},
+				},
+			},
+			InstallStrategy: operatorframework.NamedInstallStrategy{
+				StrategyName: "deployment",
+				StrategySpec: operatorframework.StrategyDetailsDeployment{
+					DeploymentSpecs: []operatorframework.StrategyDeploymentSpec{
+						{
+							Name: "ack-rds-controller",
+							Spec: appsv1.DeploymentSpec{
+								Replicas: pointer.Int32(1),
+								Selector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app.kubernetes.io/name": "ack-rds-controller",
+									},
+								},
+								Template: corev1.PodTemplateSpec{
+									ObjectMeta: metav1.ObjectMeta{
+										Labels: map[string]string{
+											"app.kubernetes.io/name": "ack-rds-controller",
+										},
+									},
+									Spec: corev1.PodSpec{
+										Containers: []corev1.Container{
+											{
+												Name:            "controller",
+												Image:           "quay.io/ecosystem-appeng/busybox",
+												ImagePullPolicy: corev1.PullIfNotPresent,
+												Command:         []string{"sh", "-c", "echo The app is running! && sleep 3600"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	err = serverClient.Create(ctx, csv)
+	Expect(err).ToNot(HaveOccurred())
+
+	subscription := &operatorframework.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-controller-alpha-community-operators-openshift-marketplace",
+			Namespace: testNamespace,
+		},
+		Spec: &operatorframework.SubscriptionSpec{
+			CatalogSource:          "community-operators",
+			CatalogSourceNamespace: "openshift-marketplace",
+			Package:                "ack-rds-controller",
+			Channel:                "alpha",
+			InstallPlanApproval:    "Automatic",
+			StartingCSV:            "ack-rds-controller.v0.0.27",
+		},
+	}
+	err = serverClient.Create(ctx, subscription)
+	Expect(err).ToNot(HaveOccurred())
+}
+
+func checkRDSController(k8sManager manager.Manager) {
+	serverClient, err := client.New(
+		k8sManager.GetConfig(),
+		client.Options{
+			Scheme: k8sManager.GetScheme(),
+		},
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	csv := &operatorframework.ClusterServiceVersion{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-controller.v0.1.0",
+			Namespace: testNamespace,
+		},
+	}
+	err = serverClient.Get(ctx, client.ObjectKeyFromObject(csv), csv)
+	Expect(err).To(HaveOccurred())
+	Expect(errors.IsNotFound(err)).Should(BeTrue())
+
+	subscription := &operatorframework.Subscription{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "ack-rds-controller-alpha-community-operators-openshift-marketplace",
+			Namespace: testNamespace,
+		},
+	}
+	err = serverClient.Get(ctx, client.ObjectKeyFromObject(subscription), subscription)
+	Expect(err).To(HaveOccurred())
+	Expect(errors.IsNotFound(err)).Should(BeTrue())
 }
