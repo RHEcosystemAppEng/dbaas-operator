@@ -39,7 +39,7 @@ var DBaaSConnectionStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 // SetConnectionMetrics set the Metrics for a connection
 func SetConnectionMetrics(provider string, account string, connection dbaasv1beta1.DBaaSConnection, execution Execution, event string, errCd string) {
 	log := ctrl.Log.WithName("Setting DBaaSConnection Metrics")
-	log.Info("provider - " + provider + " account - " + account + " namespace - " + connection.Namespace + " event - " + event + " errCd - " + errCd)
+	log.V(1).Info("provider - " + provider + " account - " + account + " namespace - " + connection.Namespace + " event - " + event + " errCd - " + errCd)
 	setConnectionStatusMetrics(provider, account, connection)
 	setConnectionRequestDurationSeconds(provider, account, connection, execution, event)
 	UpdateErrorsTotal(provider, account, connection.Namespace, LabelResourceValueConnection, event, errCd)
@@ -70,7 +70,7 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(connection.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(provider, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
-					log.Info("Set the request duration for create event")
+					log.V(1).Info("Set the request duration for create event")
 				}
 			}
 		}
@@ -82,6 +82,6 @@ func setConnectionRequestDurationSeconds(provider string, account string, connec
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(provider, connection.Name, connection.Namespace, LabelResourceValueConnection, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
+		log.V(1).Info("Set the request duration for delete event")
 	}
 }

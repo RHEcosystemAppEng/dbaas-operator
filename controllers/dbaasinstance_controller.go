@@ -189,7 +189,7 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSInstanceReconciler DeleteEvent")
-	log.Info("Delete event started")
+	log.V(1).Info("Delete event started")
 
 	instanceObj, ok := e.Object.(*v1beta1.DBaaSInstance)
 	if !ok {
@@ -197,13 +197,13 @@ func (r *DBaaSInstanceReconciler) Delete(e event.DeleteEvent) error {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingInstance
 		return nil
 	}
-	log.Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
+	log.V(1).Info("instanceObj", "instanceObj", objectKeyFromObject(instanceObj))
 
 	inventory := &v1beta1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: instanceObj.Spec.InventoryRef.Namespace, Name: instanceObj.Spec.InventoryRef.Name}, inventory)
 
 	defer func() {
-		log.Info("Calling metrics for deleting of DBaaSInstance")
+		log.V(1).Info("Calling metrics for deleting of DBaaSInstance")
 		metrics.SetInstanceMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, *instanceObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 	}()
 

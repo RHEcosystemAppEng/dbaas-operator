@@ -59,6 +59,7 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1b
 // setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
 func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string) {
 	log := ctrl.Log.WithName("DBaaSInstance Request Duration for event: " + event)
+	log.V(0)
 	switch event {
 	case LabelEventValueCreate:
 		for _, cond := range instance.Status.Conditions {
@@ -66,7 +67,7 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(instance.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(provider, instance.Name, instance.Namespace, LabelResourceValueInstance, event, duration.Seconds())
-					log.Info("Set the request duration for create event")
+					log.V(1).Info("Set the request duration for create event")
 				}
 			}
 		}
@@ -78,7 +79,7 @@ func setInstanceRequestDurationSeconds(provider string, account string, instance
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(provider, instance.Name, instance.Namespace, LabelResourceValueInstance, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
+		log.V(1).Info("Set the request duration for delete event")
 	}
 }
 
@@ -116,7 +117,7 @@ func setInstancePhaseMetrics(provider string, account string, instance dbaasv1be
 // SetInstanceMetrics set the metrics for an instance
 func SetInstanceMetrics(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string, errCd string) {
 	log := ctrl.Log.WithName("Setting DBaaSInstance Metrics")
-	log.Info("provider - " + provider + " account - " + account + " namespace - " + instance.Namespace + " event - " + event + " errCd - " + errCd)
+	log.V(1).Info("provider - " + provider + " account - " + account + " namespace - " + instance.Namespace + " event - " + event + " errCd - " + errCd)
 	setInstanceStatusMetrics(provider, account, instance)
 	setInstancePhaseMetrics(provider, account, instance)
 	setInstanceRequestDurationSeconds(provider, account, instance, execution, event)

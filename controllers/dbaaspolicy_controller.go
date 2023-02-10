@@ -178,7 +178,7 @@ func (r *DBaaSPolicyReconciler) Delete(e event.DeleteEvent) error {
 	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSPolicyReconciler DeleteEvent")
-	log.Info("Delete event started")
+	log.V(1).Info("Delete event started")
 
 	policyObj, ok := e.Object.(*v1beta1.DBaaSPolicy)
 	if !ok {
@@ -186,9 +186,9 @@ func (r *DBaaSPolicyReconciler) Delete(e event.DeleteEvent) error {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPolicy
 		return nil
 	}
-	log.Info("policyObj", "policyObj", objectKeyFromObject(policyObj))
+	log.V(1).Info("policyObj", "policyObj", objectKeyFromObject(policyObj))
 
-	log.Info("Calling metrics for deleting of DBaaSPolicy")
+	log.V(1).Info("Calling metrics for deleting of DBaaSPolicy")
 	metrics.SetPolicyMetrics(*policyObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
 	return nil

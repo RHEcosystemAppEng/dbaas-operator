@@ -65,7 +65,7 @@ func setInventoryRequestDurationSeconds(inventory dbaasv1beta1.DBaaSInventory, e
 				if cond.Status == metav1.ConditionTrue {
 					duration := time.Now().UTC().Sub(inventory.CreationTimestamp.Time.UTC())
 					UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, LabelResourceValueInventory, event, duration.Seconds())
-					log.Info("Set the request duration for create event")
+					log.V(1).Info("Set the request duration for create event")
 				}
 				break
 			}
@@ -79,6 +79,6 @@ func setInventoryRequestDurationSeconds(inventory dbaasv1beta1.DBaaSInventory, e
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(inventory.Spec.ProviderRef.Name, inventory.Name, inventory.Namespace, LabelResourceValueInventory, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
+		log.V(1).Info("Set the request duration for delete event")
 	}
 }

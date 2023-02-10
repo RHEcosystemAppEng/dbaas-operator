@@ -254,7 +254,7 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSConnectionReconciler DeleteEvent")
-	log.Info("Delete event started")
+	log.V(1).Info("Delete event started")
 
 	connectionObj, ok := e.Object.(*v1beta1.DBaaSConnection)
 	if !ok {
@@ -262,12 +262,12 @@ func (r *DBaaSConnectionReconciler) Delete(e event.DeleteEvent) error {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingConnection
 		return nil
 	}
-	log.Info("connectionObj", "connectionObj", objectKeyFromObject(connectionObj))
+	log.V(1).Info("connectionObj", "connectionObj", objectKeyFromObject(connectionObj))
 
 	inventory := &v1beta1.DBaaSInventory{}
 	_ = r.Get(context.TODO(), types.NamespacedName{Namespace: connectionObj.Spec.InventoryRef.Namespace, Name: connectionObj.Spec.InventoryRef.Name}, inventory)
 
-	log.Info("Calling metrics for deleting of DBaaSConnection")
+	log.V(1).Info("Calling metrics for deleting of DBaaSConnection")
 	metrics.SetConnectionMetrics(inventory.Spec.ProviderRef.Name, inventory.Name, *connectionObj, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
 	return nil

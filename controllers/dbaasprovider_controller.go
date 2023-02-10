@@ -129,7 +129,7 @@ func (r *DBaaSProviderReconciler) Delete(e event.DeleteEvent) error {
 	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSProviderReconciler DeleteEvent")
-	log.Info("Delete event started")
+	log.V(1).Info("Delete event started")
 
 	providerObj, ok := e.Object.(*v1beta1.DBaaSProvider)
 	if !ok {
@@ -137,9 +137,6 @@ func (r *DBaaSProviderReconciler) Delete(e event.DeleteEvent) error {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingProvider
 		return nil
 	}
-	log.Info("providerObj", "providerObj", objectKeyFromObject(providerObj))
-
-	log.Info("Calling metrics for deleting of DBaaSProvider")
 	metrics.SetProviderMetrics(*providerObj, providerObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
 	return nil
