@@ -473,17 +473,6 @@ func assertInventoryStatus(inv *v1beta1.DBaaSInventory, condType string, dbaasSt
 	}
 }
 
-func assertInventoryStatusV1alpha1(inv *v1alpha1.DBaaSInventory, condType string, dbaasStatus metav1.ConditionStatus, providerResourceStatus interface{}) func() {
-	return func() {
-		status := inv.Status.DeepCopy()
-		dbaasConds, providerConds := splitStatusConditions(status.Conditions, condType)
-		Expect(len(dbaasConds)).Should(Equal(1))
-		Expect(dbaasConds[0].Type).Should(Equal(condType))
-		Expect(dbaasConds[0].Status).Should(Equal(dbaasStatus))
-		status.Conditions = providerConds
-		Expect(status).Should(Equal(providerResourceStatus))
-	}
-}
 func assertConnectionStatus(conn *v1beta1.DBaaSConnection, condType string, providerResourceStatus interface{}) func() {
 	return func() {
 		assertConnectionDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
@@ -526,15 +515,6 @@ func assertInstanceStatus(conn *v1beta1.DBaaSInstance, condType string, provider
 	}
 }
 
-func assertInstanceStatusV1alpha1(conn *v1alpha1.DBaaSInstance, condType string, providerResourceStatus interface{}) func() {
-	return func() {
-		assertInstanceDBaaSStatus(conn.Name, conn.Namespace, metav1.ConditionTrue)()
-		status := conn.Status.DeepCopy()
-		_, providerConds := splitStatusConditions(status.Conditions, condType)
-		status.Conditions = providerConds
-		Expect(status).Should(Equal(providerResourceStatus))
-	}
-}
 func assertProviderResourceSpecUpdated(object client.Object, groupVersion schema.GroupVersion, providerResourceKind string, DBaaSResourceSpec interface{}) func() {
 	return func() {
 		By("updating the DBaaS resource spec")

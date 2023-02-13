@@ -72,34 +72,6 @@ func (r *DBaaSInventoryReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		event = metrics.LabelEventValueCreate
 	}
 
-	policyList, err := r.policyListByNS(ctx, req.Namespace)
-	if err != nil {
-		logger.Error(err, "unable to list policies")
-		metricLabelErrCdValue = metrics.LabelErrorCdValueUnableToListPolicies
-		return ctrl.Result{}, err
-	}
-	activePolicy := getActivePolicy(policyList)
-	if activePolicy == nil {
-		logger.Info("No DBaaSPolicy found for the target namespace", "Namespace", req.Namespace)
-		cond := metav1.Condition{
-			Type:    v1beta1.DBaaSInventoryReadyType,
-			Status:  metav1.ConditionFalse,
-			Reason:  v1beta1.DBaaSPolicyNotFound,
-			Message: v1beta1.MsgPolicyNotFound,
-		}
-		apimeta.SetStatusCondition(&inventory.Status.Conditions, cond)
-		if err := r.Client.Status().Update(ctx, &inventory); err != nil {
-			if errors.IsConflict(err) {
-				logger.V(1).Info("DBaaS Inventory resource modified, retry syncing status", "DBaaS Inventory", inventory)
-				return ctrl.Result{Requeue: true}, nil
-			}
-			logger.Error(err, "Error updating the DBaaS Inventory resource status", "DBaaS Inventory", inventory)
-			metricLabelErrCdValue = metrics.LabelErrorCdValueErrorUpdatingInventoryStatus
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{}, nil
-	}
-
 	if err := r.checkCredsRefLabel(ctx, inventory); err != nil {
 		if errors.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil

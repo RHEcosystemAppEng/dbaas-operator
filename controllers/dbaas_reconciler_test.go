@@ -299,14 +299,13 @@ var _ = Describe("list policies by inventory namespace", func() {
 			Expect(canProvision(inventory, activePolicy)).Should(BeTrue())
 			activePolicy.Spec.DisableProvisions = &isTrue
 			Expect(canProvision(inventory, activePolicy)).Should(BeFalse())
+			// check nil policy
+			Expect(canProvision(inventory, nil)).Should(BeTrue())
 
 			// override policy setting
 			isFalse := false
 			inventory.Spec.Policy = &v1beta1.DBaaSInventoryPolicy{DisableProvisions: &isFalse}
 			Expect(canProvision(inventory, activePolicy)).Should(BeTrue())
-
-			// check nil policy
-			Expect(canProvision(inventory, nil)).Should(BeFalse())
 		})
 
 		It("should, upon deletion, make another policy active", func() {
