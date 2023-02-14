@@ -370,7 +370,7 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 	execution := metrics.PlatformInstallStart()
 	metricLabelErrCdValue := ""
 	log := ctrl.Log.WithName("DBaaSPlatformReconciler DeleteEvent")
-	log.Info("Delete event started")
+	log.V(1).Info("Delete event started")
 
 	platformObj, ok := e.Object.(*v1beta1.DBaaSPlatform)
 	if !ok {
@@ -378,9 +378,9 @@ func (r *DBaaSPlatformReconciler) Delete(e event.DeleteEvent) error {
 		metricLabelErrCdValue = metrics.LabelErrorCdValueErrorDeletingPlatform
 		return nil
 	}
-	log.Info("platformObj", "platformObj", objectKeyFromObject(platformObj))
+	log.V(1).Info("platformObj", "platformObj", objectKeyFromObject(platformObj))
 
-	log.Info("Calling metrics for deleting of DBaaSProvider")
+	log.V(1).Info("Calling metrics for deleting of DBaaSProvider")
 	metrics.SetPlatformMetrics(*platformObj, platformObj.Name, execution, metrics.LabelEventValueDelete, metricLabelErrCdValue)
 
 	return nil

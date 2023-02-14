@@ -27,7 +27,7 @@ func setProviderRequestDurationSeconds(provider dbaasv1beta1.DBaaSProvider, acco
 	case LabelEventValueCreate:
 		duration := time.Now().UTC().Sub(provider.CreationTimestamp.Time.UTC())
 		UpdateRequestsDurationHistogram(provider.Name, account, provider.Namespace, LabelResourceValueProvider, event, duration.Seconds())
-		log.Info("Set the request duration for create event")
+		log.V(1).Info("Set the request duration for create event")
 	case LabelEventValueDelete:
 		deletionTimestamp := execution.begin.UTC()
 		if provider.DeletionTimestamp != nil {
@@ -36,14 +36,14 @@ func setProviderRequestDurationSeconds(provider dbaasv1beta1.DBaaSProvider, acco
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(provider.Name, account, provider.Namespace, LabelResourceValueProvider, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
+		log.V(1).Info("Set the request duration for delete event")
 	}
 }
 
 // SetProviderMetrics set the metrics for a provider
 func SetProviderMetrics(provider dbaasv1beta1.DBaaSProvider, account string, execution Execution, event string, errCd string) {
 	log := ctrl.Log.WithName("Setting DBaaSProvider Metrics")
-	log.Info("provider - " + provider.Name + " account - " + account + " namespace - " + provider.Namespace + " event - " + event + " errCd - " + errCd)
+	log.V(1).Info("provider - " + provider.Name + " account - " + account + " namespace - " + provider.Namespace + " event - " + event + " errCd - " + errCd)
 	setProviderRequestDurationSeconds(provider, account, execution, event)
 	UpdateErrorsTotal(provider.Name, account, provider.Namespace, LabelResourceValueProvider, event, errCd)
 }

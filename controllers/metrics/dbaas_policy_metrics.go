@@ -33,7 +33,7 @@ func setPolicyRequestDurationSeconds(policy dbaasv1beta1.DBaaSPolicy, event stri
 	case LabelEventValueCreate:
 		duration := time.Now().UTC().Sub(policy.CreationTimestamp.Time.UTC())
 		UpdateRequestsDurationHistogram(LabelValueNone, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
-		log.Info("Set the request duration for create event")
+		log.V(1).Info("Set the request duration for create event")
 
 	case LabelEventValueDelete:
 		deletionTimestamp := execution.begin.UTC()
@@ -43,6 +43,6 @@ func setPolicyRequestDurationSeconds(policy dbaasv1beta1.DBaaSPolicy, event stri
 
 		duration := time.Now().UTC().Sub(deletionTimestamp.UTC())
 		UpdateRequestsDurationHistogram(LabelValueNone, policy.Name, policy.Namespace, LabelResourceValuePolicy, event, duration.Seconds())
-		log.Info("Set the request duration for delete event")
+		log.V(1).Info("Set the request duration for delete event")
 	}
 }
