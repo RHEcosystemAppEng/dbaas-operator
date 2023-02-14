@@ -125,7 +125,7 @@ func (r *reconciler) cleanObsOldSubscription(ctx context.Context, cr *v1beta1.DB
 func (r *reconciler) createUpdateObservabilityMonitoringStackCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	config := reconcilers.GetObservabilityConfig()
 
-	r.logger.V(1).Info(" Observability Configuration", "AuthType", config.AuthType, "RemoteWritesURL", config.RemoteWritesURL, "AddonName", config.AddonName)
+	r.logger.V(1).Info(" Observability Configuration", "AuthType", config.AuthType, "AddonName", config.AddonName)
 	monitoringStackCR := getDefaultMonitoringStackCR(cr.Namespace)
 	if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringStackCR, func() error {
 		monitoringStackCR.Labels = map[string]string{

@@ -223,7 +223,7 @@ func (r *DBaaSPlatformReconciler) setOpenShiftInstallationInfo(ctx context.Conte
 
 	_, clusterVersion, err := util.GetClusterIDVersion(ctx, r.Client)
 	if err != nil {
-		logger.Error(err, "Error in getting of openshift platform Type")
+		logger.Error(err, "Error in getting of openshift cluster Version ")
 	}
 	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType), cr.CreationTimestamp.String(), clusterVersion)
 }

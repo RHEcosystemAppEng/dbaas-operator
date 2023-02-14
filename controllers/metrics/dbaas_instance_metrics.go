@@ -59,7 +59,6 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1b
 // setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
 func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string) {
 	log := ctrl.Log.WithName("DBaaSInstance Request Duration for event: " + event)
-	log.V(0)
 	switch event {
 	case LabelEventValueCreate:
 		for _, cond := range instance.Status.Conditions {
