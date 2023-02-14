@@ -3,7 +3,3 @@ dependencies:
     value:
       packageName: rh-service-binding-operator
       version: ">=1.0.0"
-  - type: olm.package
-    value:
-      packageName: ack-rds-controller
-      version: ">=0.0.27 <=0.1.3"
