@@ -26,7 +26,6 @@ import (
 
 const (
 	clusterIDLabel                     = "cluster_id"
-	clusterVersionLabel                = "cluster_version"
 	crNameForMonitoringStack           = "dbaas-operator-mso"
 	crNameForServiceMonitor            = "dbaas-operator-service-monitor"
 	rhobsRemoteWriteConfigIDKey        = "prom-remote-write-config-id"
@@ -60,7 +59,7 @@ func NewReconciler(client k8sclient.Client, scheme *runtime.Scheme, logger logr.
 func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 
 	// clean the observability operator if installed by RHODA in previous version.
-	status, err := r.cleanObsOldSubscripition(ctx, cr)
+	status, err := r.cleanObsOldSubscription(ctx, cr)
 	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
@@ -74,8 +73,8 @@ func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (
 		return v1beta1.ResultSuccess, nil
 	}
 
-	// create observability CR.
-	status, err = r.createObservabilityMonitoringStackCR(ctx, cr)
+	// create or update observability CR.
+	status, err = r.createUpdateObservabilityMonitoringStackCR(ctx, cr)
 	if status != v1beta1.ResultSuccess {
 		return status, err
 	}
@@ -106,7 +105,7 @@ func (r *reconciler) Cleanup(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1
 
 }
 
-func (r *reconciler) cleanObsOldSubscripition(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
+func (r *reconciler) cleanObsOldSubscription(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 
 	subscription := reconcilers.GetSubscription(cr.Namespace, r.config.Name+"-subscription")
 	err := r.client.Delete(ctx, subscription)
@@ -123,73 +122,43 @@ func (r *reconciler) cleanObsOldSubscripition(ctx context.Context, cr *v1beta1.D
 	return v1beta1.ResultSuccess, nil
 }
 
-func (r *reconciler) createObservabilityMonitoringStackCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
+func (r *reconciler) createUpdateObservabilityMonitoringStackCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	config := reconcilers.GetObservabilityConfig()
+
+	r.logger.V(1).Info(" Observability Configuration", "AuthType", config.AuthType, "AddonName", config.AddonName)
 	monitoringStackCR := getDefaultMonitoringStackCR(cr.Namespace)
-
-	monitoringStackList := &msoapi.MonitoringStackList{}
-	listOpts := []k8sclient.ListOption{
-		k8sclient.InNamespace(monitoringStackCR.Namespace),
-	}
-	err := r.client.List(ctx, monitoringStackList, listOpts...)
-	if err != nil {
-		return v1beta1.ResultFailed, fmt.Errorf("could not get a list of monitoring stack CR: %w", err)
-	}
-
-	if len(monitoringStackList.Items) == 0 {
+	if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringStackCR, func() error {
+		monitoringStackCR.Labels = map[string]string{
+			"managed-by": "dbaas-operator",
+		}
+		monitoringStackCR.Spec = msoapi.MonitoringStackSpec{
+			LogLevel: "debug",
+			ResourceSelector: &metav1.LabelSelector{
+				MatchLabels: setExporterLables(),
+			},
+		}
 		if config.RemoteWritesURL != "" && config.AuthType != "" && config.AddonName != "" {
 			prometheusConfig, _ := r.setPrometheusConfig(ctx, config, monitoringStackCR.Namespace)
 			monitoringStackCR.Spec.PrometheusConfig = prometheusConfig
 		}
-		err = controllerutil.SetControllerReference(cr, monitoringStackCR, r.scheme)
-		if err != nil {
-			return v1beta1.ResultFailed, err
-		}
-		if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringStackCR, func() error {
-			monitoringStackCR.Labels = map[string]string{
-				"managed-by": "dbaas-operator",
-			}
 
-			return nil
-		}); err != nil {
-			if errors.IsConflict(err) {
-				return v1beta1.ResultInProgress, nil
-			}
-			return v1beta1.ResultFailed, err
-		}
-	} else if len(monitoringStackList.Items) == 1 {
-		monitoringStackCR = &monitoringStackList.Items[0]
-		if config.RemoteWritesURL != "" && config.AuthType != "" && config.AddonName != "" {
-			prometheusConfig, _ := r.setPrometheusConfig(ctx, config, monitoringStackCR.Namespace)
-			monitoringStackCR.Spec.PrometheusConfig = prometheusConfig
-			if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringStackCR, func() error {
-				monitoringStackCR.Labels = map[string]string{
-					"managed-by": "dbaas-operator",
-				}
-				return nil
-			}); err != nil {
-				if errors.IsConflict(err) {
-					return v1beta1.ResultInProgress, nil
-				}
-				return v1beta1.ResultFailed, err
-			}
-		}
+		return controllerutil.SetControllerReference(cr, monitoringStackCR, r.scheme)
 
-	} else {
-		return v1beta1.ResultFailed, fmt.Errorf("too many monitoringStackCR resources found. Expecting 1, found %d MonitoringStack resources in %s namespace", len(monitoringStackList.Items), cr.Namespace)
+	}); err != nil {
+		if errors.IsConflict(err) {
+			return v1beta1.ResultInProgress, nil
+		}
+		return v1beta1.ResultFailed, err
 	}
+
 	return v1beta1.ResultSuccess, nil
 
 }
 
 func (r *reconciler) createObservabilityServiceMonitorCR(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 	monitoringServiceCR := getDefaultServiceMonitor(cr.Namespace)
-	err := controllerutil.SetControllerReference(cr, monitoringServiceCR, r.scheme)
-	if err != nil {
-		return v1beta1.ResultFailed, err
-	}
 	if _, err := controllerutil.CreateOrUpdate(ctx, r.client, monitoringServiceCR, func() error {
-		return nil
+		return controllerutil.SetControllerReference(cr, monitoringServiceCR, r.scheme)
 	}); err != nil {
 		if errors.IsConflict(err) {
 			return v1beta1.ResultInProgress, nil
@@ -204,12 +173,6 @@ func getDefaultMonitoringStackCR(namespace string) *msoapi.MonitoringStack {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      crNameForMonitoringStack,
 			Namespace: namespace,
-		},
-		Spec: msoapi.MonitoringStackSpec{
-			LogLevel: "debug",
-			ResourceSelector: &metav1.LabelSelector{
-				MatchLabels: setExporterLables(),
-			},
 		},
 	}
 	return monitoringStackCR
@@ -245,12 +208,13 @@ func (r *reconciler) setPrometheusConfig(ctx context.Context, config v1beta1.Obs
 	prometheusConfig := &msoapi.PrometheusConfig{}
 	prometheusConfig.Replicas = &replicas
 
-	clusterID, clusterVersion, err := util.GetClusterIDVersion(ctx, r.client)
+	clusterID, _, err := util.GetClusterIDVersion(ctx, r.client)
 	if err != nil {
+		r.logger.Error(err, "error in getting clusterID")
 		return prometheusConfig, err
 	}
-	if clusterID != "" && clusterVersion != "" {
-		prometheusConfig.ExternalLabels = map[string]string{clusterIDLabel: clusterID, clusterVersionLabel: clusterVersion}
+	if clusterID != "" {
+		prometheusConfig.ExternalLabels = map[string]string{clusterIDLabel: clusterID}
 	}
 
 	remoteWriteSpec, _ := r.configureRemoteWrite(ctx, config, namespace)

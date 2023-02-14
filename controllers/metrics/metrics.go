@@ -28,6 +28,7 @@ const (
 	MetricLabelResource          = "resource"
 	MetricLabelEvent             = "event"
 	MetricLabelErrorCd           = "error_cd"
+	ClusterVersionLabel          = "cluster_version"
 
 	// Event label values
 	LabelEventValueCreate = "create"
@@ -62,7 +63,7 @@ var DBaasStackInstallationHistogram = prometheus.NewHistogramVec(prometheus.Hist
 var DBaasOperatorVersionInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: MetricNameOperatorVersion,
 	Help: "The current version of DBaaS Operator installed in the cluster",
-}, []string{MetricLabelVersion, MetricLabelConsoleULR, MetricLabelPlatformName, MetricLabelCreationTimestamp})
+}, []string{MetricLabelVersion, MetricLabelConsoleULR, MetricLabelPlatformName, MetricLabelCreationTimestamp, ClusterVersionLabel})
 
 // DBaaSRequestsDurationHistogram DBaaS Requests Duration Histogram for all DBaaS Resources
 var DBaaSRequestsDurationHistogram = prometheus.NewHistogramVec(
@@ -93,8 +94,8 @@ func PlatformInstallStart() Execution {
 }
 
 // SetOpenShiftInstallationInfoMetric set the Metrics for openshift info
-func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL string, platformType string, creationTime string) {
-	DBaasOperatorVersionInfo.With(prometheus.Labels{MetricLabelVersion: operatorVersion, MetricLabelConsoleULR: consoleURL, MetricLabelPlatformName: platformType, MetricLabelCreationTimestamp: creationTime}).Set(1)
+func SetOpenShiftInstallationInfoMetric(operatorVersion string, consoleURL string, platformType string, creationTime string, clusterVersion string) {
+	DBaasOperatorVersionInfo.With(prometheus.Labels{MetricLabelVersion: operatorVersion, MetricLabelConsoleULR: consoleURL, MetricLabelPlatformName: platformType, MetricLabelCreationTimestamp: creationTime, ClusterVersionLabel: clusterVersion}).Set(1)
 }
 
 // UpdateRequestsDurationHistogram Utility function to update request duration histogram

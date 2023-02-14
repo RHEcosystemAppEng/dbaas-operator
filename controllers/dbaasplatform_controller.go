@@ -152,16 +152,8 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	var platforms map[v1beta1.PlatformName]v1beta1.PlatformConfig
 
-	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
-	if err != nil {
-		logger.Error(err, "Error in getting of openshift consoleURl")
-	}
+	r.setOpenShiftInstallationInfo(ctx, err, logger, cr)
 
-	platformType, err := util.GetOpenshiftPlatform(ctx, r.Client)
-	if err != nil {
-		logger.Error(err, "Error in getting of openshift platform Type")
-	}
-	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType), cr.CreationTimestamp.String())
 	if cr.DeletionTimestamp == nil {
 		platforms = reconcilers.InstallationPlatforms
 	}
@@ -215,6 +207,25 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	return r.updateStatus(cr, nextStatus)
+}
+
+//setOpenShiftInstallationInfo sets the metrics for dbaas_version_info
+func (r *DBaaSPlatformReconciler) setOpenShiftInstallationInfo(ctx context.Context, err error, logger logr.Logger, cr *v1beta1.DBaaSPlatform) {
+	consoleURL, err := util.GetOpenshiftConsoleURL(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift consoleURl")
+	}
+
+	platformType, err := util.GetOpenshiftPlatform(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift platform Type")
+	}
+
+	_, clusterVersion, err := util.GetClusterIDVersion(ctx, r.Client)
+	if err != nil {
+		logger.Error(err, "Error in getting of openshift cluster Version ")
+	}
+	metrics.SetOpenShiftInstallationInfoMetric(r.operatorNameVersion, consoleURL, string(platformType), cr.CreationTimestamp.String(), clusterVersion)
 }
 
 // SetupWithManager sets up the controller with the Manager.
