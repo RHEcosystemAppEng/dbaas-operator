@@ -418,14 +418,6 @@ spec:
         - apiGroups:
           - ""
           resources:
-          - configmaps
-          - secrets
-          verbs:
-          - create
-          - get
-        - apiGroups:
-          - ""
-          resources:
           - secrets
           verbs:
           - get
@@ -607,6 +599,7 @@ spec:
           verbs:
           - delete
           - get
+          - list
           - update
         - apiGroups:
           - operators.coreos.com

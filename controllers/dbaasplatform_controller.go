@@ -37,8 +37,6 @@ import (
 	"github.com/operator-framework/api/pkg/operators/v1alpha1"
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -88,7 +86,7 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=dbaas.redhat.com,resources=*/finalizers,verbs=update
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=catalogsources;operatorgroups,verbs=get;list;create;update;watch
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=subscriptions,verbs=get;list;create;update;watch;delete
-//+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;update;delete
+//+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions,verbs=get;update;delete;list
 //+kubebuilder:rbac:groups=operators.coreos.com,resources=clusterserviceversions/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;statefulsets,verbs=get;list;create;update;watch;delete
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;watch;delete
@@ -100,7 +98,6 @@ type DBaaSPlatformReconciler struct {
 //+kubebuilder:rbac:groups=config.openshift.io,resources=consoles,verbs=get;list;watch
 //+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=validatingwebhookconfigurations,verbs=get;list;watch;delete
-//+kubebuilder:rbac:groups="",resources=secrets;configmaps,verbs=get;create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -131,11 +128,6 @@ func (r *DBaaSPlatformReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	// OCPBUGS-4991 - temporary fix until https://github.com/operator-framework/operator-lifecycle-manager/pull/2912 makes it to a release
 	if err = r.fixConversionWebhooks(ctx); err != nil {
 		logger.Error(err, "Error related to conversion webhook setup")
-	}
-
-	// temporary fix for ack-rds-controller v0.1.3 upgrade issue
-	if err = r.fixRDSControllerUpgrade(ctx); err != nil {
-		logger.Error(err, "Error related to ack-rds-controller v0.1.3 upgrade")
 	}
 
 	if cr.DeletionTimestamp != nil {
@@ -442,84 +434,52 @@ func (r *DBaaSPlatformReconciler) fixConversionWebhooks(ctx context.Context) err
 	return nil
 }
 
+const ackRDSVersion = "1.0.0"
+
 // Temporary solution to the rds-controller upgrade issue, will revert in the next release
 func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli k8sclient.Client) error {
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ack-rds-user-secrets", //#nosec G101
-			Namespace: r.DBaaSReconciler.InstallNamespace,
-		},
-	}
-	if err := cli.Get(ctx, k8sclient.ObjectKeyFromObject(secret), secret); err != nil {
-		if apierrors.IsNotFound(err) {
-			secret.Data = map[string][]byte{
-				"AWS_ACCESS_KEY_ID":     []byte("dummy"),
-				"AWS_SECRET_ACCESS_KEY": []byte("dummy"), //#nosec G101
-			}
-			if err := cli.Create(ctx, secret); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	cm := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ack-rds-user-config",
-			Namespace: r.DBaaSReconciler.InstallNamespace,
-		},
-	}
-	if err := cli.Get(ctx, k8sclient.ObjectKeyFromObject(cm), cm); err != nil {
-		if apierrors.IsNotFound(err) {
-			cm.Data = map[string]string{
-				"AWS_REGION":                     "dummy",
-				"AWS_ENDPOINT_URL":               "",
-				"ACK_ENABLE_DEVELOPMENT_LOGGING": "false",
-				"ACK_WATCH_NAMESPACE":            "",
-				"ACK_LOG_LEVEL":                  "info",
-				"ACK_RESOURCE_TAGS":              "rhoda",
-			}
-			if err := cli.Create(ctx, cm); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Temporary solution to the rds-controller v0.1.3 upgrade issue
-func (r *DBaaSPlatformReconciler) fixRDSControllerUpgrade(ctx context.Context) error {
-	csv := &v1alpha1.ClusterServiceVersion{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ack-rds-controller.v0.1.3",
-			Namespace: r.DBaaSReconciler.InstallNamespace,
-		},
-	}
-	if err := r.Client.Get(ctx, k8sclient.ObjectKeyFromObject(csv), csv); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
+	csvName := fmt.Sprintf("ack-rds-controller.v%s", ackRDSVersion)
+	subscriptionList := &v1alpha1.SubscriptionList{}
+	if err := cli.List(ctx, subscriptionList, k8sclient.InNamespace(r.InstallNamespace)); err != nil {
 		return err
 	}
-
-	if csv.Status.Phase == v1alpha1.CSVPhaseFailed && csv.Status.Reason == v1alpha1.CSVReasonComponentFailed &&
-		csv.Status.Message == "install strategy failed: Deployment.apps \"ack-rds-controller\" is invalid: spec.selector: "+
-			"Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"app.kubernetes.io/name\":\"ack-rds-controller\"}, "+
-			"MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable" {
-		ackDeployment := &appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "ack-rds-controller",
-				Namespace: r.DBaaSReconciler.InstallNamespace,
-			},
+	for i := range subscriptionList.Items {
+		subscription := subscriptionList.Items[i]
+		if subscription.Spec != nil && subscription.Spec.Package == "ack-rds-controller" {
+			if subscription.Status.CurrentCSV == csvName ||
+				subscription.Status.InstalledCSV == csvName {
+				continue
+			}
+			if err := cli.Delete(ctx, &subscription); err != nil {
+				return err
+			}
 		}
-		if err := r.Client.Delete(ctx, ackDeployment); err != nil {
-			return err
-		}
-		log.FromContext(ctx).Info("Applied fix to the failed RDS controller v0.1.3 installation")
 	}
+
+	csvList := &v1alpha1.ClusterServiceVersionList{}
+	if err := cli.List(ctx, csvList, k8sclient.InNamespace(r.InstallNamespace)); err != nil {
+		return err
+	}
+	for i := range csvList.Items {
+		csv := csvList.Items[i]
+		instanceCRD := false
+		clusterCRD := false
+		for _, crd := range csv.Spec.CustomResourceDefinitions.Owned {
+			if crd.Name == "dbinstances.rds.services.k8s.aws" && crd.Kind == "DBInstance" {
+				instanceCRD = true
+			} else if crd.Name == "dbclusters.rds.services.k8s.aws" && crd.Kind == "DBCluster" {
+				clusterCRD = true
+			}
+		}
+		if instanceCRD && clusterCRD {
+			if csv.Spec.Version.String() == ackRDSVersion {
+				continue
+			}
+			if err := cli.Delete(ctx, &csv); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
