@@ -193,7 +193,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	mockRDSController(k8sManager)
+	mockACKRDSController(k8sManager)
 
 	createCSV(k8sManager)
 	err = (&DBaaSPlatformReconciler{
@@ -202,7 +202,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	checkRDSController(k8sManager)
+	checkACKRDSController(k8sManager)
 
 	go func() {
 		defer GinkgoRecover()
@@ -251,7 +251,7 @@ func createCSV(k8sManager manager.Manager) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func mockRDSController(k8sManager manager.Manager) {
+func mockACKRDSController(k8sManager manager.Manager) {
 	serverClient, err := client.New(
 		k8sManager.GetConfig(),
 		client.Options{
@@ -339,7 +339,7 @@ func mockRDSController(k8sManager manager.Manager) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func checkRDSController(k8sManager manager.Manager) {
+func checkACKRDSController(k8sManager manager.Manager) {
 	serverClient, err := client.New(
 		k8sManager.GetConfig(),
 		client.Options{

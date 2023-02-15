@@ -434,8 +434,11 @@ func (r *DBaaSPlatformReconciler) fixConversionWebhooks(ctx context.Context) err
 	return nil
 }
 
+const ackRDSVersion = "1.0.0"
+
 // Temporary solution to the rds-controller upgrade issue, will revert in the next release
 func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli k8sclient.Client) error {
+	csvName := fmt.Sprintf("ack-rds-controller.v%s", ackRDSVersion)
 	subscriptionList := &v1alpha1.SubscriptionList{}
 	if err := cli.List(ctx, subscriptionList, k8sclient.InNamespace(r.InstallNamespace)); err != nil {
 		return err
@@ -443,6 +446,10 @@ func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli 
 	for i := range subscriptionList.Items {
 		subscription := subscriptionList.Items[i]
 		if subscription.Spec != nil && subscription.Spec.Package == "ack-rds-controller" {
+			if subscription.Status.CurrentCSV == csvName ||
+				subscription.Status.InstalledCSV == csvName {
+				continue
+			}
 			if err := cli.Delete(ctx, &subscription); err != nil {
 				return err
 			}
@@ -465,6 +472,9 @@ func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli 
 			}
 		}
 		if instanceCRD && clusterCRD {
+			if csv.Spec.Version.String() == ackRDSVersion {
+				continue
+			}
 			if err := cli.Delete(ctx, &csv); err != nil {
 				return err
 			}
