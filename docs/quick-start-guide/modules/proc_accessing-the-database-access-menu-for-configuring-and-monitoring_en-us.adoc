@@ -32,24 +32,24 @@ By selecting *Current namespace only* option, you can view the policies.
 
 . Use the correct project namespace by following these sub-steps:
 +
-image::{imagesdir}/rhoda_admin_entry_point_single_page_all_steps.png[Single page screenshot of the administrator's entry point]
+image::../../images/rhoda_admin_entry_point_single_page_all_steps.png[Single page screenshot of the administrator's entry point]
 
-.. Select the **Administrator** perspective image:1st_Callout_Bullet.png[First callout].
+.. Select the **Administrator** perspective image:../../images/1st_Callout_Bullet.png[First callout].
 
-.. Expand the **Data Services** navigation menu, and click **Database Access** image:2nd_Callout_Bullet.png[Second callout].
+.. Expand the **Data Services** navigation menu, and click **Database Access** image:../../images/2nd_Callout_Bullet.png[Second callout].
 +
 NOTE: You might need to scroll down the navigation menu.
 
-.. Click the **Project** dropdown menu and then enable the **Show default projects** switch image:3rd_Callout_Bullet.png[Third callout].
+.. Click the **Project** dropdown menu and then enable the **Show default projects** switch image:../../images/3rd_Callout_Bullet.png[Third callout].
 
 .. Type **dbaas** in the search field.
 
-.. Select **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace image:4th_Callout_Bullet.png[Fourth callout].
+.. Select **redhat-dbaas-operator** or **openshift-dbaas-operator** project namespace image:../../images/4th_Callout_Bullet.png[Fourth callout].
 
 . From the database inventory page you get a snapshot of the database environment.
 You can import a cloud-hosted database provider account, and create a new database instance by clicking the **Configuration** menu.
 +
-image::rhoda_admin_entry_point_inventory_page.png[Database inventory landing page]
+image::../../images/rhoda_admin_entry_point_inventory_page.png[Database inventory landing page]
 
 [role="_additional-resources"]
 .Additional Resources
