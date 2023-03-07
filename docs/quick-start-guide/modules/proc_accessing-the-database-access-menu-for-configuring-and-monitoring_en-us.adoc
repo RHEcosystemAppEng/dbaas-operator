@@ -32,7 +32,7 @@ By selecting *Current namespace only* option, you can view the policies.
 
 . Use the correct project namespace by following these sub-steps:
 +
-image::images/rhoda_admin_entry_point_single_page_all_steps.png[Single page screenshot of the administrator's entry point]
+image::../images/rhoda_admin_entry_point_single_page_all_steps.png[Single page screenshot of the administrator's entry point]
 
 .. Select the **Administrator** perspective image:1st_Callout_Bullet.png[First callout].
 
