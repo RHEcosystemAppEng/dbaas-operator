@@ -1,0 +1,39 @@
+:_module-type: PROCEDURE
+
+[id="installing-the-red-hat-openshift-database-access-add-on_{context}"]
+
+= Installing the Red Hat OpenShift Database Access add-on
+
+[role="_abstract"]
+The Red Hat OpenShift Database Access add-on allows you to configure a connection to cloud-database providers, create new database instances, and connect database instances to applications for developers to use.
+
+.Prerequisites
+
+* A Red Hat user account to access the Red Hat Hybrid Cloud Console.
+* OpenShift Container Platform 4.10 or higher, and on these deployment types:
+** OpenShift Dedicated
+** Red Hat OpenShift on AWS (ROSA)
+
+.Procedure
+
+. Log into the link:https://console.redhat.com/[Red Hat Hybrid Cloud Console] with your credentials.
+
+. Click **Application and Data Services** from the navigation menu.
+
+. Click **Database Access** from the navigation menu.
+
+. On the landing page, click **Install it on a cluster**.
+
+. Select one of the detected OpenShift clusters from the drop-down menu, and click **Install**.
++
+NOTE: If a compatible deployment type was not detected, you can click **Create new cluster** to start the cluster creation process.
+
+. After the installation process completes, an alert message tells you the status of the installation.
+If successful, an alert message asks you refresh the OpenShift web console to the latest version.
+After the web console refresh, you have a new **Data Services** category on the navigational menu.
+If failure, a message displays the installation error to help you investigate the problem.
+
+[role="_additional-resources"]
+.Additional resources
+
+* For more information about Red Hat OpenShift Database Access, see the link:https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/2022-q4/html-single/reference_guide/index[_Reference Guide_].

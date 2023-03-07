@@ -1,0 +1,45 @@
+:_module-type: PROCEDURE
+
+[id="accessing-the-developer-workspace-and-adding-a-database-instance_{context}"]
+
+= Accessing the developer workspace and adding a database instance
+
+[role="_abstract"]
+You can access the developer workspace in the OpenShift console to manage connectivity for database instances to applications.
+
+.Prerequisites
+
+* xref:installing-the-red-hat-openshift-database-access-add-on_{context}[Installation] of the OpenShift Database Access add-on.
+* xref:accessing-the-database-access-menu-for-configuring-and-monitoring_{context}[Import] at least one cloud-database provider account.
+
+.Procedure
+
+. Log into the OpenShift console.
+
+. Access the developer workspace to select an existing project or create a new project, and choose a cloud-hosted database provider to add to your project:
++
+image::rhoda_dev_single_page_all_steps_v2.png[Single page screenshot of the developer's entry point]
+
+.. Select the **Developer** perspective image:1st_Callout_Bullet.png[First callout].
+
+.. Click the **Project** dropdown menu image:2nd_Callout_Bullet.png[Second callout].
+
+.. Create a new project or search for your application’s project image:3rd_Callout_Bullet.png[Third callout].
+
+.. Click **+Add** image:4th_Callout_Bullet.png[Fourth callout].
+
+.. Click the **Cloud-Hosted Databases** tile to connect to a cloud-database provider image:5th_Callout_Bullet.png[Fifth callout].
+
+. Click on your cloud-hosted database provider's tile.
+
+. Select a previously configured **Provider Account** for this database instance from the dropdown menu.
+
+. Select the database instance ID you want to use, and click **Add to Topology**.
+
+. Click **Continue**.
+Upon a successful connection, you go to the xref:connecting-an-application-to-a-database-instance-using-the-topology-view_{context}[**Topology**] page.
+
+[role="_additional-resources"]
+.Additional resources
+
+* For more information about Red Hat OpenShift Database Access, see the link:https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/2022-q4/html-single/reference_guide/index[_Reference Guide_].

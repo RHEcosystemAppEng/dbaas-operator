@@ -1,0 +1,94 @@
+:_module-type: PROCEDURE
+
+[id="installing-openshift-database-access-using-the-operator-lifecycle-manager_{context}"]
+
+= Installing OpenShift Database Access using the Operator Lifecycle Manager
+
+[role="_abstract"]
+For some OpenShift cluster types, such as Azure Red Hat OpenShift (ARO), you must install Red Hat OpenShift Database Access manually by using the Operator Lifecycle Manager (OLM).
+
+.Prerequisites
+
+* OpenShift Container Platform 4.10 or higher.
+* A running OpenShift Dedicated or ARO cluster.
+* Administrator privileges to the ARO cluster.
+
+.Procedure
+
+. Log into OpenShift by using the a command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Log in to the OpenShift console.
+Click your user name, and click **Copy login command**.
+Offer your user name and password again, and click **Display Token** to view the command.
+====
+
+. Create an OpenShift Database Access catalog source using the latest add-on image repository:
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: dbaas-operator
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: quay.io/osd-addons/dbaas-operator-index@sha256:2788a47fd0ef1ece30898c1e608050ea71036d3329b9772dbb3d1f69313f745c
+  displayName: DBaaS Operator
+EOF
+----
+
+. Verify the catalog source is added, and in a ready state:
++
+.Example
+----
+$ oc get catalogsource dbaas-operator \
+-n openshift-marketplace \
+-o jsonpath='{.status.connectionState.lastObservedState} {"\n"}'
+----
++
+IMPORTANT: Wait until the catalog source is in a `READY` state, before proceeding to the next step.
+
+. Login to the OpenShift console with a user that has administrative privileges.
+
+. In the **Administrator** perspective, expand the **Operators** navigation menu, and click **OperatorHub**.
+
+. In the filter field, type **database access**, and click the **OpenShift Database Access Operator** tile.
+
+. Click the **Install** button to show the operator details.
+
+. The default and recommended namespace for the OpenShift Database Access operator is **openshift-dbaas-operator**, click **Install** on the **Install Operator** page.
++
+NOTE: All dependencies are automatically installed, this includes the provider account operators, and the quick-start guides.
+
+.Verification
+
+. Once the OpenShift Database Access operator successfully installs, a new navigation menu item is added, called **Data Services**.
+Expand the **Data Services** menu.
+This might take a few minutes to refresh the navigation menu.
+
+. Click **Database Access**.
+
+. On the **Database Access** home page you see an empty inventory table.
++
+image::rhoda_admin_entry_point_inventory_page.png[Database inventory landing page]
+
+[role="_additional-resources"]
+.Additional resources
+
+* For additional information about Red Hat OpenShift Database Access, see the link:https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/2022-q4/html-single/reference_guide/index[_Reference Guide_].

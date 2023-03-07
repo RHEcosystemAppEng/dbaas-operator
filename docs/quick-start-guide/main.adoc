@@ -1,0 +1,63 @@
+// The main assembly for Red Hat OpenShift Database Access (RHODA) solution.
+
+:imagesdir: images
+:context: rhoda-qsg
+:rhoda-prod-doc-url: https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/index
+
+// Book Title
+= Quick Start Guide
+
+[IMPORTANT]
+====
+The Red Hat OpenShift Database Access is a Service Preview release add-on that enables:
+
+* Easy consumption of database-as-a-service (DBaaS) offerings from partners including MongoDB Atlas, Crunchy Bridge, CockroachDB, and Amazon's Relational Database Services (RDS) directly from managed OpenShift clusters.
+* Easy management, monitoring, and control by administrators of cloud-hosted DBaaS including consumption, usage, and status.
+
+Red Hat OpenShift Database Access (OpenShift Database Access) is a Service Preview release.
+A Service Preview release has features that are early in development.
+Service Preview releases are not production ready and might have features and functionality that are not fully tested.
+Red Hat advises you not to use OpenShift Database Access for production or business-critical workloads.
+
+To give feedback or inform our engineering team of any technical issues with OpenShift Database Access, please use rhoda-requests@redhat.com.
+====
+
+// Getting started for system administrators
+// As a system administrator, you can install, monitor, and configure Red Hat OpenShift Database Access using popular cloud-database providers.
+
+include::modules/proc_installing-the-red-hat-openshift-database-access-add-on_en-us.adoc[leveloffset=+1]
+
+include::modules/proc_accessing-the-database-access-menu-for-configuring-and-monitoring_en-us.adoc[leveloffset=+1]
+
+// Getting started for developers
+// As a developer, you can use OpenShift Database Access to create new database instances, and connect your applications to database instances from cloud-hosted database providers.
+
+include::modules/proc_accessing-the-developer-workspace-and-adding-a-database-instance_en-us.adoc[leveloffset=+1]
+
+include::modules/proc_connecting-an-application-to-a-database-instance-using-the-topology-view_en-us.adoc[leveloffset=+1]
+
+// Appendices - Helping customers find their DBaaS provider account credentials.
+// MongoDB Atlas
+[appendix]
+include::modules/proc_find-your-mongodb-atlas-account-credentials_en-us.adoc[leveloffset=+1]
+
+// Crunchy Data Bridge
+[appendix]
+include::modules/proc_find-your-crunchy-data-bridge-account-credentials_en-us.adoc[leveloffset=+1]
+
+// CockroachDB
+[appendix]
+include::modules/proc_find-your-cockroachdb-account-credentials_en-us.adoc[leveloffset=+1]
+
+// Amazon RDS
+[appendix]
+include::modules/proc_find-your-amazon-rds-account-credentials_en-us.adoc[leveloffset=+1]
+
+// Appendices - Miscellaneous topics
+// Azure Red Hat OpenShift (ARO)
+[appendix]
+include::assembly_manual-installation-of-openshift-database-access-on-azure-red-hat-openshift_en-us.adoc[leveloffset=+1]
+
+// How to give feedback on Red Hat documentation
+[appendix]
+include::modules/proc_providing-feedback-on-red-hat-documentation_us-en.adoc[leveloffset=+1]

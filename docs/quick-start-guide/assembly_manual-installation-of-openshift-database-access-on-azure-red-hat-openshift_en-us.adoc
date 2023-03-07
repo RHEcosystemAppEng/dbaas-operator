@@ -1,0 +1,25 @@
+[id="manual-installation-of-openshift-database-access-on-azure-red-hat-openshift"]
+
+= Manual installation of OpenShift Database Access on Azure Red Hat OpenShift
+
+[role="_abstract"]
+
+As a systems administrator, you can manually install the OpenShift Database Access add-on to a Red Hat OpenShift cluster running on Microsoft Azure.
+
+== Prerequisites
+
+* A link:https://portal.azure.com/[Microsoft Azure] organizational or user account with an active subscription.
+* A Red Hat user account for accessing the link:https://console.redhat.com[Red Hat Hybrid Cloud Console].
+
+include::modules/proc_creating-an-azure-red-hat-openshift-cluster_en-us.adoc[leveloffset=+1]
+
+include::modules/proc_registering-an-azure-red-hat-openshift-cluster-with-the-red-hat-hybrid-cloud-console_en-us.adoc[leveloffset=+1]
+
+include::modules/proc_installing-openshift-database-access-using-the-operator-lifecycle-manager_en-us.adoc[leveloffset=+1]
+
+////
+[role="_additional-resources"]
+== Additional Resources
+
+*
+////

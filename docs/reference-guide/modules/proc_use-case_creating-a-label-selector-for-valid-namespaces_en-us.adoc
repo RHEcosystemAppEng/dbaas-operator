@@ -1,0 +1,112 @@
+:_module-type: PROCEDURE
+
+[id="creating-a-label-selector-for-valid-namespaces_{context}"]
+
+= Creating a label selector for valid namespaces
+
+[role="_abstract"]
+This basic use case creates a specific label selector for allowing only namespaces where the label is `example: test`.
+
+.Prerequisites
+
+* A running OpenShift Dedicated, Red Hat OpenShift on AWS (ROSA), or Azure Red Hat OpenShift (ARO) cluster.
+* link:https://access.redhat.com/documentation/en-us/red_hat_openshift_database_access/1/html/quick_start_guide/installing-the-red-hat-openshift-database-access-add-on_rhoda-qsg[Installation] of the OpenShift Database Access add-on.
+* User access to the command-line interface (CLI) for the OpenShift cluster.
+* An existing application namespace with a valid provider account imported.
+
+.Procedure
+
+. Log into OpenShift by using the command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Log in to the OpenShift console.
+Click your user name, and click **Copy login command**.
+Offer your user name and password again, and click **Display Token** to view the command.
+====
+
+. Set the appropriate project namespace:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc project _PROJECT_NAME_
+----
++
+.Example
+----
+$ oc project redhat-dbaas-operator
+----
+
+. Open the _DBaaSPolicy_ or _DBaaSInventory_ object for editing:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc edit _OBJECT_NAME_
+----
++
+.Example
+----
+$ oc edit DBaaSPolicy
+----
+
+.. Add the `nsSelector` block under the `spec.connections` section:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+...
+spec:
+  connections:
+    nsSelector:
+      matchExpressions:
+      - key: _STRING_
+        operator: [Exists,DoesNotExist,In,NotIn]
+        values:
+        - _STRING_
+      matchLabels:
+      - _STRING_: _STRING_
+...
+----
++
+.Example
+----
+...
+spec:
+  connections:
+    nsSelector:
+      matchExpressions:
+      - key: example
+        operator: In
+        values:
+        - test
+...
+----
++
+[NOTE]
+====
+You can match many expressions by specifying more than one `matchExpressions` block.
+The results of the query use a logical AND operator with each block, so that the results match the intersection of all of the `matchExpressions` and `matchLabels` you defined, for example, x and y and z.
+====
+
+.. Save your changes and close the editor.
+
+////
+[role="_additional-resources"]
+.Additional resources
+
+* 
+////

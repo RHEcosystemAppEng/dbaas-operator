@@ -1,0 +1,193 @@
+:_module-type: PROCEDURE
+
+[id="integrating-openshift-database-access-with-a-jupyter-notebook_{context}"]
+
+= Integrating OpenShift Database Access with a Jupyter Notebook
+
+[role="_abstract"]
+You can integrate OpenShift Database Access database instances with a Jupyter Notebook by manually creating a service binding, and configuring Python libraries for your Jupyter Notebook.
+
+.Prerequisites
+
+* A running OpenShift Dedicated or Red Hat OpenShift on AWS (ROSA) cluster.
+* Installation of the Kubeflow Notebook Controller add-on.
+* Installation of the Jupyter Web App add-on.
+* Installation of the Red Hat OpenShift Database Access add-on.
+* A database instance available in a cloud-hosted database provider’s inventory.
+* An understanding of how to use the Python programming language.
+
+.Procedure
+
+. Log into OpenShift using the a command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Once you log into the OpenShift console, click your user name, click **Copy login command**, login once again using your user name and password, then click **Display Token** to view the command.
+====
+
+. Verify the installation of the Kubeflow Notebook Controller, and the Jupyter Web App:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc -n opendatahub get crd/notebooks.kubeflow.org
+oc get pods -l app=notebook-controller -n _NAMESPACE_
+oc get pods -l app=jupyter-web-app -n _NAMESPACE_
+----
++
+.Example
+----
+$ oc -n opendatahub get crd/notebooks.kubeflow.org
+NAME                 	 CREATED AT
+notebooks.kubeflow.org   2022-11-29T18:46:46Z
+
+$ oc get pods -l app=notebook-controller -n odh
+NAME                            READY STATUS	 RESTARTS AGE
+notebook-controller-deployment  1/1   Running    0        29m
+
+$ oc get pods -l app=jupyter-web-app -n odh
+NAME                        READY STATUS	  RESTARTS AGE
+jupyter-web-app-deployment  1/1   Running     0        24m
+----
+
+. Change to your project namespace:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc project _PROJECT_NAME_
+----
++
+.Example
+----
+$ oc project kubeflow-user
+----
+
+. Get your Jupyter Notebook name and DBaaS connection information to use for the service binding configuration:
++
+.Example
+----
+$ oc get notebooks
+
+NAME             AGE
+bluebook-small   44d
+example-book     10m
+
+$ oc get dbaasconnections
+
+NAME               AGE
+example-mongodb    14h
+example-crunchy    15h
+----
+
+. Create the ServiceBinding object, and apply it to OpenShift:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: binding.operators.coreos.com/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: _SB_NAME_ <1>
+  namespace: _PROJECT_NAME_ <2>
+spec:
+  application:
+    group: kubeflow.org
+    name: _NOTEBOOK_NAME_ <3>
+    resource: notebooks
+    version: v1
+  bindAsFiles: true
+  detectBindingResources: true
+  services:
+  - group: dbaas.redhat.com
+    kind: DBaaSConnection
+    name: _DB_CONNECTION_NAME_ <4>
+    version: v1alpha1
+----
+<1> The friendly name of the service binding object.
+<2> The project namespace you are working in.
+<3> The name of the Jupyter Notebook you are using.
+<4> The name of the cloud-hosted database connection to use.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: binding.operators.coreos.com/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: example-service-binding
+  namespace: kubeflow-user
+spec:
+  application:
+    group: kubeflow.org
+    name: example-book
+    resource: notebooks
+    version: v1
+  bindAsFiles: true
+  detectBindingResources: true
+  services:
+  - group: dbaas.redhat.com
+    kind: DBaaSConnection
+    name: example-mongodb
+    version: v1alpha1
+EOF
+----
+
+. Check the service binding status:
++
+.Example
+----
+$ oc get servicebinding
+
+NAME                     READY    REASON                AGE
+example-service-binding  True     ApplicationsBound     4s
+----
++
+NOTE: The service binding is ready to use when it is set to `True` and the reason is `ApplicationBound`.
+
+. Install Python libraries:
++
+.Example
+----
+$ pip install pyservicebinding
+----
+
+.. Install the appropriate Python database client libraries:
++
+.MongoDB
+----
+$ pip install pymongo
+$ pip install "pymongo[srv]"
+----
++
+.Amazon RDS, CockroachDB, and Crunchy Bridge
+----
+$ pip install psycopg2-binary
+----
++
+.Amazon RDS MySQL
+----
+$ pip install mysql-connector-python
+----
+
+. Now you are ready to start writing code in your Jupyter Notebook, and accessing data in the managed database service.
+You can find samples of Jupyter Notebooks accessing databases at link:https://github.com/RHODA-lab/rhoda-notebook-controller/tree/main/Notebooks[GitHub].
+
+////
+[role="_additional-resources"]
+.Additional resources
+
+* 
+////
