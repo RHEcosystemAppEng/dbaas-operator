@@ -17,8 +17,6 @@ endif::[]
 // Book Title
 = Quick Start Guide
 
-toc::[]
-
 [IMPORTANT]
 ====
 The OpenShift Database Access is a Service Preview release add-on that enables:
@@ -32,9 +30,12 @@ Service Preview releases are not production ready and might have features and fu
 We advises you not to use OpenShift Database Access for production or business-critical workloads.
 ====
 
+toc::[]
+
 // Getting started for system administrators
 // As a system administrator, you can install, monitor, and configure Red Hat OpenShift Database Access using popular cloud-database providers.
 
+== Installing the Red Hat OpenShift Database Access add-on
 include::modules/proc_installing-the-red-hat-openshift-database-access-add-on_en-us.adoc[leveloffset=+1]
 
 include::modules/proc_accessing-the-database-access-menu-for-configuring-and-monitoring_en-us.adoc[leveloffset=+1]
