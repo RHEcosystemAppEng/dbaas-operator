@@ -219,13 +219,13 @@ func createCSV(k8sManager manager.Manager) {
 	Expect(err).ToNot(HaveOccurred())
 
 	verValue := gjson.Get(string(jsonConversion), "spec.version")
-	newJson, err := sjson.Delete(string(jsonConversion), "spec.version")
+	newJSON, err := sjson.Delete(string(jsonConversion), "spec.version")
 	Expect(err).ToNot(HaveOccurred())
-	newJson, err = sjson.Delete(newJson, "spec.webhookdefinitions")
+	newJSON, err = sjson.Delete(newJSON, "spec.webhookdefinitions")
 	Expect(err).ToNot(HaveOccurred())
 
 	csv := &operatorframework.ClusterServiceVersion{}
-	err = json.Unmarshal([]byte(newJson), csv)
+	err = json.Unmarshal([]byte(newJSON), csv)
 	Expect(err).ToNot(HaveOccurred())
 	csv.Namespace = testNamespace
 

@@ -8,6 +8,7 @@ import (
 	dbaasv1beta1 "github.com/RHEcosystemAppEng/dbaas-operator/api/v1beta1"
 )
 
+// Constants for metrics
 const (
 	// Resource label values
 	LabelResourceValuePlatform = "dbaas_platform"

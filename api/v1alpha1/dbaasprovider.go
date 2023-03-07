@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Defines the phases for instance provisioning.
+// DBaasInstancePhase defines the phases for instance provisioning.
 type DBaasInstancePhase string
 
 // Constants for the instance phases.
@@ -37,7 +37,7 @@ const (
 	InstancePhaseFailed   DBaasInstancePhase = "Failed"
 )
 
-// Defines the desired state of a DBaaSProvider object.
+// DBaaSProviderSpec defines the desired state of a DBaaSProvider object.
 type DBaaSProviderSpec struct {
 	// Contains information about database provider and platform.
 	Provider DatabaseProvider `json:"provider"`
@@ -67,7 +67,7 @@ type DBaaSProviderSpec struct {
 	InstanceParameterSpecs []InstanceParameterSpec `json:"instanceParameterSpecs"`
 }
 
-// Defines the information for a DBaaSProvider object.
+// DatabaseProvider defines the information for a DBaaSProvider object.
 type DatabaseProvider struct {
 	// The name used to specify the service binding origin parameter.
 	// For example, 'Red Hat DBaaS / MongoDB Atlas'.
@@ -85,13 +85,13 @@ type DatabaseProvider struct {
 	Icon ProviderIcon `json:"icon"`
 }
 
-// Follows the same field and naming formats as a comma-separated values (CSV) file.
+// ProviderIcon follows the same field and naming formats as a comma-separated values (CSV) file.
 type ProviderIcon struct {
 	Data      string `json:"base64data"`
 	MediaType string `json:"mediatype"`
 }
 
-// Defines the attributes.
+// CredentialField defines the attributes.
 type CredentialField struct {
 	// The name for this field.
 	Key string `json:"key"`
@@ -117,13 +117,13 @@ type DBaaSInventorySpec struct {
 	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
 }
 
-// Contains enough information to locate the referenced object inside the same namespace.
+// LocalObjectReference contains enough information to locate the referenced object inside the same namespace.
 type LocalObjectReference struct {
 	// Name of the referent.
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 }
 
-// Defines the inventory status that the provider's operator uses.
+// DBaaSInventoryStatus defines the inventory status that the provider's operator uses.
 type DBaaSInventoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -131,7 +131,7 @@ type DBaaSInventoryStatus struct {
 	Instances []Instance `json:"instances,omitempty"`
 }
 
-// Defines the information of a database instance.
+// Instance defines the information of a database instance.
 type Instance struct {
 	// A provider-specific identifier for this instance in the database service.
 	// It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
@@ -144,7 +144,7 @@ type Instance struct {
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 }
 
-// Defines the namespace and name of a k8s resource.
+// NamespacedName defines the namespace and name of a k8s resource.
 type NamespacedName struct {
 	// The namespace where an object of a known type is stored.
 	Namespace string `json:"namespace,omitempty"`
@@ -153,7 +153,7 @@ type NamespacedName struct {
 	Name string `json:"name"`
 }
 
-// Defines the desired state of a DBaaSConnection object.
+// DBaaSConnectionSpec defines the desired state of a DBaaSConnection object.
 type DBaaSConnectionSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
@@ -165,7 +165,7 @@ type DBaaSConnectionSpec struct {
 	InstanceRef *NamespacedName `json:"instanceRef,omitempty"`
 }
 
-// Defines the observed state of a DBaaSConnection object.
+// DBaaSConnectionStatus defines the observed state of a DBaaSConnection object.
 type DBaaSConnectionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -176,7 +176,7 @@ type DBaaSConnectionStatus struct {
 	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
 }
 
-// The schema for a provider's connection status.
+// DBaaSProviderConnection defines the schema for a provider's connection status.
 type DBaaSProviderConnection struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -184,7 +184,7 @@ type DBaaSProviderConnection struct {
 	Status DBaaSConnectionStatus `json:"status,omitempty"`
 }
 
-// The schema for a provider's inventory status.
+// DBaaSProviderInventory defines the schema for a provider's inventory status.
 type DBaaSProviderInventory struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -192,7 +192,7 @@ type DBaaSProviderInventory struct {
 	Status DBaaSInventoryStatus `json:"status,omitempty"`
 }
 
-// Defines the desired state of a DBaaSInstance object.
+// DBaaSInstanceSpec defines the desired state of a DBaaSInstance object.
 type DBaaSInstanceSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
@@ -211,7 +211,7 @@ type DBaaSInstanceSpec struct {
 	OtherInstanceParams map[string]string `json:"otherInstanceParams,omitempty"`
 }
 
-// Defines the observed state of a DBaaSInstance.
+// DBaaSInstanceStatus defines the observed state of a DBaaSInstance.
 type DBaaSInstanceStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -237,7 +237,7 @@ type DBaaSInstanceStatus struct {
 	Phase DBaasInstancePhase `json:"phase"`
 }
 
-// The schema for a provider instance object.
+// DBaaSProviderInstance defines the schema for a provider instance object.
 type DBaaSProviderInstance struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -245,7 +245,7 @@ type DBaaSProviderInstance struct {
 	Status DBaaSInstanceStatus `json:"status,omitempty"`
 }
 
-// Indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
+// InstanceParameterSpec indicates what parameters to collect from the user interface, and how to display those fields in a form to provision a database instance.
 type InstanceParameterSpec struct {
 	// The name for this field.
 	Name string `json:"name"`

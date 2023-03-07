@@ -31,7 +31,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSConnection API.
+        description: DBaaSConnection defines the schema for the DBaaSConnection API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -46,7 +46,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSConnection object.
+            description: DBaaSConnectionSpec defines the desired state of a DBaaSConnection
+              object.
             properties:
               instanceID:
                 description: The ID of the instance to connect to, as seen in the
@@ -84,7 +85,8 @@ spec:
             - inventoryRef
             type: object
           status:
-            description: Defines the observed state of a DBaaSConnection object.
+            description: DBaaSConnectionStatus defines the observed state of a DBaaSConnection
+              object.
             properties:
               conditions:
                 items:
@@ -183,7 +185,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSConnection API.
+        description: DBaaSConnection defines the schema for the DBaaSConnection API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -198,7 +200,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSConnection object.
+            description: DBaaSConnectionSpec defines the desired state of a DBaaSConnection
+              object.
             properties:
               databaseServiceID:
                 description: The ID of the database service to connect to, as seen
@@ -240,7 +243,8 @@ spec:
             - inventoryRef
             type: object
           status:
-            description: Defines the observed state of a DBaaSConnection object.
+            description: DBaaSConnectionStatus defines the observed state of a DBaaSConnection
+              object.
             properties:
               conditions:
                 items:

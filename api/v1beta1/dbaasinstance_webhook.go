@@ -24,6 +24,7 @@ import (
 // log is for logging in this package.
 var dbaasinstancelog = logf.Log.WithName("dbaasinstance-resource")
 
+// SetupWebhookWithManager sets up the webhook with the Manager.
 func (r *DBaaSInstance) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).

@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Constants for metrics
 const (
 	// Metrics names.
 	MetricNameDBaaSStackInstallationTotalDuration = "dbaas_stack_installation_total_duration_seconds"

@@ -33,7 +33,7 @@ const (
 	rhobsTokenKey                      = "rhobs-token"                     //#nosec
 	authTypeDex                 string = "dex"
 	authTypeRedhat              string = "redhat-sso"
-	ServiceMonitorPeriod        string = "30s"
+	serviceMonitorPeriod        string = "30s"
 )
 
 var metricsToInclude = []string{"dbaas_.*$", "csv_succeeded$", "csv_abnormal$", "ALERTS$", "subscription_sync_total"}
@@ -188,7 +188,7 @@ func getDefaultServiceMonitor(namespace string) *rhobsv1.ServiceMonitor {
 		Spec: rhobsv1.ServiceMonitorSpec{
 			Endpoints: []rhobsv1.Endpoint{
 				{
-					Interval: rhobsv1.Duration(ServiceMonitorPeriod),
+					Interval: rhobsv1.Duration(serviceMonitorPeriod),
 					Path:     "/metrics",
 					Port:     "metrics",
 					Scheme:   "http",

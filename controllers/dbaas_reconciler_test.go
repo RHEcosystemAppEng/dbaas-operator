@@ -214,7 +214,7 @@ var _ = Describe("Get Provider Spec Status Version", func() {
 		Entry("crunchy provider", crunchyProvider, &v1beta1.GroupVersion),
 		Entry("rds provider", &v1beta1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: RDS_PROVIDER,
+				Name: rdsProvider,
 			},
 			Spec: v1beta1.DBaaSProviderSpec{
 				GroupVersion: v1alpha1.GroupVersion.String(),

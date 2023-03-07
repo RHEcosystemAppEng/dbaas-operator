@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Constants for metrics
 const (
 	// Metric Names
 	metricNameInstanceStatusReady = "dbaas_instance_status_ready"
@@ -57,7 +58,7 @@ func setInstanceStatusMetrics(provider string, account string, instance dbaasv1b
 }
 
 // setInstanceRequestDurationSeconds set the metrics for instance request duration in seconds
-func setInstanceRequestDurationSeconds(provider string, account string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string) {
+func setInstanceRequestDurationSeconds(provider string, instance dbaasv1beta1.DBaaSInstance, execution Execution, event string) {
 	log := ctrl.Log.WithName("DBaaSInstance Request Duration for event: " + event)
 	switch event {
 	case LabelEventValueCreate:
@@ -119,6 +120,6 @@ func SetInstanceMetrics(provider string, account string, instance dbaasv1beta1.D
 	log.V(1).Info("provider - " + provider + " account - " + account + " namespace - " + instance.Namespace + " event - " + event + " errCd - " + errCd)
 	setInstanceStatusMetrics(provider, account, instance)
 	setInstancePhaseMetrics(provider, account, instance)
-	setInstanceRequestDurationSeconds(provider, account, instance, execution, event)
+	setInstanceRequestDurationSeconds(provider, instance, execution, event)
 	UpdateErrorsTotal(provider, account, instance.Namespace, LabelResourceValueInstance, event, errCd)
 }

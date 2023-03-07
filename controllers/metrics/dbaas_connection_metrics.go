@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Constants for metrics
 const (
 	// Metric Names
 	MetricNameConnectionStatusReady = "dbaas_connection_status_ready"
@@ -41,7 +42,7 @@ func SetConnectionMetrics(provider string, account string, connection dbaasv1bet
 	log := ctrl.Log.WithName("Setting DBaaSConnection Metrics")
 	log.V(1).Info("provider - " + provider + " account - " + account + " namespace - " + connection.Namespace + " event - " + event + " errCd - " + errCd)
 	setConnectionStatusMetrics(provider, account, connection)
-	setConnectionRequestDurationSeconds(provider, account, connection, execution, event)
+	setConnectionRequestDurationSeconds(provider, connection, execution, event)
 	UpdateErrorsTotal(provider, account, connection.Namespace, LabelResourceValueConnection, event, errCd)
 }
 
@@ -61,7 +62,7 @@ func setConnectionStatusMetrics(provider string, account string, connection dbaa
 }
 
 // setConnectionRequestDurationSeconds set the Metrics for connection request duration in seconds
-func setConnectionRequestDurationSeconds(provider string, account string, connection dbaasv1beta1.DBaaSConnection, execution Execution, event string) {
+func setConnectionRequestDurationSeconds(provider string, connection dbaasv1beta1.DBaaSConnection, execution Execution, event string) {
 	log := ctrl.Log.WithName("Connection Request Duration for event: " + event)
 	switch event {
 	case LabelEventValueCreate:

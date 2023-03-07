@@ -37,6 +37,8 @@ const (
 
 // log is for logging in this package.
 var dbaasinventorylog = logf.Log.WithName("dbaasinventory-resource")
+
+// WebhookAPIClient is the API client for webhooks
 var WebhookAPIClient client.Client
 
 // SetupWebhookWithManager sets up the webhook with the Manager.
