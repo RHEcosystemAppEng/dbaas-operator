@@ -223,12 +223,92 @@ Upon a successful connection, you go to the xref:connecting-an-application-to-a-
 * For more information about Red Hat OpenShift Database Access, see the _Reference Guide_.
 // End
 
-include::modules/proc_connecting-an-application-to-a-database-instance-using-the-topology-view_en-us.adoc[leveloffset=+1]
+// Chapter 4
+[id="connecting-an-application-to-a-database-instance-using-the-topology-view"]
+
+== Connecting an application to a database instance using the topology view
+
+You can add a database to an application by making a connection to the database instance from the cloud-database provider.
+On the **Topology** page, you see the application pod, along with a representation of the connection of the database instance.
+
+.Prerequisites
+
+* xref:installing-openshift-database-access-using-the-operator-lifecycle-manager[Installation] of the OpenShift Database Access operator.
+* Import at least one cloud-database provider account.
+
+.Procedure
+
+. When hovering the cursor over the deployment node, you can drag the arrow from the application to the new database instance to create a binding connector.
+You can also right-click on the deployment node, and click **Create Service Binding** to create a binding connector.
++
+image::../images/dbaas_create_binding_connector_between_app_and_db.png[The topology view of the application and the database with a dotted line arrow indicating database binding in the process of being dragged from the database to the application]
+
+. On the pop-up dialog, click **Create**.
+Once the binding is created, the application pod restarts.
+After the application pod restarts, your application now has database connectivity.
++
+image::../images/dbaas_binding_between_app_and_db.png[The topology view of the application and the database with a solid line arrow indicating database binding to the application is complete]
++
+This binding visually represents the injection of database connection information and credentials into the application pod.
+
+. Use a service binding library based on your application's framework to consume the service binding information and credentials.
+
+.Additional Resources
+
+* See the OpenShift Database Access _Reference Guide_ for more details on service bindings, and for working application examples by using the service binding libraries.
+// End
 
 // Appendices - Helping customers find their DBaaS provider account credentials.
 // MongoDB Atlas
 [appendix]
-include::modules/proc_find-your-mongodb-atlas-account-credentials_en-us.adoc[leveloffset=+1]
+[id="find-your-mongodb-atlas-account-credentials"]
+
+== Find your MongoDB Atlas account credentials
+
+You need the Organization ID, the Organization Public Key, and the Organization Private Key to create a provider account resource for MongoDB Atlas.
+
+[IMPORTANT]
+====
+If using MongoDB Atlas as a cloud-database provider, then you must add the IP address of the application pod to MongoDB Atlas' IP Access List.
+If the IP address is not in the IP Access List, then a 504 gateway timeout error occurs.
+Visit the MongoDB Atlas link:https://docs.atlas.mongodb.com/security/ip-access-list/[website] for more details on adding an IP address to your database project.
+====
+
+.Procedure
+
+. From the MongoDB Atlas link:https://www.mongodb.com/[home page], **Sign In** to your account.
+
+. From your account home page:
++
+image::../images/mongodb_first_single_screen_all_step.png[Single screenshot for finding your Organization ID value]
+
+.. Select **Organization** from the dropdown menu image:../images/1st_Callout_Bullet.png[First callout].
+
+.. Click **Settings** from the Organization navigation menu image:../images/2nd_Callout_Bullet.png[Second callout].
+
+.. Copy the Organization ID value image:../images/3rd_Callout_Bullet.png[Third callout].
++
+NOTE: In some cases your organization ID may be hidden by default.
+
+. Next, from the account home page:
++
+image::../images/mongodb_second_single_screen_all_step.png[Single screenshot for finding your API keys]
+
+.. Click **Access Manager** from the **Organization** navigation menu image:../images/1st_Callout_Bullet.png[First callout].
+
+.. Click **API Keys** image:../images/2nd_Callout_Bullet.png[Second callout].
+
+.. If you have existing API keys, you can find them listed here.
+Copy the API public and private keys for the import provider account fields.
+Also, verify that your API keys have the **Organization Owner** and **Organization Member** permissions image:../images/3rd_Callout_Bullet.png[Third callout] image:../images/4th_Callout_Bullet.png[Fourth callout].
+
+. If you need new API keys, click **Create API Key**, and proceed to the next step.
+
+. On the **Create API Key** page, enter a **Description**, and under the **Organization Permissions** dropdown box select the **Organization Owner** and **Organization Member** permissions.
+Click **Next**.
+
+. Copy the API public and private keys for the import provider account fields.
+// End
 
 // Crunchy Data Bridge
 [appendix]
