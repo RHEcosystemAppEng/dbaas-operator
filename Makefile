@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.4.0
+VERSION ?= 0.5.0
 
 CONTAINER_ENGINE?=docker
 
@@ -45,7 +45,7 @@ ORG ?= ecosystem-appeng
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
 # CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
-CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.3.0-wrapper
+CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.4.0-wrapper
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
@@ -341,11 +341,11 @@ catalog-push: ## Push a catalog image.
 
 .PHONY: wrapper-build
 wrapper-build: ## Build the catalog wrapper image.
-	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t quay.io/$(ORG)/dbaas-operator-catalog:0.3.0-wrapper .
+	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t quay.io/$(ORG)/dbaas-operator-catalog:0.4.0-wrapper .
 
 .PHONY: wrapper-push
 wrapper-push: ## Push the catalog wrapper image.
-	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.3.0-wrapper
+	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.4.0-wrapper
 
 .PHONY: get-version
 get-version: ; $(info ${VERSION})
