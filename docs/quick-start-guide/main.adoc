@@ -10,13 +10,14 @@ ifdef::env-github[]
 endif::[]
 
 :context: rhoda-qsg
-
 :toc:
+:toclevels: 3
 :toc-placement!:
-toc::[]
 
 // Book Title
 = Quick Start Guide
+
+toc::[]
 
 [IMPORTANT]
 ====
@@ -25,10 +26,10 @@ The OpenShift Database Access is a Service Preview release add-on that enables:
 * Easy consumption of database-as-a-service (DBaaS) offerings from partners including MongoDB Atlas, Crunchy Bridge, CockroachDB, and Amazon's Relational Database Services (RDS) directly from managed OpenShift clusters.
 * Easy management, monitoring, and control by administrators of cloud-hosted DBaaS including consumption, usage, and status.
 
-Red Hat OpenShift Database Access (OpenShift Database Access) is a Service Preview release.
+OpenShift Database Access (OpenShift Database Access) is a Service Preview release.
 A Service Preview release has features that are early in development.
 Service Preview releases are not production ready and might have features and functionality that are not fully tested.
-Red Hat advises you not to use OpenShift Database Access for production or business-critical workloads.
+We advises you not to use OpenShift Database Access for production or business-critical workloads.
 ====
 
 // Getting started for system administrators
