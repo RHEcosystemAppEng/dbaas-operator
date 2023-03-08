@@ -193,7 +193,7 @@ This binding visually represents the injection of database connection informatio
 // End
 
 // Appendices - Helping customers find their DBaaS provider account credentials.
-// MongoDB Atlas
+// Appendix A : MongoDB Atlas
 [appendix]
 [id="find-your-mongodb-atlas-account-credentials"]
 
@@ -244,20 +244,110 @@ Click **Next**.
 . Copy the API public and private keys for the import provider account fields.
 // End
 
-// Crunchy Data Bridge
+// Appendix B : Crunchy Data Bridge
 [appendix]
-include::modules/proc_find-your-crunchy-data-bridge-account-credentials_en-us.adoc[leveloffset=+1]
+[id="find-your-crunchy-data-bridge-account-credentials"]
 
-// CockroachDB
+== Find your Crunchy Data Bridge account credentials
+
+You need the Public API Key, and the Private API Secret to create a provider account resource for Crunchy Data Bridge.
+
+.Procedure
+
+. From the Crunch Data Bridge link:https://www.crunchybridge.com/account[Log in page], sign in to your account.
+
+. From your personal account home page, click **Settings**, and then click **Settings** from the navigation menu.
++
+image::../images/rhoda_crunch_data_bridge_settings_nav_menu.png[Crunchy Data Bridge settings on the navigation menu]
+
+. Copy the **Application ID** and **Application Secret** values for the import provider account fields.
++
+image::../images/rhoda_crunchy_data_bridge_api_key_info.png[Crunchy Data Bridge API key and secret values]
+// End
+
+// Appendix C : CockroachDB
 [appendix]
-include::modules/proc_find-your-cockroachdb-account-credentials_en-us.adoc[leveloffset=+1]
+[id="find-your-cockroachdb-account-credentials"]
 
-// Amazon RDS
+== Find your CockroachDB account credentials
+
+You need the API Key to create a provider account resource for CockroachDB.
+
+[IMPORTANT]
+====
+Currently, access to the **Service Accounts** tab on the **Access Management** page is enabled by invite only from CockroachDB.
+To expose the **Service Accounts** tab on the **Access Management** page, you can request that this feature be enabled.
+Contact link:https://support.cockroachlabs.com/hc/en-us[CockroachDB support] and ask for the Cloud API to be enabled in the CockroachDB Cloud Console for your user account.
+
+Additionally, you can view this link:https://youtu.be/5Xkf7tMbbxM[quick video tutorial] from Cockroach Labs on creating an account.
+====
+
+.Procedure
+
+. From the CockroachDB link:https://cockroachlabs.cloud/service-accounts/[service account page], log in to your account.
+
+. From your service account home page, select **Access** from the navigation menu.
+
+. Click **Service Accounts** from the **Access Management** page.
+
+. Click **Create Service Account**.
+
+. Enter an **Account name**, select the **Permissions**, and click **Create**.
++
+image::../images/rhoda_cockroachdb_step1_create_service_account_dialog.png[Step 1 for creating a service account]
+
+. Enter an **API key name**, and click **Create**.
++
+image::../images/rhoda_cockroachdb_step2_create_service_account_dialog.png[Step 2 for creating a service account]
+
+. Copy the **Secret key** for the import provider account field, and click **Done**.
++
+image::../images/rhoda_cockroachdb_step3_create_service_account_dialog.png[Step 3 for creating a service account]
+// End
+
+// Appendix D : Amazon RDS
 [appendix]
-include::modules/proc_find-your-amazon-rds-account-credentials_en-us.adoc[leveloffset=+1]
+[id="find-your-amazon-rds-account-credentials"]
 
-// Appendices - Miscellaneous topics
-// Azure Red Hat OpenShift (ARO)
+== Find your Amazon RDS account credentials
+
+You need an Amazon Web Services (**AWS**) **Access key ID**, an **AWS Secret access key**, and know which **AWS Region** you are using to import an Amazon Relational Database Service (RDS) provider account for OpenShift Database Access.
+If you lose your AWS Access key ID, and your AWS Secret access key, new ones must be created.
+
+[NOTE]
+====
+Amazon only allows two secret access keys for each user.
+You might need to deactivate unused keys, or delete lost keys before you can create a new access key.
+====
+
+[IMPORTANT]
+====
+You are limited to one Amazon RDS provider account per OpenShift cluster.
+Using your AWS credentials on more than one OpenShift cluster breaks established connections on all OpenShift clusters, except for the last OpenShift cluster that established a connection.
+====
+
+IMPORTANT: OpenShift Database Access only supports RDS database **instance deployments**, and does not support database **cluster deployments**.
+
+IMPORTANT: Database instances using a custom Oracle or custom SQL Server engine type are not supported.
+
+.Prerequisites
+
+* An Amazon Web Services link:https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email[(AWS) account name].
+
+.Procedure
+
+. Sign in to Amazon’s Identity and Access Management link:https://console.aws.amazon.com/[(IAM) console] with your AWS user account.
+
+. From the IAM console home page, expand the **Access management** menu, and click **Users**.
+
+. Select a user from the list.
+
+. On the user’s summary page, select the **Security credentials** tab, and click the **Create access key** button.
+
+. Copy the **AWS Access key ID**, and the **AWS Secret access key**.
+// End
+
+// Appendix E : OpenShift Database Access for Azure Red Hat OpenShift (ARO)
 [appendix]
 [id="manual-installation-of-openshift-database-access-on-azure-red-hat-openshift"]
 
@@ -268,15 +358,12 @@ You can manually install the OpenShift Database Access operator to a Red Hat Ope
 .Prerequisites
 
 * A link:https://portal.azure.com/[Microsoft Azure] organizational or user account with an active subscription.
-* A Red Hat user account for accessing the link:https://console.redhat.com[Red Hat Hybrid Cloud Console].
 
 include::modules/proc_creating-an-azure-red-hat-openshift-cluster_en-us.adoc[leveloffset=+1]
 
 include::modules/proc_registering-an-azure-red-hat-openshift-cluster-with-the-red-hat-hybrid-cloud-console_en-us.adoc[leveloffset=+1]
 
 // Manual installation using Operator Lifecycle Manager (OLM)
-// Section x.y
-[appendix]
 [id="installing-openshift-database-access-using-the-operator-lifecycle-manager"]
 
 === Installing OpenShift Database Access using the Operator Lifecycle Manager
@@ -367,4 +454,3 @@ image::../images/rhoda_admin_entry_point_inventory_page.png[Database inventory l
 
 * For additional information about OpenShift Database Access, see the _Reference Guide_.
 // End
-
