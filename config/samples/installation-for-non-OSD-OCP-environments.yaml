@@ -34,12 +34,5 @@ spec:
   source: dbaas-operator
   sourceNamespace: openshift-marketplace
   config:
-    env:
-      - name: ADDON_NAME
-        value: dbaas-operator-dev
-      - name: RHOBS_AUTH_TYPE
-        value: dex
-      - name: RHOBS_API_URL
-        value: https://observatorium-observatorium.apps.mmikhail-obs1.kni.syseng.devcluster.openshift.com/api/metrics/v1/test2/api/v1/receive
   startingCSV: dbaas-operator.v0.3.0
 #  startingCSV: dbaas-operator.v0.4.0

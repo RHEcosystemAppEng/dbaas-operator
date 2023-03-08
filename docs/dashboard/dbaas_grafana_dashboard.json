@@ -1,0 +1,4698 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 1,
+  "iteration": 1677077244914,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 35,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_version_info)",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Installation",
+      "transformations": [],
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 292
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OpenShift Console URL"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 492
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Installed"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 134
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 118
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cloud Provider"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 121
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Operator Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 181
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "id": 33,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Days Installed"
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_version_info",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Clusters Information",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "name": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 18,
+              "__name__": 1,
+              "cloud_platform_name": 8,
+              "cluster_id": 2,
+              "cluster_version": 3,
+              "container": 4,
+              "creation_timestamp": 10,
+              "endpoint": 5,
+              "instance": 6,
+              "job": 7,
+              "namespace": 11,
+              "openshift_url": 12,
+              "pod": 13,
+              "prometheus": 14,
+              "receive": 15,
+              "service": 16,
+              "tenant_id": 17,
+              "version": 9
+            },
+            "renameByName": {
+              "Value": "",
+              "cloud_platform_name": "Cloud Provider",
+              "cluster_id": "Cluster Id",
+              "cluster_version": "Cluster Version",
+              "container": "",
+              "creation_timestamp": "Installed",
+              "job": "",
+              "name": "Cloud Provider",
+              "openshift_url": "OpenShift Console URL",
+              "pod": "",
+              "tenant_id": "",
+              "version": "Operator Version"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Installed"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 18,
+      "panels": [],
+      "repeat": "cluster_id",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "title": "Installations  status for $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 307
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cluster_version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 87
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 26,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_platform_installation_status{cluster_id=`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Platform Stack Installation Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": false,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "name": false,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 2,
+              "Value": 17,
+              "__name__": 3,
+              "cluster_id": 0,
+              "cluster_version": 1,
+              "container": 4,
+              "endpoint": 5,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "receive": 12,
+              "service": 13,
+              "status": 14,
+              "tenant_id": 15,
+              "version": 16
+            },
+            "renameByName": {
+              "cluster_id": "Cluster Id",
+              "name": "Component/Provider",
+              "namespace": "",
+              "status": "Status",
+              "version": "Version"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 19
+      },
+      "id": 40,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 18,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "title": "Installations  status for $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 307
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cluster_version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 87
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 41,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 26,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_platform_installation_status{cluster_id=`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Platform Stack Installation Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": false,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "name": false,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 2,
+              "Value": 17,
+              "__name__": 3,
+              "cluster_id": 0,
+              "cluster_version": 1,
+              "container": 4,
+              "endpoint": 5,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "receive": 12,
+              "service": 13,
+              "status": 14,
+              "tenant_id": 15,
+              "version": 16
+            },
+            "renameByName": {
+              "cluster_id": "Cluster Id",
+              "name": "Component/Provider",
+              "namespace": "",
+              "status": "Status",
+              "version": "Version"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 42,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 18,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "title": "Installations  status for $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 307
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cluster_version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 87
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 43,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 26,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_platform_installation_status{cluster_id=`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Platform Stack Installation Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": false,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "name": false,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 2,
+              "Value": 17,
+              "__name__": 3,
+              "cluster_id": 0,
+              "cluster_version": 1,
+              "container": 4,
+              "endpoint": 5,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "receive": 12,
+              "service": 13,
+              "status": 14,
+              "tenant_id": 15,
+              "version": 16
+            },
+            "renameByName": {
+              "cluster_id": "Cluster Id",
+              "name": "Component/Provider",
+              "namespace": "",
+              "status": "Status",
+              "version": "Version"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 44,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 18,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "title": "Installations  status for $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 307
+              },
+              {
+                "id": "noValue",
+                "value": "-"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "cluster_version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 87
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 45,
+      "options": {
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 26,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_platform_installation_status{cluster_id=`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Platform Stack Installation Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": false,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "name": false,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 2,
+              "Value": 17,
+              "__name__": 3,
+              "cluster_id": 0,
+              "cluster_version": 1,
+              "container": 4,
+              "endpoint": 5,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "receive": 12,
+              "service": 13,
+              "status": 14,
+              "tenant_id": 15,
+              "version": 16
+            },
+            "renameByName": {
+              "cluster_id": "Cluster Id",
+              "name": "Component/Provider",
+              "namespace": "",
+              "status": "Status",
+              "version": "Version"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 10,
+      "panels": [],
+      "repeat": "cluster_id",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "title": "Total Count for  Cluster $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 50
+      },
+      "id": 23,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_inventory_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Provider Account  Count",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 154
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 50
+      },
+      "id": 24,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Reason"
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_inventory_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Provider Accounts Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 19,
+              "__name__": 3,
+              "cluster_id": 1,
+              "container": 4,
+              "creation_timestamp": 15,
+              "endpoint": 5,
+              "exported_namespace": 12,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "provider": 2,
+              "reason": 13,
+              "receive": 16,
+              "service": 17,
+              "status": 14,
+              "tenant_id": 18
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Provider Account",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 60
+      },
+      "id": 36,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_connection_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Connections Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 60
+      },
+      "id": 37,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_connection_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Connections Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "instance_id": 22,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "cluster_version": "",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Instance ID",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 70
+      },
+      "id": 38,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_instance_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Instances Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 70
+      },
+      "id": 39,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+          "value": "22bdbcf7-996d-4e56-8779-0a85a1f53e8e"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_instance_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "id": 46,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 10,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "title": "Total Count for  Cluster $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 81
+      },
+      "id": 47,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 23,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_inventory_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Provider Account  Count",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 154
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 81
+      },
+      "id": 48,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Reason"
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 24,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_inventory_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Provider Accounts Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 19,
+              "__name__": 3,
+              "cluster_id": 1,
+              "container": 4,
+              "creation_timestamp": 15,
+              "endpoint": 5,
+              "exported_namespace": 12,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "provider": 2,
+              "reason": 13,
+              "receive": 16,
+              "service": 17,
+              "status": 14,
+              "tenant_id": 18
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Provider Account",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 91
+      },
+      "id": 49,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 36,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_connection_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Connections Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 91
+      },
+      "id": 50,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 37,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_connection_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Connections Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "instance_id": 22,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "cluster_version": "",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Instance ID",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 101
+      },
+      "id": 51,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 38,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_instance_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Instances Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 101
+      },
+      "id": 52,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 39,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+          "value": "82d06e66-0dd6-42e5-a70e-b7718f29c1a8"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_instance_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 111
+      },
+      "id": 53,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 10,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "title": "Total Count for  Cluster $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 112
+      },
+      "id": 54,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 23,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_inventory_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Provider Account  Count",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 154
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 112
+      },
+      "id": 55,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Reason"
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 24,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_inventory_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Provider Accounts Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 19,
+              "__name__": 3,
+              "cluster_id": 1,
+              "container": 4,
+              "creation_timestamp": 15,
+              "endpoint": 5,
+              "exported_namespace": 12,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "provider": 2,
+              "reason": 13,
+              "receive": 16,
+              "service": 17,
+              "status": 14,
+              "tenant_id": 18
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Provider Account",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 122
+      },
+      "id": 56,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 36,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_connection_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Connections Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 122
+      },
+      "id": 57,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 37,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_connection_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Connections Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "instance_id": 22,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "cluster_version": "",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Instance ID",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 132
+      },
+      "id": 58,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 38,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_instance_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Instances Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 132
+      },
+      "id": 59,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 39,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+          "value": "9830d7c2-eb0e-4652-83e6-6f66d225c016"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_instance_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 142
+      },
+      "id": 60,
+      "panels": [],
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 10,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "title": "Total Count for  Cluster $cluster_id",
+      "type": "row"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 143
+      },
+      "id": 61,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 23,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_inventory_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Provider Account  Count",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 148
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 154
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 143
+      },
+      "id": 62,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Reason"
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 24,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_inventory_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Provider Accounts Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 19,
+              "__name__": 3,
+              "cluster_id": 1,
+              "container": 4,
+              "creation_timestamp": 15,
+              "endpoint": 5,
+              "exported_namespace": 12,
+              "instance": 6,
+              "job": 7,
+              "name": 8,
+              "namespace": 9,
+              "pod": 10,
+              "prometheus": 11,
+              "provider": 2,
+              "reason": 13,
+              "receive": 16,
+              "service": 17,
+              "status": 14,
+              "tenant_id": 18
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Provider Account",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 153
+      },
+      "id": 63,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 36,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_connection_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Connections Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 92
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 153
+      },
+      "id": 64,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 37,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_connection_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Connections Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "instance_id": 22,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "cluster_version": "",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Instance ID",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 0,
+        "y": 163
+      },
+      "id": 65,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 38,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "count(dbaas_instance_status_ready{cluster_id=~`$cluster_id`})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Instances Count ",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Observatorium-Metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "filterable": true
+          },
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connection Id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 232
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Creation Time "
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 222
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsUS"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 67
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Cluster ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 17,
+        "x": 7,
+        "y": 163
+      },
+      "id": 66,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Creation Time "
+          }
+        ]
+      },
+      "pluginVersion": "7.5.16",
+      "repeatIteration": 1677077244914,
+      "repeatPanelId": 39,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "cluster_id": {
+          "selected": true,
+          "text": "c4e0dd70-1568-41e2-9411-f4132e45b07f",
+          "value": "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "dbaas_instance_status_ready{cluster_id=~`$cluster_id`}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances Status",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_version": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "namespace": true,
+              "pod": true,
+              "prometheus": true,
+              "receive": true,
+              "service": true,
+              "tenant_id": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value": 20,
+              "__name__": 4,
+              "account": 3,
+              "cluster_id": 1,
+              "cluster_version": 21,
+              "container": 5,
+              "creation_timestamp": 16,
+              "endpoint": 6,
+              "exported_namespace": 13,
+              "instance": 7,
+              "job": 8,
+              "name": 9,
+              "namespace": 10,
+              "pod": 11,
+              "prometheus": 12,
+              "provider": 2,
+              "reason": 14,
+              "receive": 17,
+              "service": 18,
+              "status": 15,
+              "tenant_id": 19
+            },
+            "renameByName": {
+              "__name__": "",
+              "account": "Provider Account",
+              "cluster_id": "Cluster ID",
+              "container": "",
+              "creation_timestamp": "Creation Time ",
+              "endpoint": "",
+              "exported_namespace": "Project",
+              "instance": "",
+              "instance_id": "Connection Id",
+              "job": "",
+              "name": "Name",
+              "prometheus": "",
+              "provider": "DB Provider",
+              "reason": "State",
+              "receive": "",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Creation Time "
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+            "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+            "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+            "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+          ],
+          "value": [
+            "22bdbcf7-996d-4e56-8779-0a85a1f53e8e",
+            "82d06e66-0dd6-42e5-a70e-b7718f29c1a8",
+            "9830d7c2-eb0e-4652-83e6-6f66d225c016",
+            "c4e0dd70-1568-41e2-9411-f4132e45b07f"
+          ]
+        },
+        "datasource": "Observatorium-Metrics",
+        "definition": "dbaas_version_info",
+        "description": "Select the cluster ",
+        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": "Select the cluster ",
+        "multi": true,
+        "name": "cluster_id",
+        "options": [],
+        "query": {
+          "query": "dbaas_version_info",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/.*cluster_id=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "RHODA_Metrics_Dashboard",
+  "uid": "ZA3bGim4z",
+  "version": 19
+}
