@@ -342,7 +342,7 @@ spec:
     - kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
       version: v1alpha1
-    - description: The schema for the DBaaSConnection API.
+    - description: DBaaSConnection defines the schema for the DBaaSConnection API.
       displayName: DBaaSConnection
       kind: DBaaSConnection
       name: dbaasconnections.dbaas.redhat.com
@@ -350,7 +350,7 @@ spec:
     - kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
       version: v1alpha1
-    - description: The schema for the DBaaSInstance API.
+    - description: DBaaSInstance defines the schema for the DBaaSInstance API.
       displayName: DBaaSInstance
       kind: DBaaSInstance
       name: dbaasinstances.dbaas.redhat.com
@@ -358,9 +358,9 @@ spec:
     - kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
       version: v1alpha1
-    - description: The schema for the DBaaSInventory API. Inventory objects must be
-        created in a valid namespace, determined by the existence of a DBaaSPolicy
-        object.
+    - description: DBaaSInventory defines the schema for the DBaaSInventory API. Inventory
+        objects must be created in a valid namespace, determined by the existence
+        of a DBaaSPolicy object.
       displayName: Provider Account
       kind: DBaaSInventory
       name: dbaasinventories.dbaas.redhat.com
@@ -368,7 +368,7 @@ spec:
     - kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
       version: v1alpha1
-    - description: The schema for the DBaaSPlatform API.
+    - description: DBaaSPlatform defines the schema for the DBaaSPlatform API.
       displayName: DBaaSPlatform
       kind: DBaaSPlatform
       name: dbaasplatforms.dbaas.redhat.com
@@ -376,9 +376,9 @@ spec:
     - kind: DBaaSPolicy
       name: dbaaspolicies.dbaas.redhat.com
       version: v1alpha1
-    - description: Enables administrative capabilities within a namespace, and sets
-        a default inventory policy. Policy defaults can be overridden on a per-inventory
-        basis.
+    - description: DBaaSPolicy enables administrative capabilities within a namespace,
+        and sets a default inventory policy. Policy defaults can be overridden on
+        a per-inventory basis.
       displayName: Provider Account Policy
       kind: DBaaSPolicy
       name: dbaaspolicies.dbaas.redhat.com
@@ -386,7 +386,7 @@ spec:
     - kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com
       version: v1alpha1
-    - description: The schema for the DBaaSProvider API.
+    - description: DBaaSProvider defines the schema for the DBaaSProvider API.
       displayName: DBaaSProvider
       kind: DBaaSProvider
       name: dbaasproviders.dbaas.redhat.com

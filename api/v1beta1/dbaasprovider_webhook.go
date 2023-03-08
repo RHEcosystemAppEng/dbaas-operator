@@ -25,12 +25,14 @@ import (
 // log is for logging in this package.
 var dbaasproviderlog = logf.Log.WithName("dbaasprovider-resource")
 
+// SetupWebhookWithManager sets up the webhook with the Manager.
 func (r *DBaaSProvider) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }
 
+// GetDBaaSAPIGroupVersion returns the DBaaS API group version used by the provider
 func (r *DBaaSProvider) GetDBaaSAPIGroupVersion() schema.GroupVersion {
 	if len(r.Spec.GroupVersion) > 0 {
 		groupVersion, err := schema.ParseGroupVersion(r.Spec.GroupVersion)

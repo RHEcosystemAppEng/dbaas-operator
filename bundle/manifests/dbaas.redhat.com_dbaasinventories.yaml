@@ -29,9 +29,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSInventory API. Inventory objects must
-          be created in a valid namespace, determined by the existence of a DBaaSPolicy
-          object.
+        description: DBaaSInventory defines the schema for the DBaaSInventory API.
+          Inventory objects must be created in a valid namespace, determined by the
+          existence of a DBaaSPolicy object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -46,8 +46,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: This object defines the desired state of a DBaaSInventory
-              object.
+            description: DBaaSOperatorInventorySpec defines the desired state of a
+              DBaaSInventory object.
             properties:
               connectionNamespaces:
                 description: Namespaces where DBaaSConnection and DBaaSInstance objects
@@ -143,8 +143,8 @@ spec:
             - providerRef
             type: object
           status:
-            description: Defines the inventory status that the provider's operator
-              uses.
+            description: DBaaSInventoryStatus defines the inventory status that the
+              provider's operator uses.
             properties:
               conditions:
                 items:
@@ -220,7 +220,7 @@ spec:
                 description: A list of instances returned from querying the database
                   provider.
                 items:
-                  description: Defines the information of a database instance.
+                  description: Instance defines the information of a database instance.
                   properties:
                     instanceID:
                       description: A provider-specific identifier for this instance
@@ -250,9 +250,9 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSInventory API. Inventory objects must
-          be created in a valid namespace, determined by the existence of a DBaaSPolicy
-          object.
+        description: DBaaSInventory defines the schema for the DBaaSInventory API.
+          Inventory objects must be created in a valid namespace, determined by the
+          existence of a DBaaSPolicy object.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -267,8 +267,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: This object defines the desired state of a DBaaSInventory
-              object.
+            description: DBaaSOperatorInventorySpec defines the desired state of a
+              DBaaSInventory object.
             properties:
               credentialsRef:
                 description: The secret containing the provider-specific connection
@@ -374,8 +374,8 @@ spec:
             - providerRef
             type: object
           status:
-            description: Defines the inventory status that the provider's operator
-              uses.
+            description: DBaaSInventoryStatus defines the inventory status that the
+              provider's operator uses.
             properties:
               conditions:
                 items:
@@ -451,7 +451,8 @@ spec:
                 description: A list of database services returned from querying the
                   database provider.
                 items:
-                  description: Defines the information of a database service.
+                  description: DatabaseService defines the information of a database
+                    service.
                   properties:
                     serviceID:
                       description: A provider-specific identifier for the database

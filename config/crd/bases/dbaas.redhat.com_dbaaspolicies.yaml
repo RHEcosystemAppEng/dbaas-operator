@@ -26,9 +26,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Enables administrative capabilities within a namespace, and sets
-          a default inventory policy. Policy defaults can be overridden on a per-inventory
-          basis.
+        description: DBaaSPolicy enables administrative capabilities within a namespace,
+          and sets a default inventory policy. Policy defaults can be overridden on
+          a per-inventory basis.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -43,9 +43,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: The specifications for a _DBaaSPolicy_ object. Enables administrative
-              capabilities within a namespace, and sets a default inventory policy.
-              Policy defaults can be overridden on a per-inventory basis.
+            description: DBaaSPolicySpec The specifications for a _DBaaSPolicy_ object.
+              Enables administrative capabilities within a namespace, and sets a default
+              inventory policy. Policy defaults can be overridden on a per-inventory
+              basis.
             properties:
               connectionNamespaces:
                 description: Namespaces where DBaaSConnection and DBaaSInstance objects
@@ -112,7 +113,8 @@ spec:
                 type: boolean
             type: object
           status:
-            description: Defines the observed state of a DBaaSPolicy object.
+            description: DBaaSPolicyStatus defines the observed state of a DBaaSPolicy
+              object.
             properties:
               conditions:
                 items:
@@ -200,9 +202,9 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: Enables administrative capabilities within a namespace, and sets
-          a default inventory policy. Policy defaults can be overridden on a per-inventory
-          basis.
+        description: DBaaSPolicy enables administrative capabilities within a namespace,
+          and sets a default inventory policy. Policy defaults can be overridden on
+          a per-inventory basis.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -217,7 +219,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: The specifications for a DBaaSPolicy object.
+            description: DBaaSPolicySpec the specifications for a DBaaSPolicy object.
             properties:
               connections:
                 description: Namespaces where DBaaSConnection and DBaaSInstance objects
@@ -287,7 +289,8 @@ spec:
                 type: boolean
             type: object
           status:
-            description: Defines the observed state of a DBaaSPolicy object.
+            description: DBaaSPolicyStatus defines the observed state of a DBaaSPolicy
+              object.
             properties:
               conditions:
                 items:

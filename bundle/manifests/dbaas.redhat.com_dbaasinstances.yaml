@@ -29,7 +29,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSInstance API.
+        description: DBaaSInstance defines the schema for the DBaaSInstance API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -44,7 +44,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSInstance object.
+            description: DBaaSInstanceSpec defines the desired state of a DBaaSInstance
+              object.
             properties:
               cloudProvider:
                 description: Identifies the cloud-hosted database provider.
@@ -81,7 +82,7 @@ spec:
             - name
             type: object
           status:
-            description: Defines the observed state of a DBaaSInstance.
+            description: DBaaSInstanceStatus defines the observed state of a DBaaSInstance.
             properties:
               conditions:
                 items:
@@ -197,7 +198,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSInstance API.
+        description: DBaaSInstance defines the schema for the DBaaSInstance API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -212,7 +213,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSInstance object.
+            description: DBaaSInstanceSpec defines the desired state of a DBaaSInstance
+              object.
             properties:
               inventoryRef:
                 description: A reference to the relevant DBaaSInventory custom resource
@@ -237,7 +239,7 @@ spec:
             - inventoryRef
             type: object
           status:
-            description: Defines the observed state of a DBaaSInstance.
+            description: DBaaSInstanceStatus defines the observed state of a DBaaSInstance.
             properties:
               conditions:
                 items:

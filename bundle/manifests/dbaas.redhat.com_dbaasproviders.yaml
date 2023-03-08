@@ -29,7 +29,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSProvider API.
+        description: DBaaSProvider defines the schema for the DBaaSProvider API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -44,7 +44,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSProvider object.
+            description: DBaaSProviderSpec defines the desired state of a DBaaSProvider
+              object.
             properties:
               allowsFreeTrial:
                 description: Indicates whether the provider offers free trials.
@@ -57,7 +58,7 @@ spec:
                 description: Indicates what information to collect from the user interface
                   and how to display fields in a form.
                 items:
-                  description: Defines the attributes.
+                  description: CredentialField defines the attributes.
                   properties:
                     displayName:
                       description: A user-friendly name for this field.
@@ -99,9 +100,9 @@ spec:
                   and how to display those fields in a form to provision a database
                   instance.
                 items:
-                  description: Indicates what parameters to collect from the user
-                    interface, and how to display those fields in a form to provision
-                    a database instance.
+                  description: InstanceParameterSpec indicates what parameters to
+                    collect from the user interface, and how to display those fields
+                    in a form to provision a database instance.
                   properties:
                     defaultValue:
                       description: Default value for this field.
@@ -175,7 +176,8 @@ spec:
             - provider
             type: object
           status:
-            description: Defines the observed state of a DBaaSProvider object.
+            description: DBaaSProviderStatus defines the observed state of a DBaaSProvider
+              object.
             type: object
         type: object
     served: true
@@ -185,7 +187,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSProvider API.
+        description: DBaaSProvider defines the schema for the DBaaSProvider API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -200,7 +202,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSProvider object.
+            description: DBaaSProviderSpec defines the desired state of a DBaaSProvider
+              object.
             properties:
               allowsFreeTrial:
                 description: Indicates whether the provider offers free trials.
@@ -213,7 +216,8 @@ spec:
                 description: Indicates what information to collect from the user interface
                   and how to display fields in a form.
                 items:
-                  description: Defines the CredentialField object attributes.
+                  description: CredentialField defines the CredentialField object
+                    attributes.
                   properties:
                     displayName:
                       description: A user-friendly name for this field.
@@ -293,24 +297,26 @@ spec:
                 type: object
               provisioningParameters:
                 additionalProperties:
-                  description: Information for a ProvisioningParameter object.
+                  description: ProvisioningParameter provides information for a ProvisioningParameter
+                    object.
                   properties:
                     conditionalData:
                       description: Lists of additional data containing the options
                         or default values for the field.
                       items:
-                        description: 'A list of available options with default values
-                          for a dropdown menu, or a list of default values entered
-                          by the user within the user interface (UI) based on the
-                          dependencies. A provisioning parameter can have many options
-                          lists and default values, depending on the dependency parameters.
-                          If options lists are present, the field displays a dropdown
-                          menu in the UI, otherwise it displays an empty field for
-                          user input. For example, you can have four different options
-                          lists for different regions: one for dedicated clusters
-                          on Google Cloud Platform (GCP), one for dedicated clusters
-                          on Amazon Web Services (AWS), one for serverless on GCP,
-                          and one for serverless on AWS.'
+                        description: 'ConditionalProvisioningParameterData provides
+                          a list of available options with default values for a dropdown
+                          menu, or a list of default values entered by the user within
+                          the user interface (UI) based on the dependencies. A provisioning
+                          parameter can have many options lists and default values,
+                          depending on the dependency parameters. If options lists
+                          are present, the field displays a dropdown menu in the UI,
+                          otherwise it displays an empty field for user input. For
+                          example, you can have four different options lists for different
+                          regions: one for dedicated clusters on Google Cloud Platform
+                          (GCP), one for dedicated clusters on Amazon Web Services
+                          (AWS), one for serverless on GCP, and one for serverless
+                          on AWS.'
                         properties:
                           defaultValue:
                             description: Set a default value.
@@ -318,8 +324,8 @@ spec:
                           dependencies:
                             description: List of the dependent fields and values.
                             items:
-                              description: Defines the name and value of a dependency
-                                field.
+                              description: FieldDependency defines the name and value
+                                of a dependency field.
                               properties:
                                 field:
                                   description: Name of the dependency field.
@@ -349,8 +355,9 @@ spec:
                           options:
                             description: Options displayed in the UI.
                             items:
-                              description: Defines the value and display value for
-                                an option in a dropdown menu, radio button, or checkbox.
+                              description: Option defines the value and display value
+                                for an option in a dropdown menu, radio button, or
+                                checkbox.
                               properties:
                                 displayValue:
                                   description: Corresponding display value.
@@ -386,7 +393,8 @@ spec:
             - provider
             type: object
           status:
-            description: Defines the observed state of DBaaSProvider object.
+            description: DBaaSProviderStatus defines the observed state of DBaaSProvider
+              object.
             properties:
               conditions:
                 items:

@@ -16,6 +16,7 @@ limitations under the License.
 
 package v1beta1
 
+// Constants for the providers supported
 const (
 	CockroachDBCloudRegistration = "cockroachdb-cloud-registration"
 	MongoDBAtlasRegistration     = "mongodb-atlas-registration"

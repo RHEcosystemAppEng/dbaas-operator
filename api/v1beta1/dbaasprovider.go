@@ -68,6 +68,7 @@ const (
 	ProvisioningPlanDedicated  string = "DEDICATED"
 )
 
+// ProvisioningParameterType defines teh type for provisioning parameters
 type ProvisioningParameterType string
 
 // DBaaS provisioning fields
@@ -90,10 +91,10 @@ const (
 	ProvisioningSpendLimitLabel         ProvisioningParameterType = "spendLimitLabel"
 )
 
-// Defines the phases for instance provisioning.
+// DBaasInstancePhase defines the phases for instance provisioning.
 type DBaasInstancePhase string
 
-// Defines the supported database service types.
+// DatabaseServiceType defines the supported database service types.
 type DatabaseServiceType string
 
 // Constants for the instance phases.
@@ -109,7 +110,7 @@ const (
 	InstancePhaseFailed   DBaasInstancePhase = "Failed"
 )
 
-// Defines the desired state of a DBaaSProvider object.
+// DBaaSProviderSpec defines the desired state of a DBaaSProvider object.
 type DBaaSProviderSpec struct {
 	// Contains information about database provider and platform.
 	Provider DatabaseProviderInfo `json:"provider"`
@@ -143,12 +144,12 @@ type DBaaSProviderSpec struct {
 	ProvisioningParameters map[ProvisioningParameterType]ProvisioningParameter `json:"provisioningParameters,omitempty"`
 }
 
-// Defines the observed state of DBaaSProvider object.
+// DBaaSProviderStatus defines the observed state of DBaaSProvider object.
 type DBaaSProviderStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
-// Defines the information for a DBaaSProvider object.
+// DatabaseProviderInfo defines the information for a DBaaSProvider object.
 type DatabaseProviderInfo struct {
 	// The name used to specify the service binding origin parameter.
 	// For example, 'Red Hat DBaaS / MongoDB Atlas'.
@@ -166,13 +167,13 @@ type DatabaseProviderInfo struct {
 	Icon ProviderIcon `json:"icon"`
 }
 
-// Follows the same field and naming formats as a comma-separated values (CSV) file.
+// ProviderIcon follows the same field and naming formats as a comma-separated values (CSV) file.
 type ProviderIcon struct {
 	Data      string `json:"base64data"`
 	MediaType string `json:"mediatype"`
 }
 
-// Defines the CredentialField object attributes.
+// CredentialField defines the CredentialField object attributes.
 type CredentialField struct {
 	// The name for this field.
 	Key string `json:"key"`
@@ -190,7 +191,7 @@ type CredentialField struct {
 	HelpText string `json:"helpText,omitempty"`
 }
 
-// Defines the inventory specifications for the provider's operators.
+// DBaaSInventorySpec defines the inventory specifications for the provider's operators.
 type DBaaSInventorySpec struct {
 	// The secret containing the provider-specific connection credentials to use with the provider's API endpoint.
 	// The format specifies the secret in the provider’s operator for its DBaaSProvider custom resource (CR), such as the CredentialFields key.
@@ -198,13 +199,13 @@ type DBaaSInventorySpec struct {
 	CredentialsRef *LocalObjectReference `json:"credentialsRef"`
 }
 
-// Contains enough information to locate the referenced object inside the same namespace.
+// LocalObjectReference contains enough information to locate the referenced object inside the same namespace.
 type LocalObjectReference struct {
 	// Name of the referent.
 	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 }
 
-// Defines the inventory status that the provider's operator uses.
+// DBaaSInventoryStatus defines the inventory status that the provider's operator uses.
 type DBaaSInventoryStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -212,7 +213,7 @@ type DBaaSInventoryStatus struct {
 	DatabaseServices []DatabaseService `json:"databaseServices,omitempty"`
 }
 
-// Defines the information of a database service.
+// DatabaseService defines the information of a database service.
 type DatabaseService struct {
 	// A provider-specific identifier for the database service.
 	// It can contain one or more pieces of information used by the provider's operator to identify the database service.
@@ -228,7 +229,7 @@ type DatabaseService struct {
 	ServiceInfo map[string]string `json:"serviceInfo,omitempty"`
 }
 
-// Defines the information of a database instance.
+// Instance defines the information of a database instance.
 type Instance struct {
 	// A provider-specific identifier for this instance in the database service.
 	// It can contain one or more pieces of information used by the provider's operator to identify the instance on the database service.
@@ -241,7 +242,7 @@ type Instance struct {
 	InstanceInfo map[string]string `json:"instanceInfo,omitempty"`
 }
 
-// Defines the namespace and name of a k8s resource.
+// NamespacedName defines the namespace and name of a k8s resource.
 type NamespacedName struct {
 	// The namespace where an object of a known type is stored.
 	Namespace string `json:"namespace,omitempty"`
@@ -250,7 +251,7 @@ type NamespacedName struct {
 	Name string `json:"name"`
 }
 
-// Defines the desired state of a DBaaSConnection object.
+// DBaaSConnectionSpec defines the desired state of a DBaaSConnection object.
 type DBaaSConnectionSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
@@ -265,7 +266,7 @@ type DBaaSConnectionSpec struct {
 	DatabaseServiceType *DatabaseServiceType `json:"databaseServiceType,omitempty"`
 }
 
-// Defines the observed state of a DBaaSConnection object.
+// DBaaSConnectionStatus defines the observed state of a DBaaSConnection object.
 type DBaaSConnectionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -276,7 +277,7 @@ type DBaaSConnectionStatus struct {
 	ConnectionInfoRef *corev1.LocalObjectReference `json:"connectionInfoRef,omitempty"`
 }
 
-// The schema for a provider's connection status.
+// DBaaSProviderConnection defines the schema for a provider's connection status.
 type DBaaSProviderConnection struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -284,7 +285,7 @@ type DBaaSProviderConnection struct {
 	Status DBaaSConnectionStatus `json:"status,omitempty"`
 }
 
-// The schema for a provider's inventory status.
+// DBaaSProviderInventory defines the schema for a provider's inventory status.
 type DBaaSProviderInventory struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -292,7 +293,7 @@ type DBaaSProviderInventory struct {
 	Status DBaaSInventoryStatus `json:"status,omitempty"`
 }
 
-// Defines the desired state of a DBaaSInstance object.
+// DBaaSInstanceSpec defines the desired state of a DBaaSInstance object.
 type DBaaSInstanceSpec struct {
 	// A reference to the relevant DBaaSInventory custom resource (CR).
 	InventoryRef NamespacedName `json:"inventoryRef"`
@@ -301,7 +302,7 @@ type DBaaSInstanceSpec struct {
 	ProvisioningParameters map[ProvisioningParameterType]string `json:"provisioningParameters,omitempty"`
 }
 
-// Defines the observed state of a DBaaSInstance.
+// DBaaSInstanceStatus defines the observed state of a DBaaSInstance.
 type DBaaSInstanceStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
@@ -327,7 +328,7 @@ type DBaaSInstanceStatus struct {
 	Phase DBaasInstancePhase `json:"phase"`
 }
 
-// The schema for a provider instance object.
+// DBaaSProviderInstance defines the schema for a provider instance object.
 type DBaaSProviderInstance struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -335,7 +336,7 @@ type DBaaSProviderInstance struct {
 	Status DBaaSInstanceStatus `json:"status,omitempty"`
 }
 
-// Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
+// Option defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 type Option struct {
 	// Value of the option.
 	Value string `json:"value,omitempty"`
@@ -344,7 +345,7 @@ type Option struct {
 	DisplayValue string `json:"displayValue,omitempty"`
 }
 
-// Defines the name and value of a dependency field.
+// FieldDependency defines the name and value of a dependency field.
 type FieldDependency struct {
 	// +kubebuilder:validation:Enum=name;plan;cloudProvider;regions;availabilityZones;nodes;machineType;storageGib;spendLimit;teamProject;databaseType;dedicatedLocationLabel;serverlessLocationLabel;hardwareLabel;planLabel;spendLimitLabel
 	// Name of the dependency field.
@@ -354,7 +355,7 @@ type FieldDependency struct {
 	Value string `json:"value,omitempty"`
 }
 
-// Information for a ProvisioningParameter object.
+// ProvisioningParameter provides information for a ProvisioningParameter object.
 type ProvisioningParameter struct {
 	// A user-friendly name for this field.
 	DisplayName string `json:"displayName"`
@@ -366,7 +367,7 @@ type ProvisioningParameter struct {
 	ConditionalData []ConditionalProvisioningParameterData `json:"conditionalData,omitempty"`
 }
 
-// A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies.
+// ConditionalProvisioningParameterData provides a list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies.
 // A provisioning parameter can have many options lists and default values, depending on the dependency parameters.
 // If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input.
 // For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.

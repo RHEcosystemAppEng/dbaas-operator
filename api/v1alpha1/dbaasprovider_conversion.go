@@ -23,7 +23,8 @@ import (
 
 // notes on writing good spokes https://book.kubebuilder.io/multiversion-tutorial/conversion.html
 
-var ProviderFieldsMap map[string]interface{} = map[string]interface{}{
+// ProviderFieldsMap is the global map for the fields supported for each provider
+var ProviderFieldsMap = map[string]interface{}{
 	v1beta1.CrunchyBridgeRegistration: map[string]v1beta1.ProvisioningParameterType{
 		"Name":     v1beta1.ProvisioningName,
 		"Provider": v1beta1.ProvisioningCloudProvider,
@@ -178,6 +179,7 @@ func (dst *DBaaSProvider) ConvertFrom(srcRaw conversion.Hub) error {
 	return nil
 }
 
+// ConvertNameTo converts a provisioning parameter name to v1beta1
 func ConvertNameTo(providerName, name string) v1beta1.ProvisioningParameterType {
 	if m, ok := ProviderFieldsMap[providerName]; ok {
 		m1 := m.(map[string]v1beta1.ProvisioningParameterType)
@@ -188,6 +190,7 @@ func ConvertNameTo(providerName, name string) v1beta1.ProvisioningParameterType 
 	return ""
 }
 
+// ConvertNameFrom converts a provisioning parameter name from v1beta1
 func ConvertNameFrom(providerName string, name v1beta1.ProvisioningParameterType) string {
 	if m, ok := ProviderFieldsMap[providerName]; ok {
 		m1 := m.(map[string]v1beta1.ProvisioningParameterType)

@@ -34,7 +34,7 @@ var (
 	InstallNamespaceEnvVar = "INSTALL_NAMESPACE"
 )
 
-const RDS_PROVIDER string = "rds-registration"
+const rdsProvider string = "rds-registration"
 
 // DBaaSReconciler defines common methods used by other reconcilers
 type DBaaSReconciler struct {
@@ -317,7 +317,7 @@ func (r *DBaaSReconciler) checkInventory(ctx context.Context, inventoryRef v1bet
 
 func (r *DBaaSReconciler) getProviderSpecStatusVersion(provider *v1beta1.DBaaSProvider) *schema.GroupVersion {
 	if provider.GetDBaaSAPIGroupVersion().String() == v1alpha1.GroupVersion.String() &&
-		provider.Name != RDS_PROVIDER {
+		provider.Name != rdsProvider {
 		return &v1alpha1.GroupVersion
 	}
 	return &v1beta1.GroupVersion

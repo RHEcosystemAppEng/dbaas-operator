@@ -21,13 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// The name of the platform.
+// PlatformName defines the name of the platform.
 type PlatformName string
 
-// The status of a platform installation.
+// PlatformInstlnStatus provides the status of a platform installation.
 type PlatformInstlnStatus string
 
-// The platform type.
+// PlatformType defines the platform type.
 type PlatformType int
 
 // Supported platform names.
@@ -56,7 +56,7 @@ const (
 	ResultInProgress PlatformInstlnStatus = "in progress"
 )
 
-// Defines parameters for a platform.
+// PlatformConfig defines parameters for a platform.
 type PlatformConfig struct {
 	Name           string
 	CSV            string
@@ -69,7 +69,7 @@ type PlatformConfig struct {
 	Type           PlatformType
 }
 
-// Defines parameters for observatorium.
+// ObservabilityConfig defines parameters for observatorium.
 type ObservabilityConfig struct {
 	AuthType        string
 	RemoteWritesURL string
@@ -78,7 +78,7 @@ type ObservabilityConfig struct {
 	RHOBSSecretName string
 }
 
-// Defines the desired state of a DBaaSPlatform object.
+// DBaaSPlatformSpec defines the desired state of a DBaaSPlatform object.
 type DBaaSPlatformSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=1440
@@ -86,13 +86,13 @@ type DBaaSPlatformSpec struct {
 	SyncPeriod *int `json:"syncPeriod,omitempty"`
 }
 
-// Defines the observed state of a DBaaSPlatform object.
+// DBaaSPlatformStatus defines the observed state of a DBaaSPlatform object.
 type DBaaSPlatformStatus struct {
 	Conditions      []metav1.Condition `json:"conditions,omitempty"`
 	PlatformsStatus []PlatformStatus   `json:"platformsStatus"`
 }
 
-// Defines the status of a DBaaSPlatform object.
+// PlatformStatus defines the status of a DBaaSPlatform object.
 type PlatformStatus struct {
 	PlatformName   PlatformName         `json:"platformName"`
 	PlatformStatus PlatformInstlnStatus `json:"platformStatus"`
@@ -103,7 +103,7 @@ type PlatformStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// The schema for the DBaaSPlatform API.
+// DBaaSPlatform defines the schema for the DBaaSPlatform API.
 // +operator-sdk:csv:customresourcedefinitions:displayName="DBaaSPlatform"
 type DBaaSPlatform struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -115,7 +115,7 @@ type DBaaSPlatform struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of DBaaSPlatforms.
+// DBaaSPlatformList contains a list of DBaaSPlatforms.
 type DBaaSPlatformList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

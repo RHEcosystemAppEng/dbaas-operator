@@ -20,14 +20,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// The specifications for a _DBaaSPolicy_ object.
+// DBaaSPolicySpec The specifications for a _DBaaSPolicy_ object.
 // Enables administrative capabilities within a namespace, and sets a default inventory policy.
 // Policy defaults can be overridden on a per-inventory basis.
 type DBaaSPolicySpec struct {
 	DBaaSInventoryPolicy `json:",inline"`
 }
 
-// Sets the inventory policy.
+// DBaaSInventoryPolicy sets the inventory policy.
 type DBaaSInventoryPolicy struct {
 	// Disables provisioning on inventory accounts.
 	DisableProvisions *bool `json:"disableProvisions,omitempty"`
@@ -47,7 +47,7 @@ type DBaaSInventoryPolicy struct {
 	ConnectionNsSelector *metav1.LabelSelector `json:"connectionNsSelector,omitempty"`
 }
 
-// Defines the observed state of a DBaaSPolicy object.
+// DBaaSPolicyStatus defines the observed state of a DBaaSPolicy object.
 type DBaaSPolicyStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
@@ -57,7 +57,7 @@ type DBaaSPolicyStatus struct {
 //+kubebuilder:printcolumn:name="Active",type=string,JSONPath=`.status.conditions[0].status`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// Enables administrative capabilities within a namespace, and sets a default inventory policy.
+// DBaaSPolicy enables administrative capabilities within a namespace, and sets a default inventory policy.
 // Policy defaults can be overridden on a per-inventory basis.
 type DBaaSPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -69,7 +69,7 @@ type DBaaSPolicy struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of DBaaSPolicies.
+// DBaaSPolicyList contains a list of DBaaSPolicies.
 type DBaaSPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
