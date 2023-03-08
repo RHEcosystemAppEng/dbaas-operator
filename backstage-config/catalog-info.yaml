@@ -1,9 +1,9 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: rhoda-dbaas-operator
+  name: dbaas-operator
   description: |
-    Rhoda Dbaas operator.
+    OpenShift Database Access operator.
   links:
     - title: Website
       url: https://www.redhat.com
