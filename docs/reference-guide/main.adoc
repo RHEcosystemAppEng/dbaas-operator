@@ -1,0 +1,36 @@
+// The main assembly file for the OpenShift Database Access Reference Guide.
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+// Configuring the Table of Contents.
+:toc:
+:toclevels: 3
+:toc-placement!:
+
+// Book Title
+= Reference Guide
+
+This Reference Guide provides additional information about some OpenShift Database Access concepts, additional procedures, and gives developers some example use cases by using the OpenShift Database Access API.
+
+toc::[]
+
+// Chapter 1 - Service binding libraries
+include::modules/con_service-binding-libraries_en-us.adoc[leveloffset=+1]
+
+// Chapter 2 - Provider Account policies and user personas
+include::modules/con_openshift-database-access-provider-account-policies-and-user-personas_en-us.adoc[leveloffset=+1]
+
+// Chapter 3 - Deleting a provider account
+include::modules/proc_deleting-a-database-provider-account_en-us.adoc[leveloffset=+1]
+
+// Chapter 4 - Integrating OpenShift Database Access with a Jupyter Notebook
+include::modules/proc_integrating-openshift-database-access-with-a-jupyter-notebook_en-us.adoc[leveloffset=+1]
+
+// RHODA APIs
+include::assembly_openshift-database-access-api-examples-and-schemas_en-us.adoc[leveloffset=+1]

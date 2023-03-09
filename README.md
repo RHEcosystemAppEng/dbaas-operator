@@ -10,6 +10,7 @@ available to developers for binding to their applications.
 ## Documentation
 
 - [Quick Start Guide](docs/quick-start-guide/main.adoc)
+- [Reference Guide](docs/reference-guide/main.adoc)
 
 ## Associated Github Repositories
 Component |Git Repo	| Description
