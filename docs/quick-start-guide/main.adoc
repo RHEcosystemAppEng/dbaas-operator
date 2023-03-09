@@ -35,7 +35,7 @@ The OpenShift Database Access operator allows you to configure a connection to c
 
 * OpenShift Container Platform 4.10 or higher, and on these deployment types:
 ** OpenShift Dedicated
-** Red Hat OpenShift on AWS (ROSA)
+** OpenShift on AWS
 
 .Procedure
 
@@ -154,7 +154,7 @@ Upon a successful connection, you go to the xref:connecting-an-application-to-a-
 
 .Additional resources
 
-* For more information about Red Hat OpenShift Database Access, see the _Reference Guide_.
+* For more information about OpenShift Database Access, see the _Reference Guide_.
 // End
 
 // Chapter 4
@@ -347,13 +347,13 @@ IMPORTANT: Database instances using a custom Oracle or custom SQL Server engine 
 . Copy the **AWS Access key ID**, and the **AWS Secret access key**.
 // End
 
-// Appendix E : OpenShift Database Access for Azure Red Hat OpenShift (ARO)
+// Appendix E : OpenShift Database Access for Azure OpenShift
 [appendix]
 [id="manual-installation-of-openshift-database-access-on-azure-red-hat-openshift"]
 
-== Manual installation of OpenShift Database Access on Azure Red Hat OpenShift
+== Manual installation of OpenShift Database Access on Azure OpenShift
 
-You can manually install the OpenShift Database Access operator to a Red Hat OpenShift cluster running on Microsoft Azure.
+You can manually install the OpenShift Database Access operator to a OpenShift cluster running on Microsoft Azure.
 
 .Prerequisites
 
@@ -362,11 +362,11 @@ You can manually install the OpenShift Database Access operator to a Red Hat Ope
 // Creating an ARO cluster
 [id="creating-an-azure-red-hat-openshift-cluster"]
 
-=== Creating an Azure Red Hat OpenShift cluster
+=== Creating an Azure OpenShift cluster
 
 You can manually create OpenShift clusters running on Microsoft’s Azure cloud computing service.
 
-IMPORTANT: Currently, creating an Azure Red Hat OpenShift cluster is not supported by using the Red Hat Hybrid Cloud Console.
+IMPORTANT: Currently, creating an Azure OpenShift cluster is not supported by using the Red Hat Hybrid Cloud Console.
 
 .Prerequisites
 
@@ -581,7 +581,7 @@ $ az aro list-credentials --name rhoda-aro-example \
 
 === Installing OpenShift Database Access using the Operator Lifecycle Manager
 
-For some OpenShift cluster types, such as Azure Red Hat OpenShift (ARO), you must install the OpenShift Database Access operator by using the Operator Lifecycle Manager (OLM).
+For some OpenShift cluster types, such as Azure OpenShift, you must install the OpenShift Database Access operator by using the Operator Lifecycle Manager (OLM).
 
 .Prerequisites
 

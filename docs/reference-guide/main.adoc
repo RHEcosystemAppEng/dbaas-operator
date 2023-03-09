@@ -21,10 +21,157 @@ This Reference Guide provides additional information about some OpenShift Databa
 toc::[]
 
 // Chapter 1 - Service binding libraries
-include::modules/con_service-binding-libraries_en-us.adoc[leveloffset=+1]
+[id="service-binding-libraries"]
+
+== Service binding libraries
+
+The Kubernetes service binding feature brings consistency to sharing secrets for connecting applications to external services, such as REST APIs, databases, and many other services.
+OpenShift Database Access leverages the service binding feature to bring a low-touch administrative experience to provisioning and managing access to external database services.
+The service binding feature enables developers to connect their applications to database services with a consistent and predictable experience.
+Specifically, a service binding creates a volume on the application pod and organizes the information to make a connection to the database in a directory structure.
+An environment variable exposes the volume mount point.
+Developer frameworks, such as Quarkus, are service binding aware, and can automatically connect to a database by using this exposed workload information without needing to embed database connection information in the application source code.
+
+Here are some application examples on how to use a service binding library:
+
+* link:https://github.com/RHEcosystemAppEng/mongo-quickstart[Mongo Quarkus application]
+* link:https://github.com/RHEcosystemAppEng/postgresql-orm-quickstart[Crunchy Postgres Quarkus application]
+* link:https://github.com/myeung18/postgresql-orm-demo-app[CockroachDB Postgres Quarkus application]
+* link:https://github.com/myeung18/cockroachdb-go-quickstart[CockroachDB Postgres Go application]
+* link:https://github.com/RHODA-lab/rhoda-qa-python/blob/main/test-crunchy-postgres.py[Crunchy Postgres Python test program]
+* link:https://github.com/RHODA-lab/rhoda-qa-python/blob/main/test-cockroachdb.py[CockroachDB Postgres Python test program]
+* link:https://github.com/myeung18/spring-boot-dbaas-demo-apps[Spring Boot Fruit Shop application for MongoDB and Postgres]
+
+.Additional resources
+
+* See the link:https://github.com/servicebinding/spec#workload-projection[Kubernetes GitHub project] for more details on service bindings.
+// End
 
 // Chapter 2 - Provider Account policies and user personas
-include::modules/con_openshift-database-access-provider-account-policies-and-user-personas_en-us.adoc[leveloffset=+1]
+[id="openshift-database-access-provider-account-policies-and-user-personas"]
+
+== OpenShift Database Access provider account policies and user personas
+
+.Policies
+OpenShift Database Access uses policies to manage access capabilities for the provider account inventories in a given namespace.
+You can use predefined access capabilities with different user personas to define multi-tenancy configurations that allows many organizations to share a single cluster.
+Additionally, you can create policies with strict inventory criteria to control access to provider account inventories.
+A policy's default values can be overridden on a per-inventory basis.
+
+After installing the OpenShift Database Access add-on, the OpenShift Database Access operator creates a new Database-as-a-service (DBaaS) policy object in the operator’s installation namespace.
+By default this namespace is `redhat-dbaas-operator` or `openshift-dbaas-operator`.
+
+The OpenShift Database Access operator only allows one policy per namespace, and watches for inventory object changes as defined in the policy.
+With the policy in place the operator configures the appropriate access requirements.
+
+//The `DBaaSPolicy` object is a custom-resource definition (CRD).
+The following example is a __DBaaSPolicy__ object, using some optional `spec` fields.
+
+.Example
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSPolicy
+metadata:
+  name: user1-policy
+  namespace: user1-project
+spec:
+  connections:
+    namespaces: <1>
+    - user1-project2 <2>
+  disableProvisions: false <3>
+----
+<1> A list of other namespaces that are allowed a connection to a policy’s inventories. Rather than listing namespaces, you can use an asterisk surrounded by single quotes (`'*'`) to allow a connection from all namespaces available in the OpenShift cluster.
+<2> A user needs at least, the **view** role to see the listed namespaces' inventories.
+<3> Disables provisioning in the provider account inventory, defaults to `false`.
+
+In this example policy, "User1" shares the provider account inventories in their namespace, `user1-project`, with another namespace, `user1-project2`.
+
+[NOTE]
+====
+All of the `DBaaSPolicy.spec` fields are optional.
+For more information about the optional `spec` fields, see the OpenShift Database Access _Reference Guide_ for the _DBaaSPolicy_ API schema documentation.
+====
+
+.Personas
+User personas define roles for OpenShift Database Access’ intended audience.
+Each role has key characteristics that a user can do as they interact with the service.
+OpenShift Database Access utilizes four personas: Cluster Administrator, Project Administrator, OpenShift Database Access Service Administrator, and OpenShift Database Access Developer.
+These roles start with the highest authority level, the Cluster Administrator, and move down to the lowest authority level, the OpenShift Database Access Developer.
+
+With the exception of the Cluster Administrator, all other personas are namespace-specific.
+A user might have different roles within each namespace that they are working in.
+For example, a user can be a Developer in one namespace, and also be a Project Administrator in another namespace.
+
+Cluster Administrator::
+A Cluster Administrator is a user with the `cluster-admin` role, and has full access to all resources and namespaces in an OpenShift cluster.
+Cluster Administrators can do the following:
+* Install and upgrade the OpenShift Database Access operator.
+* Assign other users or groups to be operator administrators.
++
+.Command-line Syntax and Examples
+[source,subs="verbatim,quotes"]
+----
+oc adm policy add-role-to-group **admin** _GROUP_NAME_ \
+-n _NAMESPACE_OF_OPERATOR_INSTALLATION_
+oc adm policy add-role-to-user **admin** _USER_NAME_ \
+-n _NAMESPACE_OF_OPERATOR_INSTALLATION_
+
+$ oc adm policy add-role-to-group admin rhoda-admins \
+-n redhat-dbaas-operator
+$ oc adm policy add-role-to-user admin user01 \
+-n redhat-dbaas-operator
+----
+* Everything a Project Administrator can do.
+
+Project Administrator::
+A Project Administrator is any user with administrative rights to a specific namespace, and has the `admin` role.
+Project Administrators can do the following:
+* Assign users as additional Project Administrators, OpenShift Database Access Service Administrators, and OpenShift Database Access Developers to a specific namespace.
++
+.Command-line Syntax and Examples
+[source,subs="verbatim,quotes"]
+----
+oc adm policy add-role-to-user **admin** _USER_NAME_ -n _PROJECT_NAMESPACE_
+oc adm policy add-role-to-user **edit** _USER_NAME_ -n _PROJECT_NAMESPACE_
+oc adm policy add-role-to-user **view** _USER_NAME_ -n _PROJECT_NAMESPACE_
+
+$ oc adm policy add-role-to-user admin user02 -n example-project <1>
+$ oc adm policy add-role-to-user edit user03 -n example-project <2>
+$ oc adm policy add-role-to-user view user04 -n example-project <3>
+----
+<1> Assign users as additional Project Administrators.
+<2> Assign OpenShift Database Access Service Administrators to a specific namespace.
+<3> Assign OpenShift Database Access Developers to a specific namespace.
+
+* Everything that a OpenShift Database Access Service Administrator can do.
+
+Service Administrator::
+A OpenShift Database Access Service Administrator’s rights are a subset of the Project Administrator, and has the `edit` role.
+A user can be both a Project Administrator, and a OpenShift Database Access Service Administrator for a specific namespace, and for the cloud-hosted database providers they have credentials for.
+OpenShift Database Access Service Administrators can do the following:
+* Enable OpenShift Database Access in a namespace.
+* Set the policy for the namespace.
+* Import provider accounts for cloud-hosted database providers, and can generate secrets for those providers.
+* Create `DBaaSInventory`, `DBaaSConnections`, and `DBaaSInstances` objects in a namespace.
+* Everything that a OpenShift Database Access Developer can do.
+
+Developer::
+A OpenShift Database Access Developer can connect to databases, but is limited by the cloud-hosted database provider accounts accessible to them.
+OpenShift Database Access Developers have the `view` role, and can do the following:
+* View specific inventories, and database instances available to them from provider accounts.
+* Create their own namespace, where they become the Project Administrator for that new namespace.
+* Create connections using `DBaaSConnections`, and `DBaaSInstances` custom resources (CRs) in allowed namespaces.
+These are namespaces that the user has at least `edit` rights to.
+* Use the _Topology View_ page to make service bindings between applications and databases in allowed namespaces.
+* No access to stored secrets in an inventory’s namespace.
+* No access to create any objects in an inventory's namespace.
+
+[role="_additional-resources"]
+.Additional resources
+
+* For more information about service bindings, see the _Reference Guide_.
+* Kubernetes link:https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles[user-facing role descriptions].
+// End
 
 // Chapter 3 - Deleting a provider account
 include::modules/proc_deleting-a-database-provider-account_en-us.adoc[leveloffset=+1]

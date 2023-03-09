@@ -1,5 +1,5 @@
-# Red Hat OpenShift Database Access Operator
-Red Hat OpenShift Database Access Operator is currently iterating early releases. The intent of these releases is to show how we could
+# OpenShift Database Access Operator
+The OpenShift Database Access Operator is currently iterating early releases. The intent of these releases is to show how we could
 create trail database cluster, scan & import off-cluster cloud database instances hosted by various 3rd party ISV providers & make those instances
 available to developers for binding to their applications.
 
@@ -24,7 +24,7 @@ RDS Operator|[RDS Operator](https://github.com/RHEcosystemAppEng/rds-dbaas-opera
 Observability Operator |[Observability Operator](https://github.com/rhobs/observability-operator)| Operator for installing the monitoring stack and configuring remote write Observatorium.
 
 ## Building the Operator
-Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
+Build the OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
 
 Reqs:
  - go v1.18
