@@ -25,7 +25,7 @@ The OpenShift Database Access operator enables you to do the following:
 toc::[]
 
 // Chapter 1
-[id="installing-the-red-hat-openshift-database-access-operator"]
+[id="installing-the-openshift-database-access-operator"]
 
 == Installing the OpenShift Database Access operator
 
@@ -80,7 +80,7 @@ By selecting *Current namespace only* option, you can view the policies.
 
 .Prerequisites
 
-* xref:installing-the-red-hat-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
+* xref:installing-the-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
 * A service account with either the link:https://www.mongodb.com/atlas/database[MongoDB Atlas], or link:https://www.crunchydata.com[Crunchy Data Bridge], or link:https://www.cockroachlabs.com[CockroachDB], or link:https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email[Amazon RDS] cloud-hosted database provider.
 
 .Procedure
@@ -122,7 +122,7 @@ You can access the developer workspace in the OpenShift console to manage connec
 
 .Prerequisites
 
-* xref:installing-the-red-hat-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
+* xref:installing-the-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
 * Import at least one cloud-database provider account.
 
 .Procedure
@@ -167,7 +167,7 @@ On the **Topology** page, you see the application pod, along with a representati
 
 .Prerequisites
 
-* xref:installing-the-red-hat-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
+* xref:installing-the-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
 * Import at least one cloud-database provider account.
 
 .Procedure
@@ -347,241 +347,13 @@ IMPORTANT: Database instances using a custom Oracle or custom SQL Server engine 
 . Copy the **AWS Access key ID**, and the **AWS Secret access key**.
 // End
 
-// Appendix E : OpenShift Database Access for Azure OpenShift
+// Appendix E : Manual installation using Operator Lifecycle Manager (OLM)
 [appendix]
-[id="manual-installation-of-openshift-database-access-on-azure-red-hat-openshift"]
-
-== Manual installation of OpenShift Database Access on Azure OpenShift
-
-You can manually install the OpenShift Database Access operator to a OpenShift cluster running on Microsoft Azure.
-
-.Prerequisites
-
-* A link:https://portal.azure.com/[Microsoft Azure] organizational or user account with an active subscription.
-
-// Creating an ARO cluster
-[id="creating-an-azure-red-hat-openshift-cluster"]
-
-=== Creating an Azure OpenShift cluster
-
-You can manually create OpenShift clusters running on Microsoft’s Azure cloud computing service.
-
-IMPORTANT: Currently, creating an Azure OpenShift cluster is not supported by using the Red Hat Hybrid Cloud Console.
-
-.Prerequisites
-
-* Installation of the link:https://docs.microsoft.com/en-us/cli/azure/install-azure-cli[Azure client], version 2.6 or higher.
-* A link:https://portal.azure.com/[Microsoft Azure] organizational or user account with an active subscription.
-* Download a link:https://access.redhat.com/documentation/en-us/openshift_cluster_manager/2022/html/managing_clusters/assembly-managing-clusters#downloading_and_updating_pull_secrets[pull secret] for authentication to an OpenShift cluster.
-
-.Procedure
-
-. Login to the Microsoft Azure portal from the command-line client:
-+
-----
-$ az login
-----
-+
-[NOTE]
-====
-Running this command opens a web browser for you to finish the login process.
-You can close the browser after you successfully logged in.
-====
-
-. Set the account subscription:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az account set --subscription ‘_SUBSCRIPTION_NAME_’
-----
-+
-.Example
-----
-$ az account set –-subscription ‘Example Sub’
-----
-
-. Register the Azure resources:
-+
-.Example
-----
-$ az provider register -n Microsoft.RedHatOpenShift --wait
-$ az provider register -n Microsoft.Compute --wait
-$ az provider register -n Microsoft.Storage --wait
-----
-
-. Create a resource group:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az group create --name _RESOURCE_GROUP_ --location _LOCATION_
-----
-+
-.Example
-----
-$ az group create --name rhoda-aro-gr --location eastus
-----
-
-. Create a virtual network:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az network vnet create --resource-group _RESOURCE_GROUP_ \
---name aro-vnet \
---address-prefixes _IP_SUBNET_/_CIDR_
-----
-+
-.Example
-----
-$ az network vnet create --resource-group rhoda-aro-gr \
---name aro-vnet \
---address-prefixes 10.0.0.0/22
-----
-
-. Create a subnet for the main node:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az network vnet subnet create --resource-group _RESOURCE_GROUP_ \
---vnet-name aro-vnet \
---name main-subnet \
---address-prefixes _IP_SUBNET_/_CIDR_ \
---service-endpoints Microsoft.ContainerRegistry
-----
-+
-.Example
-----
-$ az network vnet subnet create --resource-group rhoda-aro-gr \
---vnet-name aro-vnet \
---name main-subnet \
---address-prefixes 10.0.0.0/23 \
---service-endpoints Microsoft.ContainerRegistry
-----
-
-. Create a subnet for the worker node:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az network vnet subnet create --resource-group _RESOURCE_GROUP_ \
---vnet-name aro-vnet \
---name worker-subnet \
---address-prefixes _IP_SUBNET_/_CIDR_ \
---service-endpoints Microsoft.ContainerRegistry
-----
-+
-.Example
-----
-$ az network vnet subnet create --resource-group rhoda-aro-gr \
---vnet-name aro-vnet \
---name worker-subnet \
---address-prefixes 10.0.2.0/23 \
---service-endpoints Microsoft.ContainerRegistry
-----
-
-. Disable private endpoint policies for the main subnet:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az network vnet subnet update --name main-subnet \
---resource-group _RESOURCE_GROUP_ \
---vnet-name aro-vnet \
---disable-private-link-service-network-policies true
-----
-+
-.Example
-----
-$ az network vnet subnet update --name main-subnet \
---resource-group rhoda-aro-gr \
---vnet-name aro-vnet \
---disable-private-link-service-network-policies true
-----
-
-. Create the ARO cluster:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az aro create --resource-group _RESOURCE_GROUP_ \
---name _CLUSTER_NAME_ \
---vnet aro-vnet \
---master-subnet main-subnet \
---worker-subnet worker-subnet \
---apiserver-visibility Public \
---ingress-visibility Public \
---pull-secret @_DOWNLOADED_PULL_SECRET_FILE_PWD_
-----
-+
-.Example
-----
-$ az aro create --resource-group rhoda-aro-gr \
---name rhoda-aro-example \
---vnet aro-vnet \
---master-subnet main-subnet \
---worker-subnet worker-subnet \
---apiserver-visibility Public \
---ingress-visibility Public \
---pull-secret @pull-secret.txt
-----
-+
-NOTE: The cluster creation process can take up to an hour to complete.
-
-.Verification
-
-. Once the cluster creation process finishes, login to the OpenShift console.
-
-.. Get the OpenShift console URL:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az aro show --name _CLUSTER_NAME_ \
---resource-group _RESOURCE_GROUP_ \
---query "consoleProfile.url" -o tsv
-----
-+
-.Example
-----
-$ az aro show --name rhoda-aro-example \
---resource-group rhoda-aro-gr \
---query "consoleProfile.url" -o tsv
-
-https://console-openshift-console.apps.b879bjix.eastus.example.com/
-----
-
-.. Find the `kubeadmin` credentials:
-+
-.Syntax
-[source,subs="verbatim,quotes"]
-----
-az aro list-credentials --name _CLUSTER_NAME_ \
---resource-group _RESOURCE_GROUP_
-----
-+
-.Example
-----
-$ az aro list-credentials --name rhoda-aro-example \
---resource-group rhoda-aro-gr
-
-{
-"kubeadminPassword": "AAFAA-Zk3aR-V46bu-A4F7D",
-"kubeadminUsername": "kubeadmin"
-}
-----
-
-. Use the `kubeadmin` credentials to login to the OpenShift console.
-// End
-
-// Manual installation using Operator Lifecycle Manager (OLM)
 [id="installing-openshift-database-access-using-the-operator-lifecycle-manager"]
 
-=== Installing OpenShift Database Access using the Operator Lifecycle Manager
+== Installing OpenShift Database Access using the Operator Lifecycle Manager
 
-For some OpenShift cluster types, such as Azure OpenShift, you must install the OpenShift Database Access operator by using the Operator Lifecycle Manager (OLM).
+For some OpenShift cluster types, you must install the OpenShift Database Access operator by using the Operator Lifecycle Manager (OLM).
 
 .Prerequisites
 
