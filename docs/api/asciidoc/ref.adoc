@@ -26,7 +26,7 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-conditionalprovisioningparameterdata"]
 ==== ConditionalProvisioningParameterData 
 
-A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
+ConditionalProvisioningParameterData provides a list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
 
 .Appears In:
 ****
@@ -45,7 +45,7 @@ A list of available options with default values for a dropdown menu, or a list o
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-credentialfield"]
 ==== CredentialField 
 
-Defines the CredentialField object attributes.
+CredentialField defines the CredentialField object attributes.
 
 .Appears In:
 ****
@@ -66,7 +66,7 @@ Defines the CredentialField object attributes.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnection"]
 ==== DBaaSConnection 
 
-The schema for the DBaaSConnection API.
+DBaaSConnection defines the schema for the DBaaSConnection API.
 
 
 
@@ -84,7 +84,7 @@ The schema for the DBaaSConnection API.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionpolicy"]
 ==== DBaaSConnectionPolicy 
 
-The DBaaSConnectionPolicy object sets a connection policy.
+DBaaSConnectionPolicy sets a connection policy.
 
 .Appears In:
 ****
@@ -102,7 +102,7 @@ The DBaaSConnectionPolicy object sets a connection policy.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasconnectionspec"]
 ==== DBaaSConnectionSpec 
 
-Defines the desired state of a DBaaSConnection object.
+DBaaSConnectionSpec defines the desired state of a DBaaSConnection object.
 
 .Appears In:
 ****
@@ -123,7 +123,7 @@ Defines the desired state of a DBaaSConnection object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstance"]
 ==== DBaaSInstance 
 
-The schema for the DBaaSInstance API.
+DBaaSInstance defines the schema for the DBaaSInstance API.
 
 
 
@@ -141,7 +141,7 @@ The schema for the DBaaSInstance API.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinstancespec"]
 ==== DBaaSInstanceSpec 
 
-Defines the desired state of a DBaaSInstance object.
+DBaaSInstanceSpec defines the desired state of a DBaaSInstance object.
 
 .Appears In:
 ****
@@ -160,7 +160,7 @@ Defines the desired state of a DBaaSInstance object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventory"]
 ==== DBaaSInventory 
 
-The schema for the DBaaSInventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
+DBaaSInventory defines the schema for the DBaaSInventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
 
 
 
@@ -178,7 +178,7 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventorypolicy"]
 ==== DBaaSInventoryPolicy 
 
-Sets the inventory policy.
+DBaaSInventoryPolicy sets the inventory policy.
 
 .Appears In:
 ****
@@ -197,7 +197,7 @@ Sets the inventory policy.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasinventoryspec"]
 ==== DBaaSInventorySpec 
 
-Defines the inventory specifications for the provider's operators.
+DBaaSInventorySpec defines the inventory specifications for the provider's operators.
 
 .Appears In:
 ****
@@ -215,7 +215,7 @@ Defines the inventory specifications for the provider's operators.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasoperatorinventoryspec"]
 ==== DBaaSOperatorInventorySpec 
 
-This object defines the desired state of a DBaaSInventory object.
+DBaaSOperatorInventorySpec defines the desired state of a DBaaSInventory object.
 
 .Appears In:
 ****
@@ -234,7 +234,7 @@ This object defines the desired state of a DBaaSInventory object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatform"]
 ==== DBaaSPlatform 
 
-The schema for the DBaaSPlatform API.
+DBaaSPlatform defines the schema for the DBaaSPlatform API.
 
 
 
@@ -252,7 +252,7 @@ The schema for the DBaaSPlatform API.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasplatformspec"]
 ==== DBaaSPlatformSpec 
 
-Defines the desired state of a DBaaSPlatform object.
+DBaaSPlatformSpec defines the desired state of a DBaaSPlatform object.
 
 .Appears In:
 ****
@@ -269,7 +269,7 @@ Defines the desired state of a DBaaSPlatform object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicy"]
 ==== DBaaSPolicy 
 
-Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
+DBaaSPolicy enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
 
 
 
@@ -287,7 +287,7 @@ Enables administrative capabilities within a namespace, and sets a default inven
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaaspolicyspec"]
 ==== DBaaSPolicySpec 
 
-The specifications for a DBaaSPolicy object.
+DBaaSPolicySpec the specifications for a DBaaSPolicy object.
 
 .Appears In:
 ****
@@ -304,7 +304,7 @@ The specifications for a DBaaSPolicy object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasprovider"]
 ==== DBaaSProvider 
 
-The schema for the DBaaSProvider API.
+DBaaSProvider defines the schema for the DBaaSProvider API.
 
 
 
@@ -328,7 +328,7 @@ The schema for the DBaaSProvider API.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-dbaasproviderspec"]
 ==== DBaaSProviderSpec 
 
-Defines the desired state of a DBaaSProvider object.
+DBaaSProviderSpec defines the desired state of a DBaaSProvider object.
 
 .Appears In:
 ****
@@ -354,7 +354,7 @@ Defines the desired state of a DBaaSProvider object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseproviderinfo"]
 ==== DatabaseProviderInfo 
 
-Defines the information for a DBaaSProvider object.
+DatabaseProviderInfo defines the information for a DBaaSProvider object.
 
 .Appears In:
 ****
@@ -376,7 +376,7 @@ Defines the information for a DBaaSProvider object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-databaseservicetype"]
 ==== DatabaseServiceType (string) 
 
-Defines the supported database service types.
+DatabaseServiceType defines the supported database service types.
 
 .Appears In:
 ****
@@ -389,7 +389,7 @@ Defines the supported database service types.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-fielddependency"]
 ==== FieldDependency 
 
-Defines the name and value of a dependency field.
+FieldDependency defines the name and value of a dependency field.
 
 .Appears In:
 ****
@@ -409,7 +409,7 @@ Defines the name and value of a dependency field.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-localobjectreference"]
 ==== LocalObjectReference 
 
-Contains enough information to locate the referenced object inside the same namespace.
+LocalObjectReference contains enough information to locate the referenced object inside the same namespace.
 
 .Appears In:
 ****
@@ -426,7 +426,7 @@ Contains enough information to locate the referenced object inside the same name
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-namespacedname"]
 ==== NamespacedName 
 
-Defines the namespace and name of a k8s resource.
+NamespacedName defines the namespace and name of a k8s resource.
 
 .Appears In:
 ****
@@ -448,7 +448,7 @@ Defines the namespace and name of a k8s resource.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-option"]
 ==== Option 
 
-Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
+Option defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 
 .Appears In:
 ****
@@ -470,7 +470,7 @@ Defines the value and display value for an option in a dropdown menu, radio butt
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-providericon"]
 ==== ProviderIcon 
 
-Follows the same field and naming formats as a comma-separated values (CSV) file.
+ProviderIcon follows the same field and naming formats as a comma-separated values (CSV) file.
 
 .Appears In:
 ****
@@ -488,7 +488,7 @@ Follows the same field and naming formats as a comma-separated values (CSV) file
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparameter"]
 ==== ProvisioningParameter 
 
-Information for a ProvisioningParameter object.
+ProvisioningParameter provides information for a ProvisioningParameter object.
 
 .Appears In:
 ****
@@ -507,7 +507,7 @@ Information for a ProvisioningParameter object.
 [id="{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-provisioningparametertype"]
 ==== ProvisioningParameterType (string) 
 
-
+ProvisioningParameterType defines teh type for provisioning parameters
 
 .Appears In:
 ****

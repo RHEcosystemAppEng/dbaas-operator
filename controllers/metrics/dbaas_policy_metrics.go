@@ -8,6 +8,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Constants for label values
 const (
 	// Resource label values
 	LabelResourceValuePolicy = "dbaas_policy"

@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSPlatform API.
+        description: DBaaSPlatform defines the schema for the DBaaSPlatform API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,7 +32,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSPlatform object.
+            description: DBaaSPlatformSpec defines the desired state of a DBaaSPlatform
+              object.
             properties:
               syncPeriod:
                 description: The SyncPeriod set The minimum interval at which the
@@ -43,7 +44,8 @@ spec:
                 type: integer
             type: object
           status:
-            description: Defines the observed state of a DBaaSPlatform object.
+            description: DBaaSPlatformStatus defines the observed state of a DBaaSPlatform
+              object.
             properties:
               conditions:
                 items:
@@ -117,15 +119,17 @@ spec:
                 type: array
               platformsStatus:
                 items:
-                  description: Defines the status of a DBaaSPlatform object.
+                  description: PlatformStatus defines the status of a DBaaSPlatform
+                    object.
                   properties:
                     lastMessage:
                       type: string
                     platformName:
-                      description: The name of the platform.
+                      description: PlatformsName defines the name of the platform.
                       type: string
                     platformStatus:
-                      description: The status of a platform installation.
+                      description: PlatformsInstlnStatus provides the status of a
+                        platform installation.
                       type: string
                   required:
                   - platformName
@@ -143,7 +147,7 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: The schema for the DBaaSPlatform API.
+        description: DBaaSPlatform defines the schema for the DBaaSPlatform API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -158,7 +162,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired state of a DBaaSPlatform object.
+            description: DBaaSPlatformSpec defines the desired state of a DBaaSPlatform
+              object.
             properties:
               syncPeriod:
                 description: Sets the minimum interval, which the provider's operator
@@ -168,7 +173,8 @@ spec:
                 type: integer
             type: object
           status:
-            description: Defines the observed state of a DBaaSPlatform object.
+            description: DBaaSPlatformStatus defines the observed state of a DBaaSPlatform
+              object.
             properties:
               conditions:
                 items:
@@ -242,15 +248,17 @@ spec:
                 type: array
               platformsStatus:
                 items:
-                  description: Defines the status of a DBaaSPlatform object.
+                  description: PlatformStatus defines the status of a DBaaSPlatform
+                    object.
                   properties:
                     lastMessage:
                       type: string
                     platformName:
-                      description: The name of the platform.
+                      description: PlatformName defines the name of the platform.
                       type: string
                     platformStatus:
-                      description: The status of a platform installation.
+                      description: PlatformInstlnStatus provides the status of a platform
+                        installation.
                       type: string
                   required:
                   - platformName

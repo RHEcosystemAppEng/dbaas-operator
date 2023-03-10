@@ -12,6 +12,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
+// Constants for metrics
 const (
 	// Metric Names
 	MetricNameInventoryStatusReady = "dbaas_inventory_status_ready"

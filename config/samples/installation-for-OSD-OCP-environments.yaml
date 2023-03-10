@@ -11,7 +11,7 @@ metadata:
   namespace: redhat-dbaas-operator
 spec:
   sourceType: grpc
-  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.4.0
+  image: quay.io/ecosystem-appeng/dbaas-operator-catalog:v0.5.0
   displayName: Red Hat OpenShift Database Access
 
 ---
@@ -33,13 +33,5 @@ spec:
   name: dbaas-operator
   source: addon-dbaas-operator-catalog
   sourceNamespace: redhat-dbaas-operator
-  config:
-    env:
-      - name: ADDON_NAME
-        value: dbaas-operator-dev
-      - name: RHOBS_AUTH_TYPE
-        value: dex
-      - name: RHOBS_API_URL
-        value: https://observatorium-observatorium.apps/api/metrics/v1/test2/api/v1/receive
   startingCSV: dbaas-operator.v0.3.0
 #  startingCSV: dbaas-operator.v0.4.0

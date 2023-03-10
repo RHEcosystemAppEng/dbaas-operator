@@ -22,7 +22,7 @@ Package v1beta1 contains API Schema definitions for the dbaas v1beta1 API group
 
 
 
-A list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
+ConditionalProvisioningParameterData provides a list of available options with default values for a dropdown menu, or a list of default values entered by the user within the user interface (UI) based on the dependencies. A provisioning parameter can have many options lists and default values, depending on the dependency parameters. If options lists are present, the field displays a dropdown menu in the UI, otherwise it displays an empty field for user input. For example, you can have four different options lists for different regions: one for dedicated clusters on Google Cloud Platform (GCP), one for dedicated clusters on Amazon Web Services (AWS), one for serverless on GCP, and one for serverless on AWS.
 
 _Appears in:_
 - [ProvisioningParameter](#provisioningparameter)
@@ -38,7 +38,7 @@ _Appears in:_
 
 
 
-Defines the CredentialField object attributes.
+CredentialField defines the CredentialField object attributes.
 
 _Appears in:_
 - [DBaaSProviderSpec](#dbaasproviderspec)
@@ -56,7 +56,7 @@ _Appears in:_
 
 
 
-The schema for the DBaaSConnection API.
+DBaaSConnection defines the schema for the DBaaSConnection API.
 
 
 
@@ -72,7 +72,7 @@ The schema for the DBaaSConnection API.
 
 
 
-The DBaaSConnectionPolicy object sets a connection policy.
+DBaaSConnectionPolicy sets a connection policy.
 
 _Appears in:_
 - [DBaaSInventoryPolicy](#dbaasinventorypolicy)
@@ -87,7 +87,7 @@ _Appears in:_
 
 
 
-Defines the desired state of a DBaaSConnection object.
+DBaaSConnectionSpec defines the desired state of a DBaaSConnection object.
 
 _Appears in:_
 - [DBaaSConnection](#dbaasconnection)
@@ -105,7 +105,7 @@ _Appears in:_
 
 
 
-The schema for the DBaaSInstance API.
+DBaaSInstance defines the schema for the DBaaSInstance API.
 
 
 
@@ -121,7 +121,7 @@ The schema for the DBaaSInstance API.
 
 
 
-Defines the desired state of a DBaaSInstance object.
+DBaaSInstanceSpec defines the desired state of a DBaaSInstance object.
 
 _Appears in:_
 - [DBaaSInstance](#dbaasinstance)
@@ -137,7 +137,7 @@ _Appears in:_
 
 
 
-The schema for the DBaaSInventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
+DBaaSInventory defines the schema for the DBaaSInventory API. Inventory objects must be created in a valid namespace, determined by the existence of a DBaaSPolicy object.
 
 
 
@@ -153,7 +153,7 @@ The schema for the DBaaSInventory API. Inventory objects must be created in a va
 
 
 
-Sets the inventory policy.
+DBaaSInventoryPolicy sets the inventory policy.
 
 _Appears in:_
 - [DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)
@@ -169,7 +169,7 @@ _Appears in:_
 
 
 
-Defines the inventory specifications for the provider's operators.
+DBaaSInventorySpec defines the inventory specifications for the provider's operators.
 
 _Appears in:_
 - [DBaaSOperatorInventorySpec](#dbaasoperatorinventoryspec)
@@ -184,7 +184,7 @@ _Appears in:_
 
 
 
-This object defines the desired state of a DBaaSInventory object.
+DBaaSOperatorInventorySpec defines the desired state of a DBaaSInventory object.
 
 _Appears in:_
 - [DBaaSInventory](#dbaasinventory)
@@ -200,7 +200,7 @@ _Appears in:_
 
 
 
-The schema for the DBaaSPlatform API.
+DBaaSPlatform defines the schema for the DBaaSPlatform API.
 
 
 
@@ -216,7 +216,7 @@ The schema for the DBaaSPlatform API.
 
 
 
-Defines the desired state of a DBaaSPlatform object.
+DBaaSPlatformSpec defines the desired state of a DBaaSPlatform object.
 
 _Appears in:_
 - [DBaaSPlatform](#dbaasplatform)
@@ -230,7 +230,7 @@ _Appears in:_
 
 
 
-Enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
+DBaaSPolicy enables administrative capabilities within a namespace, and sets a default inventory policy. Policy defaults can be overridden on a per-inventory basis.
 
 
 
@@ -246,7 +246,7 @@ Enables administrative capabilities within a namespace, and sets a default inven
 
 
 
-The specifications for a DBaaSPolicy object.
+DBaaSPolicySpec the specifications for a DBaaSPolicy object.
 
 _Appears in:_
 - [DBaaSPolicy](#dbaaspolicy)
@@ -260,7 +260,7 @@ _Appears in:_
 
 
 
-The schema for the DBaaSProvider API.
+DBaaSProvider defines the schema for the DBaaSProvider API.
 
 
 
@@ -282,7 +282,7 @@ The schema for the DBaaSProvider API.
 
 
 
-Defines the desired state of a DBaaSProvider object.
+DBaaSProviderSpec defines the desired state of a DBaaSProvider object.
 
 _Appears in:_
 - [DBaaSProvider](#dbaasprovider)
@@ -305,7 +305,7 @@ _Appears in:_
 
 
 
-Defines the information for a DBaaSProvider object.
+DatabaseProviderInfo defines the information for a DBaaSProvider object.
 
 _Appears in:_
 - [DBaaSProviderSpec](#dbaasproviderspec)
@@ -324,7 +324,7 @@ _Appears in:_
 
 _Underlying type:_ `string`
 
-Defines the supported database service types.
+DatabaseServiceType defines the supported database service types.
 
 _Appears in:_
 - [DBaaSConnectionSpec](#dbaasconnectionspec)
@@ -336,7 +336,7 @@ _Appears in:_
 
 
 
-Defines the name and value of a dependency field.
+FieldDependency defines the name and value of a dependency field.
 
 _Appears in:_
 - [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
@@ -353,7 +353,7 @@ _Appears in:_
 
 
 
-Contains enough information to locate the referenced object inside the same namespace.
+LocalObjectReference contains enough information to locate the referenced object inside the same namespace.
 
 _Appears in:_
 - [DBaaSInventorySpec](#dbaasinventoryspec)
@@ -367,7 +367,7 @@ _Appears in:_
 
 
 
-Defines the namespace and name of a k8s resource.
+NamespacedName defines the namespace and name of a k8s resource.
 
 _Appears in:_
 - [DBaaSConnectionSpec](#dbaasconnectionspec)
@@ -386,7 +386,7 @@ _Appears in:_
 
 
 
-Defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
+Option defines the value and display value for an option in a dropdown menu, radio button, or checkbox.
 
 _Appears in:_
 - [ConditionalProvisioningParameterData](#conditionalprovisioningparameterdata)
@@ -405,7 +405,7 @@ _Appears in:_
 
 
 
-Follows the same field and naming formats as a comma-separated values (CSV) file.
+ProviderIcon follows the same field and naming formats as a comma-separated values (CSV) file.
 
 _Appears in:_
 - [DatabaseProviderInfo](#databaseproviderinfo)
@@ -420,7 +420,7 @@ _Appears in:_
 
 
 
-Information for a ProvisioningParameter object.
+ProvisioningParameter provides information for a ProvisioningParameter object.
 
 _Appears in:_
 - [DBaaSProviderSpec](#dbaasproviderspec)
@@ -436,7 +436,7 @@ _Appears in:_
 
 _Underlying type:_ `string`
 
-
+ProvisioningParameterType defines teh type for provisioning parameters
 
 _Appears in:_
 - [DBaaSInstanceSpec](#dbaasinstancespec)

@@ -23,7 +23,7 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// The schema for the DBaaSInstance API.
+// DBaaSInstance defines the schema for the DBaaSInstance API.
 type DBaaSInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -34,7 +34,7 @@ type DBaaSInstance struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of DBaaSInstances.
+// DBaaSInstanceList contains a list of DBaaSInstances.
 type DBaaSInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
