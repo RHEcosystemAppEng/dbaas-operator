@@ -35,7 +35,7 @@ The OpenShift Database Access operator allows you to configure a connection to c
 
 * OpenShift Container Platform 4.10 or higher, and on these deployment types:
 ** OpenShift Dedicated
-** OpenShift on AWS
+** OpenShift on Amazon Web Services (AWS)
 
 .Procedure
 
