@@ -112,10 +112,10 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			},
 		}
 
-		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -186,10 +186,10 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -274,10 +274,10 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 			},
 			Spec: *DBaaSConnectionSpec,
 		}
-		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSConnection))
 		AfterEach(assertResourceDeletion(createdDBaaSConnection))
@@ -289,7 +289,7 @@ var _ = Describe("DBaaSConnection controller with errors", func() {
 
 var _ = Describe("DBaaSConnection controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -354,7 +354,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
 				It("should create a provider connection", func() {
-					assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec)()
+					assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec)()
 
 					By("checking if the Deployment is created")
 					deployment := &appv1.Deployment{
@@ -415,7 +415,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
@@ -427,7 +427,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				})
 			})
 
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -492,10 +492,10 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 			})
 
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})
@@ -504,7 +504,7 @@ var _ = Describe("DBaaSConnection controller - nominal", func() {
 
 var _ = Describe("DBaaSConnection controller - nominal with instance reference", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -548,7 +548,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 					},
 				},
 			}
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 
 			Context("after creating DBaaSInstance", func() {
@@ -582,7 +582,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 					},
 				}
 
-				BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, instanceStatus))
+				BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, instanceStatus))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
 				Context("after creating DBaaSConnection", func() {
@@ -615,7 +615,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 							},
 							DatabaseServiceID: instanceID,
 						}
-						assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, expectedDBaaSConnectionSpec)()
+						assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, expectedDBaaSConnectionSpec)()
 
 						By("checking if the Deployment is created")
 						deployment := &appv1.Deployment{
@@ -676,7 +676,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 								Name: "testConnectionInfoRef",
 							},
 						}
-						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+						It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 					})
 				})
 			})
@@ -686,7 +686,7 @@ var _ = Describe("DBaaSConnection controller - nominal with instance reference",
 
 var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -758,7 +758,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -777,7 +777,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
@@ -790,7 +790,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -861,7 +861,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -880,7 +880,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
@@ -893,7 +893,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -983,7 +983,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -1002,7 +1002,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
@@ -1015,7 +1015,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -1091,7 +1091,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSConnection))
 				AfterEach(assertResourceDeletion(createdDBaaSConnection))
 
-				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
+				It("should create a provider connection", assertProviderResourceCreated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), testConnectionKind, DBaaSConnectionSpec))
 				Context("when updating provider connection status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSConnectionStatus{
@@ -1110,7 +1110,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 							Name: "testConnectionInfoRef",
 						},
 					}
-					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
+					It("should update DBaaSConnection status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSConnection, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testConnectionKind, status))
 				})
 
 				Context("when updating DBaaSConnection spec", func() {
@@ -1122,7 +1122,7 @@ var _ = Describe("DBaaSConnection controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})

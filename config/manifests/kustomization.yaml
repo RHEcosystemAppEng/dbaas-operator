@@ -34,6 +34,3 @@ patchesJson6902:
     - op: replace
       path: /metadata/annotations/containerImage
       value: quay.io/ecosystem-appeng/dbaas-operator:v0.5.0
-    - op: replace
-      path: /spec/replaces
-      value: dbaas-operator.v0.4.0

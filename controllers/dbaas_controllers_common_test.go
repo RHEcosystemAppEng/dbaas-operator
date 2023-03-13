@@ -46,23 +46,23 @@ import (
 )
 
 const (
-	testProviderName           = "mongodb-atlas"
-	testInventoryKind          = "MongoDBAtlasInventory"
-	testConnectionKind         = "MongoDBAtlasConnection"
-	testInstanceKind           = "MongoDBAtlasInstance"
+	testProviderName           = v1beta1.CrunchyBridgeRegistration
+	testInventoryKind          = "CrunchyBridgeInventory"
+	testConnectionKind         = "CrunchyBridgeConnection"
+	testInstanceKind           = "CrunchyBridgeInstance"
 	testProviderV1alpha1Name   = "rds-v1alpha1"
 	testInventoryV1alpha1Kind  = "RDSInventory"
 	testConnectionV1alpha1Kind = "RDSConnection"
 	testInstanceV1alpha1Kind   = "RDSInstance"
 )
 
-var mongoProvider = &v1beta1.DBaaSProvider{
+var crunchyProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: testProviderName,
+		Name: v1beta1.CrunchyBridgeRegistration,
 	},
 	Spec: v1beta1.DBaaSProviderSpec{
 		Provider: v1beta1.DatabaseProviderInfo{
-			Name: testProviderName,
+			Name: v1beta1.CrunchyBridgeRegistration,
 		},
 		InventoryKind:                testInventoryKind,
 		ConnectionKind:               testConnectionKind,
@@ -94,7 +94,7 @@ var rdsProviderV1alpha1 = &v1beta1.DBaaSProvider{
 	},
 }
 
-var crunchyProvider = &v1beta1.DBaaSProvider{
+var ccapiProvider = &v1beta1.DBaaSProvider{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: v1beta1.CockroachDBCloudRegistration,
 	},

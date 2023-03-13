@@ -93,7 +93,7 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 
 var _ = Describe("DBaaSInventory controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -112,7 +112,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 				},
 				Spec: v1beta1.DBaaSOperatorInventorySpec{
 					ProviderRef: v1beta1.NamespacedName{
-						Name: testProviderName,
+						Name: v1beta1.CrunchyBridgeRegistration,
 					},
 					DBaaSInventorySpec: *DBaaSInventorySpec,
 				},
@@ -122,7 +122,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 			BeforeEach(assertResourceCreation(createdDBaaSInventory))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 
-			It("should create a provider inventory", assertProviderResourceCreated(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), testInventoryKind, DBaaSInventorySpec))
+			It("should create a provider inventory", assertProviderResourceCreated(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), testInventoryKind, DBaaSInventorySpec))
 
 			Context("when updating provider inventory status", func() {
 				lastTransitionTime := getLastTransitionTimeForTest()
@@ -155,7 +155,7 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					},
 				}
 				BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-				It("should update DBaaSInventory status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, status))
+				It("should update DBaaSInventory status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, status))
 			})
 
 			Context("when updating DBaaSInventory spec", func() {
@@ -171,14 +171,14 @@ var _ = Describe("DBaaSInventory controller - nominal", func() {
 					},
 				}
 				BeforeEach(assertResourceCreationIfNotExists(&updatedTestSecret))
-				It("should update provider inventory spec", assertProviderResourceSpecUpdated(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), testInventoryKind, DBaaSInventorySpec))
+				It("should update provider inventory spec", assertProviderResourceSpecUpdated(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), testInventoryKind, DBaaSInventorySpec))
 				It("should return the secret without error and with proper label", func() {
 					getSecret := v1.Secret{}
 					err := dRec.Get(ctx, client.ObjectKeyFromObject(&updatedTestSecret), &getSecret)
 					Expect(err).NotTo(HaveOccurred())
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
-					Expect(labels[v1beta1.TypeLabelKeyMongo]).Should(Equal(v1beta1.TypeLabelValue))
+					Expect(labels[v1beta1.TypeLabelKey]).Should(Equal(v1beta1.TypeLabelValue))
 				})
 			})
 		})
