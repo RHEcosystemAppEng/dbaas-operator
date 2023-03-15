@@ -27,14 +27,10 @@ var devInstanceQuickStart []byte
 //go:embed connecting-an-application-to-a-database-instance-using-the-topology-view-quick-start.yaml
 var devConnectQuickStart []byte
 
-//go:embed installing-the-red-hat-openshift-database-access-add-on-quick-start.yaml
-var installAddonQuickStart []byte
-
 var quickStarts = map[string][]byte{
 	"accessing-the-database-access-menu-for-configuring-and-monitoring":        adminQuickStart,
 	"accessing-the-developer-workspace-and-adding-a-database-instance":         devInstanceQuickStart,
 	"connecting-an-application-to-a-database-instance-using-the-topology-view": devConnectQuickStart,
-	"installing-the-red-hat-openshift-database-access-add-on":                  installAddonQuickStart,
 }
 
 type reconciler struct {

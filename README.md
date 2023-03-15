@@ -1,5 +1,5 @@
-# Red Hat OpenShift Database Access Operator
-Red Hat OpenShift Database Access Operator is currently iterating early releases. The intent of these releases is to show how we could
+# OpenShift Database Access Operator
+OpenShift Database Access Operator (a.k.a. DBaaS Operator) is currently iterating early releases. The intent of these releases is to show how we could
 create trail database cluster, scan & import off-cluster cloud database instances hosted by various 3rd party ISV providers & make those instances
 available to developers for binding to their applications.
 
@@ -19,7 +19,7 @@ RDS Operator|[RDS Operator](https://github.com/RHEcosystemAppEng/rds-dbaas-opera
 Observability Operator |[Observability Operator](https://github.com/rhobs/observability-operator)| Operator for installing the monitoring stack and configuring remote write Observatorium.
 
 ## Building the Operator
-Build the Red Hat OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
+Build the OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
 
 Reqs:
  - go v1.18
@@ -47,10 +47,10 @@ If you run locally or via direct deploy (no longer recommended), you can create 
   - You can also find the exact commit you want to deploy based on the commit sha.
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
-  The RHODA operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
-- On successful installation of RHODA operator, will automatically install all its dependencies and the operator logs shows: *DBaaS platform stack installation complete*.
+  The DBaaS operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
+- On successful installation of DBaaS operator, will automatically install all its dependencies and the operator logs shows: *DBaaS platform stack installation complete*.
 - Continue below by following the [Using the Operator](#using-the-operator) section
-- If you wish to uninstall operator and dependencies from your cluster: delete dbaas-platform(DBaaSPlatform) CR manually wait for the operator to uninstall its dependencies and then uninstall RHODA operators by going →**Operators → Installed Operators → Actions → Uninstall Operator**.
+- If you wish to uninstall operator and dependencies from your cluster: delete dbaas-platform(DBaaSPlatform) CR manually wait for the operator to uninstall its dependencies and then uninstall the DBaaS operator by going →**Operators → Installed Operators → Actions → Uninstall Operator**.
   Then delete the catalog source.
 
 ## Using the Operator
@@ -70,7 +70,7 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 - Select your cloud database provider from the drop-down menu and provide the credentials for that provider.
 - Click on the Create button to create the Provider Account resource and fetch the available database instances.
 - If fetching is successful, then you can click on the View Provider Accounts button to display the exposed database instances that developers can import.
-- For more understanding see the demo: [IT Operations preview demo of Red Hat OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift)  
+- For more understanding see the demo: [IT Operations preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift)  
 
 **Creating a DBaaSConnection:**
 - Change into the Developer perspective. Click +Add.
@@ -84,11 +84,11 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 - Upon successful connection, you are taken to the Topology page.
 - Click and drag the arrow from the application to the new database instance to create a binding connector.
   ![topology-view](docs/images/topology-view-example.png)
-- For more understanding see the demo: [Developer preview demo of Red Hat OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift)  
+- For more understanding see the demo: [Developer preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift)  
  
 ## Contributing
 
-- Fork Red Hat OpenShift Database Access Operator repository
+- Fork OpenShift Database Access Operator repository
   - https://github.com/RHEcosystemAppEng/dbaas-operator
 - Check out code from your new fork
   - `git clone git@github.com:<your-user-name>/dbaas-operator.git`
