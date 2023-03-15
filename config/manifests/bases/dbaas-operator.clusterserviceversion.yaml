@@ -53,7 +53,7 @@ spec:
       name: dbaasproviders.dbaas.redhat.com
       version: v1beta1
   description: |
-    The Red Hat OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
+    The OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
     hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas, CrunchyData Bridge & CockroachCloud.
 
     ## Release Status
@@ -87,7 +87,6 @@ spec:
     type: AllNamespaces
   keywords:
   - dbaas
-  - rhoda
   - database
   links:
   - name: GitHub
@@ -97,7 +96,6 @@ spec:
     name: Red Hat Ecosystem App Engineering
   maturity: alpha
   provider:
-    name: Red Hat
-    url: https://www.redhat.com
+    name: OpenShift Database Access
   replaces: dbaas-operator.prior
   version: 0.0.0

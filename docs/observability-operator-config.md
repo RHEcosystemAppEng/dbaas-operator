@@ -25,6 +25,6 @@ The following parameters can be modified or configured in operator subscription 
       - name: RHOBS_API_URL
         value: https://observatorium-observatorium.apps.<>/api/metrics/v1/test2/api/v1/receive
 
-###### Install the RHODA operator, by substituted above params in:
+###### Install the DBaaS operator, by substituted above params in:
 
 ```oc apply -f config/samples/installation-for-non-OSD-OCP-environments.yaml```

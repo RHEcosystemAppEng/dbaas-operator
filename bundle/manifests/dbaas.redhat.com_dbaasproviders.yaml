@@ -156,7 +156,8 @@ spec:
                     type: object
                   name:
                     description: The name used to specify the service binding origin
-                      parameter. For example, 'Red Hat DBaaS / MongoDB Atlas'.
+                      parameter. For example, 'OpenShift Database Access / MongoDB
+                      Atlas'.
                     type: string
                 required:
                 - displayDescription
@@ -287,7 +288,8 @@ spec:
                     type: object
                   name:
                     description: The name used to specify the service binding origin
-                      parameter. For example, 'Red Hat DBaaS / MongoDB Atlas'.
+                      parameter. For example, 'OpenShift Database Access / MongoDB
+                      Atlas'.
                     type: string
                 required:
                 - displayDescription

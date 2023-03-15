@@ -58,7 +58,7 @@ func NewReconciler(client k8sclient.Client, scheme *runtime.Scheme, logger logr.
 // Reconcile create the CR for Observability Operator
 func (r *reconciler) Reconcile(ctx context.Context, cr *v1beta1.DBaaSPlatform) (v1beta1.PlatformInstlnStatus, error) {
 
-	// clean the observability operator if installed by RHODA in previous version.
+	// clean the observability operator if installed by DBaaS Operator in previous version.
 	status, err := r.cleanObsOldSubscription(ctx, cr)
 	if status != v1beta1.ResultSuccess {
 		return status, err
