@@ -7,7 +7,7 @@ metadata:
     categories: "Database management"
   labels:
     service-category/data-services: "true"
-    product/rhoda: "true"
+    product/dbaas: "true"
 spec:
   displayName: Accessing the developer workspace and adding a database instance
   appName: OpenShift Database Access
@@ -19,7 +19,7 @@ spec:
   introduction: |-
     You can access the developer workspace in the OpenShift console to manage connectivity between database instances and applications.
 
-    **IMPORTANT** : Red Hat OpenShift Database Access is a pre-beta service preview release, and is not ready for production environments.
+    **IMPORTANT** : OpenShift Database Access is a pre-beta service preview release, and is not ready for production environments.
   tasks:
     - title: Accessing the developer workspace and adding a database instance
       description: |-

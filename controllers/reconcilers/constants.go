@@ -57,7 +57,7 @@ const (
 	rdsProviderCSV         = "CSV_VERSION_RDS_PROVIDER"
 	rdsProviderCatalogImg  = "RELATED_IMAGE_RDS_PROVIDER_CATALOG"
 	rdsProviderName        = "rds-provider"
-	rdsProviderDisplayName = "RHODA Provider Operator for Amazon RDS"
+	rdsProviderDisplayName = "OpenShift Database Access Provider Operator for Amazon RDS"
 	rdsProviderDeployment  = "rds-dbaas-operator-controller-manager"
 	rdsProviderPkg         = "rds-dbaas-operator"
 	rdsProviderChannel     = "alpha"

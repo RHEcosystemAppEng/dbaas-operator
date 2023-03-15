@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2023 The OpenShift Database Access Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -478,7 +478,7 @@ func (r *DBaaSPlatformReconciler) prepareRDSController(ctx context.Context, cli 
 				"ACK_ENABLE_DEVELOPMENT_LOGGING": "false",
 				"ACK_WATCH_NAMESPACE":            "",
 				"ACK_LOG_LEVEL":                  "info",
-				"ACK_RESOURCE_TAGS":              "rhoda",
+				"ACK_RESOURCE_TAGS":              "dbaas",
 			}
 			if err := cli.Create(ctx, cm); err != nil {
 				return err

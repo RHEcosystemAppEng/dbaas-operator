@@ -7,7 +7,7 @@ metadata:
     categories: "Database management"
   labels:
     service-category/data-services: "true"
-    product/rhoda: "true"
+    product/dbaas: "true"
 spec:
   displayName: Connecting an application to a database instance using the topology view
   appName: OpenShift Database Access

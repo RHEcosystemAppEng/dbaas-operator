@@ -39,7 +39,7 @@ var DBaaSInstanceStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 // DBaaSInstancePhaseGauge defines a gauge for DBaaSInstancePhase
 var DBaaSInstancePhaseGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: metricNameInstancePhase,
-	Help: "Current status phase of the Instance currently managed by RHODA values ( Pending=-1, Creating=0, Ready=1, Unknown=2, Failed=3, Error=4, Deleting=5 ).",
+	Help: "Current status phase of the Instance currently managed by OpenShift Database Access values ( Pending=-1, Creating=0, Ready=1, Unknown=2, Failed=3, Error=4, Deleting=5 ).",
 }, []string{MetricLabelProvider, MetricLabelAccountName, metricLabelInstanceName, MetricLabelNameSpace})
 
 // setInstanceStatusMetrics set the metrics based on instance status

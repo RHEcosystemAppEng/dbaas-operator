@@ -1,5 +1,5 @@
 /*
-Copyright 2021.
+Copyright 2023 The OpenShift Database Access Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -152,7 +152,7 @@ type DBaaSProviderStatus struct {
 // DatabaseProviderInfo defines the information for a DBaaSProvider object.
 type DatabaseProviderInfo struct {
 	// The name used to specify the service binding origin parameter.
-	// For example, 'Red Hat DBaaS / MongoDB Atlas'.
+	// For example, 'OpenShift Database Access / MongoDB Atlas'.
 	Name string `json:"name"`
 
 	// A user-friendly name for this database provider.
