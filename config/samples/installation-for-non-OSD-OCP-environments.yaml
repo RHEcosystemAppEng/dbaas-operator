@@ -28,7 +28,7 @@ metadata:
   name: dbaas-operator
   namespace: openshift-dbaas-operator
 spec:
-  channel: alpha
+  channel: stable
   installPlanApproval: Automatic
   name: dbaas-operator
   source: dbaas-operator

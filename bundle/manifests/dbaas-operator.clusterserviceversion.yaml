@@ -322,7 +322,7 @@ metadata:
           }
         }
       ]
-    capabilities: Basic Install
+    capabilities: Seamless Upgrades
     categories: Database
     containerImage: quay.io/ecosystem-appeng/dbaas-operator:v0.5.0
     description: Discover & connect with database instances hosted on 3rd-party ISV
@@ -807,7 +807,7 @@ spec:
   maintainers:
   - email: ecosystem-appeng@redhat.com
     name: Red Hat Ecosystem App Engineering
-  maturity: alpha
+  maturity: stable
   provider:
     name: OpenShift Database Access
   relatedImages:

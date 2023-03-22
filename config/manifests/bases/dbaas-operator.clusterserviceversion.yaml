@@ -3,7 +3,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: '[]'
-    capabilities: Basic Install
+    capabilities: Seamless Upgrades
     categories: Database
     containerImage: controller:latest
     description: Discover & connect with database instances hosted on 3rd-party ISV
@@ -94,7 +94,7 @@ spec:
   maintainers:
   - email: ecosystem-appeng@redhat.com
     name: Red Hat Ecosystem App Engineering
-  maturity: alpha
+  maturity: stable
   provider:
     name: OpenShift Database Access
   version: 0.0.0
