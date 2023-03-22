@@ -28,7 +28,7 @@ metadata:
   name: addon-dbaas-operator
   namespace: redhat-dbaas-operator
 spec:
-  channel: alpha
+  channel: stable
   installPlanApproval: Automatic
   name: dbaas-operator
   source: addon-dbaas-operator-catalog

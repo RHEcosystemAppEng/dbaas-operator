@@ -10,6 +10,3 @@ subjects:
 - kind: ServiceAccount
   name: service-binding-operator
   namespace: openshift-dbaas-operator
-- kind: ServiceAccount
-  name: service-binding-operator
-  namespace: redhat-dbaas-operator
