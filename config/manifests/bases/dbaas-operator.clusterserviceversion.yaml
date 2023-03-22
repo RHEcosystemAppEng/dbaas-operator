@@ -97,5 +97,4 @@ spec:
   maturity: alpha
   provider:
     name: OpenShift Database Access
-  replaces: dbaas-operator.prior
   version: 0.0.0

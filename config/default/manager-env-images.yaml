@@ -11,17 +11,13 @@ spec:
         - name: manager
           env:
             - name: RELATED_IMAGE_DBAAS_DYNAMIC_PLUGIN
-              value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.4.0
+              value: quay.io/ecosystem-appeng/dbaas-dynamic-plugin:0.5.0
             - name: CSV_VERSION_DBAAS_DYNAMIC_PLUGIN
-              value: dbaas-dynamic-plugin:0.4.0
+              value: dbaas-dynamic-plugin:0.5.0
             - name: RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG
               value: registry.developers.crunchydata.com/crunchydata/crunchy-bridge-operator-catalog:v0.0.6
             - name: CSV_VERSION_CRUNCHY_BRIDGE
               value: crunchy-bridge-operator.v0.0.6
-            - name: RELATED_IMAGE_MONGODB_ATLAS_CATALOG
-              value: quay.io/mongodb/mongodb-atlas-kubernetes-dbaas-catalog:0.3.0
-            - name: CSV_VERSION_MONGODB_ATLAS
-              value: mongodb-atlas-kubernetes.v0.3.0
             - name: RELATED_IMAGE_COCKROACHDB_CATALOG
               value: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.5
             - name: CSV_VERSION_COCKROACHDB

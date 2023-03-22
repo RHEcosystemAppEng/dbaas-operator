@@ -115,10 +115,10 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 			},
 		}
 
-		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionFalse, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -193,10 +193,10 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 		}
 
 		BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-		BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+		BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 		BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 		BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		BeforeEach(assertResourceCreationIfNotExists(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInstance))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
@@ -206,7 +206,7 @@ var _ = Describe("DBaaSInstance controller with errors", func() {
 
 var _ = Describe("DBaaSInstance controller - nominal", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -249,7 +249,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 					},
 				},
 			}
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 			Context("after creating DBaaSInstance", func() {
 				instanceName := "test-instance"
@@ -275,7 +275,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -293,7 +293,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -309,7 +309,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 		})
@@ -318,7 +318,7 @@ var _ = Describe("DBaaSInstance controller - nominal", func() {
 
 var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 
@@ -394,7 +394,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -412,7 +412,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -428,12 +428,12 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -508,7 +508,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 				BeforeEach(assertResourceCreation(createdDBaaSInstance))
 				AfterEach(assertResourceDeletion(createdDBaaSInstance))
 
-				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+				It("should create a provider instance", assertProviderResourceCreated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				Context("when updating provider instance status", func() {
 					lastTransitionTime := getLastTransitionTimeForTest()
 					status := &v1beta1.DBaaSInstanceStatus{
@@ -526,7 +526,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 						},
 						Phase: v1beta1.InstancePhaseReady,
 					}
-					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
+					It("should update DBaaSInstance status", assertDBaaSResourceProviderStatusUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInstanceKind, status))
 				})
 
 				Context("when updating DBaaSInstance spec", func() {
@@ -542,12 +542,12 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 							v1beta1.ProvisioningPlan:          v1beta1.ProvisioningPlanFreeTrial,
 						},
 					}
-					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, mongoProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
+					It("should update provider instance spec", assertProviderResourceSpecUpdated(createdDBaaSInstance, crunchyProvider.GetDBaaSAPIGroupVersion(), testInstanceKind, DBaaSInstanceSpec))
 				})
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 
@@ -628,7 +628,7 @@ var _ = Describe("DBaaSInstance controller - valid dev namespaces", func() {
 			})
 
 			BeforeEach(assertResourceCreationIfNotExists(&otherNS))
-			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+			BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 			AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		})
 	})

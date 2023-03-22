@@ -88,9 +88,9 @@ var _ = Describe("Get DBaaSProvider", func() {
 			Provider: v1beta1.DatabaseProviderInfo{
 				Name: "test-provider",
 			},
-			InventoryKind:                "MongoDBAtlasInventory",
-			ConnectionKind:               "MongoDBAtlasConnection",
-			InstanceKind:                 "MongoDBAtlasInstance",
+			InventoryKind:                "CrunchyBridgeInventory",
+			ConnectionKind:               "CrunchyBridgeConnection",
+			InstanceKind:                 "CrunchyBridgeInstance",
 			CredentialFields:             []v1beta1.CredentialField{},
 			AllowsFreeTrial:              false,
 			ExternalProvisionURL:         "",
@@ -210,7 +210,7 @@ var _ = Describe("Get Provider Spec Status Version", func() {
 			Expect(gv.String()).Should(Equal(groupVersion.String()))
 		},
 
-		Entry("mongo provider", mongoProvider, &v1beta1.GroupVersion),
+		Entry("cockroach provider", ccapiProvider, &v1beta1.GroupVersion),
 		Entry("crunchy provider", crunchyProvider, &v1beta1.GroupVersion),
 		Entry("rds provider", &v1beta1.DBaaSProvider{
 			ObjectMeta: metav1.ObjectMeta{
@@ -354,7 +354,7 @@ var _ = Describe("list policies by inventory namespace", func() {
 var _ = Describe("Check inventory", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret2))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(ccapiProvider))
 	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
@@ -413,8 +413,8 @@ var _ = Describe("Check inventory", func() {
 				},
 			},
 		}
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
-		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory2, mongoProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, "CrunchyBridgeInventory", providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory, crunchyProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
+		BeforeEach(assertResourceCreationWithProviderStatus(createdDBaaSInventory2, ccapiProvider.GetDBaaSAPIGroupVersion(), metav1.ConditionTrue, testInventoryKind, providerInventoryStatus))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory))
 		AfterEach(assertResourceDeletion(createdDBaaSInventory2))
 
@@ -466,7 +466,7 @@ var _ = Describe("Check inventory", func() {
 					labels := getSecret.GetLabels()
 					Expect(labels).Should(Not(BeNil()))
 					Expect(labels["test"]).Should(Equal("label"))
-					Expect(labels[v1beta1.TypeLabelKeyMongo]).Should(Equal(v1beta1.TypeLabelValue))
+					Expect(labels[v1beta1.TypeLabelKey]).Should(Equal(v1beta1.TypeLabelValue))
 
 					getSecret2 := corev1.Secret{}
 					err = dRec.Get(ctx, client.ObjectKeyFromObject(&testSecret2), &getSecret2)
@@ -568,7 +568,8 @@ var _ = Describe("Check inventory", func() {
 
 var _ = Describe("Reconcile Provider Resource", func() {
 	BeforeEach(assertResourceCreationIfNotExists(&testSecret))
-	BeforeEach(assertResourceCreationIfNotExists(mongoProvider))
+	BeforeEach(assertResourceCreationIfNotExists(ccapiProvider))
+	BeforeEach(assertResourceCreationIfNotExists(crunchyProvider))
 	BeforeEach(assertResourceCreationIfNotExists(&defaultPolicy))
 	BeforeEach(assertDBaaSResourceStatusUpdated(&defaultPolicy, metav1.ConditionTrue, v1beta1.Ready))
 

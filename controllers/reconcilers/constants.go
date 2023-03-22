@@ -29,15 +29,6 @@ const (
 	crunchyBridgePkg         = "crunchy-bridge-operator"
 	crunchyBridgeChannel     = "alpha"
 
-	// MONGODB_ATLAS
-	mongoDBAtlasCatalogImg  = "RELATED_IMAGE_MONGODB_ATLAS_CATALOG"
-	mongoDBAtlasCSV         = "CSV_VERSION_MONGODB_ATLAS"
-	mongoDBAtlasName        = "mongodb-atlas"
-	mongoDBAtlasDisplayName = "MongoDB Atlas Operator"
-	mongoDBAtlasDeployment  = "mongodb-atlas-operator"
-	mongoDBAtlasPkg         = "mongodb-atlas-kubernetes"
-	mongoDBAtlasChannel     = "beta"
-
 	// COCKROACHDB
 	cockroachDBCSV         = "CSV_VERSION_COCKROACHDB"
 	cockroachDBCatalogImg  = "RELATED_IMAGE_COCKROACHDB_CATALOG"
@@ -85,16 +76,6 @@ var InstallationPlatforms = map[dbaasv1beta1.PlatformName]dbaasv1beta1.PlatformC
 		PackageName:    crunchyBridgePkg,
 		Channel:        crunchyBridgeChannel,
 		DisplayName:    crunchyBridgeDisplayName,
-		Type:           dbaasv1beta1.TypeOperator,
-	},
-	dbaasv1beta1.MongoDBAtlasInstallation: {
-		Name:           mongoDBAtlasName,
-		CSV:            fetchEnvValue(mongoDBAtlasCSV),
-		DeploymentName: mongoDBAtlasDeployment,
-		Image:          fetchEnvValue(mongoDBAtlasCatalogImg),
-		PackageName:    mongoDBAtlasPkg,
-		Channel:        mongoDBAtlasChannel,
-		DisplayName:    mongoDBAtlasDisplayName,
 		Type:           dbaasv1beta1.TypeOperator,
 	},
 	dbaasv1beta1.CockroachDBInstallation: {
