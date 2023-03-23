@@ -312,8 +312,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `name` _string_ | The name used to specify the service binding origin parameter. For example, 'OpenShift Database Access / MongoDB Atlas'. |
-| `displayName` _string_ | A user-friendly name for this database provider. For example, 'MongoDB Atlas'. |
+| `name` _string_ | The name used to specify the service binding origin parameter. For example, 'OpenShift Database Access / Crunchy Bridge'. |
+| `displayName` _string_ | A user-friendly name for this database provider. For example, 'Crunchy Bridge managed PostgreSQL'. |
 | `displayDescription` _string_ | Indicates the description text shown for a database provider within the user interface. For example, the catalog tile description. |
 | `icon` _[ProviderIcon](#providericon)_ | Indicates what icon to display on the catalog tile. |
 

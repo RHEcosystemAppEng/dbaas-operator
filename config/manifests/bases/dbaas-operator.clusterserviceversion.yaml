@@ -54,14 +54,7 @@ spec:
       version: v1beta1
   description: |
     The OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
-    hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas, CrunchyData Bridge & CockroachCloud.
-
-    ## Release Status
-
-    Project is currently in **Service Preview**. This is an early evaluation release that enables OpenShift users to
-    discover & utilize database instances created via their respective ISV cloud platforms. Our OpenShift Database Access Operator project
-    is new, however, our partners' cloud platforms aren't & should not be considered 'early release'. Please refer to platform
-    documentation for each provider for latest information regarding product offerings.
+    hosted on 3rd-party ISV cloud platforms such as CrunchyData Bridge & CockroachCloud.
 
     ## Feedback & Support
 
@@ -95,6 +88,7 @@ spec:
   - email: ecosystem-appeng@redhat.com
     name: Red Hat Ecosystem App Engineering
   maturity: stable
+  minKubeVersion: 1.23.0
   provider:
     name: OpenShift Database Access
   version: 0.0.0
