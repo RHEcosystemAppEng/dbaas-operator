@@ -33,9 +33,7 @@ The OpenShift Database Access operator allows you to configure a connection to c
 
 .Prerequisites
 
-* OpenShift Container Platform 4.10 or higher, and on these deployment types:
-** OpenShift Dedicated
-** OpenShift on Amazon Web Services (AWS)
+* Either OpenShift Container Platform or Origin Kubernetes Distribution (OKD) 4.10 or higher.
 
 .Procedure
 
