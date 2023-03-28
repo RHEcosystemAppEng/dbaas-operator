@@ -19,7 +19,7 @@ endif::[]
 This Quick Start Guide helps administrators and developers with installing, and accessing the OpenShift Database Access service.
 The OpenShift Database Access operator enables you to do the following:
 
-* Easy consumption of database-as-a-service (DBaaS) offerings from partners including MongoDB Atlas, Crunchy Bridge, CockroachDB, and Amazon's Relational Database Services (RDS) directly from managed OpenShift clusters.
+* Easy consumption of database-as-a-service (DBaaS) offerings from partners including Crunchy Bridge, CockroachDB, and Amazon's Relational Database Services (RDS) directly from managed OpenShift clusters.
 * Easy management, monitoring, and control by administrators of cloud-hosted DBaaS including consumption, usage, and status.
 
 toc::[]
@@ -63,12 +63,15 @@ If failure, a message displays the installation error to help you investigate th
 From the OpenShift console, you can access the OpenShift Database Access navigation menu.
 On the Database Access page, use the appropriate project namespace for importing a cloud-database provider account.
 
+////
+// 3/28/23 - ritz303 : Commenting out this admonishment, but don't want to lose this information.
 [IMPORTANT]
 ====
 By using MongoDB Atlas as a cloud-database provider, you must add the IP address of the application pod to MongoDB Atlas' **IP Access List**.
 If the IP address is not in the **IP Access List**, then a `504 gateway timeout error` occurs.
 Visit the MongoDB Atlas link:https://docs.atlas.mongodb.com/security/ip-access-list/[website] for more details on adding an IP address to your database project.
 ====
+////
 
 [NOTE]
 ====
@@ -79,7 +82,7 @@ By selecting *Current namespace only* option, you can view the policies.
 .Prerequisites
 
 * xref:installing-the-openshift-database-access-operator[Installation] of the OpenShift Database Access operator.
-* A service account with either the link:https://www.mongodb.com/atlas/database[MongoDB Atlas], or link:https://www.crunchydata.com[Crunchy Data Bridge], or link:https://www.cockroachlabs.com[CockroachDB], or link:https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email[Amazon RDS] cloud-hosted database provider.
+* A service account with either the link:https://www.crunchydata.com[Crunchy Data Bridge], or link:https://www.cockroachlabs.com[CockroachDB], or link:https://portal.aws.amazon.com/billing/signup?nc2=h_ct&src=header_signup&redirect_url=https%3A%2F%2Faws.amazon.com%2Fregistration-confirmation#/start/email[Amazon RDS] cloud-hosted database provider.
 
 .Procedure
 
@@ -191,58 +194,7 @@ This binding visually represents the injection of database connection informatio
 // End
 
 // Appendices - Helping customers find their DBaaS provider account credentials.
-// Appendix A : MongoDB Atlas
-[appendix]
-[id="find-your-mongodb-atlas-account-credentials"]
-
-== Find your MongoDB Atlas account credentials
-
-You need the Organization ID, the Organization Public Key, and the Organization Private Key to create a provider account resource for MongoDB Atlas.
-
-[IMPORTANT]
-====
-If using MongoDB Atlas as a cloud-database provider, then you must add the IP address of the application pod to MongoDB Atlas' IP Access List.
-If the IP address is not in the IP Access List, then a 504 gateway timeout error occurs.
-Visit the MongoDB Atlas link:https://docs.atlas.mongodb.com/security/ip-access-list/[website] for more details on adding an IP address to your database project.
-====
-
-.Procedure
-
-. From the MongoDB Atlas link:https://www.mongodb.com/[home page], **Sign In** to your account.
-
-. From your account home page:
-+
-image::../images/mongodb_first_single_screen_all_step.png[Single screenshot for finding your Organization ID value]
-
-.. Select **Organization** from the dropdown menu image:../images/1st_Callout_Bullet.png[First callout].
-
-.. Click **Settings** from the Organization navigation menu image:../images/2nd_Callout_Bullet.png[Second callout].
-
-.. Copy the Organization ID value image:../images/3rd_Callout_Bullet.png[Third callout].
-+
-NOTE: In some cases your organization ID may be hidden by default.
-
-. Next, from the account home page:
-+
-image::../images/mongodb_second_single_screen_all_step.png[Single screenshot for finding your API keys]
-
-.. Click **Access Manager** from the **Organization** navigation menu image:../images/1st_Callout_Bullet.png[First callout].
-
-.. Click **API Keys** image:../images/2nd_Callout_Bullet.png[Second callout].
-
-.. If you have existing API keys, you can find them listed here.
-Copy the API public and private keys for the import provider account fields.
-Also, verify that your API keys have the **Organization Owner** and **Organization Member** permissions image:../images/3rd_Callout_Bullet.png[Third callout] image:../images/4th_Callout_Bullet.png[Fourth callout].
-
-. If you need new API keys, click **Create API Key**, and proceed to the next step.
-
-. On the **Create API Key** page, enter a **Description**, and under the **Organization Permissions** dropdown box select the **Organization Owner** and **Organization Member** permissions.
-Click **Next**.
-
-. Copy the API public and private keys for the import provider account fields.
-// End
-
-// Appendix B : Crunchy Data Bridge
+// Appendix A : Crunchy Data Bridge
 [appendix]
 [id="find-your-crunchy-data-bridge-account-credentials"]
 
@@ -263,7 +215,7 @@ image::../images/rhoda_crunch_data_bridge_settings_nav_menu.png[Crunchy Data Bri
 image::../images/rhoda_crunchy_data_bridge_api_key_info.png[Crunchy Data Bridge API key and secret values]
 // End
 
-// Appendix C : CockroachDB
+// Appendix B : CockroachDB
 [appendix]
 [id="find-your-cockroachdb-account-credentials"]
 
@@ -303,7 +255,7 @@ image::../images/rhoda_cockroachdb_step2_create_service_account_dialog.png[Step 
 image::../images/rhoda_cockroachdb_step3_create_service_account_dialog.png[Step 3 for creating a service account]
 // End
 
-// Appendix D : Amazon RDS
+// Appendix C : Amazon RDS
 [appendix]
 [id="find-your-amazon-rds-account-credentials"]
 
@@ -345,7 +297,7 @@ IMPORTANT: Database instances using a custom Oracle or custom SQL Server engine 
 . Copy the **AWS Access key ID**, and the **AWS Secret access key**.
 // End
 
-// Appendix E : Manual installation using Operator Lifecycle Manager (OLM)
+// Appendix D : Manual installation using Operator Lifecycle Manager (OLM)
 [appendix]
 [id="installing-openshift-database-access-using-the-operator-lifecycle-manager"]
 
