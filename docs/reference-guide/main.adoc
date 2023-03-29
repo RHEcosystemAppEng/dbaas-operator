@@ -1,0 +1,910 @@
+// The main assembly file for the OpenShift Database Access Reference Guide.
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+// Configuring the Table of Contents.
+:toc:
+:toclevels: 3
+:toc-placement!:
+
+// Book Title
+= Reference Guide
+
+This Reference Guide provides additional information about some OpenShift Database Access concepts, additional procedures, and gives developers some example use cases by using the OpenShift Database Access API.
+
+toc::[]
+
+// Chapter 1 - Service binding libraries
+[id="service-binding-libraries"]
+
+== Service binding libraries
+
+The Kubernetes service binding feature brings consistency to sharing secrets for connecting applications to external services, such as REST APIs, databases, and many other services.
+OpenShift Database Access leverages the service binding feature to bring a low-touch administrative experience to provisioning and managing access to external database services.
+The service binding feature enables developers to connect their applications to database services with a consistent and predictable experience.
+Specifically, a service binding creates a volume on the application pod and organizes the information to make a connection to the database in a directory structure.
+An environment variable exposes the volume mount point.
+Developer frameworks, such as Quarkus, are service binding aware, and can automatically connect to a database by using this exposed workload information without needing to embed database connection information in the application source code.
+
+Here are some application examples on how to use a service binding library:
+
+// 3/28/23 - ritz303 : Commenting out the links that use MongoDB, but don't want to lost track of these examples.
+//* link:https://github.com/RHEcosystemAppEng/mongo-quickstart[Mongo Quarkus application]
+* link:https://github.com/RHEcosystemAppEng/postgresql-orm-quickstart[Crunchy Postgres Quarkus application]
+* link:https://github.com/myeung18/postgresql-orm-demo-app[CockroachDB Postgres Quarkus application]
+* link:https://github.com/myeung18/cockroachdb-go-quickstart[CockroachDB Postgres Go application]
+* link:https://github.com/RHODA-lab/rhoda-qa-python/blob/main/test-crunchy-postgres.py[Crunchy Postgres Python test program]
+* link:https://github.com/RHODA-lab/rhoda-qa-python/blob/main/test-cockroachdb.py[CockroachDB Postgres Python test program]
+//* link:https://github.com/myeung18/spring-boot-dbaas-demo-apps[Spring Boot Fruit Shop application for MongoDB and Postgres]
+
+.Additional resources
+
+* See the link:https://github.com/servicebinding/spec#workload-projection[Kubernetes GitHub project] for more details on service bindings.
+// End
+
+// Chapter 2 - Provider Account policies and user personas
+[id="openshift-database-access-provider-account-policies-and-user-personas"]
+
+== OpenShift Database Access provider account policies and user personas
+
+.Policies
+OpenShift Database Access uses policies to manage access capabilities for the provider account inventories in a given namespace.
+You can use predefined access capabilities with different user personas to define multi-tenancy configurations that allows many organizations to share a single cluster.
+Additionally, you can create policies with strict inventory criteria to control access to provider account inventories.
+A policy's default values can be overridden on a per-inventory basis.
+
+After installing the OpenShift Database Access add-on, the OpenShift Database Access operator creates a new Database-as-a-service (DBaaS) policy object in the operator’s installation namespace.
+By default this namespace is `openshift-dbaas-operator`.
+
+The OpenShift Database Access operator only allows one policy per namespace, and watches for inventory object changes as defined in the policy.
+With the policy in place the operator configures the appropriate access requirements.
+
+The following example is a __DBaaSPolicy__ object, using some optional `spec` fields.
+
+.Example
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSPolicy
+metadata:
+  name: user1-policy
+  namespace: user1-project
+spec:
+  connections:
+    namespaces: <1>
+    - user1-project2 <2>
+  disableProvisions: false <3>
+----
+<1> A list of other namespaces that are allowed a connection to a policy’s inventories. Rather than listing namespaces, you can use an asterisk surrounded by single quotes (`'*'`) to allow a connection from all namespaces available in the OpenShift cluster.
+<2> A user needs at least, the **view** role to see the listed namespaces' inventories.
+<3> Disables provisioning in the provider account inventory, defaults to `false`.
+
+In this example policy, "User1" shares the provider account inventories in their namespace, `user1-project`, with another namespace, `user1-project2`.
+
+[NOTE]
+====
+All of the `DBaaSPolicy.spec` fields are optional.
+For more information about the optional `spec` fields, see the OpenShift Database Access _Reference Guide_ for the _DBaaSPolicy_ API schema documentation.
+====
+
+.Personas
+User personas define roles for OpenShift Database Access’ intended audience.
+Each role has key characteristics that a user can do as they interact with the service.
+OpenShift Database Access utilizes four personas: Cluster Administrator, Project Administrator, OpenShift Database Access Service Administrator, and OpenShift Database Access Developer.
+These roles start with the highest authority level, the Cluster Administrator, and move down to the lowest authority level, the OpenShift Database Access Developer.
+
+With the exception of the Cluster Administrator, all other personas are namespace-specific.
+A user might have different roles within each namespace that they are working in.
+For example, a user can be a Developer in one namespace, and also be a Project Administrator in another namespace.
+
+Cluster Administrator::
+A Cluster Administrator is a user with the `cluster-admin` role, and has full access to all resources and namespaces in an OpenShift cluster.
+Cluster Administrators can do the following:
+* Install and upgrade the OpenShift Database Access operator.
+* Assign other users or groups to be operator administrators.
++
+.Command-line Syntax and Examples
+[source,subs="verbatim,quotes"]
+----
+oc adm policy add-role-to-group **admin** _GROUP_NAME_ \
+-n _NAMESPACE_OF_OPERATOR_INSTALLATION_
+oc adm policy add-role-to-user **admin** _USER_NAME_ \
+-n _NAMESPACE_OF_OPERATOR_INSTALLATION_
+
+$ oc adm policy add-role-to-group admin rhoda-admins \
+-n openshift-dbaas-operator
+$ oc adm policy add-role-to-user admin user01 \
+-n openshift-dbaas-operator
+----
+* Everything a Project Administrator can do.
+
+Project Administrator::
+A Project Administrator is any user with administrative rights to a specific namespace, and has the `admin` role.
+Project Administrators can do the following:
+* Assign users as additional Project Administrators, OpenShift Database Access Service Administrators, and OpenShift Database Access Developers to a specific namespace.
++
+.Command-line Syntax and Examples
+[source,subs="verbatim,quotes"]
+----
+oc adm policy add-role-to-user **admin** _USER_NAME_ -n _PROJECT_NAMESPACE_
+oc adm policy add-role-to-user **edit** _USER_NAME_ -n _PROJECT_NAMESPACE_
+oc adm policy add-role-to-user **view** _USER_NAME_ -n _PROJECT_NAMESPACE_
+
+$ oc adm policy add-role-to-user admin user02 -n example-project <1>
+$ oc adm policy add-role-to-user edit user03 -n example-project <2>
+$ oc adm policy add-role-to-user view user04 -n example-project <3>
+----
+<1> Assign users as additional Project Administrators.
+<2> Assign OpenShift Database Access Service Administrators to a specific namespace.
+<3> Assign OpenShift Database Access Developers to a specific namespace.
+
+* Everything that a OpenShift Database Access Service Administrator can do.
+
+Service Administrator::
+A OpenShift Database Access Service Administrator’s rights are a subset of the Project Administrator, and has the `edit` role.
+A user can be both a Project Administrator, and a OpenShift Database Access Service Administrator for a specific namespace, and for the cloud-hosted database providers they have credentials for.
+OpenShift Database Access Service Administrators can do the following:
+* Enable OpenShift Database Access in a namespace.
+* Set the policy for the namespace.
+* Import provider accounts for cloud-hosted database providers, and can generate secrets for those providers.
+* Create `DBaaSInventory`, `DBaaSConnections`, and `DBaaSInstances` objects in a namespace.
+* Everything that a OpenShift Database Access Developer can do.
+
+Developer::
+A OpenShift Database Access Developer can connect to databases, but is limited by the cloud-hosted database provider accounts accessible to them.
+OpenShift Database Access Developers have the `view` role, and can do the following:
+* View specific inventories, and database instances available to them from provider accounts.
+* Create their own namespace, where they become the Project Administrator for that new namespace.
+* Create connections using `DBaaSConnections`, and `DBaaSInstances` custom resources (CRs) in allowed namespaces.
+These are namespaces that the user has at least `edit` rights to.
+* Use the _Topology View_ page to make service bindings between applications and databases in allowed namespaces.
+* No access to stored secrets in an inventory’s namespace.
+* No access to create any objects in an inventory's namespace.
+
+[role="_additional-resources"]
+.Additional resources
+
+* For more information about service bindings, see the _Reference Guide_.
+* Kubernetes link:https://kubernetes.io/docs/reference/access-authn-authz/rbac/#user-facing-roles[user-facing role descriptions].
+// End
+
+// Chapter 3 - Deleting a provider account
+[id="deleting-a-database-provider-account"]
+
+== Deleting a database provider account
+
+Rather than directly editing your cloud-hosted database provider account information, we recommends you delete the provider account, and recreate a new one.
+
+.Procedure
+
+. Log into the OpenShift console.
+
+. Select the **Administrator** perspective from the navigation menu.
+
+. Expand the **Operators** navigation menu, and click **Installed Operators**.
+
+. Click **OpenShift Database Access Operator** from the list of installed operators.
+
+. Select **Provider Account**.
+
+. Click the vertical ellipsis for the database provider account you want to delete, and click on **Delete DBaaSInventory**.
+
+. A dialog box appears to confirm the deletion, click **Delete**.
+
+. After deleting the database provider account, you can recreate the database provider account by clicking **Create DBaaSInventory**.
+// End
+
+// Chapter 4 - Integrating OpenShift Database Access with a Jupyter Notebook
+[id="integrating-openshift-database-access-with-a-jupyter-notebook"]
+
+== Integrating OpenShift Database Access with a Jupyter Notebook
+
+[role="_abstract"]
+You can integrate OpenShift Database Access database instances with a Jupyter Notebook by manually creating a service binding, and configuring Python libraries for your Jupyter Notebook.
+
+.Prerequisites
+
+* Running OpenShift Dedicated, or OpenShift on AWS.
+* Installation of the Kubeflow Notebook Controller add-on.
+* Installation of the Jupyter Web App add-on.
+* Installation of the OpenShift Database Access operator.
+* A database instance available in a cloud-hosted database provider’s inventory.
+* An understanding of how to use the Python programming language.
+
+.Procedure
+
+. Log into OpenShift using the a command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Once you log into the OpenShift console, click your user name, click **Copy login command**, login once again using your user name and password, then click **Display Token** to view the command.
+====
+
+. Verify the installation of the Kubeflow Notebook Controller, and the Jupyter Web App:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc -n opendatahub get crd/notebooks.kubeflow.org
+oc get pods -l app=notebook-controller -n _NAMESPACE_
+oc get pods -l app=jupyter-web-app -n _NAMESPACE_
+----
++
+.Example
+----
+$ oc -n opendatahub get crd/notebooks.kubeflow.org
+NAME                 	 CREATED AT
+notebooks.kubeflow.org   2022-11-29T18:46:46Z
+
+$ oc get pods -l app=notebook-controller -n odh
+NAME                            READY STATUS	 RESTARTS AGE
+notebook-controller-deployment  1/1   Running    0        29m
+
+$ oc get pods -l app=jupyter-web-app -n odh
+NAME                        READY STATUS	  RESTARTS AGE
+jupyter-web-app-deployment  1/1   Running     0        24m
+----
+
+. Change to your project namespace:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc project _PROJECT_NAME_
+----
++
+.Example
+----
+$ oc project kubeflow-user
+----
+
+. Get your Jupyter Notebook name and DBaaS connection information to use for the service binding configuration:
++
+.Example
+----
+$ oc get notebooks
+
+NAME             AGE
+bluebook-small   44d
+example-book     10m
+
+$ oc get dbaasconnections
+
+NAME               AGE
+example-rds        14h
+example-crunchy    15h
+----
+
+. Create the ServiceBinding object, and apply it to OpenShift:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: binding.operators.coreos.com/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: _SB_NAME_ <1>
+  namespace: _PROJECT_NAME_ <2>
+spec:
+  application:
+    group: kubeflow.org
+    name: _NOTEBOOK_NAME_ <3>
+    resource: notebooks
+    version: v1
+  bindAsFiles: true
+  detectBindingResources: true
+  services:
+  - group: dbaas.redhat.com
+    kind: DBaaSConnection
+    name: _DB_CONNECTION_NAME_ <4>
+    version: v1alpha1
+----
+<1> The friendly name of the service binding object.
+<2> The project namespace you are working in.
+<3> The name of the Jupyter Notebook you are using.
+<4> The name of the cloud-hosted database connection to use.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: binding.operators.coreos.com/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: example-service-binding
+  namespace: kubeflow-user
+spec:
+  application:
+    group: kubeflow.org
+    name: example-book
+    resource: notebooks
+    version: v1
+  bindAsFiles: true
+  detectBindingResources: true
+  services:
+  - group: dbaas.redhat.com
+    kind: DBaaSConnection
+    name: example-rds
+    version: v1alpha1
+EOF
+----
+
+. Check the service binding status:
++
+.Example
+----
+$ oc get servicebinding
+
+NAME                     READY    REASON                AGE
+example-service-binding  True     ApplicationsBound     4s
+----
++
+NOTE: The service binding is ready to use when it is set to `True` and the reason is `ApplicationBound`.
+
+. Install Python libraries:
++
+.Example
+----
+$ pip install pyservicebinding
+----
+
+.. Install the appropriate Python database client libraries:
++
+.Amazon RDS, CockroachDB, and Crunchy Bridge
+----
+$ pip install psycopg2-binary
+----
++
+.Amazon RDS MySQL
+----
+$ pip install mysql-connector-python
+----
+
+. Now you are ready to start writing code in your Jupyter Notebook, and accessing data in the managed database service.
+You can find samples of Jupyter Notebooks accessing databases at link:https://github.com/RHODA-lab/rhoda-notebook-controller/tree/main/Notebooks[GitHub].
+// End
+
+// Chapter 5 - OpenShift Database Access API example use cases
+[id="openshift-database-access-api-example-use-cases"]
+
+== OpenShift Database Access API example use cases
+
+You can manage and gather information about the OpenShift Database Access operator and cloud-hosted database providers by using the OpenShift Database Access application programming interface (API).
+Here you can find basic use case examples, and the full reference documentation for OpenShift Database Access API schemas and resource types.
+
+// Section 5.1 - Connecting an application to a known database instance
+[id="connecting-an-application-to-a-known-database-instance"]
+
+=== Connecting an application to a known database instance
+
+This use case connects an application to a known database instance from a cloud-hosted database provider.
+
+You can implement the OpenShift Database Access application programming interface (API) schemas in one of two ways:
+
+* By using an in-line code block with the `oc apply` command, and the `EOF` descriptor.
+* By writing a static YAML file for use with the `oc apply` command.
+
+The examples in this procedure uses Amazon RDS as the cloud-hosted database provider.
+The procedure gives a schema syntax example, followed by an implementation example that uses an in-line code block with the `oc apply` command.
+You create the resource objects in this order: _DBaaSPolicy_, _Secret_, _DBaaSInventory_, _DBaaSConnection_, _ServiceBinding_.
+
+.Prerequisites
+
+* Running OpenShift Dedicated, or OpenShift on AWS.
+* Installation of the OpenShift Database Access add-on.
+* User access to the command-line interface (CLI) for the OpenShift cluster.
+* An existing application namespace.
+
+.Procedure
+
+. Log into OpenShift by using the command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Log in to the OpenShift console.
+Click your user name, and click **Copy login command**.
+Offer your user name and password again, and click **Display Token** to view the command.
+====
+
+. You can use the default _DBaaSPolicy_ object in the `openshift-dbaas-operator` namespace, and modify it according to your needs.
+Or, you can create a new _DBaaSPolicy_ object in the project namespace.
+
+. Create a _Secret_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: v1
+kind: Secret
+metadata:
+  name: _WORKFLOW_NAME_ <1>
+  namespace: _ADMIN_NAMESPACE_ <2>
+data:
+  orgId: _ORGANIZATION_ID_ <3>
+  privateApiKey: _PRIVATE_KEY_ <4>
+  publicApiKey: _PUBLIC_KEY_ <5>
+type: Opaque
+----
+<1> The name of the workflow.
+<2> The namespace where _DBaaSPolicy_ allows for the creation of a _DBaaSInventory_, and also has the provider account and secret information. The default namespace is `openshift-dbaas-operator`.
+<3> The unique cloud-hosted database provider organizational identifier assigned to your account.
+<4> The private API key. Key encoding must use `base64`.
+<5> The public API key. Key encoding must use `base64`.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rds-user-secrets
+  namespace: openshift-dbaas-operator
+data:
+  orgId: JjA4ZGY1ZTY1MmAxOTQ0MjkzZTg45DRh
+  privateApiKey: PTAzOWQyOTMtNGJhMy01ZjdkLTk2ZWEtNWQ1MzNkYWQ1OTk7
+  publicApiKey: tXpkaWl3aWw=
+type: Opaque
+EOF
+----
+
+. Create a _DBaaSInventory_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSInventory
+metadata:
+  labels:
+    related-to: dbaas-operator
+    type: dbaas-vendor-service
+  name: _WORKFLOW_NAME_ <1>
+  namespace: _ADMIN_NAMESPACE_ <2>
+spec:
+  credentialsRef:
+    name: _SECRET_NAME_ <3>
+  providerRef:
+    name: _PROVIDER_TYPE_ <4>
+----
+<1> The name of the provider account workflow.
+<2> The namespace where _DBaaSPolicy_ allows for the creation of a _DBaaSInventory_, and also has the Provider Account and secret information. The default namespace is `openshift-dbaas-operator`.
+<3> The name of the secret object.
+<4> The cloud-hosted database provider, for example, `rds-cloud-registration`, `cockroachdb-cloud-registration`, or `crunchy-bridge-registration`.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSInventory
+metadata:
+  labels:
+    related-to: dbaas-operator
+    type: dbaas-vendor-service
+  name: rds-provider-account
+  namespace: openshift-dbaas-operator
+spec:
+  credentialsRef:
+    name: rds-user-secrets
+  providerRef:
+    name: rds-registration
+EOF
+----
+
+. Create a _DBaaSConnection_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSConnection
+metadata:
+  name: _CONNECTION_NAME_ <1>
+  namespace: _APP_NAMESPACE_ <2>
+spec:
+  inventoryRef:
+    name: _INVENTORY_NAME_ <3>
+    namespace: _NAMESPACE_ <4>
+  databaseServiceID: _INSTANCE_ID_ <5>
+----
+<1> The name of the connection object.
+<2> The name of the application deployment namespace.
+<3> The name of the provider account inventory.
+<4> The namespace where _DBaaSPolicy_ allows for the creation of a _DBaaSInventory_, and also has the Provider Account and secret information. The default namespace is `openshift-dbaas-operator`.
+<5> The database instance unique ID.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSConnection
+metadata:
+  name: rds-connection
+  namespace: my-app-example
+spec:
+  inventoryRef:
+    name: rds-provider-account
+    namespace: openshift-dbaas-operator
+  databaseServiceID: 1671a1f0-5674-48d8-a16b-d2f2fcc6ff45f
+EOF
+----
+
+. Create a _ServiceBinding_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion:  binding.operators.coreos.com/v1alpha1
+kind:        ServiceBinding
+metadata:
+  name:      _BINDING_NAME_ <1>
+  namespace: _APP_NAMESPACE_ <2>
+spec:
+  application:
+    group:                   apps
+    name:                    _APP_DEPLOYMENT_ <3>
+    resource:                deployments
+    version:                 v1
+  bindAsFiles:             true
+  detectBindingResources:  true
+  services:
+  - group:    dbaas.redhat.com
+    kind:     DBaaSConnection
+    name:     _CONNECTION_NAME_ <4>
+    version:  v1beta1
+----
+<1> The name of the service binding object.
+<2> The name of the application deployment namespace.
+<3> The name for the connecting application's Kubernetes deployment.
+<4> The name of the DBaaS connection object.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion:  binding.operators.coreos.com/v1alpha1
+kind:        ServiceBinding
+metadata:
+  name:      rds-service-binder
+  namespace: my-app-example
+spec:
+  application:
+    group:                   apps
+    name:                    my-app
+    resource:                deployments
+    version:                 v1
+  bindAsFiles:             true
+  detectBindingResources:  true
+  services:
+  - group:    dbaas.redhat.com
+    kind:     DBaaSConnection
+    name:     rds-connection
+    version:  v1beta1
+EOF
+----
+
+.Additional resources
+
+* See the OpenShift Database Access _Reference Guide_ for more information about policies and personas.
+// End
+
+// Section 5.2 - Provisioning a new free trial database and connecting an application to it
+[id="provisioning-a-new-free-trial-database-and-connecting-an-application-to-it"]
+
+=== Provisioning a new free trial database and connecting an application to it
+
+This use case provisions a new free trial database and connects an application to the trial database.
+
+You can implement the OpenShift Database Access application programming interface (API) schemas in one of two ways:
+
+* By using in-line code with the `oc apply` command, and the `EOF` descriptor.
+* By writing a static YAML file for use with the `oc apply` command.
+
+The examples in this procedure uses Amazon RDS as the cloud-hosted database provider.
+The procedure gives a schema syntax example, followed by an implementation example that uses an in-line code block with the `oc apply` command.
+You create the resource objects in this order: _DBaaSInstance_, _DBaaSConnection_, _ServiceBinding_.
+
+.Prerequisites
+
+* Running OpenShift Dedicated, or OpenShift on AWS.
+* Installation of the OpenShift Database Access add-on.
+* User access to the command-line interface (CLI) for the OpenShift cluster.
+* An existing application namespace.
+
+.Procedure
+
+. Log into OpenShift by using the command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Log in to the OpenShift console.
+Click your user name, and click **Copy login command**.
+Offer your user name and password again, and click **Display Token** to view the command.
+====
+
+. Create a _DBaaSInstance_ object to provision the new database instance and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSInstance
+metadata:
+  name: _DB_INSTANCE_NAME_ <1>
+  namespace: _APP_NAMESPACE_ <2>
+spec:
+  inventoryRef:
+    name: _INVENTORY_NAME_ <3>
+    namespace: _PA_NAMESPACE_ <4>
+  cloudProvider: _DB_PROVIDER_ <5>
+  cloudRegion: _REGION_ID_ <6>
+  name: _DB_INSTANCE_NAME_
+  otherInstanceParams:
+    projectName: _RDS_PROJECT_NAME_ <7>
+----
+<1> The name of the database instance.
+<2> The name of the application deployment namespace.
+<3> The name of the provider account inventory.
+<4> The namespace where _DBaaSPolicy_ allows for the creation of a _DBaaSInventory_, and also has the provider account and secret information. The default namespace is `openshift-dbaas-operator`.
+<5> The cloud-hosted database provider.
+<6> The deployment region for the cloud-hosted database provider.
+<7> The project name for Amazon RDS.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSInstance
+metadata:
+  name: rds-instance 
+  namespace: my-app-example
+spec:
+  inventoryRef:
+    name: rds-provider-account
+    namespace: openshift-dbaas-operator
+  cloudProvider: aws
+  cloudRegion: us-east-1
+  name: rds-instance
+  otherInstanceParams:
+    projectName: rds-project
+EOF
+----
+
+. Create a _DBaaSConnection_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSConnection
+metadata:
+  name: _CONNECTION_NAME_ <1>
+  namespace: _APP_NAMESPACE_ <2>
+spec:
+  inventoryRef:
+    name: _INVENTORY_NAME_ <3>
+    namespace: _NAMESPACE_ <4>
+  databaseServiceID: _INSTANCE_ID_ <5>
+----
+<1> The name of the connection object.
+<2> The name of the application deployment namespace.
+<3> The name of the provider account inventory.
+<4> The namespace where _DBaaSPolicy_ allows for the creation of a _DBaaSInventory_, and also has the Provider Account and secret information. The default namespace is `openshift-dbaas-operator`.
+<5> The database instance unique ID.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion: dbaas.redhat.com/v1beta1
+kind: DBaaSConnection
+metadata:
+  name: rds-connection
+  namespace: my-app-example
+spec:
+  inventoryRef:
+    name: rds-provider-account
+    namespace: openshift-dbaas-operator
+  databaseServiceID: 1671a1f0-5674-48d8-a16b-d2f2fcc6ff45f
+EOF
+----
+
+. Create a _ServiceBinding_ object and apply it to the OpenShift cluster:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+apiVersion:  binding.operators.coreos.com/v1alpha1
+kind:        ServiceBinding
+metadata:
+  name:      _BINDING_NAME_ <1>
+  namespace: _APP_NAMESPACE_ <2>
+spec:
+  application:
+    group:                   apps
+    name:                    _APP_DEPLOYMENT_ <3>
+    resource:                deployments
+    version:                 v1
+  bindAsFiles:             true
+  detectBindingResources:  true
+  services:
+  - group:    dbaas.redhat.com
+    kind:     DBaaSConnection
+    name:     _CONNECTION_NAME_ <4>
+    version:  v1beta1
+----
+<1> The name of the service binding object.
+<2> The name of the application deployment namespace.
+<3> The name for the connecting application's Kubernetes deployment.
+<4> The name of the DBaaS connection object.
++
+.Example
+----
+$ cat <<EOF | oc apply -f -
+apiVersion:  binding.operators.coreos.com/v1alpha1
+kind:        ServiceBinding
+metadata:
+  name:      rds-service-binder
+  namespace: my-app-example
+spec:
+  application:
+    group:                   apps
+    name:                    my-app
+    resource:                deployments
+    version:                 v1
+  bindAsFiles:             true
+  detectBindingResources:  true
+  services:
+  - group:    dbaas.redhat.com
+    kind:     DBaaSConnection
+    name:     rds-connection
+    version:  v1beta1
+EOF
+----
+
+.Additional resources
+
+* See the OpenShift Database Access _Reference Guide_ for more information about policies and personas.
+// End
+
+// Section 5.3 - Creating a label selector for valid namespaces
+[id="creating-a-label-selector-for-valid-namespaces"]
+
+=== Creating a label selector for valid namespaces
+
+This basic use case creates a specific label selector for allowing only namespaces where the label is `example: test`.
+
+.Prerequisites
+
+* Running OpenShift Dedicated, or OpenShift on AWS.
+* Installation of the OpenShift Database Access add-on.
+* User access to the command-line interface (CLI) for the OpenShift cluster.
+* An existing application namespace with a valid provider account imported.
+
+.Procedure
+
+. Log into OpenShift by using the command-line interface:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc login --token=_TOKEN_ --server=_SERVER_URL_AND_PORT_
+----
++
+.Example
+----
+$ oc login --token=sha256~ZvFDBvoIYAbVECixS4-WmkN4RfnNd8Neh3y1WuiFPXC --server=https://example.com:6443
+----
++
+[NOTE]
+====
+You can find your command-line login token and URL from the OpenShift console.
+Log in to the OpenShift console.
+Click your user name, and click **Copy login command**.
+Offer your user name and password again, and click **Display Token** to view the command.
+====
+
+. Set the appropriate project namespace:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc project _PROJECT_NAME_
+----
++
+.Example
+----
+$ oc project openshift-dbaas-operator
+----
+
+. Open the _DBaaSPolicy_ or _DBaaSInventory_ object for editing:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+oc edit _OBJECT_NAME_
+----
++
+.Example
+----
+$ oc edit DBaaSPolicy
+----
+
+.. Add the `nsSelector` block under the `spec.connections` section:
++
+.Syntax
+[source,subs="verbatim,quotes"]
+----
+...
+spec:
+  connections:
+    nsSelector:
+      matchExpressions:
+      - key: _STRING_
+        operator: [Exists,DoesNotExist,In,NotIn]
+        values:
+        - _STRING_
+      matchLabels:
+      - _STRING_: _STRING_
+...
+----
++
+.Example
+----
+...
+spec:
+  connections:
+    nsSelector:
+      matchExpressions:
+      - key: example
+        operator: In
+        values:
+        - test
+...
+----
++
+[NOTE]
+====
+You can match many expressions by specifying more than one `matchExpressions` block.
+The results of the query use a logical AND operator with each block, so that the results match the intersection of all of the `matchExpressions` and `matchLabels` you defined, for example, x and y and z.
+====
+
+.. Save your changes and close the editor.
+// End
