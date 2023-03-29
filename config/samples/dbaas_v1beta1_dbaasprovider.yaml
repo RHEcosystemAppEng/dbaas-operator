@@ -1,64 +1,180 @@
 apiVersion: dbaas.redhat.com/v1beta1
 kind: DBaaSProvider
 metadata:
-  name: atlas-provider-registration
   labels:
     related-to: dbaas-operator
     type: dbaas-provider-registration
+  name: provider-example-registration
 spec:
-  provider:
-    name: OpenShift Database Access / MongoDB Atlas
-    displayName: MongoDB Atlas
-    displayDescription: Some nice description show to dev users in UX when selecting which provider from catalog.
-    icon:
-      base64data: <base64-encoded image data>
-      mediatype: image/png
-  inventoryKind: MongoDBAtlasInventory
-  connectionKind: MongoDBAtlasConnection
-  instanceKind: MongoDBAtlasInstance
-  credentialFields:
-    - key: organizationId
-      displayName: Organization ID
-      type: string
-      required: true
-      helpText: You can find the Organization ID from the Organization Settings page on your MongoDB account home page.
-    - key: publicApiKey
-      displayName: Organization Public Key
-      type: string
-      required: true
-      helpText: You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.
-    - key: privateApiKey
-      displayName: Organization Private Key
-      type: maskedstring
-      required: true
-      helpText: You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.
   allowsFreeTrial: true
-  instanceParameterSpecs:
-    - name: clusterName
-      displayName: Cluster Name
-      type: string
+  externalProvisionURL: 'https://www.exmample.com/docs/provider/quickstart.html'
+  instanceKind: ProviderInstance
+  credentialFields:
+    - displayName: ProviderAPIKeyD
+      helpText: This is the API Key for the example provider to show on UI
+      key: APIKey
       required: true
-    - name: ProjectName
-      displayName: Atlas Project Name
-      type: string
-      required: true
-    - name: clusterType
-      displayName: Cluster Type
-      type: string
-      required: false
-      defaultValue: Shared
-    - name: providerName
+      type: maskedstring
+  inventoryKind: ProviderInventory
+  provider:
+    displayDescription: >-
+      This is an example for providers on how to implement their operator to
+      integrate with DBaaS.
+    displayName: 'DBaaS Provider Example '
+    icon:
+      base64data: SGVsbG8sIHdvcmxkLg==
+      mediatype: image/png
+    name: Provider Example
+  externalProvisionDescription: Follow the guide to start a free Provider Serverless (beta) cluster
+  connectionKind: ProviderConnection
+  provisioningParameters:
+    machineType:
+      conditionalData:
+        - defaultValue: m5.large
+          dependencies:
+            - field: plan
+              value: DEDICATED
+            - field: cloudProvider
+              value: AWS
+          options:
+            - displayValue: '2 vCPU, 8 GiB RAM'
+              value: m5.large
+            - displayValue: '4 vCPU, 16 GiB RAM'
+              value: m5.xlarge
+            - displayValue: '8 vCPU, 32 GiB RAM'
+              value: m5.2xlarge
+            - displayValue: '16 vCPU, 64 GiB RAM'
+              value: m5.4xlarge
+            - displayValue: '32 vCPU, 128 GiB RAM'
+              value: m5.8xlarge
+        - defaultValue: n1-standard-2
+          dependencies:
+            - field: plan
+              value: DEDICATED
+            - field: cloudProvider
+              value: GCP
+          options:
+            - displayValue: '2 vCPU, 7.5 GiB RAM'
+              value: n1-standard-2
+            - displayValue: '4 vCPU, 15 GiB RAM'
+              value: n1-standard-4
+            - displayValue: '8 vCPU, 30 GiB RAM'
+              value: n1-standard-8
+            - displayValue: '16 vCPU, 60 GiB RAM'
+              value: n1-standard-16
+            - displayValue: '32 vCPU, 120 GiB RAM'
+              value: n1-standard-32
+      displayName: Compute
+    serverlessLocationLabel:
+      displayName: Select regions
+      helpText: >-
+        Select the geographical region where you want the database instance to
+        run.
+    storageGib:
+      conditionalData:
+        - defaultValue: '15'
+          dependencies:
+            - field: plan
+              value: DEDICATED
+            - field: cloudProvider
+              value: AWS
+          options:
+            - displayValue: 15 GiB
+              value: '15'
+            - displayValue: 35 GiB
+              value: '35'
+            - displayValue: 75 GiB
+              value: '75'
+            - displayValue: 150 GiB
+              value: '150'
+            - displayValue: 300 GiB
+              value: '300'
+            - displayValue: 600 GiB
+              value: '600'
+        - defaultValue: '15'
+          dependencies:
+            - field: plan
+              value: DEDICATED
+            - field: cloudProvider
+              value: GCP
+          options:
+            - displayValue: 15 GiB
+              value: '15'
+            - displayValue: 35 GiB
+              value: '35'
+            - displayValue: 75 GiB
+              value: '75'
+            - displayValue: 150 GiB
+              value: '150'
+            - displayValue: 300 GiB
+              value: '300'
+            - displayValue: 600 GiB
+              value: '600'
+      displayName: Storage
+    cloudProvider:
+      conditionalData:
+        - defaultValue: GCP
+          dependencies:
+            - field: plan
+              value: FREETRIAL
+          options:
+            - displayValue: Google Cloud Platform
+              value: GCP
+        - defaultValue: AWS
+          dependencies:
+            - field: plan
+              value: SERVERLESS
+          options:
+            - displayValue: Amazon Web Services
+              value: AWS
+            - displayValue: Google Cloud Platform
+              value: GCP
+        - defaultValue: AWS
+          dependencies:
+            - field: plan
+              value: DEDICATED
+          options:
+            - displayValue: Amazon Web Services
+              value: AWS
+            - displayValue: Google Cloud Platform
+              value: GCP
       displayName: Cloud Provider
-      type: string
-      required: false
-      defaultValue: AWS
-    - name: regionName
-      displayName: Cloud Region
-      type: string
-      required: false
-      defaultValue: US_EAST_1
-    - name: instanceSizeName
-      displayName: Cluster Size Name
-      type: string
-      required: false
-      defaultValue: M0
+    plan:
+      conditionalData:
+        - defaultValue: SERVERLESS
+          options:
+            - displayValue: Free trial
+              value: FREETRIAL
+            - displayValue: Serverless
+              value: SERVERLESS
+            - displayValue: Dedicated
+              value: DEDICATED
+      displayName: Hosting plan
+    planLabel:
+      displayName: Select a plan
+    name:
+      displayName: Cluster name
+    hardwareLabel:
+      displayName: Hardware per node
+      helpText: Select the compute and storage requirements for this database instance.
+    dedicatedLocationLabel:
+      displayName: Select regions & nodes
+      helpText: >-
+        Select the geographical region where you want the database instance to
+        run, and set the number of nodes you want running in this dedicated
+        cluster.
+    nodes:
+      displayName: nodes
+    spendLimitLabel:
+      displayName: Spend limit
+      helpText: Set a spending limit on resources for this database instance.
+    spendLimit:
+      conditionalData:
+        - defaultValue: '0'
+          dependencies:
+            - field: plan
+              value: SERVERLESS
+      displayName: Spend limit
+    regions:
+      displayName: us-west-2
+  groupVersion: dbaas.redhat.com/v1beta1

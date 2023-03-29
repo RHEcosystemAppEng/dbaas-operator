@@ -152,11 +152,11 @@ type DBaaSProviderStatus struct {
 // DatabaseProviderInfo defines the information for a DBaaSProvider object.
 type DatabaseProviderInfo struct {
 	// The name used to specify the service binding origin parameter.
-	// For example, 'OpenShift Database Access / MongoDB Atlas'.
+	// For example, 'OpenShift Database Access / Crunchy Bridge'.
 	Name string `json:"name"`
 
 	// A user-friendly name for this database provider.
-	// For example, 'MongoDB Atlas'.
+	// For example, 'Crunchy Bridge managed PostgreSQL'.
 	DisplayName string `json:"displayName"`
 
 	// Indicates the description text shown for a database provider within the user interface.

@@ -364,8 +364,8 @@ DatabaseProviderInfo defines the information for a DBaaSProvider object.
 [cols="25a,75a", options="header"]
 |===
 | Field | Description
-| *`name`* __string__ | The name used to specify the service binding origin parameter. For example, 'OpenShift Database Access / MongoDB Atlas'.
-| *`displayName`* __string__ | A user-friendly name for this database provider. For example, 'MongoDB Atlas'.
+| *`name`* __string__ | The name used to specify the service binding origin parameter. For example, 'OpenShift Database Access / Crunchy Bridge'.
+| *`displayName`* __string__ | A user-friendly name for this database provider. For example, 'Crunchy Bridge managed PostgreSQL'.
 | *`displayDescription`* __string__ | Indicates the description text shown for a database provider within the user interface. For example, the catalog tile description.
 | *`icon`* __xref:{anchor_prefix}-github-com-rhecosystemappeng-dbaas-operator-api-v1beta1-providericon[$$ProviderIcon$$]__ | Indicates what icon to display on the catalog tile.
 |===

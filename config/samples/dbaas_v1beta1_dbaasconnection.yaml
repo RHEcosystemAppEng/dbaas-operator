@@ -1,10 +1,10 @@
 apiVersion: dbaas.redhat.com/v1beta1
 kind: DBaaSConnection
 metadata:
-  name: dbaasconnection-sample
+  name: dbaasconnection-example
 spec:
   inventoryRef:
     namespace: openshift-dbaas-operator
-    name: atlas-inventory
-  databaseServiceID: atlas-instance
+    name: inventory-example
+  databaseServiceID: instance-example
   databaseServiceType: instance

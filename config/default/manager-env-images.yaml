@@ -23,6 +23,6 @@ spec:
             - name: CSV_VERSION_COCKROACHDB
               value: ccapi-k8s-operator.v0.0.5
             - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
-              value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.3.0
+              value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.4.0
             - name: CSV_VERSION_RDS_PROVIDER
-              value: rds-dbaas-operator.v0.3.0
+              value: rds-dbaas-operator.v0.4.0

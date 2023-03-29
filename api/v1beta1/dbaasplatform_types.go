@@ -33,7 +33,6 @@ type PlatformType int
 // Supported platform names.
 const (
 	CrunchyBridgeInstallation      PlatformName = "crunchy-bridge"
-	MongoDBAtlasInstallation       PlatformName = "mongodb-atlas"
 	DBaaSDynamicPluginInstallation PlatformName = "dbaas-dynamic-plugin"
 	CockroachDBInstallation        PlatformName = "cockroachdb-cloud"
 	ObservabilityInstallation      PlatformName = "observability"

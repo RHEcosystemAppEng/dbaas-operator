@@ -202,7 +202,6 @@ undeploy-olm:
 
 catalog-update:
 	-oc delete catalogsource dbaas-operator -n openshift-marketplace
-	-oc delete catalogsource mongodb-atlas-catalogsource -n openshift-marketplace
 	-oc delete catalogsource crunchy-bridge-catalogsource -n openshift-marketplace
 	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
 	-oc delete catalogsource observability-catalogsource -n openshift-marketplace
@@ -270,12 +269,12 @@ sdk-manifests: manifests generate-ref kustomize sdk ## Generate bundle manifests
 .PHONY: bundle
 bundle: sdk-manifests ## Generate bundle manifests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	$(SDK) bundle validate ./bundle
+	$(SDK) bundle validate ./bundle --select-optional suite=operatorframework
 
 .PHONY: bundle-w-digests
 bundle-w-digests: sdk-manifests ## Generate bundle manifests w/ image digests, then validate generated files.
 	$(KUSTOMIZE) build config/manifests | $(SDK) generate bundle -q --overwrite --manifests --use-image-digests --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	$(SDK) bundle validate ./bundle
+	$(SDK) bundle validate ./bundle --select-optional suite=operatorframework
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
