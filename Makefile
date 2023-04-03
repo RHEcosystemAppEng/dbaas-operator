@@ -39,9 +39,10 @@ ENVTEST_K8S_VERSION ?= 1.25.0
 # If you are developing and pushing against your OWN quay for testing, you likely need to uncomment
 #OLD_BUNDLE_VERSIONS ?= 0.1.0,0.1.1,0.1.2,0.1.3
 
-# ORG indicates the organization that docker images will be build for & pushed to
-# CHANGE THIS TO YOUR OWN QUAY USERNAME FOR DEV/TESTING/PUSHING
+# ORG indicates the quay.io organization that docker images will be build for & pushed to
+# Set REGISTRY to use a registry other than quay.io
 ORG ?= ecosystem-appeng
+REGISTRY ?= quay.io/$(ORG)
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
 # CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
@@ -73,7 +74,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
 # redhat.com/dbaas-operator-bundle:$VERSION and redhat.com/dbaas-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= quay.io/$(ORG)/dbaas-operator
+IMAGE_TAG_BASE ?= $(REGISTRY)/dbaas-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
@@ -341,11 +342,11 @@ catalog-push: ## Push a catalog image.
 
 .PHONY: wrapper-build
 wrapper-build: ## Build the catalog wrapper image.
-	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t quay.io/$(ORG)/dbaas-operator-catalog:0.4.0-wrapper .
+	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t $(REGISTRY)/dbaas-operator-catalog:0.4.0-wrapper .
 
 .PHONY: wrapper-push
 wrapper-push: ## Push the catalog wrapper image.
-	$(MAKE) docker-push IMG=quay.io/$(ORG)/dbaas-operator-catalog:0.4.0-wrapper
+	$(MAKE) docker-push IMG=$(REGISTRY)/dbaas-operator-catalog:0.4.0-wrapper
 
 .PHONY: get-version
 get-version: ; $(info ${VERSION})
