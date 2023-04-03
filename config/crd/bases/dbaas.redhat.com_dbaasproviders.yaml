@@ -263,7 +263,7 @@ spec:
                     type: string
                   displayName:
                     description: A user-friendly name for this database provider.
-                      For example, 'MongoDB Atlas'.
+                      For example, 'Crunchy Bridge managed PostgreSQL'.
                     type: string
                   icon:
                     description: Indicates what icon to display on the catalog tile.
@@ -278,8 +278,8 @@ spec:
                     type: object
                   name:
                     description: The name used to specify the service binding origin
-                      parameter. For example, 'OpenShift Database Access / MongoDB
-                      Atlas'.
+                      parameter. For example, 'OpenShift Database Access / Crunchy
+                      Bridge'.
                     type: string
                 required:
                 - displayDescription

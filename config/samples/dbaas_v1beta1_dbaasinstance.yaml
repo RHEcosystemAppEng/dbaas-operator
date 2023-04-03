@@ -4,11 +4,8 @@ metadata:
   name: dbaasinstance-sample
 spec:
   inventoryRef:
-    name: atlas-inventory
     namespace: openshift-dbaas-operator
+    name: inventory-example
   name: my-cluster-free
   cloudProvider: AWS
   cloudRegion: US_EAST_1
-  otherInstanceParams:
-    projectName: my-atlas-project-free
-    instanceSizeName: M0

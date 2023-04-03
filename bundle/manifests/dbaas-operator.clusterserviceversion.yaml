@@ -5,174 +5,16 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSConnection",
-          "metadata": {
-            "name": "dbaasconnection-sample"
-          },
-          "spec": {
-            "instanceID": "atlas-instance",
-            "inventoryRef": {
-              "name": "atlas-inventory",
-              "namespace": "openshift-dbaas-operator"
-            }
-          }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSInstance",
-          "metadata": {
-            "name": "dbaasinstance-sample"
-          },
-          "spec": {
-            "cloudProvider": "AWS",
-            "cloudRegion": "US_EAST_1",
-            "inventoryRef": {
-              "name": "atlas-inventory",
-              "namespace": "openshift-dbaas-operator"
-            },
-            "name": "my-cluster-free",
-            "otherInstanceParams": {
-              "instanceSizeName": "M0",
-              "projectName": "my-atlas-project-free"
-            }
-          }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSInventory",
-          "metadata": {
-            "name": "atlas-inventory"
-          },
-          "spec": {
-            "credentialsRef": {
-              "name": "atlas-inventory-credentials"
-            },
-            "providerRef": {
-              "name": "mongodb-atlas-registration"
-            }
-          }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSPlatform",
-          "metadata": {
-            "name": "dbaasplatform-sample"
-          },
-          "spec": {
-            "syncPeriod": 180
-          }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSPolicy",
-          "metadata": {
-            "name": "dbaaspolicy-sample"
-          },
-          "spec": null
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1alpha1",
-          "kind": "DBaaSProvider",
-          "metadata": {
-            "labels": {
-              "related-to": "dbaas-operator",
-              "type": "dbaas-provider-registration"
-            },
-            "name": "atlas-provider-registration"
-          },
-          "spec": {
-            "allowsFreeTrial": true,
-            "connectionKind": "MongoDBAtlasConnection",
-            "credentialFields": [
-              {
-                "displayName": "Organization ID",
-                "helpText": "You can find the Organization ID from the Organization Settings page on your MongoDB account home page.",
-                "key": "organizationId",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Organization Public Key",
-                "helpText": "You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
-                "key": "publicApiKey",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Organization Private Key",
-                "helpText": "You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
-                "key": "privateApiKey",
-                "required": true,
-                "type": "maskedstring"
-              }
-            ],
-            "instanceKind": "MongoDBAtlasInstance",
-            "instanceParameterSpecs": [
-              {
-                "displayName": "Cluster Name",
-                "name": "clusterName",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Atlas Project Name",
-                "name": "ProjectName",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "defaultValue": "Shared",
-                "displayName": "Cluster Type",
-                "name": "clusterType",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "AWS",
-                "displayName": "Cloud Provider",
-                "name": "providerName",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "US_EAST_1",
-                "displayName": "Cloud Region",
-                "name": "regionName",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "M0",
-                "displayName": "Cluster Size Name",
-                "name": "instanceSizeName",
-                "required": false,
-                "type": "string"
-              }
-            ],
-            "inventoryKind": "MongoDBAtlasInventory",
-            "provider": {
-              "displayDescription": "Some nice description show to dev users in UX when selecting which provider from catalog.",
-              "displayName": "MongoDB Atlas",
-              "icon": {
-                "base64data": "\u003cbase64-encoded image data\u003e",
-                "mediatype": "image/png"
-              },
-              "name": "OpenShift Database Access / MongoDB Atlas"
-            }
-          }
-        },
-        {
           "apiVersion": "dbaas.redhat.com/v1beta1",
           "kind": "DBaaSConnection",
           "metadata": {
-            "name": "dbaasconnection-sample"
+            "name": "dbaasconnection-example"
           },
           "spec": {
-            "databaseServiceID": "atlas-instance",
+            "databaseServiceID": "instance-example",
             "databaseServiceType": "instance",
             "inventoryRef": {
-              "name": "atlas-inventory",
+              "name": "inventory-example",
               "namespace": "openshift-dbaas-operator"
             }
           }
@@ -187,39 +29,25 @@ metadata:
             "cloudProvider": "AWS",
             "cloudRegion": "US_EAST_1",
             "inventoryRef": {
-              "name": "atlas-inventory",
+              "name": "inventory-example",
               "namespace": "openshift-dbaas-operator"
             },
-            "name": "my-cluster-free",
-            "otherInstanceParams": {
-              "instanceSizeName": "M0",
-              "projectName": "my-atlas-project-free"
-            }
+            "name": "my-cluster-free"
           }
         },
         {
           "apiVersion": "dbaas.redhat.com/v1beta1",
           "kind": "DBaaSInventory",
           "metadata": {
-            "name": "dbaasinventory-sample"
+            "name": "inventory-example"
           },
           "spec": {
             "credentialsRef": {
-              "name": "atlas-inventory-credentials"
+              "name": "dbaas-vendor-credentials"
             },
             "providerRef": {
-              "name": "mongodb-atlas-registration"
+              "name": "provider-example-registration"
             }
-          }
-        },
-        {
-          "apiVersion": "dbaas.redhat.com/v1beta1",
-          "kind": "DBaaSPlatform",
-          "metadata": {
-            "name": "dbaasplatform-sample"
-          },
-          "spec": {
-            "syncPeriod": 180
           }
         },
         {
@@ -228,7 +56,9 @@ metadata:
           "metadata": {
             "name": "dbaaspolicy-sample"
           },
-          "spec": null
+          "spec": {
+            "disableProvisions": false
+          }
         },
         {
           "apiVersion": "dbaas.redhat.com/v1beta1",
@@ -238,86 +68,315 @@ metadata:
               "related-to": "dbaas-operator",
               "type": "dbaas-provider-registration"
             },
-            "name": "atlas-provider-registration"
+            "name": "provider-example-registration"
           },
           "spec": {
             "allowsFreeTrial": true,
-            "connectionKind": "MongoDBAtlasConnection",
+            "connectionKind": "ProviderConnection",
             "credentialFields": [
               {
-                "displayName": "Organization ID",
-                "helpText": "You can find the Organization ID from the Organization Settings page on your MongoDB account home page.",
-                "key": "organizationId",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Organization Public Key",
-                "helpText": "You can find the Public API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
-                "key": "publicApiKey",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Organization Private Key",
-                "helpText": "You can find the Private API Key from the API Keys tab on the Organization Access Manager page from your MongoDB account home page.",
-                "key": "privateApiKey",
+                "displayName": "ProviderAPIKeyD",
+                "helpText": "This is the API Key for the example provider to show on UI",
+                "key": "APIKey",
                 "required": true,
                 "type": "maskedstring"
               }
             ],
-            "instanceKind": "MongoDBAtlasInstance",
-            "instanceParameterSpecs": [
-              {
-                "displayName": "Cluster Name",
-                "name": "clusterName",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "displayName": "Atlas Project Name",
-                "name": "ProjectName",
-                "required": true,
-                "type": "string"
-              },
-              {
-                "defaultValue": "Shared",
-                "displayName": "Cluster Type",
-                "name": "clusterType",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "AWS",
-                "displayName": "Cloud Provider",
-                "name": "providerName",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "US_EAST_1",
-                "displayName": "Cloud Region",
-                "name": "regionName",
-                "required": false,
-                "type": "string"
-              },
-              {
-                "defaultValue": "M0",
-                "displayName": "Cluster Size Name",
-                "name": "instanceSizeName",
-                "required": false,
-                "type": "string"
-              }
-            ],
-            "inventoryKind": "MongoDBAtlasInventory",
+            "externalProvisionDescription": "Follow the guide to start a free Provider Serverless (beta) cluster",
+            "externalProvisionURL": "https://www.exmample.com/docs/provider/quickstart.html",
+            "groupVersion": "dbaas.redhat.com/v1beta1",
+            "instanceKind": "ProviderInstance",
+            "inventoryKind": "ProviderInventory",
             "provider": {
-              "displayDescription": "Some nice description show to dev users in UX when selecting which provider from catalog.",
-              "displayName": "MongoDB Atlas",
+              "displayDescription": "This is an example for providers on how to implement their operator to integrate with DBaaS.",
+              "displayName": "DBaaS Provider Example ",
               "icon": {
-                "base64data": "\u003cbase64-encoded image data\u003e",
+                "base64data": "SGVsbG8sIHdvcmxkLg==",
                 "mediatype": "image/png"
               },
-              "name": "OpenShift Database Access / MongoDB Atlas"
+              "name": "Provider Example"
+            },
+            "provisioningParameters": {
+              "cloudProvider": {
+                "conditionalData": [
+                  {
+                    "defaultValue": "GCP",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "FREETRIAL"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "Google Cloud Platform",
+                        "value": "GCP"
+                      }
+                    ]
+                  },
+                  {
+                    "defaultValue": "AWS",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "SERVERLESS"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "Amazon Web Services",
+                        "value": "AWS"
+                      },
+                      {
+                        "displayValue": "Google Cloud Platform",
+                        "value": "GCP"
+                      }
+                    ]
+                  },
+                  {
+                    "defaultValue": "AWS",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "DEDICATED"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "Amazon Web Services",
+                        "value": "AWS"
+                      },
+                      {
+                        "displayValue": "Google Cloud Platform",
+                        "value": "GCP"
+                      }
+                    ]
+                  }
+                ],
+                "displayName": "Cloud Provider"
+              },
+              "dedicatedLocationLabel": {
+                "displayName": "Select regions \u0026 nodes",
+                "helpText": "Select the geographical region where you want the database instance to run, and set the number of nodes you want running in this dedicated cluster."
+              },
+              "hardwareLabel": {
+                "displayName": "Hardware per node",
+                "helpText": "Select the compute and storage requirements for this database instance."
+              },
+              "machineType": {
+                "conditionalData": [
+                  {
+                    "defaultValue": "m5.large",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "DEDICATED"
+                      },
+                      {
+                        "field": "cloudProvider",
+                        "value": "AWS"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "2 vCPU, 8 GiB RAM",
+                        "value": "m5.large"
+                      },
+                      {
+                        "displayValue": "4 vCPU, 16 GiB RAM",
+                        "value": "m5.xlarge"
+                      },
+                      {
+                        "displayValue": "8 vCPU, 32 GiB RAM",
+                        "value": "m5.2xlarge"
+                      },
+                      {
+                        "displayValue": "16 vCPU, 64 GiB RAM",
+                        "value": "m5.4xlarge"
+                      },
+                      {
+                        "displayValue": "32 vCPU, 128 GiB RAM",
+                        "value": "m5.8xlarge"
+                      }
+                    ]
+                  },
+                  {
+                    "defaultValue": "n1-standard-2",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "DEDICATED"
+                      },
+                      {
+                        "field": "cloudProvider",
+                        "value": "GCP"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "2 vCPU, 7.5 GiB RAM",
+                        "value": "n1-standard-2"
+                      },
+                      {
+                        "displayValue": "4 vCPU, 15 GiB RAM",
+                        "value": "n1-standard-4"
+                      },
+                      {
+                        "displayValue": "8 vCPU, 30 GiB RAM",
+                        "value": "n1-standard-8"
+                      },
+                      {
+                        "displayValue": "16 vCPU, 60 GiB RAM",
+                        "value": "n1-standard-16"
+                      },
+                      {
+                        "displayValue": "32 vCPU, 120 GiB RAM",
+                        "value": "n1-standard-32"
+                      }
+                    ]
+                  }
+                ],
+                "displayName": "Compute"
+              },
+              "name": {
+                "displayName": "Cluster name"
+              },
+              "nodes": {
+                "displayName": "nodes"
+              },
+              "plan": {
+                "conditionalData": [
+                  {
+                    "defaultValue": "SERVERLESS",
+                    "options": [
+                      {
+                        "displayValue": "Free trial",
+                        "value": "FREETRIAL"
+                      },
+                      {
+                        "displayValue": "Serverless",
+                        "value": "SERVERLESS"
+                      },
+                      {
+                        "displayValue": "Dedicated",
+                        "value": "DEDICATED"
+                      }
+                    ]
+                  }
+                ],
+                "displayName": "Hosting plan"
+              },
+              "planLabel": {
+                "displayName": "Select a plan"
+              },
+              "regions": {
+                "displayName": "us-west-2"
+              },
+              "serverlessLocationLabel": {
+                "displayName": "Select regions",
+                "helpText": "Select the geographical region where you want the database instance to run."
+              },
+              "spendLimit": {
+                "conditionalData": [
+                  {
+                    "defaultValue": "0",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "SERVERLESS"
+                      }
+                    ]
+                  }
+                ],
+                "displayName": "Spend limit"
+              },
+              "spendLimitLabel": {
+                "displayName": "Spend limit",
+                "helpText": "Set a spending limit on resources for this database instance."
+              },
+              "storageGib": {
+                "conditionalData": [
+                  {
+                    "defaultValue": "15",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "DEDICATED"
+                      },
+                      {
+                        "field": "cloudProvider",
+                        "value": "AWS"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "15 GiB",
+                        "value": "15"
+                      },
+                      {
+                        "displayValue": "35 GiB",
+                        "value": "35"
+                      },
+                      {
+                        "displayValue": "75 GiB",
+                        "value": "75"
+                      },
+                      {
+                        "displayValue": "150 GiB",
+                        "value": "150"
+                      },
+                      {
+                        "displayValue": "300 GiB",
+                        "value": "300"
+                      },
+                      {
+                        "displayValue": "600 GiB",
+                        "value": "600"
+                      }
+                    ]
+                  },
+                  {
+                    "defaultValue": "15",
+                    "dependencies": [
+                      {
+                        "field": "plan",
+                        "value": "DEDICATED"
+                      },
+                      {
+                        "field": "cloudProvider",
+                        "value": "GCP"
+                      }
+                    ],
+                    "options": [
+                      {
+                        "displayValue": "15 GiB",
+                        "value": "15"
+                      },
+                      {
+                        "displayValue": "35 GiB",
+                        "value": "35"
+                      },
+                      {
+                        "displayValue": "75 GiB",
+                        "value": "75"
+                      },
+                      {
+                        "displayValue": "150 GiB",
+                        "value": "150"
+                      },
+                      {
+                        "displayValue": "300 GiB",
+                        "value": "300"
+                      },
+                      {
+                        "displayValue": "600 GiB",
+                        "value": "600"
+                      }
+                    ]
+                  }
+                ],
+                "displayName": "Storage"
+              }
             }
           }
         }
@@ -393,14 +452,7 @@ spec:
       version: v1beta1
   description: |
     The OpenShift Database Access Operator enables OpenShift users to discover & connect with database instances
-    hosted on 3rd-party ISV cloud platforms such as MongoDB Atlas, CrunchyData Bridge & CockroachCloud.
-
-    ## Release Status
-
-    Project is currently in **Service Preview**. This is an early evaluation release that enables OpenShift users to
-    discover & utilize database instances created via their respective ISV cloud platforms. Our OpenShift Database Access Operator project
-    is new, however, our partners' cloud platforms aren't & should not be considered 'early release'. Please refer to platform
-    documentation for each provider for latest information regarding product offerings.
+    hosted on 3rd-party ISV cloud platforms such as CrunchyData Bridge & CockroachCloud.
 
     ## Feedback & Support
 
@@ -676,9 +728,9 @@ spec:
                 - name: CSV_VERSION_COCKROACHDB
                   value: ccapi-k8s-operator.v0.0.5
                 - name: RELATED_IMAGE_RDS_PROVIDER_CATALOG
-                  value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.3.0
+                  value: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.4.0
                 - name: CSV_VERSION_RDS_PROVIDER
-                  value: rds-dbaas-operator.v0.3.0
+                  value: rds-dbaas-operator.v0.4.0
                 - name: INSTALL_NAMESPACE
                   valueFrom:
                     fieldRef:
@@ -799,8 +851,22 @@ spec:
   - supported: true
     type: AllNamespaces
   keywords:
+  - rhoda
+  - oda
   - dbaas
   - database
+  - db
+  - data
+  - access
+  - crunchy
+  - bridge
+  - cockroach
+  - cockroachdb
+  - cloud
+  - ack
+  - amazon
+  - rds
+  - relational
   links:
   - name: GitHub
     url: https://github.com/RHEcosystemAppEng/dbaas-operator
@@ -808,6 +874,7 @@ spec:
   - email: ecosystem-appeng@redhat.com
     name: Red Hat Ecosystem App Engineering
   maturity: stable
+  minKubeVersion: 1.23.0
   provider:
     name: OpenShift Database Access
   relatedImages:
@@ -817,7 +884,7 @@ spec:
     name: crunchy-bridge-catalog
   - image: gcr.io/cockroach-shared/ccapi-k8s-operator-catalog:v0.0.5
     name: cockroachdb-catalog
-  - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.3.0
+  - image: quay.io/ecosystem-appeng/rds-dbaas-operator-catalog:v0.4.0
     name: rds-provider-catalog
   version: 0.5.0
   webhookdefinitions:

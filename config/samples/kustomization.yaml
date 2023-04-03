@@ -1,15 +1,9 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
-- dbaas_v1alpha1_dbaasconnection.yaml
-- dbaas_v1alpha1_dbaasinventory.yaml
-- dbaas_v1alpha1_dbaasprovider.yaml
-- dbaas_v1alpha1_dbaasplatform.yaml
-- dbaas_v1alpha1_dbaasinstance.yaml
-- dbaas_v1alpha1_dbaaspolicy.yaml
 - dbaas_v1beta1_dbaasconnection.yaml
 - dbaas_v1beta1_dbaasprovider.yaml
-- dbaas_v1beta1_dbaasplatform.yaml
 - dbaas_v1beta1_dbaasinstance.yaml
 - dbaas_v1beta1_dbaasinventory.yaml
 - dbaas_v1beta1_dbaaspolicy.yaml
+#- dbaas_v1beta1_dbaasplatform.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

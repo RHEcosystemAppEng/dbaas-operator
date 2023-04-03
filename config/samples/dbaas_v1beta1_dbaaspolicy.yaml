@@ -3,4 +3,4 @@ kind: DBaaSPolicy
 metadata:
   name: dbaaspolicy-sample
 spec:
-  # TODO(user): Add fields here
+  disableProvisions: false
