@@ -5,7 +5,7 @@ available to developers for binding to their applications.
 
 ## Architecture Diagram
 
-![Conceptual Diagram of the Components](docs/images/dbaas-arch.png)
+![Conceptual Diagram of the Components](docs/images/dbaas-arch-v2.png)
 
 ## Documentation
 
