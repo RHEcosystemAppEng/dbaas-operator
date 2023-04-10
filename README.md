@@ -23,29 +23,27 @@ RDS Operator|[RDS Operator](https://github.com/RHEcosystemAppEng/rds-dbaas-opera
 Observability Operator |[Observability Operator](https://github.com/rhobs/observability-operator)| Operator for installing the monitoring stack and configuring remote write Observatorium.
 
 ## Building the Operator
-Build the OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
-
-Reqs:
+Requires:
  - go v1.18
  - operator-sdk v1.22.2
 
-**if you are using podman instead of docker set CONTAINER_ENGINE as podman** `export CONTAINER_ENGINE=podman`
-- `make build`
-- `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
+Build the OpenShift Database Access Operator image and its bundle and catalog images and push them to a public registry, such as quay.io:
 
-## [API Reference](docs/api/markdown/ref.md)
+- `ORG=<YOUR_QUAY_USER> VERSION=<version> make release-build release-push`
+
+**If you are using podman instead of docker:** 
+- `CONTAINER_ENGINE=podman ORG=<YOUR_QUAY_USER> VERSION=<version> make release-build release-push`
+
+You can also build and push the image to a public registry other than quay.io:
+- `REGISTRY=<YOUR_REGISTRY> VERSION=<version> make release-build release-push`
 
 ## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.10 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
 **Deploy via OLM on cluster:**
-- **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
-- **Next `make release-build`**
-- **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
-- `make release-push`
 - Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
-- `make catalog-update`
+- `ORG=<YOUR_QUAY_USER> VERSION=<version> make catalog-update`
   - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here: 
     https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
   - You can also find the exact commit you want to deploy based on the commit sha.
@@ -58,7 +56,6 @@ If you run locally or via direct deploy (no longer recommended), you can create 
   Then delete the catalog source.
 
 ## Using the Operator
-
 **Prerequisites:**
 - Either OpenShift Container Platform or Origin Kubernetes Distribution (OKD) 4.10 or higher.
 - [Installation](https://github.com/RHEcosystemAppEng/dbaas-operator/blob/main/docs/quick-start-guide/main.adoc#installing-the-openshift-database-access-operator) of the OpenShift Database Access operator.
@@ -94,6 +91,8 @@ If you run locally or via direct deploy (no longer recommended), you can create 
    ![topology-view](docs/images/topology-view-example.png)
    Click the link to view a [Developer preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift).
  
+## [API Reference](docs/api/markdown/ref.md)
+
 ## Contributing
 
 - Fork OpenShift Database Access Operator repository

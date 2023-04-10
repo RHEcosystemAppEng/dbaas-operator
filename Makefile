@@ -207,7 +207,7 @@ catalog-update:
 	-oc delete catalogsource ccapi-k8s-catalogsource -n openshift-marketplace
 	-oc delete catalogsource observability-catalogsource -n openshift-marketplace
 	-oc delete catalogsource rds-provider-catalogsource -n openshift-marketplace
-	 oc apply -f config/samples/catalog-source.yaml
+	sed "s/{{CATALOG_IMG}}/$(subst /,\/,$(CATALOG_IMG))/g" config/samples/catalog-source-template.yaml | oc apply -f -
 
 deploy-sample-app:
 	oc apply -f config/samples/quarkus-runner/deployment.yaml
