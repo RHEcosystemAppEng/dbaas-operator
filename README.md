@@ -5,7 +5,7 @@ available to developers for binding to their applications.
 
 ## Architecture Diagram
 
-![Conceptual Diagram of the Components](docs/images/dbaas-arch.png)
+![Conceptual Diagram of the Components](docs/images/dbaas-arch-v2.png)
 
 ## Documentation
 
@@ -23,29 +23,27 @@ RDS Operator|[RDS Operator](https://github.com/RHEcosystemAppEng/rds-dbaas-opera
 Observability Operator |[Observability Operator](https://github.com/rhobs/observability-operator)| Operator for installing the monitoring stack and configuring remote write Observatorium.
 
 ## Building the Operator
-Build the OpenShift Database Access Operator image and push it to a public registry, such as quay.io:
-
-Reqs:
+Requires:
  - go v1.18
  - operator-sdk v1.22.2
 
-**if you are using podman instead of docker set CONTAINER_ENGINE as podman** `export CONTAINER_ENGINE=podman`
-- `make build`
-- `make docker-build docker-push IMG=quay.io/<YOUR_USERNAME_IN_QUAY>/dbaas-operator:<version>`
+Build the OpenShift Database Access Operator image and its bundle and catalog images and push them to a public registry, such as quay.io:
 
-## [API Reference](docs/api/markdown/ref.md)
+- `ORG=<YOUR_QUAY_USER> VERSION=<version> make release-build release-push`
+
+**If you are using podman instead of docker:** 
+- `CONTAINER_ENGINE=podman ORG=<YOUR_QUAY_USER> VERSION=<version> make release-build release-push`
+
+You can also build and push the image to a public registry other than quay.io:
+- `REGISTRY=<YOUR_REGISTRY> VERSION=<version> make release-build release-push`
 
 ## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.10 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
 **Deploy via OLM on cluster:**
-- **Make sure to edit `Makefile` and replace `QUAY_ORG` in the `IMAGE_TAG_BASE` with your own Quay.io Org!**
-- **Next `make release-build`**
-- **Next edit the [catalog-source.yaml](config/samples/catalog-source.yaml) template to indicate your new Quay.io org image**
-- `make release-push`
 - Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
-- `make catalog-update`
+- `ORG=<YOUR_QUAY_USER> VERSION=<version> make catalog-update`
   - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here: 
     https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
   - You can also find the exact commit you want to deploy based on the commit sha.
@@ -58,38 +56,43 @@ If you run locally or via direct deploy (no longer recommended), you can create 
   Then delete the catalog source.
 
 ## Using the Operator
-
 **Prerequisites:**
-- An instance of OpenShift Container Platform (OCP) 4.10 or higher
-- A database instance created using Crunchy Data Bridge cloud database provider.
+- Either OpenShift Container Platform or Origin Kubernetes Distribution (OKD) 4.10 or higher.
+- [Installation](https://github.com/RHEcosystemAppEng/dbaas-operator/blob/main/docs/quick-start-guide/main.adoc#installing-the-openshift-database-access-operator) of the OpenShift Database Access operator.
+- A service account with either the Crunchy Data Bridge, or CockroachDB, or Amazon RDS cloud-hosted database provider.
 
 **Creating a DBaaSInventory:**
-- Click Operators → Installed Operators.
-- Set the Project dropdown to the openshift-dbaas-operator project.
-- Click the name of the OpenShift Database Access Operator to view the details page.
-- Under Provided APIs, on the Provider Account tile, click Create instance to create a new provider account instance.
-- Refresh the page if you are not seeing the DBaaS Console UI, this required only once to reload the plugin.
-- On the Create Provider Account page, specify a name for the new Provider Account resource.
-  ![provider account creation](docs/images/provider-account-setup.png)
-- Select your cloud database provider from the drop-down menu and provide the credentials for that provider.
-- Click on the Create button to create the Provider Account resource and fetch the available database instances.
-- If fetching is successful, then you can click on the View Provider Accounts button to display the exposed database instances that developers can import.
-- For more understanding see the demo: [IT Operations preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift)  
+1. From the OpenShift console home page, in the **Administrator** perspective, click **Operators**, then click **Installed Operators**.
+2. Set the **Project** to **openshift-dbaas-operator**.
+3. Click the **OpenShift Database Access Operator** tile to view the details page.
+4. Click the **Provider Account** tab.
+5. Click the **Create DBaaSInventory** button to create a new provider account.
+
+   **NOTE:** Refresh the page if you are not seeing the DBaaS Console UI, this requires a one-time only plugin reload.
+6. On the Import Provider Account page, select a **Database provider**, provide the credentials for your choosen cloud-hosted database provider, and specify a name for the new provider account resource.
+   ![provider account creation](docs/images/provider-account-setup-v2.png)
+
+7. Click the **Import** button to create the provider account resource, and fetch the available database instances.
+8. If fetching is successful, then you see can the exposed database instances that developers can import, or you can click the **View Provider Accounts** button to return to the provider account's **DBaaSInventorys** page. Click the link to view an [IT Operations preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift). 
 
 **Creating a DBaaSConnection:**
-- Change into the Developer perspective. Click +Add.
-- Select/Create the project to the application that you want to add the database to. Sample Quarkus application deployment for [crunchy-bridge](config/samples/quarkus-crunchydata-sample-app.yaml)
-- From **Developer Catalog** Click on the **Database** category or select the **Connected Database**
-  ![database-provider](docs/images/connected-database.png)
-- Select the database provider and click Connect.  
-  ![connect-database](docs/images/connected.png)
-- Select the database provider and click Connect.  
-  ![connection-list](docs/images/connection-list.png)
-- Upon successful connection, you are taken to the Topology page.
-- Click and drag the arrow from the application to the new database instance to create a binding connector.
-  ![topology-view](docs/images/topology-view-example.png)
-- For more understanding see the demo: [Developer preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift)  
+1. From the OpenShift console home page, switch to the **Developer** perspective.
+2. Click **+Add**.
+3. Select or create a project for your application where you want to add a database to.
+   Here is sample Quarkus application deployment for [Crunchy Bridge](config/samples/quarkus-crunchydata-sample-app.yaml).
+4. Click the **Cloud-hosted Database** category.
+   ![database-provider](docs/images/connected-database-v2.png)
+5. Select the cloud-hosted database provider tile, and click **Add to Topology**.  
+   ![connect-database](docs/images/connected-v2.png)
+6. Select the database instance name, and click **Add to Topology**.  
+   ![connection-list](docs/images/connection-list-v2.png)
+7. Upon a successful connection, you are taken to the Topology page.
+8. Click and drag the arrow from the application to the new database instance to create a binding connector.
+   ![topology-view](docs/images/topology-view-example.png)
+   Click the link to view a [Developer preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift).
  
+## [API Reference](docs/api/markdown/ref.md)
+
 ## Contributing
 
 - Fork OpenShift Database Access Operator repository
