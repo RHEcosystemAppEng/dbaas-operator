@@ -11,6 +11,7 @@ available to developers for binding to their applications.
 
 - [Quick Start Guide](docs/quick-start-guide/main.adoc)
 - [Reference Guide](docs/reference-guide/main.adoc)
+- [Discussions](https://github.com/RHEcosystemAppEng/dbaas-operator/discussions)
 
 ## Associated Github Repositories
 Component |Git Repo	| Description
@@ -37,23 +38,24 @@ Build the OpenShift Database Access Operator image and its bundle and catalog im
 You can also build and push the image to a public registry other than quay.io:
 - `REGISTRY=<YOUR_REGISTRY> VERSION=<version> make release-build release-push`
 
+- Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
+- `ORG=<YOUR_QUAY_USER> VERSION=<version> make catalog-update`
+    - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here:
+      https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
+    - You can also find the exact commit you want to deploy based on the commit sha.
+
 ## Running the Operator (requires OCP 4.10 or higher)
 **NOTE**: The DBaaS console UI portion of the workflow described below will *only* work if your operator is installed via OLM and using version OpenShift Container Platform (OCP) version 4.10 or higher.
 If you run locally or via direct deploy (no longer recommended), you can create a DBaaSInventory. DBaaSConnection CRs created directly in command line can appear in the topology view in the OpenShift Console.
 
-**Deploy via OLM on cluster:**
-- Make visibility of the repositories (`dbaas-operator`, `dbaas-operator-bundle`, and `dbaas-operator-catalog`) public in your Quay.io account
-- `ORG=<YOUR_QUAY_USER> VERSION=<version> make catalog-update`
-  - Note: We already pre-build the dbaas-operator images, which can be deployed to the cluster. They can be found here: 
-    https://quay.io/repository/ecosystem-appeng/dbaas-operator-dev-catalog?tab=tags
-  - You can also find the exact commit you want to deploy based on the commit sha.
+**[Install](https://github.com/RHEcosystemAppEng/dbaas-operator/discussions/374) the Operator From OperatorHub:**
+
 - Access to an OpenShift and navigate in the web console to the **Operators → OperatorHub** page.
 - Scroll or type a keyword into the Filter by keyword box **OpenShift Database Access Operator** click Install.
   The DBaaS operator is cluster scope and the default installed namespace is **openshift-dbaas-operator**. 
 - On successful installation of DBaaS operator, will automatically install all its dependencies and the operator logs shows: *DBaaS platform stack installation complete*.
 - Continue below by following the [Using the Operator](#using-the-operator) section
-- If you wish to uninstall operator and dependencies from your cluster: delete dbaas-platform(DBaaSPlatform) CR manually wait for the operator to uninstall its dependencies and then uninstall the DBaaS operator by going →**Operators → Installed Operators → Actions → Uninstall Operator**.
-  Then delete the catalog source.
+- If you wish to uninstall operator click *Operators →Installed Operators* then  **OpenShift Database Access Operator** click *Uninstall Operator* from *Actions* 
 
 ## Using the Operator
 **Prerequisites:**
@@ -79,7 +81,7 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 1. From the OpenShift console home page, switch to the **Developer** perspective.
 2. Click **+Add**.
 3. Select or create a project for your application where you want to add a database to.
-   Here is sample Quarkus application deployment for [Crunchy Bridge](config/samples/quarkus-crunchydata-sample-app.yaml).
+   Here is sample application deployment for [Service Bindings](https://github.com/RHEcosystemAppEng/dbaas-operator/discussions/365).
 4. Click the **Cloud-hosted Database** category.
    ![database-provider](docs/images/connected-database-v2.png)
 5. Select the cloud-hosted database provider tile, and click **Add to Topology**.  
@@ -90,7 +92,35 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 8. Click and drag the arrow from the application to the new database instance to create a binding connector.
    ![topology-view](docs/images/topology-view-example.png)
    Click the link to view a [Developer preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=wEcqQziu17o&ab_channel=OpenShift).
- 
+
+**Creating a DBaaSInstance:**
+
+Users can provision a new database cluster (or instance) by creating a DBaaSInstance custom resource through the Administrator or Developer perspective with the following steps.
+
+**Administrator Perspective**
+
+1. Click the **Database Services-->Database Access** to view the DBaaS Dashboard page.
+2. From the top corner click **Configure** then Create **Database Instance** link.
+  ![create-instance](docs/images/1-createinstance.png)
+3. Select the desired **Database Provider** type and **Provider account**.
+   ![create-instance](docs/images/2-createinstance.png)
+4. Choose the name, cloud provider, other configuration options.
+5. Click the **Create** button to create the DBaaSInstance.
+
+**Developer Perspective**
+
+1. From the OpenShift console home page, switch to the **Developer** perspective.
+2. Click **+Add**.
+3. Click the **Cloud-hosted Database** category.
+   ![database-provider](docs/images/connected-database-v2.png)
+4. Select the cloud-hosted database provider tile, and click **Add to Topology**.  
+   ![connect-database](docs/images/connected-v2.png)
+5. Click on the **Creat New Database Instance**
+   ![create-instance](docs/images/3-createinstance.png)
+6. This will redirect to **Create Database Instance** Page
+7. Choose the name, cloud provider, other configuration options.
+8. Click the **Create** button to create the DBaaSInstance.
+
 ## [API Reference](docs/api/markdown/ref.md)
 
 ## Contributing
@@ -104,7 +134,7 @@ If you run locally or via direct deploy (no longer recommended), you can create 
   - `git remote add upstream git@github.com:RHEcosystemAppEng/dbaas-operator.git`
 - create feature branches within your fork to complete your work
 - raise PR's from your feature branch targeting upstream main branch
-- add `jeremyary` (and others as needed) as reviewer
+
 
 ## Appendix
 
