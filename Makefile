@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.5.0
+VERSION ?= 0.6.0
 
 CONTAINER_ENGINE?=docker
 
@@ -37,7 +37,7 @@ ENVTEST_K8S_VERSION ?= 1.25.0
 # need to uncomment & add the old bundles - the existing "from-index" catalog already has those.
 #
 # If you are developing and pushing against your OWN quay for testing, you likely need to uncomment
-#OLD_BUNDLE_VERSIONS ?= 0.1.0,0.1.1,0.1.2,0.1.3
+OLD_BUNDLE_VERSIONS ?= 0.5.0
 
 # ORG indicates the quay.io organization that docker images will be build for & pushed to
 # Set REGISTRY to use a registry other than quay.io
@@ -46,7 +46,7 @@ REGISTRY ?= quay.io/$(ORG)
 
 # CATALOG_BASE_IMG defines an existing catalog version to build on & add bundles to
 # CATALOG_BASE_IMG ?= quay.io/$(ORG)/dbaas-operator-catalog:v$(VERSION)
-CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.4.0-wrapper
+#CATALOG_BASE_IMG ?= quay.io/ecosystem-appeng/dbaas-operator-catalog:0.5.0
 
 export OPERATOR_CONDITION_NAME=dbaas-operator.v$(VERSION)
 
@@ -328,25 +328,15 @@ FROM_INDEX_OPT := --from-index $(CATALOG_BASE_IMG)
 endif
 
 # Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
-# This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
 # https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
 .PHONY: catalog-build
 catalog-build: opm ## Build a catalog image.
-	$(OPM) index add --container-tool $(CONTAINER_ENGINE) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS)
-#	$(OPM) index add --container-tool $(CONTAINER_ENGINE) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+	$(OPM) index add --container-tool $(CONTAINER_ENGINE) --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
 
 # Push the catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
-
-.PHONY: wrapper-build
-wrapper-build: ## Build the catalog wrapper image.
-	$(CONTAINER_ENGINE) build --pull -f wrapper.Dockerfile --platform linux/amd64 -t $(REGISTRY)/dbaas-operator-catalog:0.4.0-wrapper .
-
-.PHONY: wrapper-push
-wrapper-push: ## Push the catalog wrapper image.
-	$(MAKE) docker-push IMG=$(REGISTRY)/dbaas-operator-catalog:0.4.0-wrapper
 
 .PHONY: get-version
 get-version: ; $(info ${VERSION})

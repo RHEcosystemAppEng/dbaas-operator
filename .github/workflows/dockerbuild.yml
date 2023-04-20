@@ -21,4 +21,3 @@ jobs:
         containerfiles: |
           ./Dockerfile
           ./bundle.Dockerfile
-          ./wrapper.Dockerfile
