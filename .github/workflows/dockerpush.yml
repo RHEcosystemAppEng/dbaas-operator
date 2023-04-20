@@ -8,6 +8,7 @@ on:
 
 env:
   IMAGE_TAG_BASE: quay.io/ecosystem-appeng/dbaas-operator-dev
+  OLD_BUNDLE_IMGS: quay.io/ecosystem-appeng/dbaas-operator-bundle:v0.5.0
 
 jobs:
   push:
@@ -40,7 +41,7 @@ jobs:
         git diff
 
     - name: Build and push release
-      run: VERSION=${{ steps.version.outputs.VERSION }} IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} CONTAINER_ENGINE=podman make release-build release-push
+      run: VERSION=${{ steps.version.outputs.VERSION }} IMAGE_TAG_BASE=${{ env.IMAGE_TAG_BASE }} OLD_BUNDLE_IMGS=${{ env.OLD_BUNDLE_IMGS }} CONTAINER_ENGINE=podman make release-build release-push
 
     - name: Print image urls
       run: |
