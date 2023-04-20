@@ -18,7 +18,7 @@ const (
 	CatalogNamespace = "openshift-marketplace"
 
 	// DBaaSQuickStartVersion version for the quick start guide
-	DBaaSQuickStartVersion = "dbaas-quick-starts:0.5.0"
+	DBaaSQuickStartVersion = "dbaas-quick-starts:0.6.0"
 
 	// CRUNCHY_BRIDGE
 	crunchyBridgeCatalogImg  = "RELATED_IMAGE_CRUNCHY_BRIDGE_CATALOG"
