@@ -64,18 +64,18 @@ If you run locally or via direct deploy (no longer recommended), you can create 
 - A service account with either the Crunchy Data Bridge, or CockroachDB, or Amazon RDS cloud-hosted database provider.
 
 **Creating a DBaaSInventory:**
-1. From the OpenShift console home page, in the **Administrator** perspective, click **Operators**, then click **Installed Operators**.
+1. From the OpenShift console home page, in the **Administrator** perspective, click **Data Services(the last menu option)**,  then click **Database Access**.
 2. Set the **Project** to **openshift-dbaas-operator**.
-3. Click the **OpenShift Database Access Operator** tile to view the details page.
-4. Click the **Provider Account** tab.
-5. Click the **Create DBaaSInventory** button to create a new provider account.
-
+   ![provider account creation](docs/images/provider-account-setup-v3.png)
+3. Click the **Configure** button to view the dropdown links.
+4. Click the **Import Database Provider Account** link to create a new provider account.
+   ![provider account creation](docs/images/provider-account-setup-v4.png)
    **NOTE:** Refresh the page if you are not seeing the DBaaS Console UI, this requires a one-time only plugin reload.
-6. On the Import Provider Account page, select a **Database provider**, provide the credentials for your choosen cloud-hosted database provider, and specify a name for the new provider account resource.
+5. On the Import Provider Account page, select a **Database provider**, provide the credentials for your choosen cloud-hosted database provider, and specify a name for the new provider account resource.
    ![provider account creation](docs/images/provider-account-setup-v2.png)
 
-7. Click the **Import** button to create the provider account resource, and fetch the available database instances.
-8. If fetching is successful, then you see can the exposed database instances that developers can import, or you can click the **View Provider Accounts** button to return to the provider account's **DBaaSInventorys** page. Click the link to view an [IT Operations preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift). 
+6. Click the **Import** button to create the provider account resource, and fetch the available database instances.
+7. If fetching is successful, then you see can the exposed database instances that developers can import, or you can click the **View Provider Accounts** button to return to the provider account's **DBaaSInventorys** page. Click the link to view an [IT Operations preview demo of OpenShift Database Access](https://www.youtube.com/watch?v=QmF5da2LvnU&t=0s&ab_channel=OpenShift). 
 
 **Creating a DBaaSConnection:**
 1. From the OpenShift console home page, switch to the **Developer** perspective.
