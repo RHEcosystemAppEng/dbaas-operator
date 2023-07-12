@@ -162,17 +162,15 @@ func (r *DBaaSReconciler) isValidConnectionNS(ctx context.Context, namespace str
 
 // check if provisioning is allowed against an inventory. inventory takes precedence over dbaaspolicy.
 func canProvision(inventory *v1beta1.DBaaSInventory, activePolicy *v1beta1.DBaaSPolicy) bool {
-	if activePolicy == nil {
-		// not an active namespace
-		return false
-	}
 	if inventory.Spec.Policy != nil {
 		if inventory.Spec.Policy.DisableProvisions != nil {
 			return !*inventory.Spec.Policy.DisableProvisions
 		}
 	} else {
-		if activePolicy.Spec.DisableProvisions != nil {
-			return !*activePolicy.Spec.DisableProvisions
+		if activePolicy != nil {
+			if activePolicy.Spec.DisableProvisions != nil {
+				return !*activePolicy.Spec.DisableProvisions
+			}
 		}
 	}
 	return true

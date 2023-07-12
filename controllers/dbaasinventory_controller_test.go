@@ -32,32 +32,6 @@ var _ = Describe("DBaaSInventory controller with errors", func() {
 	ns := "testns-no-policy"
 	nsSpec := &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: ns}}
 	BeforeEach(assertResourceCreationIfNotExists(nsSpec))
-	Context("after creating DBaaSInventory without policy in the target namespace", func() {
-		inventoryName := "test-inventory-no-policy"
-		testSecret2 := testSecret.DeepCopy()
-		testSecret2.Namespace = ns
-		DBaaSInventorySpec := &v1beta1.DBaaSInventorySpec{
-			CredentialsRef: &v1beta1.LocalObjectReference{
-				Name: testSecret2.Name,
-			},
-		}
-		testCreatedDBaaSInventory := &v1beta1.DBaaSInventory{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      inventoryName,
-				Namespace: ns,
-			},
-			Spec: v1beta1.DBaaSOperatorInventorySpec{
-				ProviderRef: v1beta1.NamespacedName{
-					Name: testProviderName,
-				},
-				DBaaSInventorySpec: *DBaaSInventorySpec,
-			},
-		}
-		BeforeEach(assertResourceCreationIfNotExists(testSecret2))
-		BeforeEach(assertResourceCreationIfNotExists(testCreatedDBaaSInventory))
-		It("reconcile with error", assertDBaaSResourceStatusUpdated(testCreatedDBaaSInventory, metav1.ConditionFalse, v1beta1.DBaaSPolicyNotFound))
-	})
-
 	Context("after creating DBaaSInventory without valid provider", func() {
 		inventoryName := "test-inventory-no-provider"
 		providerName := "provider-no-exist"

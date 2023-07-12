@@ -59,10 +59,7 @@ var _ = Describe("DBaaSPlatform controller", func() {
 					},
 				}
 				err := dRec.Get(ctx, client.ObjectKeyFromObject(secret), secret)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, timeout).Should(BeTrue())
 
 			Eventually(func() bool {
@@ -73,10 +70,7 @@ var _ = Describe("DBaaSPlatform controller", func() {
 					},
 				}
 				err := dRec.Get(ctx, client.ObjectKeyFromObject(cm), cm)
-				if err != nil {
-					return false
-				}
-				return true
+				return err == nil
 			}, timeout).Should(BeTrue())
 		})
 	})

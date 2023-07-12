@@ -35,7 +35,6 @@ const (
 
 	// DBaaS condition reasons:
 	Ready                          string = "Ready"
-	DBaaSPolicyNotFound            string = "DBaaSPolicyNotFound"
 	DBaaSPolicyNotReady            string = "DBaaSPolicyNotReady"
 	DBaaSProviderNotFound          string = "DBaaSProviderNotFound"
 	DBaaSInventoryNotFound         string = "DBaaSInventoryNotFound"
@@ -54,7 +53,6 @@ const (
 	MsgProviderCRReconcileInProgress string = "DBaaS Provider Custom Resource reconciliation in progress"
 	MsgInventoryNotReady             string = "Inventory discovery not done"
 	MsgInventoryNotProvisionable     string = "Inventory provisioning not allowed"
-	MsgPolicyNotFound                string = "Failed to find an active Policy"
 	MsgPolicyReady                   string = "Policy is active"
 	MsgInvalidNamespace              string = "Invalid connection namespace for the referenced inventory"
 	MsgPolicyNotReady                string = "Another active Policy already exists"
